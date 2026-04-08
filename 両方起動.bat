@@ -4,23 +4,23 @@ title 両サーバー起動
 REM === Della Score (port 8080) ===
 tasklist /fi "imagename eq php.exe" 2>nul | find /i "php.exe" >nul
 if errorlevel 1 (
-  start /min "PHP 8080 DellaScore" php -S localhost:8080 -t "%~dp001営業管理システム【della score】"
+  start /min "PHP 8080 DellaScore" php -S 0.0.0.0:8080 -t "%~dp001営業管理システム【della score】"
   timeout /t 2 /nobreak >nul
 )
 
 REM === イワタアシスト (port 8081) ===
-start /min "PHP 8081 IwataAssist" php -S localhost:8081 -t "%~dp002仕入れ管理【イワタアシスト】"
+start /min "PHP 8081 IwataAssist" php -S 0.0.0.0:8081 -t "%~dp002仕入れ管理【イワタアシスト】"
 timeout /t 2 /nobreak >nul
 
-REM === トンネル (Della Score) ===
-start "Tunnel DellaScore" cmd /k "title Tunnel-DellaScore && :loop && ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
-
-REM === トンネル (イワタアシスト) ===
-start "Tunnel IwataAssist" cmd /k "title Tunnel-IwataAssist && :loop && ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -R 80:localhost:8081 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
-
 echo.
-echo 両サーバー起動＆トンネル接続中...
-echo DellaScore  : localhost:8080
-echo IwataAssist : localhost:8081
+echo 両サーバー起動完了
+echo.
+echo ■ DellaScore
+echo   http://100.67.184.75:8080
+echo.
+echo ■ イワタアシスト
+echo   http://100.67.184.75:8081
+echo.
+echo ※ Tailscaleが入っているデバイスからのみアクセス可能
 echo.
 pause
