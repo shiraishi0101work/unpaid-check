@@ -13,10 +13,10 @@ start /min "PHP 8081 IwataAssist" php -S localhost:8081 -t "%~dp002仕入れ管�
 timeout /t 2 /nobreak >nul
 
 REM === トンネル (Della Score) ===
-start "Tunnel DellaScore" cmd /k "title Tunnel-DellaScore && :loop && ssh -R 80:localhost:8080 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
+start "Tunnel DellaScore" cmd /k "title Tunnel-DellaScore && :loop && ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
 
 REM === トンネル (イワタアシスト) ===
-start "Tunnel IwataAssist" cmd /k "title Tunnel-IwataAssist && :loop && ssh -R 80:localhost:8081 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
+start "Tunnel IwataAssist" cmd /k "title Tunnel-IwataAssist && :loop && ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -R 80:localhost:8081 nokey@localhost.run && timeout /t 3 /nobreak >nul && goto loop"
 
 echo.
 echo 両サーバー起動＆トンネル接続中...
