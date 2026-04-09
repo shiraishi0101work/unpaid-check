@@ -339,6 +339,9 @@ def generate_report(result: dict, output_dir: str = None) -> str:
     ws_upcoming = wb.create_sheet()
     _write_upcoming_sheet(ws_upcoming, upcoming)
 
+    ws_diff = wb.create_sheet()
+    _write_diff_sheet(ws_diff, result.get("diff", []))
+
     ws_paid = wb.create_sheet()
     _write_paid_sheet(ws_paid, result["paid"])
 
