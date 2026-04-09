@@ -1,1 +1,21 @@
-{"name":"meo-report-generator","version":"1.0.0","description":"MEO対策レポート自動化システム","main":"dist/index.js","scripts":{"build":"tsc","start":"node dist/index.js"},"type":"commonjs","dependencies":{"@anthropic-ai/sdk":"^0.86.1","pptxgenjs":"^4.0.1","sharp":"^0.34.5"},"devDependencies":{"@types/node":"^25.5.2","typescript":"^6.0.2"}}
+{
+  "name": "meo-report-generator",
+  "version": "1.0.0",
+  "description": "MEO対策レポート自動化システム",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "generate": "node dist/index.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.86.1",
+    "pptxgenjs": "^4.0.1",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "typescript": "^6.0.2"
+  }
+}
