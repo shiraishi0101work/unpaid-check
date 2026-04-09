@@ -419,8 +419,7 @@
         <thead class="table-success">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>支払期限</th><th class="text-end">請求金額</th>
-            <th>着金日</th><th class="text-end">着金金額</th><th>科目</th>
+            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th><th>入金状態</th>
           </tr>
         </thead>
         <tbody>
@@ -429,14 +428,20 @@
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.請求日 }}</td>
             <td class="small">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="small text-success fw-semibold">{{ b.着金日 }}</td>
-            <td class="text-end">¥{{ "{:,.0f}".format(b.着金金額 | default(0)) }}</td>
-            <td class="text-muted small">{{ b.科目 }}</td>
+            <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
           </tr>
           {% endfor %}
         </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="5">合計</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     {% else %}
