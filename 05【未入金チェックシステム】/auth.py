@@ -93,13 +93,18 @@ def _is_expired(token_data: dict) -> bool:
     return time.time() > saved_at + expires_in - 60
 
 
+def _basic_auth_header(client_id: str, client_secret: str) -> dict:
+    """CLIENT_SECRET_BASIC用のAuthorizationヘッダーを生成"""
+    credentials = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+    return {"Authorization": f"Basic {credentials}"}
+
+
 def _refresh(service_name: str, token_data: dict) -> dict:
-    svc  = _svc(service_name)
-    resp = requests.post(svc["token_url"], data={
+    svc     = _svc(service_name)
+    headers = _basic_auth_header(svc["client_id"], svc["client_secret"])
+    resp    = requests.post(svc["token_url"], headers=headers, data={
         "grant_type":    "refresh_token",
         "refresh_token": token_data["refresh_token"],
-        "client_id":     svc["client_id"],
-        "client_secret": svc["client_secret"],
     })
     resp.raise_for_status()
     new_token = resp.json()
