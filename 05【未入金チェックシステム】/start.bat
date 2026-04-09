@@ -17,14 +17,16 @@ if not exist .env (
     exit /b
 )
 
+set PYTHON=C:\Users\shira_k13727w\AppData\Local\Programs\Python\Python312\python.exe
+
 :: 依存パッケージのインストール確認
-python -c "import flask" 2>nul
+%PYTHON% -c "import flask" 2>nul
 if errorlevel 1 (
     echo 依存パッケージをインストールしています...
-    pip install -r requirements.txt
+    %PYTHON% -m pip install -r requirements.txt
 )
 
 :: アプリ起動
-python app.py
+%PYTHON% app.py
 
 pause
