@@ -18,36 +18,48 @@ import requests
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 
-load_dotenv()
+# .envをこのファイルと同じディレクトリから確実に読み込む
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(_BASE_DIR, ".env"), override=True)
 
 PORT = int(os.getenv("PORT", 5000))
 
-SERVICES = {
+_SERVICE_DEFS = {
     "invoice": {
-        "auth_url":      "https://invoice.moneyforward.com/oauth/authorize",
-        "token_url":     "https://invoice.moneyforward.com/oauth/token",
-        "scope":         "read",
-        "client_id":     os.getenv("MF_INVOICE_CLIENT_ID"),
-        "client_secret": os.getenv("MF_INVOICE_CLIENT_SECRET"),
-        "redirect_uri":  os.getenv(
-            "MF_INVOICE_REDIRECT_URI",
-            f"http://localhost:{PORT}/oauth/callback/invoice"
-        ),
-        "token_file":    "token_invoice.json",
+        "auth_url":   "https://invoice.moneyforward.com/oauth/authorize",
+        "token_url":  "https://invoice.moneyforward.com/oauth/token",
+        "scope":      "read",
+        "env_id":     "MF_INVOICE_CLIENT_ID",
+        "env_secret": "MF_INVOICE_CLIENT_SECRET",
+        "env_uri":    "MF_INVOICE_REDIRECT_URI",
+        "default_uri": f"http://localhost:{PORT}/oauth/callback/invoice",
+        "token_file": "token_invoice.json",
     },
     "accounting": {
-        "auth_url":      "https://accounting.moneyforward.com/oauth/authorize",
-        "token_url":     "https://accounting.moneyforward.com/oauth/token",
-        "scope":         "read",
-        "client_id":     os.getenv("MF_ACCOUNTING_CLIENT_ID"),
-        "client_secret": os.getenv("MF_ACCOUNTING_CLIENT_SECRET"),
-        "redirect_uri":  os.getenv(
-            "MF_ACCOUNTING_REDIRECT_URI",
-            f"http://localhost:{PORT}/oauth/callback/accounting"
-        ),
-        "token_file":    "token_accounting.json",
+        "auth_url":   "https://accounting.moneyforward.com/oauth/authorize",
+        "token_url":  "https://accounting.moneyforward.com/oauth/token",
+        "scope":      "read",
+        "env_id":     "MF_ACCOUNTING_CLIENT_ID",
+        "env_secret": "MF_ACCOUNTING_CLIENT_SECRET",
+        "env_uri":    "MF_ACCOUNTING_REDIRECT_URI",
+        "default_uri": f"http://localhost:{PORT}/oauth/callback/accounting",
+        "token_file": "token_accounting.json",
     },
 }
+
+
+def _svc(service_name: str) -> dict:
+    """env変数を毎回動的に読んでサービス設定を返す"""
+    d = _SERVICE_DEFS[service_name]
+    return {
+        "auth_url":      d["auth_url"],
+        "token_url":     d["token_url"],
+        "scope":         d["scope"],
+        "client_id":     os.getenv(d["env_id"], ""),
+        "client_secret": os.getenv(d["env_secret"], ""),
+        "redirect_uri":  os.getenv(d["env_uri"], d["default_uri"]),
+        "token_file":    d["token_file"],
+    }
 
 TOKEN_DIR = os.path.join(os.path.dirname(__file__), "tokens")
 
