@@ -71,7 +71,7 @@
     <div class="sidebar-item">
       <button type="submit" class="btn btn-primary btn-sm w-100"
         id="run-btn"
-        {% if not auth_invoice or not auth_accounting %}disabled{% endif %}
+        {% if not auth_invoice %}disabled{% endif %}
         {% if status.running %}disabled{% endif %}>
         <i class="bi bi-play-fill"></i>
         <span id="run-label">
