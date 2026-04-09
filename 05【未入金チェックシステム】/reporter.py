@@ -24,17 +24,19 @@ from openpyxl.utils import get_column_letter
 # ========================================
 COLOR_HEADER_OVERDUE  = "C00000"  # 深紅（支払期限超過ヘッダー）
 COLOR_HEADER_UPCOMING = "833C00"  # 深オレンジ（期日前ヘッダー）
-COLOR_HEADER_UNPAID   = "C00000"  # 深紅（未入金ヘッダー、後方互換）
+COLOR_HEADER_DIFF     = "7030A0"  # 紫（差額ありヘッダー）
 COLOR_HEADER_PAID     = "375623"  # 深緑（入金済みヘッダー）
 COLOR_HEADER_UNMATCHED= "7F6000"  # 深黄（照合不能ヘッダー）
 COLOR_HEADER_SUMMARY  = "1F3864"  # 紺（サマリーヘッダー）
 COLOR_WHITE           = "FFFFFF"
 COLOR_ROW_OVERDUE     = "FCE4D6"  # 薄いオレンジ（超過）
 COLOR_ROW_UPCOMING    = "FFF2CC"  # 薄い黄色（期日前）
-COLOR_ROW_UNPAID      = "FCE4D6"  # 後方互換
+COLOR_ROW_DIFF        = "E2CFED"  # 薄い紫（差額あり）
 COLOR_ROW_PAID        = "E2EFDA"  # 薄い緑
 COLOR_ROW_UNMATCHED   = "FFF2CC"  # 薄い黄色
 COLOR_OVERDUE         = "FF0000"  # 支払期限超過テキスト
+COLOR_SHORTAGE        = "C00000"  # 不足テキスト（赤）
+COLOR_OVERPAY         = "7030A0"  # 過払いテキスト（紫）
 
 
 def _thin_border():
