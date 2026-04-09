@@ -63,12 +63,20 @@ def main():
     output_path = generate_report(result)
 
     # ⑤ サマリーをコンソールにも表示
+    from datetime import datetime as _dt
+    today_str = _dt.now().strftime("%Y-%m-%d")
+    unpaid   = result["unpaid"]
+    overdue  = [b for b in unpaid if b.get("支払期限", "") < today_str]
+    upcoming = [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")]
+
     print()
     print("=" * 60)
     print("  照合結果サマリー")
     print("=" * 60)
-    print(f"  未入金:           {len(result['unpaid']):>4} 件  "
-          f"¥{sum(b['請求金額'] for b in result['unpaid']):>12,.0f}")
+    print(f"  支払期限超過:     {len(overdue):>4} 件  "
+          f"¥{sum(b['請求金額'] for b in overdue):>12,.0f}")
+    print(f"  期日前（未入金）:  {len(upcoming):>4} 件  "
+          f"¥{sum(b['請求金額'] for b in upcoming):>12,.0f}")
     print(f"  入金確認済み:     {len(result['paid']):>4} 件  "
           f"¥{sum(b['請求金額'] for b in result['paid']):>12,.0f}")
     print(f"  照合不能な入金:   {len(result['unmatched_deals']):>4} 件")
@@ -76,11 +84,19 @@ def main():
     print(f"  出力ファイル: {output_path}")
     print("=" * 60)
 
-    if result["unpaid"]:
-        print("\n  【未入金請求書一覧】")
+    if overdue:
+        print("\n  【支払期限超過請求書】")
         print(f"  {'取引先名':<20} {'請求番号':<15} {'支払期限':<12} {'請求金額':>12}")
         print("  " + "-" * 65)
-        for b in sorted(result["unpaid"], key=lambda x: x.get("支払期限", "")):
+        for b in sorted(overdue, key=lambda x: x.get("支払期限", "")):
+            print(f"  {b['取引先名']:<20} {b['請求番号']:<15} {b['支払期限']:<12} "
+                  f"¥{b['請求金額']:>11,.0f}")
+
+    if upcoming:
+        print("\n  【期日前請求書】")
+        print(f"  {'取引先名':<20} {'請求番号':<15} {'支払期限':<12} {'請求金額':>12}")
+        print("  " + "-" * 65)
+        for b in sorted(upcoming, key=lambda x: x.get("支払期限", "")):
             print(f"  {b['取引先名']:<20} {b['請求番号']:<15} {b['支払期限']:<12} "
                   f"¥{b['請求金額']:>11,.0f}")
 
