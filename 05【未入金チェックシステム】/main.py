@@ -73,10 +73,13 @@ def main():
     print("=" * 60)
     print("  照合結果サマリー")
     print("=" * 60)
+    diff = result.get("diff", [])
     print(f"  支払期限超過:     {len(overdue):>4} 件  "
           f"¥{sum(b['請求金額'] for b in overdue):>12,.0f}")
     print(f"  期日前（未入金）:  {len(upcoming):>4} 件  "
           f"¥{sum(b['請求金額'] for b in upcoming):>12,.0f}")
+    print(f"  差額あり:         {len(diff):>4} 件  "
+          f"¥{sum(b['請求金額'] for b in diff):>12,.0f}")
     print(f"  入金確認済み:     {len(result['paid']):>4} 件  "
           f"¥{sum(b['請求金額'] for b in result['paid']):>12,.0f}")
     print(f"  照合不能な入金:   {len(result['unmatched_deals']):>4} 件")
