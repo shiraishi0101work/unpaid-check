@@ -39,7 +39,7 @@ _SERVICE_DEFS = {
     "accounting": {
         "auth_url":    "https://api.biz.moneyforward.com/authorize",
         "token_url":   "https://api.biz.moneyforward.com/token",
-        "scope":       "",
+        "scope":       "mfc/accounting/data.read",
         "env_id":      "MF_ACCOUNTING_CLIENT_ID",
         "env_secret":  "MF_ACCOUNTING_CLIENT_SECRET",
         "env_uri":     "MF_ACCOUNTING_REDIRECT_URI",
