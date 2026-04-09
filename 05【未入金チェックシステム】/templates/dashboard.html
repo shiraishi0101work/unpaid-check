@@ -176,8 +176,8 @@
 <div class="text-center py-5 text-muted">
   <i class="bi bi-inbox fs-1"></i>
   <p class="mt-3">
-    {% if not auth_invoice or not auth_accounting %}
-      先に左サイドバーからMFクラウドとの連携を行ってください。
+    {% if not auth_invoice %}
+      先に左サイドバーからMFクラウド請求書との連携を行ってください。
     {% else %}
       「今すぐ実行」ボタンで照合を開始してください。
     {% endif %}
