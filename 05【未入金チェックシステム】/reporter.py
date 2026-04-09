@@ -275,13 +275,21 @@ def generate_report(result: dict, output_dir: str = None) -> str:
     filename     = f"未入金チェック_{timestamp}.xlsx"
     filepath     = os.path.join(output_dir, filename)
 
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    unpaid    = result["unpaid"]
+    overdue   = [b for b in unpaid if b.get("支払期限", "") < today_str]
+    upcoming  = [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")]
+
     wb = openpyxl.Workbook()
     # デフォルトシートを使ってサマリーを先頭に
     ws_summary = wb.active
     _write_summary_sheet(ws_summary, result, generated_at)
 
-    ws_unpaid    = wb.create_sheet()
-    _write_unpaid_sheet(ws_unpaid, result["paid"] and result["unpaid"] or result["unpaid"])
+    ws_overdue = wb.create_sheet()
+    _write_overdue_sheet(ws_overdue, overdue)
+
+    ws_upcoming = wb.create_sheet()
+    _write_upcoming_sheet(ws_upcoming, upcoming)
 
     ws_paid = wb.create_sheet()
     _write_paid_sheet(ws_paid, result["paid"])
