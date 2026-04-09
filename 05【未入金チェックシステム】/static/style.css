@@ -2,22 +2,93 @@
    未入金チェックシステム カスタムCSS
    =================================== */
 
-body {
-  background-color: #f4f6f9;
+html, body {
+  height: 100%;
   font-size: 0.9rem;
+  background-color: #f4f6f9;
 }
 
-/* サマリーカード */
-.summary-card {
-  border-width: 2px !important;
+/* ======== レイアウト ======== */
+.d-flex.flex-grow-1 {
+  height: calc(100vh - 48px); /* navbar高さを引く */
+}
+
+aside.sidebar {
+  background: #fff;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 1rem;
+}
+
+main {
+  overflow-y: auto;
+}
+
+/* ======== サイドバー部品 ======== */
+.sidebar-section {
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.sidebar-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-sublabel {
+  font-size: 0.72rem;
+  color: #6c757d;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+.sidebar-item {
+  padding: 0.25rem 0;
+}
+
+.sidebar-divider {
+  margin: 0.25rem 0.75rem;
+  border-color: #e9ecef;
+}
+
+.sidebar-stat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sidebar-stat-item:hover {
+  background: #f8f9fa;
+}
+
+/* 極小ボタン */
+.btn-xs {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+/* ======== サマリーカード ======== */
+.card {
+  border-width: 1.5px;
   transition: transform 0.15s;
 }
-.summary-card:hover {
+.card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
 }
 
-/* テーブル */
+/* ======== テーブル ======== */
 .table th {
   font-size: 0.78rem;
   white-space: nowrap;
@@ -36,7 +107,7 @@ body {
   z-index: 1;
 }
 
-/* タブ */
+/* ======== タブ ======== */
 .nav-tabs .nav-link {
   font-size: 0.82rem;
   padding: 0.4rem 0.8rem;
@@ -45,18 +116,11 @@ body {
   font-weight: 600;
 }
 
-/* 紫色用 */
+/* ======== カラー ======== */
 .text-purple { color: #7030A0 !important; }
 .border-purple { border-color: #7030A0 !important; }
 
-/* プログレスバー */
+/* ======== その他 ======== */
 .progress { background-color: #dee2e6; }
-
-/* ナビゲーションバー */
 .navbar-brand { font-size: 1rem; }
-
-/* アクションボタン行 */
-.card .card-body { padding: 0.6rem 1rem; }
-
-/* フラッシュメッセージ */
 .alert { font-size: 0.85rem; }
