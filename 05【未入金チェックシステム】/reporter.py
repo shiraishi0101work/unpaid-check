@@ -245,6 +245,7 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
 
     today_str = datetime.now().strftime("%Y-%m-%d")
     paid      = result["paid"]
+    diff      = result.get("diff", [])
     unpaid    = result["unpaid"]
     unmatch   = result["unmatched_deals"]
 
@@ -253,6 +254,8 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
 
     overdue_total  = sum(b.get("請求金額", 0) for b in overdue)
     upcoming_total = sum(b.get("請求金額", 0) for b in upcoming)
+    diff_total     = sum(b.get("請求金額", 0) for b in diff)
+    diff_shortage  = sum(abs(b.get("差額", 0)) for b in diff if b.get("差額", 0) < 0)
     paid_total     = sum(b.get("請求金額", 0) for b in paid)
 
     rows = [
@@ -270,7 +273,12 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
         ("件数",                      len(unpaid)),
         ("合計金額（税込）",           overdue_total + upcoming_total),
         (None, None),
-        ("■ 入金確認済み",             None),
+        ("■ 差額あり請求書",           None),
+        ("件数",                      len(diff)),
+        ("請求金額合計",               diff_total),
+        ("不足合計",                   diff_shortage),
+        (None, None),
+        ("■ 入金確認済み（金額一致）", None),
         ("件数",                      len(paid)),
         ("合計金額（税込）",           paid_total),
         (None, None),
