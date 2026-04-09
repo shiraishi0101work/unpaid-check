@@ -134,7 +134,7 @@ def handle_callback(service_name: str, code: str, state: str) -> bool:
     if _pending_states.pop(state, None) != service_name:
         return False  # stateが一致しない（不正リクエスト）
 
-    svc  = SERVICES[service_name]
+    svc  = _svc(service_name)
     resp = requests.post(svc["token_url"], data={
         "grant_type":   "authorization_code",
         "code":          code,
