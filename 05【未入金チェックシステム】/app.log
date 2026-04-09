@@ -15,3 +15,10 @@ Press CTRL+C to quit
 127.0.0.1 - - [09/Apr/2026 19:32:10] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [09/Apr/2026 19:32:10] "GET /static/style.css HTTP/1.1" 304 -
 127.0.0.1 - - [09/Apr/2026 19:32:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Apr/2026 19:32:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Apr/2026 19:33:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Apr/2026 19:33:08] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [09/Apr/2026 19:33:11] "GET /oauth/start/accounting HTTP/1.1" 302 -
+127.0.0.1 - - [09/Apr/2026 19:33:22] "GET /oauth/callback/accounting?state=Zwnx-9K2R8KjBksnOei9Zg&code=yDNMPpF2vBUHewpUMdSEVb1siR0og1FL9lDn5GG95FA&iss=https://biz.moneyforward.com HTTP/1.1" 302 -
+127.0.0.1 - - [09/Apr/2026 19:33:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Apr/2026 19:33:23] "GET /static/style.css HTTP/1.1" 304 -

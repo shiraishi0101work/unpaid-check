@@ -1,110 +1,196 @@
 {% extends "base.html" %}
-{% block content %}
 
-{# ========== 認証バナー ========== #}
-{% if not auth_invoice or not auth_accounting %}
-<div class="alert alert-warning d-flex align-items-center gap-3 mb-3">
-  <i class="bi bi-exclamation-triangle-fill fs-4"></i>
-  <div>
-    <strong>MFクラウドとの連携が必要です</strong><br>
-    <small>
-      {% if not auth_invoice %}
-        <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="alert-link">
-          クラウド請求書を認証する
-        </a>
-      {% else %}
-        <span class="text-success"><i class="bi bi-check-circle-fill"></i> クラウド請求書 認証済み</span>
-      {% endif %}
-      &nbsp;&nbsp;
-      {% if not auth_accounting %}
-        <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="alert-link">
-          クラウド会計を認証する
-        </a>
-      {% else %}
-        <span class="text-success"><i class="bi bi-check-circle-fill"></i> クラウド会計 認証済み</span>
-      {% endif %}
-    </small>
+{# ==================== 左サイドバー ==================== #}
+{% block sidebar %}
+
+<!-- MF連携ステータス -->
+<div class="sidebar-section">
+  <div class="sidebar-label">MFクラウド連携</div>
+
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-text{% if auth_invoice %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド請求書</span>
+    </span>
+    {% if auth_invoice %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
   </div>
-</div>
-{% endif %}
 
-{# ========== 実行パネル ========== #}
-<div class="card mb-4 shadow-sm">
-  <div class="card-body py-2">
-    <div class="row align-items-center g-2">
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-calculator{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド会計</span>
+    </span>
+    {% if auth_accounting %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
 
-      <div class="col-auto">
-        <form method="POST" action="{{ url_for('run') }}" id="run-form" class="d-flex align-items-center gap-2">
-          <input type="date" name="from_date" class="form-control form-control-sm" placeholder="開始日">
-          <span class="text-muted small">〜</span>
-          <input type="date" name="to_date"   class="form-control form-control-sm" placeholder="終了日">
-          <button type="submit" class="btn btn-primary btn-sm"
-            id="run-btn"
-            {% if not auth_invoice or not auth_accounting %}disabled{% endif %}
-            {% if status.running %}disabled{% endif %}>
-            <i class="bi bi-play-fill"></i>
-            <span id="run-label">
-              {% if status.running %}実行中...{% else %}今すぐ実行{% endif %}
-            </span>
-          </button>
-        </form>
-      </div>
-
-      <div class="col">
-        {% if status.running %}
-        <div class="d-flex align-items-center gap-2">
-          <div class="progress flex-grow-1" style="height:8px">
-            <div class="progress-bar progress-bar-striped progress-bar-animated"
-                 id="progress-bar"
-                 style="width: {{ status.progress }}%"></div>
-          </div>
-          <small class="text-muted" id="progress-msg">{{ status.message }}</small>
-        </div>
-        {% elif status.error %}
-          <span class="text-danger small"><i class="bi bi-x-circle-fill"></i> {{ status.error }}</span>
-        {% elif status.last_run %}
-          <span class="text-muted small"><i class="bi bi-clock-history"></i> 最終実行: {{ status.last_run }}</span>
-        {% elif result %}
-          <span class="text-muted small"><i class="bi bi-clock-history"></i> 最終実行: {{ result.saved_at[:19].replace('T',' ') }}</span>
-        {% endif %}
-      </div>
-
-      <div class="col-auto">
-        <a href="{{ url_for('download') }}"
-           class="btn btn-outline-success btn-sm {% if not result %}disabled{% endif %}">
-          <i class="bi bi-file-earmark-excel"></i> Excelダウンロード
-        </a>
-        {% if auth_invoice %}
-          <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}" class="d-inline">
-            <button class="btn btn-outline-secondary btn-sm" title="請求書認証解除">
-              <i class="bi bi-key"></i> 請求書
-            </button>
-          </form>
-        {% endif %}
-        {% if auth_accounting %}
-          <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}" class="d-inline">
-            <button class="btn btn-outline-secondary btn-sm" title="会計認証解除">
-              <i class="bi bi-key"></i> 会計
-            </button>
-          </form>
-        {% endif %}
-      </div>
-
+  {% if auth_invoice or auth_accounting %}
+  <div class="sidebar-item">
+    <div class="d-flex gap-1 flex-wrap">
+      {% if auth_invoice %}
+      <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}">
+        <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="請求書連携解除">
+          <i class="bi bi-x-circle"></i> 請求書解除
+        </button>
+      </form>
+      {% endif %}
+      {% if auth_accounting %}
+      <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}">
+        <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="会計連携解除">
+          <i class="bi bi-x-circle"></i> 会計解除
+        </button>
+      </form>
+      {% endif %}
     </div>
+  </div>
+  {% endif %}
+</div>
+
+<hr class="sidebar-divider">
+
+<!-- 照合実行 -->
+<div class="sidebar-section">
+  <div class="sidebar-label">照合実行</div>
+
+  <form method="POST" action="{{ url_for('run') }}" id="run-form">
+    <div class="sidebar-item">
+      <label class="sidebar-sublabel">開始日</label>
+      <input type="date" name="from_date" class="form-control form-control-sm">
+    </div>
+    <div class="sidebar-item">
+      <label class="sidebar-sublabel">終了日</label>
+      <input type="date" name="to_date" class="form-control form-control-sm">
+    </div>
+    <div class="sidebar-item">
+      <button type="submit" class="btn btn-primary btn-sm w-100"
+        id="run-btn"
+        {% if not auth_invoice or not auth_accounting %}disabled{% endif %}
+        {% if status.running %}disabled{% endif %}>
+        <i class="bi bi-play-fill"></i>
+        <span id="run-label">
+          {% if status.running %}実行中...{% else %}今すぐ実行{% endif %}
+        </span>
+      </button>
+    </div>
+  </form>
+
+  {% if status.running %}
+  <div class="sidebar-item">
+    <div class="progress mb-1" style="height:6px">
+      <div class="progress-bar progress-bar-striped progress-bar-animated"
+           id="progress-bar" style="width: {{ status.progress }}%"></div>
+    </div>
+    <small class="text-muted" id="progress-msg">{{ status.message }}</small>
+  </div>
+  {% elif status.error %}
+  <div class="sidebar-item">
+    <small class="text-danger"><i class="bi bi-x-circle-fill"></i> {{ status.error }}</small>
+  </div>
+  {% elif status.last_run %}
+  <div class="sidebar-item">
+    <small class="text-muted"><i class="bi bi-clock-history"></i> {{ status.last_run }}</small>
+  </div>
+  {% elif result %}
+  <div class="sidebar-item">
+    <small class="text-muted"><i class="bi bi-clock-history"></i> {{ result.saved_at[:19].replace('T',' ') }}</small>
+  </div>
+  {% endif %}
+</div>
+
+<hr class="sidebar-divider">
+
+<!-- ダウンロード -->
+<div class="sidebar-section">
+  <div class="sidebar-label">レポート</div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('download') }}"
+       class="btn btn-outline-success btn-sm w-100 {% if not result %}disabled{% endif %}">
+      <i class="bi bi-file-earmark-excel"></i> Excelダウンロード
+    </a>
   </div>
 </div>
 
 {% if result %}
+<hr class="sidebar-divider">
 
-{# ========== サマリーカード ========== #}
-{% set unpaid_total = namespace(v=0) %}
-{% for b in overdue  %}{% set unpaid_total.v = unpaid_total.v + b['請求金額'] %}{% endfor %}
-{% for b in upcoming %}{% set unpaid_total.v = unpaid_total.v + b['請求金額'] %}{% endfor %}
+<!-- 集計サマリー（サイドバー） -->
+<div class="sidebar-section">
+  <div class="sidebar-label">集計</div>
 
+  <a href="#tab-overdue" class="sidebar-stat-item text-decoration-none" data-tab="tab-overdue">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-circle-fill text-danger"></i>
+      <span class="small text-dark">支払期限超過</span>
+    </span>
+    <span class="badge bg-danger">{{ overdue|length }}</span>
+  </a>
+
+  <a href="#tab-upcoming" class="sidebar-stat-item text-decoration-none" data-tab="tab-upcoming">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-hourglass-split text-warning"></i>
+      <span class="small text-dark">期日前（未入金）</span>
+    </span>
+    <span class="badge bg-warning text-dark">{{ upcoming|length }}</span>
+  </a>
+
+  <a href="#tab-diff" class="sidebar-stat-item text-decoration-none" data-tab="tab-diff">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-diamond-fill" style="color:#7030A0"></i>
+      <span class="small text-dark">差額あり</span>
+    </span>
+    <span class="badge" style="background:#7030A0">{{ result.diff|length }}</span>
+  </a>
+
+  <a href="#tab-paid" class="sidebar-stat-item text-decoration-none" data-tab="tab-paid">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-check-circle-fill text-success"></i>
+      <span class="small text-dark">入金確認済み</span>
+    </span>
+    <span class="badge bg-success">{{ result.paid|length }}</span>
+  </a>
+
+  <a href="#tab-unmatched" class="sidebar-stat-item text-decoration-none" data-tab="tab-unmatched">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-question-circle-fill text-secondary"></i>
+      <span class="small text-dark">照合不能</span>
+    </span>
+    <span class="badge bg-secondary">{{ result.unmatched_deals|length }}</span>
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{# ==================== メインコンテンツ ==================== #}
+{% block content %}
+
+{% if not result %}
+{# まだ実行されていない #}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-inbox fs-1"></i>
+  <p class="mt-3">
+    {% if not auth_invoice or not auth_accounting %}
+      先に左サイドバーからMFクラウドとの連携を行ってください。
+    {% else %}
+      「今すぐ実行」ボタンで照合を開始してください。
+    {% endif %}
+  </p>
+</div>
+
+{% else %}
+
+{# ===== サマリーカード ===== #}
 <div class="row g-3 mb-4">
 
   <div class="col-sm-6 col-xl-3">
-    <div class="card summary-card border-danger shadow-sm h-100">
+    <div class="card border-danger shadow-sm h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
@@ -113,15 +199,13 @@
           </div>
           <i class="bi bi-exclamation-circle-fill text-danger opacity-25" style="font-size:2.5rem"></i>
         </div>
-        <div class="text-muted small mt-1">
-          ¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}
-        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</div>
       </div>
     </div>
   </div>
 
   <div class="col-sm-6 col-xl-3">
-    <div class="card summary-card border-warning shadow-sm h-100">
+    <div class="card border-warning shadow-sm h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
@@ -130,15 +214,13 @@
           </div>
           <i class="bi bi-hourglass-split text-warning opacity-25" style="font-size:2.5rem"></i>
         </div>
-        <div class="text-muted small mt-1">
-          ¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}
-        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</div>
       </div>
     </div>
   </div>
 
   <div class="col-sm-6 col-xl-3">
-    <div class="card summary-card border-purple shadow-sm h-100">
+    <div class="card shadow-sm h-100" style="border-color:#7030A0">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
@@ -147,15 +229,13 @@
           </div>
           <i class="bi bi-exclamation-diamond-fill opacity-25" style="font-size:2.5rem;color:#7030A0"></i>
         </div>
-        <div class="text-muted small mt-1">
-          ¥{{ "{:,.0f}".format(result.diff|sum(attribute='請求金額')) }}
-        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(result.diff|sum(attribute='請求金額')) }}</div>
       </div>
     </div>
   </div>
 
   <div class="col-sm-6 col-xl-3">
-    <div class="card summary-card border-success shadow-sm h-100">
+    <div class="card border-success shadow-sm h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
@@ -164,49 +244,42 @@
           </div>
           <i class="bi bi-check-circle-fill text-success opacity-25" style="font-size:2.5rem"></i>
         </div>
-        <div class="text-muted small mt-1">
-          ¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}
-        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}</div>
       </div>
     </div>
   </div>
 
 </div>
 
-{# ========== タブ付きテーブル ========== #}
+{# ===== タブテーブル ===== #}
 <ul class="nav nav-tabs mb-0" id="resultTabs">
   <li class="nav-item">
-    <a class="nav-link active" data-bs-toggle="tab" href="#tab-overdue">
-      <i class="bi bi-exclamation-circle text-danger"></i>
-      支払期限超過
+    <a class="nav-link active" data-bs-toggle="tab" href="#tab-overdue" id="btn-tab-overdue">
+      <i class="bi bi-exclamation-circle text-danger"></i> 支払期限超過
       <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-upcoming">
-      <i class="bi bi-hourglass-split text-warning"></i>
-      期日前
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-upcoming" id="btn-tab-upcoming">
+      <i class="bi bi-hourglass-split text-warning"></i> 期日前
       <span class="badge bg-warning text-dark ms-1">{{ upcoming|length }}</span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-diff">
-      <i class="bi bi-exclamation-diamond" style="color:#7030A0"></i>
-      差額あり
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-diff" id="btn-tab-diff">
+      <i class="bi bi-exclamation-diamond" style="color:#7030A0"></i> 差額あり
       <span class="badge ms-1" style="background:#7030A0">{{ result.diff|length }}</span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid">
-      <i class="bi bi-check-circle text-success"></i>
-      入金確認済み
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid" id="btn-tab-paid">
+      <i class="bi bi-check-circle text-success"></i> 入金確認済み
       <span class="badge bg-success ms-1">{{ result.paid|length }}</span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-unmatched">
-      <i class="bi bi-question-circle text-secondary"></i>
-      照合不能
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-unmatched" id="btn-tab-unmatched">
+      <i class="bi bi-question-circle text-secondary"></i> 照合不能
       <span class="badge bg-secondary ms-1">{{ result.unmatched_deals|length }}</span>
     </a>
   </li>
@@ -223,12 +296,11 @@
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
             <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th>
-            <th class="text-center">超過日数</th>
+            <th class="text-center">ステータス</th>
           </tr>
         </thead>
         <tbody>
           {% for b in overdue %}
-          {% set days = ((today | string)[:10] | replace('-','') | int) - ((b.支払期限 or '')[:10] | replace('-','') | int) %}
           <tr>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
@@ -236,17 +308,7 @@
             <td class="small">{{ b.請求日 }}</td>
             <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="text-center">
-              <span class="badge bg-danger">
-                {% set d = namespace(v=0) %}
-                {% if b.支払期限 %}
-                  {% set t = today.split('-') %}
-                  {% set due = b.支払期限.split('-') %}
-                  {# シンプルに表示 #}
-                  超過中
-                {% endif %}
-              </span>
-            </td>
+            <td class="text-center"><span class="badge bg-danger">期限超過</span></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -260,7 +322,9 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>支払期限超過の請求書はありません</div>
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>支払期限超過の請求書はありません
+    </div>
     {% endif %}
   </div>
 
@@ -298,7 +362,9 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>期日前の未入金請求書はありません</div>
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>期日前の未入金請求書はありません
+    </div>
     {% endif %}
   </div>
 
@@ -339,7 +405,9 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>差額のある請求書はありません</div>
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>差額のある請求書はありません
+    </div>
     {% endif %}
   </div>
 
@@ -403,17 +471,12 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>照合不能な入金データはありません</div>
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>照合不能な入金データはありません
+    </div>
     {% endif %}
   </div>
 
-</div>
-
-{% else %}
-{# まだ実行されていない場合 #}
-<div class="text-center py-5 text-muted">
-  <i class="bi bi-inbox fs-1"></i>
-  <p class="mt-3">まだ実行されていません。<br>「今すぐ実行」ボタンで照合を開始してください。</p>
 </div>
 {% endif %}
 
@@ -421,7 +484,6 @@
 
 {% block scripts %}
 <script>
-// 実行中はポーリングでステータス更新
 let polling = {{ 'true' if status.running else 'false' }};
 
 function poll() {
@@ -433,15 +495,13 @@ function poll() {
       const label = document.getElementById('run-label');
       const bar   = document.getElementById('progress-bar');
       const msg   = document.getElementById('progress-msg');
-
       if (s.running) {
-        btn.disabled  = true;
+        if (btn)   btn.disabled = true;
         if (label) label.textContent = '実行中...';
-        if (bar)   bar.style.width   = s.progress + '%';
-        if (msg)   msg.textContent   = s.message;
+        if (bar)   bar.style.width = s.progress + '%';
+        if (msg)   msg.textContent = s.message;
         setTimeout(poll, 1500);
       } else {
-        // 完了 → ページリロード
         polling = false;
         window.location.reload();
       }
@@ -451,13 +511,24 @@ function poll() {
 
 if (polling) setTimeout(poll, 1500);
 
-// フォーム送信中はボタン無効化
 document.getElementById('run-form')?.addEventListener('submit', function() {
   const btn = document.getElementById('run-btn');
-  btn.disabled = true;
-  document.getElementById('run-label').textContent = '実行中...';
+  if (btn) btn.disabled = true;
+  const label = document.getElementById('run-label');
+  if (label) label.textContent = '実行中...';
   polling = true;
   setTimeout(poll, 2000);
+});
+
+// サイドバーの集計アイテムからタブ切り替え
+document.querySelectorAll('.sidebar-stat-item[data-tab]').forEach(el => {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    const tabId = this.dataset.tab;
+    const tabBtn = document.getElementById('btn-' + tabId);
+    if (tabBtn) tabBtn.click();
+    document.getElementById(tabId)?.scrollIntoView({behavior:'smooth', block:'start'});
+  });
 });
 </script>
 {% endblock %}
