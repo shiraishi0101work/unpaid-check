@@ -1,13 +1,22 @@
 """
 MFクラウド請求書APIクライアント
 発行済み・未入金の請求書一覧を取得する
-API docs: https://invoice.moneyforward.com/api/v3/docs
+API docs: https://invoice.moneyforward.com/docs/api/v3/index.html
+
+payment_status の実際の値:
+  "未設定"  → 入金登録なし（未入金扱い）
+  "未入金"  → 明示的に未入金
+  "入金済み" → 入金確認済み
 """
 
 import requests
 from auth import get_access_token
 
 BASE_URL = "https://invoice.moneyforward.com/api/v3"
+
+# 未入金とみなす payment_status 値
+UNPAID_STATUSES = {"未設定", "未入金"}
+PAID_STATUSES   = {"入金済み"}
 
 
 def _headers() -> dict:
@@ -18,26 +27,23 @@ def _headers() -> dict:
     }
 
 
-def _get_all_pages(endpoint: str, params: dict) -> list:
-    """ページネーションを自動処理して全件取得"""
+def _get_all_pages(params: dict) -> list:
+    """ページネーションを自動処理して全請求書を取得"""
     results = []
     page = 1
     while True:
         params["page"] = page
-        resp = requests.get(f"{BASE_URL}{endpoint}", headers=_headers(), params=params)
+        resp = requests.get(f"{BASE_URL}/billings", headers=_headers(), params=params)
         resp.raise_for_status()
         data = resp.json()
 
-        # MF APIのレスポンス構造に合わせてデータを取り出す
         items = data.get("data", [])
         if not items:
             break
-
         results.extend(items)
 
-        # 次ページの有無を確認
-        meta = data.get("meta", {})
-        total_pages = meta.get("total_pages", 1)
+        pagination = data.get("pagination", {})
+        total_pages = pagination.get("total_pages", 1)
         if page >= total_pages:
             break
         page += 1
@@ -45,57 +51,61 @@ def _get_all_pages(endpoint: str, params: dict) -> list:
     return results
 
 
-def get_unpaid_billings() -> list[dict]:
-    """
-    発行済み・未入金の請求書を全件取得
-    返却データ例:
-    {
-        "id": "XXXXXXXX",
-        "billing_number": "請求番号",
-        "title": "件名",
-        "billing_date": "2026-03-01",
-        "due_date": "2026-03-31",
-        "payment_status": "unregistered",  # 未入金
-        "billing_status": "issued",         # 発行済み
-        "total_amount_with_tax": 110000,
-        "partner": {
-            "id": "...",
-            "name": "株式会社〇〇"
-        },
-        "operator": {...},
-        "memo": "",
-        "tags": [],
-        ...
-    }
-    """
-    print("[請求書] 発行済み・未入金の請求書を取得中...")
-
-    params = {
-        "billing_status": "issued",          # 発行済み
-        "payment_status": "unregistered",    # 未入金
-        "per_page": 100,
+def _to_billing_dict(b: dict) -> dict:
+    """請求書データを整形"""
+    partner = b.get("partner") or {}
+    return {
+        "請求書ID":       b.get("id", ""),
+        "請求番号":       b.get("billing_number", ""),
+        "件名":           b.get("title", ""),
+        "取引先名":       b.get("partner_name") or partner.get("name", ""),
+        "請求日":         b.get("billing_date", ""),
+        "支払期限":       b.get("due_date", ""),
+        "請求金額":       int(float(b.get("total_price", 0) or 0)),
+        "入金状態":       b.get("payment_status", ""),
+        "メモ":           b.get("memo", ""),
+        "_raw":           b,
     }
 
-    billings = _get_all_pages("/billings", params)
 
-    # 必要なフィールドだけに整形
-    result = []
-    for b in billings:
-        partner = b.get("partner") or {}
-        result.append({
-            "請求書ID":     b.get("id", ""),
-            "請求番号":     b.get("billing_number", ""),
-            "件名":         b.get("title", ""),
-            "取引先名":     partner.get("name", ""),
-            "請求日":       b.get("billing_date", ""),
-            "支払期限":     b.get("due_date", ""),
-            "請求金額":     int(b.get("total_amount_with_tax", 0)),
-            "入金状態":     b.get("payment_status", ""),
-            "請求ステータス": b.get("billing_status", ""),
-            "メモ":         b.get("memo", ""),
-            # 照合用フィールド（後でmatcher.pyが使う）
-            "_raw": b,
-        })
+def get_all_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+    """
+    全請求書を取得してPython側でフィルタリング
+    MF Invoice API v3 は billing_status / payment_status フィルタ不可のため全件取得
+    """
+    print("[請求書] 全請求書を取得中...")
 
-    print(f"[請求書] {len(result)}件取得完了")
-    return result
+    params = {"per_page": 100}
+    billings_raw = _get_all_pages(params)
+    print(f"[請求書] API取得: {len(billings_raw)}件")
+
+    # 日付範囲フィルタ（Python側）
+    if from_date or to_date:
+        filtered = []
+        for b in billings_raw:
+            bill_date = b.get("billing_date", "") or b.get("due_date", "")
+            if from_date and bill_date and bill_date < from_date:
+                continue
+            if to_date and bill_date and bill_date > to_date:
+                continue
+            filtered.append(b)
+        billings_raw = filtered
+        print(f"[請求書] 日付フィルタ後: {len(billings_raw)}件")
+
+    return [_to_billing_dict(b) for b in billings_raw]
+
+
+def get_unpaid_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+    """未入金の請求書のみ返す（payment_status が 未設定 or 未入金）"""
+    all_billings = get_all_billings(from_date, to_date)
+    unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
+    print(f"[請求書] 未入金: {len(unpaid)}件")
+    return unpaid
+
+
+def get_paid_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+    """入金済みの請求書のみ返す"""
+    all_billings = get_all_billings(from_date, to_date)
+    paid = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
+    print(f"[請求書] 入金済み: {len(paid)}件")
+    return paid
