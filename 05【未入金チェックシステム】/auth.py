@@ -1,12 +1,18 @@
 """
 OAuth 2.0認証モジュール
 MFクラウド請求書・会計の両方に対応
-トークンはJSONファイルに保存し、期限切れ時は自動リフレッシュ
+
+2つのモードをサポート:
+  - webモード: Flaskのコールバックエンドポイントで自動処理（app.py経由）
+  - CLIモード: ブラウザを開き、ユーザーがコードを手動入力（後方互換）
+
+トークンはtokens/に保存し、期限切れ時は自動リフレッシュ
 """
 
 import os
 import json
 import time
+import secrets
 import webbrowser
 import requests
 from urllib.parse import urlencode
@@ -14,31 +20,39 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ========================================
-# MFクラウドAPIのエンドポイント定義
-# ========================================
+PORT = int(os.getenv("PORT", 5000))
+
 SERVICES = {
     "invoice": {
-        "auth_url":  "https://invoice.moneyforward.com/oauth/authorize",
-        "token_url": "https://invoice.moneyforward.com/oauth/token",
-        "scope":     "read",
+        "auth_url":      "https://invoice.moneyforward.com/oauth/authorize",
+        "token_url":     "https://invoice.moneyforward.com/oauth/token",
+        "scope":         "read",
         "client_id":     os.getenv("MF_INVOICE_CLIENT_ID"),
         "client_secret": os.getenv("MF_INVOICE_CLIENT_SECRET"),
-        "redirect_uri":  os.getenv("MF_INVOICE_REDIRECT_URI", "urn:ietf:wg:oauth:2.0:oob"),
-        "token_file": "token_invoice.json",
+        "redirect_uri":  os.getenv(
+            "MF_INVOICE_REDIRECT_URI",
+            f"http://localhost:{PORT}/oauth/callback/invoice"
+        ),
+        "token_file":    "token_invoice.json",
     },
     "accounting": {
-        "auth_url":  "https://accounting.moneyforward.com/oauth/authorize",
-        "token_url": "https://accounting.moneyforward.com/oauth/token",
-        "scope":     "read",
+        "auth_url":      "https://accounting.moneyforward.com/oauth/authorize",
+        "token_url":     "https://accounting.moneyforward.com/oauth/token",
+        "scope":         "read",
         "client_id":     os.getenv("MF_ACCOUNTING_CLIENT_ID"),
         "client_secret": os.getenv("MF_ACCOUNTING_CLIENT_SECRET"),
-        "redirect_uri":  os.getenv("MF_ACCOUNTING_REDIRECT_URI", "urn:ietf:wg:oauth:2.0:oob"),
-        "token_file": "token_accounting.json",
+        "redirect_uri":  os.getenv(
+            "MF_ACCOUNTING_REDIRECT_URI",
+            f"http://localhost:{PORT}/oauth/callback/accounting"
+        ),
+        "token_file":    "token_accounting.json",
     },
 }
 
 TOKEN_DIR = os.path.join(os.path.dirname(__file__), "tokens")
+
+# OAuth stateパラメータを一時保存（CSRF対策）
+_pending_states: dict[str, str] = {}  # state -> service_name
 
 
 def _token_path(service_name: str) -> str:
@@ -46,8 +60,7 @@ def _token_path(service_name: str) -> str:
     return os.path.join(TOKEN_DIR, SERVICES[service_name]["token_file"])
 
 
-def _save_token(service_name: str, token_data: dict):
-    """トークンをファイルに保存（取得時刻も記録）"""
+def save_token(service_name: str, token_data: dict):
     token_data["saved_at"] = time.time()
     with open(_token_path(service_name), "w", encoding="utf-8") as f:
         json.dump(token_data, f, ensure_ascii=False, indent=2)
@@ -62,16 +75,13 @@ def _load_token(service_name: str) -> dict | None:
 
 
 def _is_expired(token_data: dict) -> bool:
-    """アクセストークンが期限切れかどうか確認（60秒のマージン付き）"""
-    saved_at = token_data.get("saved_at", 0)
+    saved_at   = token_data.get("saved_at", 0)
     expires_in = token_data.get("expires_in", 0)
     return time.time() > saved_at + expires_in - 60
 
 
-def _refresh_token(service_name: str, token_data: dict) -> dict:
-    """リフレッシュトークンで新しいアクセストークンを取得"""
-    svc = SERVICES[service_name]
-    print(f"[{service_name}] アクセストークンをリフレッシュ中...")
+def _refresh(service_name: str, token_data: dict) -> dict:
+    svc  = SERVICES[service_name]
     resp = requests.post(svc["token_url"], data={
         "grant_type":    "refresh_token",
         "refresh_token": token_data["refresh_token"],
@@ -80,69 +90,83 @@ def _refresh_token(service_name: str, token_data: dict) -> dict:
     })
     resp.raise_for_status()
     new_token = resp.json()
-    _save_token(service_name, new_token)
-    print(f"[{service_name}] トークンリフレッシュ完了")
+    save_token(service_name, new_token)
     return new_token
 
 
-def _authorize_new(service_name: str) -> dict:
-    """
-    新規OAuth認証フロー（ブラウザを開いて認可コードを取得）
-    MFのoob（Out-of-Band）リダイレクトURIに対応
-    """
-    svc = SERVICES[service_name]
+# ========================================
+# Webモード用: app.pyから呼び出す
+# ========================================
 
-    if not svc["client_id"] or not svc["client_secret"]:
-        raise ValueError(
-            f"[{service_name}] .envにMF_{service_name.upper()}_CLIENT_IDと"
-            f"MF_{service_name.upper()}_CLIENT_SECRETを設定してください"
-        )
+def get_auth_url(service_name: str) -> str:
+    """OAuthの認可URLを生成して返す（stateはセッション管理用に保持）"""
+    svc   = SERVICES[service_name]
+    state = secrets.token_urlsafe(16)
+    _pending_states[state] = service_name
 
     params = {
         "response_type": "code",
         "client_id":     svc["client_id"],
         "redirect_uri":  svc["redirect_uri"],
         "scope":         svc["scope"],
+        "state":         state,
     }
-    auth_url = svc["auth_url"] + "?" + urlencode(params)
+    return svc["auth_url"] + "?" + urlencode(params)
 
-    print(f"\n{'='*60}")
-    print(f"[{service_name}] 認証が必要です")
-    print(f"{'='*60}")
-    print(f"ブラウザで以下のURLを開いてください:\n{auth_url}\n")
-    webbrowser.open(auth_url)
 
-    code = input("表示された認可コードを貼り付けてください: ").strip()
+def handle_callback(service_name: str, code: str, state: str) -> bool:
+    """
+    OAuthコールバックを処理してトークンを保存する
+    Returns: 成功したらTrue
+    """
+    if _pending_states.pop(state, None) != service_name:
+        return False  # stateが一致しない（不正リクエスト）
 
+    svc  = SERVICES[service_name]
     resp = requests.post(svc["token_url"], data={
-        "grant_type":    "authorization_code",
+        "grant_type":   "authorization_code",
         "code":          code,
         "client_id":     svc["client_id"],
         "client_secret": svc["client_secret"],
         "redirect_uri":  svc["redirect_uri"],
     })
     resp.raise_for_status()
-    token_data = resp.json()
-    _save_token(service_name, token_data)
-    print(f"[{service_name}] 認証完了、トークンを保存しました\n")
-    return token_data
+    save_token(service_name, resp.json())
+    return True
 
+
+def is_authenticated(service_name: str) -> bool:
+    """トークンが存在し有効（またはリフレッシュ可能）かを確認"""
+    token_data = _load_token(service_name)
+    if token_data is None:
+        return False
+    if _is_expired(token_data):
+        try:
+            _refresh(service_name, token_data)
+        except Exception:
+            return False
+    return True
+
+
+def revoke_token(service_name: str):
+    """トークンファイルを削除（ログアウト）"""
+    path = _token_path(service_name)
+    if os.path.exists(path):
+        os.remove(path)
+
+
+# ========================================
+# 共通: APIクライアントから呼び出す
+# ========================================
 
 def get_access_token(service_name: str) -> str:
     """
     有効なアクセストークンを返す。
-    保存済みトークンがあればそれを使い、期限切れならリフレッシュ、
-    トークンがなければ新規認証フローを起動する。
+    Webアプリ内では事前にis_authenticated()で確認してから呼ぶこと。
     """
     token_data = _load_token(service_name)
-
     if token_data is None:
-        token_data = _authorize_new(service_name)
-    elif _is_expired(token_data):
-        try:
-            token_data = _refresh_token(service_name, token_data)
-        except Exception as e:
-            print(f"[{service_name}] リフレッシュ失敗 ({e})、再認証します")
-            token_data = _authorize_new(service_name)
-
+        raise RuntimeError(f"{service_name} が未認証です。先にOAuth認証を行ってください。")
+    if _is_expired(token_data):
+        token_data = _refresh(service_name, token_data)
     return token_data["access_token"]
