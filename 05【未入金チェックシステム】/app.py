@@ -1,5 +1,6 @@
 """
 未入金チェックシステム — Webアプリ メイン
+請求書APIのみで動作（会計API不要）
 
 起動: python app.py  または  start.bat
 アクセス: http://localhost:5000
@@ -16,18 +17,16 @@ from flask import (
 from dotenv import load_dotenv
 
 import auth
-from mf_invoice    import get_unpaid_billings
-from mf_accounting import get_income_deals
-from matcher       import match
-from reporter      import generate_report
-from scheduler     import init_scheduler
+from mf_invoice import get_all_billings, UNPAID_STATUSES, PAID_STATUSES
+from reporter   import generate_report
+from scheduler  import init_scheduler
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "mf-unpaid-check-secret-2026")
 
-DATA_DIR   = os.path.join(os.path.dirname(__file__), "data")
+DATA_DIR    = os.path.join(os.path.dirname(__file__), "data")
 RESULT_FILE = os.path.join(DATA_DIR, "last_result.json")
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -38,7 +37,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 _status = {
     "running":   False,
     "message":   "",
-    "progress":  0,        # 0-100
+    "progress":  0,
     "error":     None,
     "last_run":  None,
     "last_file": None,
@@ -55,18 +54,39 @@ def _run_check(from_date=None, to_date=None):
     """バックグラウンドで照合処理を実行"""
     try:
         _update_status(running=True, error=None, progress=10, message="請求書データを取得中...")
-        billings = get_unpaid_billings(from_date=from_date, to_date=to_date)
+        all_billings = get_all_billings(from_date=from_date, to_date=to_date)
 
-        _update_status(progress=40, message="入金データを取得中...")
-        deals = get_income_deals(from_date=from_date, to_date=to_date)
+        _update_status(progress=60, message="請求書を分類中...")
 
-        _update_status(progress=70, message="照合処理中...")
-        result = match(billings, deals)
+        today_str = datetime.now().strftime("%Y-%m-%d")
+
+        # 未入金
+        unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
+        overdue  = sorted(
+            [b for b in unpaid if b.get("支払期限", "") < today_str],
+            key=lambda x: x.get("支払期限", "")
+        )
+        upcoming = sorted(
+            [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")],
+            key=lambda x: x.get("支払期限", "")
+        )
+
+        # 入金済み
+        paid = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
+
+        result = {
+            "unpaid":          unpaid,
+            "overdue":         overdue,
+            "upcoming":        upcoming,
+            "paid":            paid,
+            "diff":            [],          # 会計API連携時のみ
+            "unmatched_deals": [],          # 会計API連携時のみ
+            "total":           len(all_billings),
+        }
 
         _update_status(progress=85, message="Excelレポートを生成中...")
         output_path = generate_report(result)
 
-        # 結果をJSONで保存（ダッシュボード表示用）
         _save_result(result, output_path)
 
         _update_status(
@@ -79,21 +99,25 @@ def _run_check(from_date=None, to_date=None):
         )
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         _update_status(running=False, error=str(e), message="エラーが発生しました", progress=0)
 
 
 def _save_result(result: dict, output_path: str):
-    """照合結果をJSON保存（_rawフィールドは除外）"""
     def _clean(items):
         return [{k: v for k, v in item.items() if k != "_raw"} for item in items]
 
     data = {
         "saved_at":        datetime.now().isoformat(),
         "output_path":     output_path,
-        "paid":            _clean(result["paid"]),
-        "diff":            _clean(result.get("diff", [])),
         "unpaid":          _clean(result["unpaid"]),
+        "overdue":         _clean(result["overdue"]),
+        "upcoming":        _clean(result["upcoming"]),
+        "paid":            _clean(result["paid"]),
+        "diff":            _clean(result["diff"]),
         "unmatched_deals": _clean(result["unmatched_deals"]),
+        "total":           result["total"],
     }
     with open(RESULT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -117,19 +141,8 @@ def dashboard():
     result          = _load_result()
     today_str       = datetime.now().strftime("%Y-%m-%d")
 
-    overdue  = []
-    upcoming = []
-
-    if result:
-        unpaid = result.get("unpaid", [])
-        overdue  = sorted(
-            [b for b in unpaid if b.get("支払期限", "") < today_str],
-            key=lambda x: x.get("支払期限", "")
-        )
-        upcoming = sorted(
-            [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")],
-            key=lambda x: x.get("支払期限", "")
-        )
+    overdue  = result.get("overdue",  []) if result else []
+    upcoming = result.get("upcoming", []) if result else []
 
     return render_template(
         "dashboard.html",
@@ -161,7 +174,6 @@ def run():
 
 @app.route("/api/status")
 def api_status():
-    """フロントエンドのポーリング用"""
     with _status_lock:
         return jsonify(dict(_status))
 
