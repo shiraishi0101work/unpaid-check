@@ -1,0 +1,62 @@
+/* ===================================
+   未入金チェックシステム カスタムCSS
+   =================================== */
+
+body {
+  background-color: #f4f6f9;
+  font-size: 0.9rem;
+}
+
+/* サマリーカード */
+.summary-card {
+  border-width: 2px !important;
+  transition: transform 0.15s;
+}
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+/* テーブル */
+.table th {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.table td {
+  vertical-align: middle;
+}
+.table-responsive {
+  max-height: 480px;
+  overflow-y: auto;
+}
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* タブ */
+.nav-tabs .nav-link {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.8rem;
+}
+.nav-tabs .nav-link.active {
+  font-weight: 600;
+}
+
+/* 紫色用 */
+.text-purple { color: #7030A0 !important; }
+.border-purple { border-color: #7030A0 !important; }
+
+/* プログレスバー */
+.progress { background-color: #dee2e6; }
+
+/* ナビゲーションバー */
+.navbar-brand { font-size: 1rem; }
+
+/* アクションボタン行 */
+.card .card-body { padding: 0.6rem 1rem; }
+
+/* フラッシュメッセージ */
+.alert { font-size: 0.85rem; }
