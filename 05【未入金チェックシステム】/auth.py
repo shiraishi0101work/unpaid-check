@@ -27,24 +27,24 @@ PORT = int(os.getenv("PORT", 5000))
 
 _SERVICE_DEFS = {
     "invoice": {
-        "auth_url":   "https://invoice.moneyforward.com/oauth/authorize",
-        "token_url":  "https://invoice.moneyforward.com/oauth/token",
-        "scope":      "read",
-        "env_id":     "MF_INVOICE_CLIENT_ID",
-        "env_secret": "MF_INVOICE_CLIENT_SECRET",
-        "env_uri":    "MF_INVOICE_REDIRECT_URI",
+        "auth_url":    "https://app-portal.moneyforward.com/oauth/authorize",
+        "token_url":   "https://app-portal.moneyforward.com/oauth/token",
+        "scope":       "invoice",
+        "env_id":      "MF_INVOICE_CLIENT_ID",
+        "env_secret":  "MF_INVOICE_CLIENT_SECRET",
+        "env_uri":     "MF_INVOICE_REDIRECT_URI",
         "default_uri": f"http://localhost:{PORT}/oauth/callback/invoice",
-        "token_file": "token_invoice.json",
+        "token_file":  "token_invoice.json",
     },
     "accounting": {
-        "auth_url":   "https://accounting.moneyforward.com/oauth/authorize",
-        "token_url":  "https://accounting.moneyforward.com/oauth/token",
-        "scope":      "read",
-        "env_id":     "MF_ACCOUNTING_CLIENT_ID",
-        "env_secret": "MF_ACCOUNTING_CLIENT_SECRET",
-        "env_uri":    "MF_ACCOUNTING_REDIRECT_URI",
+        "auth_url":    "https://app-portal.moneyforward.com/oauth/authorize",
+        "token_url":   "https://app-portal.moneyforward.com/oauth/token",
+        "scope":       "accounting",
+        "env_id":      "MF_ACCOUNTING_CLIENT_ID",
+        "env_secret":  "MF_ACCOUNTING_CLIENT_SECRET",
+        "env_uri":     "MF_ACCOUNTING_REDIRECT_URI",
         "default_uri": f"http://localhost:{PORT}/oauth/callback/accounting",
-        "token_file": "token_accounting.json",
+        "token_file":  "token_accounting.json",
     },
 }
 
