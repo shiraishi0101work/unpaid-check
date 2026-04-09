@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEOレポーター</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #2c6fad;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .logo-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-left: auto;
+    }
+
+    main {
+      flex: 1;
+      max-width: 780px;
+      margin: 32px auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      color: #1a3c5e;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e8f0fe;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #555;
+      font-weight: 600;
+    }
+
+    input[type="text"], input[type="number"], select {
+      padding: 10px 12px;
+      border: 1.5px solid #dde3ed;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: #2c6fad;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .upload-box {
+      border: 2px dashed #c5d5e8;
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: #f8fafd;
+    }
+
+    .upload-box:hover, .upload-box.dragover {
+      border-color: #2c6fad;
+      background: #eef4fb;
+    }
+
+    .upload-box.has-file {
+      border-color: #34a853;
+      background: #f0faf3;
+    }
+
+    .upload-box input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .upload-box h3 {
+      font-size: 13px;
+      color: #333;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .upload-box p {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .upload-box .file-name {
+      font-size: 12px;
+      color: #34a853;
+      font-weight: 600;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .upload-box.has-file .file-name { display: block; }
+    .upload-box.has-file .upload-hint { display: none; }
+
+    .api-row {
+      margin-top: 14px;
+    }
+
+    .api-row input {
+      width: 100%;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .generate-btn {
+      width: 100%;
+      padding: 15px;
+      background: #2c6fad;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+    }
+
+    .generate-btn:hover { background: #1a5490; }
+    .generate-btn:disabled { background: #aac4de; cursor: not-allowed; }
+
+    .status-area {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .status-area.visible { display: block; }
+
+    .progress-bar-wrap {
+      background: #e8f0fe;
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #2c6fad;
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .status-log {
+      background: #1e2a38;
+      color: #a8d4a8;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      min-height: 80px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .status-log .error { color: #ff8a80; }
+    .status-log .success { color: #69f0ae; }
+
+    .download-btn {
+      display: none;
+      width: 100%;
+      padding: 15px;
+      background: #34a853;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 14px;
+      font-family: inherit;
+      transition: background 0.2s;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .download-btn:hover { background: #2d8f47; }
+    .download-btn.visible { display: block; }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-dots">
+    <div class="dot" style="background:#4285F4"></div>
+    <div class="dot" style="background:#EA4335"></div>
+    <div class="dot" style="background:#FBBC05"></div>
+    <div class="dot" style="background:#34A853"></div>
+  </div>
+  <h1>MEOレポーター</h1>
+  <p>MEO対策 月次レポート自動生成</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>基本情報</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>店舗名</label>
+        <input type="text" id="storeName" placeholder="例：○○整骨院 名古屋駅前店">
+      </div>
+      <div class="form-group">
+        <label>対象月</label>
+        <select id="month">
+          <option value="1">1月</option><option value="2">2月</option>
+          <option value="3">3月</option><option value="4">4月</option>
+          <option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option>
+          <option value="9">9月</option><option value="10">10月</option>
+          <option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>対象年</label>
+        <input type="number" id="year" value="2026" min="2020" max="2030">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>スクリーンショット（MEO管理システムから保存）</h2>
+    <div class="upload-grid">
+
+      <div class="upload-box" id="box-keyword">
+        <input type="file" accept="image/*,.pdf" onchange="onFileSelected(this, 'keyword')">
+        <div class="upload-icon">📊</div>
+        <h3>キーワード順位</h3>
+        <p class="upload-hint">PNG / JPG / PDF</p>
+        <p class="file-name" id="name-keyword"></p>
+      </div>
+
+      <div class="upload-box" id="box-views">
+        <input type="file" accept="image/*,.pdf" onchange="onFileSelected(this, 'views')">
+        <div class="upload-icon">👁️</div>
+        <h3>閲覧ユーザー数</h3>
+        <p class="upload-hint">PNG / JPG / PDF</p>
+        <p class="file-name" id="name-views"></p>
+      </div>
+
+      <div class="upload-box" id="box-interactions">
+        <input type="file" accept="image/*,.pdf" onchange="onFileSelected(this, 'interactions')">
+        <div class="upload-icon">🔄</div>
+        <h3>インタラクション数</h3>
+        <p class="upload-hint">PNG / JPG / PDF</p>
+        <p class="file-name" id="name-interactions"></p>
+      </div>
+
+      <div class="upload-box" id="box-userActions">
+        <input type="file" accept="image/*,.pdf" onchange="onFileSelected(this, 'userActions')">
+        <div class="upload-icon">📍</div>
+        <h3>ユーザー行動データ</h3>
+        <p class="upload-hint">PNG / JPG / PDF</p>
+        <p class="file-name" id="name-userActions"></p>
+      </div>
+
+    </div>
+
+    <div class="api-row">
+      <div class="form-group">
+        <label>Anthropic APIキー</label>
+        <input type="text" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generateReport()">
+    レポートを生成する
+  </button>
+
+  <div class="status-area" id="statusArea">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="status-log" id="statusLog"></div>
+  </div>
+
+  <a class="download-btn" id="downloadBtn">📥 PowerPointをダウンロード</a>
+</main>
+
+<footer>MEOレポーター — Powered by Claude AI</footer>
+
+<script>
+  // Set current month
+  const now = new Date();
+  document.getElementById('month').value = now.getMonth() + 1;
+  document.getElementById('year').value = now.getFullYear();
+
+  // Load saved API key
+  const savedKey = localStorage.getItem('anthropic_api_key');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+  function onFileSelected(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+    const box = document.getElementById('box-' + type);
+    const nameEl = document.getElementById('name-' + type);
+    box.classList.add('has-file');
+    nameEl.textContent = file.name;
+  }
+
+  function log(msg, type = 'info') {
+    const el = document.getElementById('statusLog');
+    const line = document.createElement('div');
+    line.className = type;
+    line.textContent = '> ' + msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setProgress(pct) {
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  async function generateReport() {
+    const storeName = document.getElementById('storeName').value.trim();
+    const month = document.getElementById('month').value;
+    const year = document.getElementById('year').value;
+    const apiKey = document.getElementById('apiKey').value.trim();
+
+    if (!storeName) { alert('店舗名を入力してください'); return; }
+    if (!apiKey) { alert('Anthropic APIキーを入力してください'); return; }
+
+    // Save API key
+    localStorage.setItem('anthropic_api_key', apiKey);
+
+    const formData = new FormData();
+    formData.append('storeName', storeName);
+    formData.append('month', month);
+    formData.append('year', year);
+    formData.append('apiKey', apiKey);
+
+    const types = ['keyword', 'views', 'interactions', 'userActions'];
+    let hasFile = false;
+    for (const type of types) {
+      const input = document.querySelector(`#box-${type} input[type=file]`);
+      if (input.files[0]) {
+        formData.append(type, input.files[0]);
+        hasFile = true;
+      }
+    }
+
+    if (!hasFile) { alert('スクショを1枚以上アップロードしてください'); return; }
+
+    // UI
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+    document.getElementById('statusArea').classList.add('visible');
+    document.getElementById('downloadBtn').classList.remove('visible');
+    document.getElementById('statusLog').innerHTML = '';
+    setProgress(5);
+
+    log('レポート生成を開始します...');
+    log(`店舗: ${storeName}　${year}年${month}月`);
+
+    try {
+      setProgress(20);
+      log('Claude AI がスクリーンショットを解析中...');
+
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setProgress(80);
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'サーバーエラー');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const filename = `MEO対策レポート_${storeName}_${year}年${month}月.pptx`;
+
+      const dlBtn = document.getElementById('downloadBtn');
+      dlBtn.href = url;
+      dlBtn.download = filename;
+      dlBtn.textContent = `📥 ${filename} をダウンロード`;
+      dlBtn.classList.add('visible');
+
+      setProgress(100);
+      log('✅ レポートの生成が完了しました！', 'success');
+      log('下のボタンからダウンロードしてください。', 'success');
+
+    } catch (err) {
+      log('❌ エラー: ' + err.message, 'error');
+      setProgress(0);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'レポートを生成する';
+    }
+  }
+
+  // Drag and drop
+  document.querySelectorAll('.upload-box').forEach(box => {
+    box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('dragover'); });
+    box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+    box.addEventListener('drop', e => {
+      e.preventDefault();
+      box.classList.remove('dragover');
+      const input = box.querySelector('input[type=file]');
+      input.files = e.dataTransfer.files;
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+</script>
+</body>
+</html>
