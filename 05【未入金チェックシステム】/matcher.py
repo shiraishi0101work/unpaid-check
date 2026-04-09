@@ -1,12 +1,12 @@
 """
 請求書と入金データの照合ロジック
 
-照合ルール:
-  1. 金額が一致（MATCH_AMOUNT_TOLERANCEの範囲内）
-  2. 取引先名が一致（部分一致：請求書の取引先名が入金データの取引先名に含まれる、またはその逆）
-  3. 着金日が請求日以降（MATCH_DATE_BEFORE_DAYSを考慮）
-
-複数の入金が同一請求書に対応する可能性を考慮（分割払い等は未対応 → 金額一致優先）
+照合は2パスで実施:
+  パス1（完全照合）: 金額一致 + 取引先名一致 + 日付範囲 → 「完全入金」
+  パス2（差額照合）: 取引先名一致 + 日付範囲のみ（金額不問） → 「差額あり」
+    - 入金金額 < 請求金額 → 部分入金（残額を表示）
+    - 入金金額 > 請求金額 → 過払い（差額を表示）
+    - 振込手数料差引など少額差異も検出可能
 """
 
 import os
@@ -55,73 +55,107 @@ def _date_ok(billing_date_str: str, deal_date_str: str) -> bool:
     return earliest <= deal_date <= latest
 
 
+def _build_paid_entry(billing: dict, deal: dict, status: str) -> dict:
+    """照合済み請求書のデータを組み立てる"""
+    diff = deal["入金金額"] - billing["請求金額"]  # 正 = 過払い、負 = 不足
+    entry = dict(billing)
+    entry["着金日"]    = deal["着金日"]
+    entry["着金金額"]  = deal["入金金額"]
+    entry["差額"]      = diff          # 0=完全一致、負=不足、正=過払い
+    entry["会計取引ID"] = deal["取引ID"]
+    entry["科目"]      = deal["科目"]
+    entry["会計備考"]  = deal["備考"]
+    entry["照合結果"]  = status
+    return entry
+
+
 def match(billings: list[dict], deals: list[dict]) -> dict:
     """
-    請求書リストと入金データリストを照合する
+    請求書リストと入金データリストを照合する（2パス方式）
 
     Returns:
         {
-            "paid":   [ {請求書データ + 着金日, 取引ID, ...} ],
-            "unpaid": [ {請求書データ} ],
+            "paid":            [ {完全入金の請求書データ} ],
+            "diff":            [ {差額ありの請求書データ} ],
+            "unpaid":          [ {未入金の請求書データ} ],
             "unmatched_deals": [ {照合できなかった入金データ} ],
         }
     """
     print("[照合] 請求書と入金データを照合中...")
 
-    paid_billings    = []
-    unpaid_billings  = []
-    unmatched_deals  = []
+    paid_billings   = []
+    diff_billings   = []
+    unpaid_billings = []
 
-    # 入金データの使用済みフラグをリセット
     for deal in deals:
         deal["_matched"] = False
 
+    # =========================================================
+    # パス1: 金額 + 取引先名 + 日付 の完全照合
+    # =========================================================
+    remaining_billings = []
+
     for billing in billings:
-        invoice_amount = billing["請求金額"]
-        invoice_name   = billing["取引先名"]
-        billing_date   = billing["請求日"]
-
         matched_deal = None
-
         for deal in deals:
             if deal["_matched"]:
-                continue  # 既に別の請求書に照合済み
-
-            if not _amount_match(invoice_amount, deal["入金金額"]):
                 continue
-            if not _name_match(invoice_name, deal["取引先名"]):
+            if not _amount_match(billing["請求金額"], deal["入金金額"]):
                 continue
-            if not _date_ok(billing_date, deal["着金日"]):
+            if not _name_match(billing["取引先名"], deal["取引先名"]):
                 continue
-
-            # 照合成功
+            if not _date_ok(billing["請求日"], deal["着金日"]):
+                continue
             matched_deal = deal
             deal["_matched"] = True
             break
 
         if matched_deal:
-            paid_billing = dict(billing)
-            paid_billing["着金日"]  = matched_deal["着金日"]
-            paid_billing["着金金額"] = matched_deal["入金金額"]
-            paid_billing["会計取引ID"] = matched_deal["取引ID"]
-            paid_billing["科目"]    = matched_deal["科目"]
-            paid_billing["会計備考"] = matched_deal["備考"]
-            paid_billing["照合結果"] = "入金確認済み"
-            paid_billings.append(paid_billing)
+            paid_billings.append(_build_paid_entry(billing, matched_deal, "完全入金"))
         else:
-            unpaid_billing = dict(billing)
-            unpaid_billing["照合結果"] = "未入金"
-            unpaid_billings.append(unpaid_billing)
+            remaining_billings.append(billing)
 
-    # 照合できなかった入金データ（請求書外の入金 or 取引先名・金額不一致）
-    for deal in deals:
-        if not deal["_matched"]:
-            unmatched_deals.append(deal)
+    # =========================================================
+    # パス2: 取引先名 + 日付のみ（金額不問）で差額照合
+    # =========================================================
+    for billing in remaining_billings:
+        matched_deal = None
+        for deal in deals:
+            if deal["_matched"]:
+                continue
+            if not _name_match(billing["取引先名"], deal["取引先名"]):
+                continue
+            if not _date_ok(billing["請求日"], deal["着金日"]):
+                continue
+            matched_deal = deal
+            deal["_matched"] = True
+            break
 
-    print(f"[照合] 入金確認済み: {len(paid_billings)}件  未入金: {len(unpaid_billings)}件  照合不能な入金: {len(unmatched_deals)}件")
+        if matched_deal:
+            diff = matched_deal["入金金額"] - billing["請求金額"]
+            if diff < 0:
+                status = f"差額あり（不足 ¥{abs(diff):,}）"
+            else:
+                status = f"差額あり（過払い ¥{diff:,}）"
+            diff_billings.append(_build_paid_entry(billing, matched_deal, status))
+        else:
+            entry = dict(billing)
+            entry["照合結果"] = "未入金"
+            unpaid_billings.append(entry)
+
+    # 照合できなかった入金データ
+    unmatched_deals = [d for d in deals if not d["_matched"]]
+
+    print(
+        f"[照合] 完全入金: {len(paid_billings)}件  "
+        f"差額あり: {len(diff_billings)}件  "
+        f"未入金: {len(unpaid_billings)}件  "
+        f"照合不能な入金: {len(unmatched_deals)}件"
+    )
 
     return {
         "paid":            paid_billings,
+        "diff":            diff_billings,
         "unpaid":          unpaid_billings,
         "unmatched_deals": unmatched_deals,
     }
