@@ -112,7 +112,7 @@ def _refresh(service_name: str, token_data: dict) -> dict:
 
 def get_auth_url(service_name: str) -> str:
     """OAuthの認可URLを生成して返す（stateはセッション管理用に保持）"""
-    svc   = SERVICES[service_name]
+    svc   = _svc(service_name)
     state = secrets.token_urlsafe(16)
     _pending_states[state] = service_name
 
