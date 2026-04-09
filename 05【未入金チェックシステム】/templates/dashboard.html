@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+{% block content %}
+
+{# ========== 認証バナー ========== #}
+{% if not auth_invoice or not auth_accounting %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-3">
+  <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+  <div>
+    <strong>MFクラウドとの連携が必要です</strong><br>
+    <small>
+      {% if not auth_invoice %}
+        <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="alert-link">
+          クラウド請求書を認証する
+        </a>
+      {% else %}
+        <span class="text-success"><i class="bi bi-check-circle-fill"></i> クラウド請求書 認証済み</span>
+      {% endif %}
+      &nbsp;&nbsp;
+      {% if not auth_accounting %}
+        <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="alert-link">
+          クラウド会計を認証する
+        </a>
+      {% else %}
+        <span class="text-success"><i class="bi bi-check-circle-fill"></i> クラウド会計 認証済み</span>
+      {% endif %}
+    </small>
+  </div>
+</div>
+{% endif %}
+
+{# ========== 実行パネル ========== #}
+<div class="card mb-4 shadow-sm">
+  <div class="card-body py-2">
+    <div class="row align-items-center g-2">
+
+      <div class="col-auto">
+        <form method="POST" action="{{ url_for('run') }}" id="run-form" class="d-flex align-items-center gap-2">
+          <input type="date" name="from_date" class="form-control form-control-sm" placeholder="開始日">
+          <span class="text-muted small">〜</span>
+          <input type="date" name="to_date"   class="form-control form-control-sm" placeholder="終了日">
+          <button type="submit" class="btn btn-primary btn-sm"
+            id="run-btn"
+            {% if not auth_invoice or not auth_accounting %}disabled{% endif %}
+            {% if status.running %}disabled{% endif %}>
+            <i class="bi bi-play-fill"></i>
+            <span id="run-label">
+              {% if status.running %}実行中...{% else %}今すぐ実行{% endif %}
+            </span>
+          </button>
+        </form>
+      </div>
+
+      <div class="col">
+        {% if status.running %}
+        <div class="d-flex align-items-center gap-2">
+          <div class="progress flex-grow-1" style="height:8px">
+            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                 id="progress-bar"
+                 style="width: {{ status.progress }}%"></div>
+          </div>
+          <small class="text-muted" id="progress-msg">{{ status.message }}</small>
+        </div>
+        {% elif status.error %}
+          <span class="text-danger small"><i class="bi bi-x-circle-fill"></i> {{ status.error }}</span>
+        {% elif status.last_run %}
+          <span class="text-muted small"><i class="bi bi-clock-history"></i> 最終実行: {{ status.last_run }}</span>
+        {% elif result %}
+          <span class="text-muted small"><i class="bi bi-clock-history"></i> 最終実行: {{ result.saved_at[:19].replace('T',' ') }}</span>
+        {% endif %}
+      </div>
+
+      <div class="col-auto">
+        <a href="{{ url_for('download') }}"
+           class="btn btn-outline-success btn-sm {% if not result %}disabled{% endif %}">
+          <i class="bi bi-file-earmark-excel"></i> Excelダウンロード
+        </a>
+        {% if auth_invoice %}
+          <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}" class="d-inline">
+            <button class="btn btn-outline-secondary btn-sm" title="請求書認証解除">
+              <i class="bi bi-key"></i> 請求書
+            </button>
+          </form>
+        {% endif %}
+        {% if auth_accounting %}
+          <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}" class="d-inline">
+            <button class="btn btn-outline-secondary btn-sm" title="会計認証解除">
+              <i class="bi bi-key"></i> 会計
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% if result %}
+
+{# ========== サマリーカード ========== #}
+{% set unpaid_total = namespace(v=0) %}
+{% for b in overdue  %}{% set unpaid_total.v = unpaid_total.v + b['請求金額'] %}{% endfor %}
+{% for b in upcoming %}{% set unpaid_total.v = unpaid_total.v + b['請求金額'] %}{% endfor %}
+
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card summary-card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-danger fw-bold small mb-1">支払期限超過</div>
+            <div class="fs-3 fw-bold text-danger">{{ overdue|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-exclamation-circle-fill text-danger opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">
+          ¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card summary-card border-warning shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-warning fw-bold small mb-1">期日前（未入金）</div>
+            <div class="fs-3 fw-bold text-warning">{{ upcoming|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-hourglass-split text-warning opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">
+          ¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card summary-card border-purple shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="fw-bold small mb-1" style="color:#7030A0">差額あり</div>
+            <div class="fs-3 fw-bold" style="color:#7030A0">{{ result.diff|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-exclamation-diamond-fill opacity-25" style="font-size:2.5rem;color:#7030A0"></i>
+        </div>
+        <div class="text-muted small mt-1">
+          ¥{{ "{:,.0f}".format(result.diff|sum(attribute='請求金額')) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card summary-card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-success fw-bold small mb-1">入金確認済み</div>
+            <div class="fs-3 fw-bold text-success">{{ result.paid|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-check-circle-fill text-success opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">
+          ¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# ========== タブ付きテーブル ========== #}
+<ul class="nav nav-tabs mb-0" id="resultTabs">
+  <li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="tab" href="#tab-overdue">
+      <i class="bi bi-exclamation-circle text-danger"></i>
+      支払期限超過
+      <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-upcoming">
+      <i class="bi bi-hourglass-split text-warning"></i>
+      期日前
+      <span class="badge bg-warning text-dark ms-1">{{ upcoming|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-diff">
+      <i class="bi bi-exclamation-diamond" style="color:#7030A0"></i>
+      差額あり
+      <span class="badge ms-1" style="background:#7030A0">{{ result.diff|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid">
+      <i class="bi bi-check-circle text-success"></i>
+      入金確認済み
+      <span class="badge bg-success ms-1">{{ result.paid|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-unmatched">
+      <i class="bi bi-question-circle text-secondary"></i>
+      照合不能
+      <span class="badge bg-secondary ms-1">{{ result.unmatched_deals|length }}</span>
+    </a>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-3 bg-white shadow-sm">
+
+  {# --- 支払期限超過 --- #}
+  <div class="tab-pane fade show active" id="tab-overdue">
+    {% if overdue %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-danger">
+          <tr>
+            <th>請求番号</th><th>取引先名</th><th>件名</th>
+            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th>
+            <th class="text-center">超過日数</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in overdue %}
+          {% set days = ((today | string)[:10] | replace('-','') | int) - ((b.支払期限 or '')[:10] | replace('-','') | int) %}
+          <tr>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.請求日 }}</td>
+            <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="text-center">
+              <span class="badge bg-danger">
+                {% set d = namespace(v=0) %}
+                {% if b.支払期限 %}
+                  {% set t = today.split('-') %}
+                  {% set due = b.支払期限.split('-') %}
+                  {# シンプルに表示 #}
+                  超過中
+                {% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="5">合計</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>支払期限超過の請求書はありません</div>
+    {% endif %}
+  </div>
+
+  {# --- 期日前 --- #}
+  <div class="tab-pane fade" id="tab-upcoming">
+    {% if upcoming %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-warning">
+          <tr>
+            <th>請求番号</th><th>取引先名</th><th>件名</th>
+            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th><th>メモ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in upcoming %}
+          <tr>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.請求日 }}</td>
+            <td class="small">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="text-muted small">{{ b.メモ }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="5">合計</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>期日前の未入金請求書はありません</div>
+    {% endif %}
+  </div>
+
+  {# --- 差額あり --- #}
+  <div class="tab-pane fade" id="tab-diff">
+    {% if result.diff %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead style="background:#E2CFED">
+          <tr>
+            <th>請求番号</th><th>取引先名</th><th>件名</th>
+            <th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>着金日</th>
+            <th class="text-end">着金金額</th>
+            <th class="text-end">差額</th>
+            <th>照合結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in result.diff %}
+          {% set diff = b.差額 | default(0) %}
+          <tr>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small">{{ b.着金日 }}</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(b.着金金額 | default(0)) }}</td>
+            <td class="text-end fw-bold {% if diff < 0 %}text-danger{% else %}text-purple{% endif %}">
+              {% if diff < 0 %}▲{% else %}+{% endif %}¥{{ "{:,.0f}".format(diff | abs) }}
+            </td>
+            <td class="small">{{ b.照合結果 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>差額のある請求書はありません</div>
+    {% endif %}
+  </div>
+
+  {# --- 入金確認済み --- #}
+  <div class="tab-pane fade" id="tab-paid">
+    {% if result.paid %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-success">
+          <tr>
+            <th>請求番号</th><th>取引先名</th><th>件名</th>
+            <th>支払期限</th><th class="text-end">請求金額</th>
+            <th>着金日</th><th class="text-end">着金金額</th><th>科目</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in result.paid %}
+          <tr>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small text-success fw-semibold">{{ b.着金日 }}</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(b.着金金額 | default(0)) }}</td>
+            <td class="text-muted small">{{ b.科目 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">入金確認済みの請求書はありません</div>
+    {% endif %}
+  </div>
+
+  {# --- 照合不能 --- #}
+  <div class="tab-pane fade" id="tab-unmatched">
+    {% if result.unmatched_deals %}
+    <p class="text-muted small mb-2">請求書と紐付けできなかった入金データです。手動で確認してください。</p>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>取引ID</th><th>着金日</th><th>取引先名</th>
+            <th class="text-end">入金金額</th><th>科目</th><th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in result.unmatched_deals %}
+          <tr>
+            <td class="text-muted small">{{ d.取引ID }}</td>
+            <td class="small">{{ d.着金日 }}</td>
+            <td class="fw-semibold">{{ d.取引先名 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(d.入金金額 | default(0)) }}</td>
+            <td class="text-muted small">{{ d.科目 }}</td>
+            <td class="text-muted small">{{ d.備考 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4"><i class="bi bi-check-circle-fill text-success fs-3"></i><br>照合不能な入金データはありません</div>
+    {% endif %}
+  </div>
+
+</div>
+
+{% else %}
+{# まだ実行されていない場合 #}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-inbox fs-1"></i>
+  <p class="mt-3">まだ実行されていません。<br>「今すぐ実行」ボタンで照合を開始してください。</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 実行中はポーリングでステータス更新
+let polling = {{ 'true' if status.running else 'false' }};
+
+function poll() {
+  if (!polling) return;
+  fetch('/api/status')
+    .then(r => r.json())
+    .then(s => {
+      const btn   = document.getElementById('run-btn');
+      const label = document.getElementById('run-label');
+      const bar   = document.getElementById('progress-bar');
+      const msg   = document.getElementById('progress-msg');
+
+      if (s.running) {
+        btn.disabled  = true;
+        if (label) label.textContent = '実行中...';
+        if (bar)   bar.style.width   = s.progress + '%';
+        if (msg)   msg.textContent   = s.message;
+        setTimeout(poll, 1500);
+      } else {
+        // 完了 → ページリロード
+        polling = false;
+        window.location.reload();
+      }
+    })
+    .catch(() => setTimeout(poll, 3000));
+}
+
+if (polling) setTimeout(poll, 1500);
+
+// フォーム送信中はボタン無効化
+document.getElementById('run-form')?.addEventListener('submit', function() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  document.getElementById('run-label').textContent = '実行中...';
+  polling = true;
+  setTimeout(poll, 2000);
+});
+</script>
+{% endblock %}
