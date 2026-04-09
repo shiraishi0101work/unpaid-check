@@ -69,7 +69,7 @@ _pending_states: dict[str, str] = {}  # state -> service_name
 
 def _token_path(service_name: str) -> str:
     os.makedirs(TOKEN_DIR, exist_ok=True)
-    return os.path.join(TOKEN_DIR, SERVICES[service_name]["token_file"])
+    return os.path.join(TOKEN_DIR, _SERVICE_DEFS[service_name]["token_file"])
 
 
 def save_token(service_name: str, token_data: dict):
