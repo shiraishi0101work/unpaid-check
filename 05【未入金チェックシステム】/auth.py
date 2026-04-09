@@ -27,8 +27,8 @@ PORT = int(os.getenv("PORT", 5000))
 
 _SERVICE_DEFS = {
     "invoice": {
-        "auth_url":    "https://app-portal.moneyforward.com/oauth/authorize",
-        "token_url":   "https://app-portal.moneyforward.com/oauth/token",
+        "auth_url":    "https://id.moneyforward.com/oauth/authorize",
+        "token_url":   "https://id.moneyforward.com/oauth/token",
         "scope":       "invoice",
         "env_id":      "MF_INVOICE_CLIENT_ID",
         "env_secret":  "MF_INVOICE_CLIENT_SECRET",
@@ -37,8 +37,8 @@ _SERVICE_DEFS = {
         "token_file":  "token_invoice.json",
     },
     "accounting": {
-        "auth_url":    "https://app-portal.moneyforward.com/oauth/authorize",
-        "token_url":   "https://app-portal.moneyforward.com/oauth/token",
+        "auth_url":    "https://id.moneyforward.com/oauth/authorize",
+        "token_url":   "https://id.moneyforward.com/oauth/token",
         "scope":       "accounting",
         "env_id":      "MF_ACCOUNTING_CLIENT_ID",
         "env_secret":  "MF_ACCOUNTING_CLIENT_SECRET",
