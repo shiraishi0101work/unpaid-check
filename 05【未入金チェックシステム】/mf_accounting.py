@@ -1,7 +1,7 @@
 """
 MFクラウド会計APIクライアント
-入金データ（収入取引）を取得する
-API docs: https://accounting.moneyforward.com/api/v1/docs
+入金データ（収入仕訳）を取得する
+API docs: https://accounting.moneyforward.com/api/v1
 """
 
 import requests
@@ -28,11 +28,21 @@ def _get_all_pages(endpoint: str, params: dict) -> list:
         resp.raise_for_status()
         data = resp.json()
 
-        items = data.get("data", [])
+        # レスポンス構造はエンドポイントによって異なる
+        if isinstance(data, list):
+            items = data
+        else:
+            # {"data": [...], "meta": {...}} 形式
+            items = data.get("data", [])
+
         if not items:
             break
 
         results.extend(items)
+
+        if isinstance(data, list):
+            # リスト形式の場合はページネーションなし
+            break
 
         meta = data.get("meta", {})
         total_pages = meta.get("total_pages", 1)
@@ -45,33 +55,15 @@ def _get_all_pages(endpoint: str, params: dict) -> list:
 
 def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     """
-    収入取引（入金）データを全件取得
+    収入仕訳（入金）データを全件取得
     from_date, to_date: "YYYY-MM-DD"形式
 
-    返却データ例:
-    {
-        "id": "XXXXXXXX",
-        "deal_date": "2026-03-25",   # 着金日
-        "amount": 110000,             # 金額
-        "due_amount": 0,              # 未払い残額（0なら完済）
-        "type": "income",             # 収入
-        "partner": {
-            "name": "株式会社〇〇"
-        },
-        "details": [
-            {
-                "account_item_name": "売掛金",
-                "amount": 110000,
-                "description": "〇〇の件"
-            }
-        ],
-        ...
-    }
+    MF Cloud Accounting API v1 の /journals エンドポイントを使用
+    収入系の仕訳（売掛金回収・売上計上など）を取得する
     """
     print("[会計] 入金データを取得中...")
 
     params = {
-        "type": "income",   # 収入のみ
         "per_page": 100,
     }
     if from_date:
@@ -79,38 +71,49 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     if to_date:
         params["to_date"] = to_date
 
-    deals = _get_all_pages("/deals", params)
+    # まず /journals エンドポイントを試す
+    try:
+        journals = _get_all_pages("/journals", params)
+        print(f"[会計] 仕訳データ {len(journals)}件取得完了")
 
-    # 必要なフィールドだけに整形
-    result = []
-    for d in deals:
-        partner = d.get("partner") or {}
-        details = d.get("details") or []
+        result = []
+        for j in journals:
+            # 仕訳の構造を解析して収入系のエントリを抽出
+            entry_side = j.get("debit_or_credit", "")  # "debit" or "credit"
+            account_item_name = j.get("account_item_name", "")
 
-        # 科目名を結合して備考として使う
-        account_items = "、".join(
-            detail.get("account_item_name", "")
-            for detail in details
-            if detail.get("account_item_name")
-        )
-        descriptions = "、".join(
-            detail.get("description", "")
-            for detail in details
-            if detail.get("description")
-        )
+            # 収入判定: 売掛金の借方（回収）、または売上の貸方
+            is_income = (
+                ("売掛金" in account_item_name and entry_side == "debit")
+                or ("売上" in account_item_name and entry_side == "credit")
+                or ("売上高" in account_item_name and entry_side == "credit")
+                or ("普通預金" in account_item_name and entry_side == "debit")
+                or ("現金" in account_item_name and entry_side == "debit")
+            )
 
-        result.append({
-            "取引ID":   d.get("id", ""),
-            "着金日":   d.get("deal_date", ""),
-            "取引先名": partner.get("name", ""),
-            "入金金額": int(d.get("amount", 0)),
-            "残額":     int(d.get("due_amount", 0)),
-            "科目":     account_items,
-            "備考":     descriptions,
-            # 照合用
-            "_raw": d,
-            "_matched": False,       # 照合済みフラグ（matcher.pyが更新）
-        })
+            result.append({
+                "取引ID":   j.get("id", ""),
+                "着金日":   j.get("date", j.get("deal_date", "")),
+                "取引先名": j.get("partner_name", ""),
+                "入金金額": int(j.get("amount", 0)),
+                "残額":     0,
+                "科目":     account_item_name,
+                "備考":     j.get("description", ""),
+                "_is_income": is_income,
+                "_raw": j,
+                "_matched": False,
+            })
 
-    print(f"[会計] {len(result)}件取得完了")
-    return result
+        # 収入系のみフィルタ（もし判定できる場合）
+        income_result = [r for r in result if r["_is_income"]]
+        if income_result:
+            print(f"[会計] うち収入系: {len(income_result)}件")
+            return income_result
+        else:
+            # 判定できなかった場合は全件返す
+            print("[会計] 収入フィルタなし: 全仕訳を返します")
+            return result
+
+    except Exception as e:
+        print(f"[会計] /journals エラー: {e}")
+        raise
