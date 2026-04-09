@@ -203,26 +203,39 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
     ws.title = "サマリー"
     ws.sheet_properties.tabColor = "1F3864"
 
-    paid    = result["paid"]
-    unpaid  = result["unpaid"]
-    unmatch = result["unmatched_deals"]
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    paid      = result["paid"]
+    unpaid    = result["unpaid"]
+    unmatch   = result["unmatched_deals"]
 
-    unpaid_total = sum(b.get("請求金額", 0) for b in unpaid)
-    paid_total   = sum(b.get("請求金額", 0) for b in paid)
+    overdue  = [b for b in unpaid if b.get("支払期限", "") < today_str]
+    upcoming = [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")]
+
+    overdue_total  = sum(b.get("請求金額", 0) for b in overdue)
+    upcoming_total = sum(b.get("請求金額", 0) for b in upcoming)
+    paid_total     = sum(b.get("請求金額", 0) for b in paid)
 
     rows = [
-        ("集計日時",        generated_at),
+        ("集計日時",                  generated_at),
         (None, None),
-        ("■ 未入金",       None),
-        ("件数",           len(unpaid)),
-        ("合計金額（税込）", unpaid_total),
+        ("■ 支払期限超過請求書",       None),
+        ("件数",                      len(overdue)),
+        ("合計金額（税込）",           overdue_total),
         (None, None),
-        ("■ 入金確認済み", None),
-        ("件数",           len(paid)),
-        ("合計金額（税込）", paid_total),
+        ("■ 期日前請求書",             None),
+        ("件数",                      len(upcoming)),
+        ("合計金額（税込）",           upcoming_total),
         (None, None),
-        ("■ 照合不能な入金", None),
-        ("件数",           len(unmatch)),
+        ("■ 未入金合計",               None),
+        ("件数",                      len(unpaid)),
+        ("合計金額（税込）",           overdue_total + upcoming_total),
+        (None, None),
+        ("■ 入金確認済み",             None),
+        ("件数",                      len(paid)),
+        ("合計金額（税込）",           paid_total),
+        (None, None),
+        ("■ 照合不能な入金",           None),
+        ("件数",                      len(unmatch)),
     ]
 
     for r, (label, value) in enumerate(rows, start=1):
@@ -238,7 +251,7 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
             if isinstance(value, int) and "金額" in label:
                 cell_v.number_format = '#,##0'
 
-    ws.column_dimensions["A"].width = 25
+    ws.column_dimensions["A"].width = 28
     ws.column_dimensions["B"].width = 20
 
 
