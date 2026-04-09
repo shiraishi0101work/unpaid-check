@@ -13,6 +13,7 @@ import os
 import json
 import time
 import secrets
+import base64
 import webbrowser
 import requests
 from urllib.parse import urlencode
