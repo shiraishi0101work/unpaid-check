@@ -154,6 +154,43 @@ def _write_upcoming_sheet(ws, upcoming: list[dict]):
     )
 
 
+def _write_diff_sheet(ws, diff_billings: list[dict]):
+    """差額あり請求書シート（請求金額と入金金額が異なるもの）"""
+    ws.title = "差額あり請求書"
+    ws.sheet_properties.tabColor = "7030A0"
+
+    cols = ["請求番号", "取引先名", "件名", "請求日", "支払期限",
+            "請求金額", "着金日", "着金金額", "差額", "照合結果", "科目", "会計備考"]
+    for c, name in enumerate(cols, start=1):
+        _header_cell(ws, 1, c, name, COLOR_HEADER_DIFF)
+
+    ws.row_dimensions[1].height = 25
+
+    for r, billing in enumerate(diff_billings, start=2):
+        bg   = COLOR_ROW_DIFF
+        diff = billing.get("差額", 0)
+
+        _data_cell(ws, r, 1,  billing.get("請求番号", ""), bg, center=True)
+        _data_cell(ws, r, 2,  billing.get("取引先名", ""), bg)
+        _data_cell(ws, r, 3,  billing.get("件名", ""),     bg)
+        _data_cell(ws, r, 4,  billing.get("請求日", ""),   bg, center=True)
+        _data_cell(ws, r, 5,  billing.get("支払期限", ""), bg, center=True)
+        _data_cell(ws, r, 6,  billing.get("請求金額", 0),  bg, number_format='#,##0', center=True)
+        _data_cell(ws, r, 7,  billing.get("着金日", ""),   bg, center=True)
+        _data_cell(ws, r, 8,  billing.get("着金金額", 0),  bg, number_format='#,##0', center=True)
+
+        # 差額セル: 不足は赤、過払いは紫で強調
+        diff_color = COLOR_SHORTAGE if diff < 0 else COLOR_OVERPAY
+        diff_cell = _data_cell(ws, r, 9, diff, bg, number_format='+#,##0;-#,##0;0', center=True)
+        diff_cell.font = Font(bold=True, color=diff_color)
+
+        _data_cell(ws, r, 10, billing.get("照合結果", ""), bg)
+        _data_cell(ws, r, 11, billing.get("科目", ""),     bg)
+        _data_cell(ws, r, 12, billing.get("会計備考", ""), bg)
+
+    _auto_column_width(ws)
+
+
 def _write_paid_sheet(ws, paid: list[dict]):
     ws.title = "入金確認済み"
     ws.sheet_properties.tabColor = "375623"
