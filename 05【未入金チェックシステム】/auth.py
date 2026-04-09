@@ -29,7 +29,7 @@ _SERVICE_DEFS = {
     "invoice": {
         "auth_url":    "https://api.biz.moneyforward.com/authorize",
         "token_url":   "https://api.biz.moneyforward.com/token",
-        "scope":       "",
+        "scope":       "mfc/invoice/data.read mfc/invoice/data.write",
         "env_id":      "MF_INVOICE_CLIENT_ID",
         "env_secret":  "MF_INVOICE_CLIENT_SECRET",
         "env_uri":     "MF_INVOICE_REDIRECT_URI",
