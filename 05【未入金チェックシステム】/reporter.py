@@ -195,7 +195,7 @@ def _write_paid_sheet(ws, paid: list[dict]):
     ws.title = "入金確認済み"
     ws.sheet_properties.tabColor = "375623"
 
-    cols = ["請求番号", "取引先名", "件名", "請求日", "支払期限", "請求金額", "着金日", "着金金額", "科目", "会計備考"]
+    cols = ["請求番号", "取引先名", "件名", "請求日", "支払期限", "請求金額", "入金状態"]
     for c, name in enumerate(cols, start=1):
         _header_cell(ws, 1, c, name, COLOR_HEADER_PAID)
 
@@ -209,10 +209,7 @@ def _write_paid_sheet(ws, paid: list[dict]):
         _data_cell(ws, r, 4, billing.get("請求日", ""),    bg, center=True)
         _data_cell(ws, r, 5, billing.get("支払期限", ""),  bg, center=True)
         _data_cell(ws, r, 6, billing.get("請求金額", 0),   bg, number_format='#,##0', center=True)
-        _data_cell(ws, r, 7, billing.get("着金日", ""),    bg, center=True)
-        _data_cell(ws, r, 8, billing.get("着金金額", 0),   bg, number_format='#,##0', center=True)
-        _data_cell(ws, r, 9, billing.get("科目", ""),      bg)
-        _data_cell(ws, r, 10, billing.get("会計備考", ""), bg)
+        _data_cell(ws, r, 7, billing.get("入金状態", ""),  bg, center=True)
 
     _auto_column_width(ws)
 
