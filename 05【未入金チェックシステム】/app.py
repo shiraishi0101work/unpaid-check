@@ -55,7 +55,7 @@ def _run_check(from_date=None, to_date=None):
     """バックグラウンドで照合処理を実行"""
     try:
         _update_status(running=True, error=None, progress=10, message="請求書データを取得中...")
-        billings = get_unpaid_billings()
+        billings = get_unpaid_billings(from_date=from_date, to_date=to_date)
 
         _update_status(progress=40, message="入金データを取得中...")
         deals = get_income_deals(from_date=from_date, to_date=to_date)
