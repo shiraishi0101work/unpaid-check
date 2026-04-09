@@ -126,9 +126,10 @@ def get_auth_url(service_name: str) -> str:
         "response_type": "code",
         "client_id":     svc["client_id"],
         "redirect_uri":  svc["redirect_uri"],
-        "scope":         svc["scope"],
         "state":         state,
     }
+    if svc["scope"]:
+        params["scope"] = svc["scope"]
     return svc["auth_url"] + "?" + urlencode(params)
 
 
