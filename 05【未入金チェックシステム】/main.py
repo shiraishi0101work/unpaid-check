@@ -1,0 +1,98 @@
+"""
+未入金チェックシステム — メイン実行スクリプト
+
+使い方:
+  python main.py                          # 全期間の未入金チェック
+  python main.py --from 2026-01-01        # 特定期間の入金データを使用
+  python main.py --from 2026-01-01 --to 2026-03-31
+  python main.py --open                   # 実行後にExcelを自動で開く
+"""
+
+import argparse
+import os
+import subprocess
+import sys
+
+from mf_invoice    import get_unpaid_billings
+from mf_accounting import get_income_deals
+from matcher       import match
+from reporter      import generate_report
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="MFクラウド請求書 × MFクラウド会計 未入金チェックシステム"
+    )
+    parser.add_argument(
+        "--from", dest="from_date", default=None,
+        metavar="YYYY-MM-DD",
+        help="入金データの取得開始日（例: 2026-01-01）"
+    )
+    parser.add_argument(
+        "--to", dest="to_date", default=None,
+        metavar="YYYY-MM-DD",
+        help="入金データの取得終了日（例: 2026-03-31）"
+    )
+    parser.add_argument(
+        "--open", dest="auto_open", action="store_true",
+        help="生成したExcelファイルを自動で開く"
+    )
+    args = parser.parse_args()
+
+    print("=" * 60)
+    print("  未入金チェックシステム 起動")
+    print("=" * 60)
+
+    # ① MFクラウド請求書から未入金請求書を取得
+    billings = get_unpaid_billings()
+
+    if not billings:
+        print("\n未入金の請求書はありません。")
+        return
+
+    # ② MFクラウド会計から入金データを取得
+    deals = get_income_deals(
+        from_date=args.from_date,
+        to_date=args.to_date,
+    )
+
+    # ③ 照合
+    result = match(billings, deals)
+
+    # ④ Excelレポート生成
+    output_path = generate_report(result)
+
+    # ⑤ サマリーをコンソールにも表示
+    print()
+    print("=" * 60)
+    print("  照合結果サマリー")
+    print("=" * 60)
+    print(f"  未入金:           {len(result['unpaid']):>4} 件  "
+          f"¥{sum(b['請求金額'] for b in result['unpaid']):>12,.0f}")
+    print(f"  入金確認済み:     {len(result['paid']):>4} 件  "
+          f"¥{sum(b['請求金額'] for b in result['paid']):>12,.0f}")
+    print(f"  照合不能な入金:   {len(result['unmatched_deals']):>4} 件")
+    print("=" * 60)
+    print(f"  出力ファイル: {output_path}")
+    print("=" * 60)
+
+    if result["unpaid"]:
+        print("\n  【未入金請求書一覧】")
+        print(f"  {'取引先名':<20} {'請求番号':<15} {'支払期限':<12} {'請求金額':>12}")
+        print("  " + "-" * 65)
+        for b in sorted(result["unpaid"], key=lambda x: x.get("支払期限", "")):
+            print(f"  {b['取引先名']:<20} {b['請求番号']:<15} {b['支払期限']:<12} "
+                  f"¥{b['請求金額']:>11,.0f}")
+
+    # Excelを自動で開く
+    if args.auto_open:
+        if sys.platform == "win32":
+            os.startfile(output_path)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", output_path])
+        else:
+            subprocess.run(["xdg-open", output_path])
+
+
+if __name__ == "__main__":
+    main()
