@@ -83,37 +83,72 @@ def _auto_column_width(ws, padding=4):
         ws.column_dimensions[col_letter].width = min(max_len + padding, 50)
 
 
-def _write_unpaid_sheet(ws, unpaid: list[dict]):
-    ws.title = "未入金一覧"
-    ws.sheet_properties.tabColor = "C00000"
+def _write_unpaid_billings(ws, billings: list[dict], title: str,
+                           tab_color: str, header_color: str, row_color: str,
+                           show_overdue_days: bool = False):
+    """未入金請求書シートの共通描画関数"""
+    ws.title = title
+    ws.sheet_properties.tabColor = tab_color
     today_str = datetime.now().strftime("%Y-%m-%d")
 
     cols = ["請求番号", "取引先名", "件名", "請求日", "支払期限", "請求金額", "メモ"]
+    if show_overdue_days:
+        cols.append("超過日数")
     for c, name in enumerate(cols, start=1):
-        _header_cell(ws, 1, c, name, COLOR_HEADER_UNPAID)
+        _header_cell(ws, 1, c, name, header_color)
 
     ws.row_dimensions[1].height = 25
 
-    for r, billing in enumerate(unpaid, start=2):
+    for r, billing in enumerate(billings, start=2):
         due_date = billing.get("支払期限", "")
-        overdue  = due_date < today_str if due_date else False
-        bg       = COLOR_ROW_UNPAID
+        bg = row_color
 
-        _data_cell(ws, r, 1, billing.get("請求番号", ""),  bg, center=True)
-        _data_cell(ws, r, 2, billing.get("取引先名", ""),  bg)
-        _data_cell(ws, r, 3, billing.get("件名", ""),      bg)
-        _data_cell(ws, r, 4, billing.get("請求日", ""),    bg, center=True)
-
-        # 支払期限: 超過なら赤字
-        due_cell = _data_cell(ws, r, 5, due_date, bg, center=True)
-        if overdue:
-            due_cell.font = Font(color=COLOR_OVERDUE, bold=True)
-
-        _data_cell(ws, r, 6, billing.get("請求金額", 0), bg,
+        _data_cell(ws, r, 1, billing.get("請求番号", ""), bg, center=True)
+        _data_cell(ws, r, 2, billing.get("取引先名", ""), bg)
+        _data_cell(ws, r, 3, billing.get("件名", ""),     bg)
+        _data_cell(ws, r, 4, billing.get("請求日", ""),   bg, center=True)
+        _data_cell(ws, r, 5, due_date,                    bg, center=True)
+        _data_cell(ws, r, 6, billing.get("請求金額", 0),  bg,
                    number_format='#,##0', center=True)
-        _data_cell(ws, r, 7, billing.get("メモ", ""), bg)
+        _data_cell(ws, r, 7, billing.get("メモ", ""),     bg)
+
+        if show_overdue_days and due_date:
+            try:
+                delta = (datetime.strptime(today_str, "%Y-%m-%d")
+                         - datetime.strptime(due_date, "%Y-%m-%d")).days
+                cell = _data_cell(ws, r, 8, delta, bg,
+                                  number_format='#,##0', center=True)
+                cell.font = Font(color=COLOR_OVERDUE, bold=True)
+            except ValueError:
+                _data_cell(ws, r, 8, "", bg)
 
     _auto_column_width(ws)
+
+
+def _write_overdue_sheet(ws, overdue: list[dict]):
+    """支払期限超過請求書シート（期限切れ順に並べる）"""
+    sorted_billings = sorted(overdue, key=lambda x: x.get("支払期限", ""))
+    _write_unpaid_billings(
+        ws, sorted_billings,
+        title="支払期限超過請求書",
+        tab_color="C00000",
+        header_color=COLOR_HEADER_OVERDUE,
+        row_color=COLOR_ROW_OVERDUE,
+        show_overdue_days=True,
+    )
+
+
+def _write_upcoming_sheet(ws, upcoming: list[dict]):
+    """期日前請求書シート（支払期限が近い順に並べる）"""
+    sorted_billings = sorted(upcoming, key=lambda x: x.get("支払期限", ""))
+    _write_unpaid_billings(
+        ws, sorted_billings,
+        title="期日前請求書",
+        tab_color="833C00",
+        header_color=COLOR_HEADER_UPCOMING,
+        row_color=COLOR_ROW_UPCOMING,
+        show_overdue_days=False,
+    )
 
 
 def _write_paid_sheet(ws, paid: list[dict]):
