@@ -93,7 +93,7 @@ def _is_expired(token_data: dict) -> bool:
 
 
 def _refresh(service_name: str, token_data: dict) -> dict:
-    svc  = SERVICES[service_name]
+    svc  = _svc(service_name)
     resp = requests.post(svc["token_url"], data={
         "grant_type":    "refresh_token",
         "refresh_token": token_data["refresh_token"],
