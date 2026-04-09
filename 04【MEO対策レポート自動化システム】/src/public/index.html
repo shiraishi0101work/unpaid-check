@@ -5,302 +5,485 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MEOレポーター</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+    :root {
+      --navy:       #0F1E38;
+      --blue:       #1D6FE8;
+      --blue-hover: #1558C0;
+      --blue-light: #EBF2FD;
+      --green:      #16A34A;
+      --green-light:#DCFCE7;
+      --red:        #DC2626;
+      --red-light:  #FEE2E2;
+      --gray-50:    #F8FAFC;
+      --gray-100:   #F1F5F9;
+      --gray-200:   #E2E8F0;
+      --gray-300:   #CBD5E1;
+      --gray-400:   #94A3B8;
+      --gray-500:   #64748B;
+      --gray-600:   #475569;
+      --gray-700:   #334155;
+      --gray-900:   #0F172A;
+      --white:      #FFFFFF;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:  0 12px 32px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+      --radius:     10px;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
-      background: #f0f4f8;
+      font-family: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Header ── */
     header {
-      background: #2c6fad;
-      color: white;
-      padding: 14px 28px;
+      background: var(--navy);
+      padding: 0 32px;
+      height: 58px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      gap: 14px;
       position: sticky;
       top: 0;
       z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
-    .logo-dots { display: flex; gap: 5px; }
-    .dot { width: 13px; height: 13px; border-radius: 50%; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-decoration: none;
+    }
 
-    header h1 { font-size: 20px; font-weight: 700; cursor: pointer; }
-    header h1:hover { opacity: 0.85; }
+    .logo-mark {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.01em;
+    }
+
+    .header-sep {
+      width: 1px;
+      height: 20px;
+      background: rgba(255,255,255,0.15);
+    }
 
     .breadcrumb {
       font-size: 13px;
-      opacity: 0.75;
-      margin-left: 8px;
+      color: rgba(255,255,255,0.5);
       display: none;
     }
+    .breadcrumb span { color: rgba(255,255,255,0.85); }
     .breadcrumb.visible { display: block; }
 
-    header .spacer { flex: 1; }
+    .header-spacer { flex: 1; }
 
-    .header-api {
+    .api-field {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
     }
 
-    .header-api input {
-      padding: 5px 10px;
+    .api-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .api-input {
+      padding: 6px 12px;
       border-radius: 6px;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
       font-size: 12px;
-      width: 220px;
-      font-family: monospace;
-      background: rgba(255,255,255,0.15);
-      color: white;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      width: 210px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
     }
+    .api-input::placeholder { color: rgba(255,255,255,0.25); }
+    .api-input:focus { border-color: rgba(29,111,232,0.6); background: rgba(255,255,255,0.1); }
 
-    .header-api input::placeholder { color: rgba(255,255,255,0.5); }
-    .header-api input:focus { outline: none; background: rgba(255,255,255,0.25); }
-
-    .api-saved { font-size: 11px; color: #a8f0c6; display: none; }
-    .api-saved.show { display: block; }
+    .api-status {
+      font-size: 11px;
+      color: #4ADE80;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .api-status.show { opacity: 1; }
 
     /* ── Pages ── */
-    .page { display: none; max-width: 860px; margin: 0 auto; padding: 28px 20px; }
+    .page { display: none; max-width: 900px; margin: 0 auto; padding: 36px 24px; }
     .page.active { display: block; }
 
-    /* ── Store List Page ── */
-    .page-header {
+    /* ── Section header ── */
+    .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 24px;
     }
 
-    .page-header h2 { font-size: 20px; color: #1a3c5e; }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
 
-    .btn-primary {
-      background: #2c6fad;
-      color: white;
-      border: none;
-      padding: 10px 20px;
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 3px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.2s;
+      border: none;
+      transition: all 0.15s;
+      white-space: nowrap;
     }
-    .btn-primary:hover { background: #1a5490; }
 
-    .btn-danger {
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: var(--blue-hover); }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+    .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+    .btn-ghost {
       background: none;
-      color: #e53935;
-      border: 1.5px solid #e53935;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
+      color: var(--blue);
+      border: none;
+      padding: 8px 12px;
     }
-    .btn-danger:hover { background: #e53935; color: white; }
+    .btn-ghost:hover { background: var(--blue-light); }
 
+    .btn-danger-ghost {
+      background: none;
+      color: var(--gray-400);
+      border: none;
+      padding: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-danger-ghost:hover { color: var(--red); background: var(--red-light); }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      padding: 12px 24px;
+      font-size: 14px;
+    }
+
+    /* ── Store Grid ── */
     .store-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
     }
 
     .store-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 22px 22px 18px;
+      box-shadow: var(--shadow-sm);
       cursor: pointer;
-      transition: all 0.2s;
-      border: 2px solid transparent;
+      transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+      border: 1.5px solid var(--gray-100);
       position: relative;
     }
 
-    .store-card:hover { border-color: #2c6fad; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44,111,173,0.15); }
+    .store-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--blue);
+    }
 
-    .store-card h3 { font-size: 15px; color: #1a3c5e; margin-bottom: 8px; }
-
-    .store-card .meta {
-      font-size: 12px;
-      color: #888;
+    .store-card-top {
       display: flex;
-      flex-direction: column;
-      gap: 3px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
 
-    .store-card .report-badge {
-      display: inline-block;
-      background: #e8f0fe;
-      color: #2c6fad;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-top: 10px;
-    }
-
-    .store-card .delete-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: none;
-      border: none;
-      color: #ccc;
-      cursor: pointer;
+    .store-initial {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--blue-light);
+      color: var(--blue);
       font-size: 16px;
-      line-height: 1;
-      padding: 2px;
-      transition: color 0.2s;
-    }
-    .store-card .delete-btn:hover { color: #e53935; }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #aaa;
-    }
-    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; }
-
-    /* ── Add Store Modal ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 200;
+      font-weight: 700;
+      display: flex;
       align-items: center;
       justify-content: center;
     }
-    .modal-overlay.show { display: flex; }
+
+    .store-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+
+    .store-card .meta {
+      font-size: 12px;
+      color: var(--gray-400);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .store-card-footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .badge-blue { background: var(--blue-light); color: var(--blue); }
+    .badge-green { background: var(--green-light); color: var(--green); }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--gray-400);
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      color: var(--gray-300);
+    }
+
+    .empty-state h3 { font-size: 15px; color: var(--gray-500); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Modal ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,30,56,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+    .overlay.show { display: flex; }
 
     .modal {
-      background: white;
+      background: var(--white);
       border-radius: 14px;
       padding: 28px;
-      width: 400px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 420px;
+      box-shadow: var(--shadow-lg);
+      animation: modal-in 0.18s ease;
     }
 
-    .modal h3 { font-size: 16px; color: #1a3c5e; margin-bottom: 16px; }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
-    .modal input[type="text"] {
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 20px; }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .field-input {
       width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #dde3ed;
-      border-radius: 8px;
-      font-size: 15px;
-      font-family: inherit;
-      outline: none;
-      margin-bottom: 16px;
-    }
-    .modal input[type="text"]:focus { border-color: #2c6fad; }
-
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-    .btn-secondary {
-      background: none;
-      color: #666;
-      border: 1.5px solid #ddd;
-      padding: 9px 18px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-200);
       border-radius: 8px;
       font-size: 14px;
-      cursor: pointer;
       font-family: inherit;
+      color: var(--gray-900);
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--white);
     }
-    .btn-secondary:hover { background: #f5f5f5; }
+    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
 
-    /* ── Store Detail Page ── */
-    .store-detail-header {
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Detail Page ── */
+    .detail-nav {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
-    .back-btn {
-      background: none;
-      border: none;
-      color: #2c6fad;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-      padding: 6px 10px;
-      border-radius: 6px;
-      transition: background 0.2s;
-    }
-    .back-btn:hover { background: #e8f0fe; }
+    .detail-nav h2 { font-size: 20px; font-weight: 700; color: var(--gray-900); }
 
-    .store-detail-header h2 { font-size: 20px; color: #1a3c5e; flex: 1; }
+    .detail-actions { margin-left: auto; }
 
-    /* ── Report Form Card ── */
+    /* ── Card ── */
     .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
       margin-bottom: 20px;
+      overflow: hidden;
     }
 
-    .card h3 {
-      font-size: 15px;
-      color: #1a3c5e;
-      margin-bottom: 18px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #e8f0fe;
+    .card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .card-body { padding: 24px; }
+
+    /* ── Form ── */
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
 
-    label { font-size: 12px; color: #666; font-weight: 600; }
-
-    select, input[type="number"] {
+    select {
       padding: 9px 12px;
-      border: 1.5px solid #dde3ed;
+      border: 1.5px solid var(--gray-200);
       border-radius: 8px;
       font-size: 14px;
       font-family: inherit;
+      color: var(--gray-900);
       outline: none;
+      background: var(--white);
+      transition: border-color 0.15s;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
     }
-    select:focus, input[type="number"]:focus { border-color: #2c6fad; }
 
+    select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
+
+    input[type="number"] {
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--gray-900);
+      outline: none;
+      width: 100%;
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+
+    input[type="number"]:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
+
+    /* ── Upload Grid ── */
     .upload-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
-    .upload-box {
-      border: 2px dashed #c5d5e8;
-      border-radius: 10px;
-      padding: 14px;
+    .upload-zone {
+      border: 1.5px dashed var(--gray-200);
+      border-radius: 8px;
+      padding: 18px 14px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
-      background: #f8fafd;
+      background: var(--gray-50);
     }
-    .upload-box:hover, .upload-box.dragover { border-color: #2c6fad; background: #eef4fb; }
-    .upload-box.has-file { border-color: #34a853; background: #f0faf3; border-style: solid; }
 
-    .upload-box input[type="file"] {
+    .upload-zone:hover { border-color: var(--blue); background: var(--blue-light); }
+    .upload-zone.dragover { border-color: var(--blue); background: var(--blue-light); }
+
+    .upload-zone.done {
+      border-style: solid;
+      border-color: #16A34A;
+      background: var(--green-light);
+    }
+
+    .upload-zone input[type="file"] {
       position: absolute;
       inset: 0;
       opacity: 0;
@@ -309,469 +492,585 @@
       height: 100%;
     }
 
-    .upload-box .icon { font-size: 22px; margin-bottom: 4px; }
-    .upload-box h4 { font-size: 12px; color: #333; font-weight: 700; margin-bottom: 2px; }
-    .upload-box p { font-size: 10px; color: #999; }
-    .upload-box .file-name { font-size: 11px; color: #34a853; font-weight: 600; margin-top: 4px; display: none; word-break: break-all; }
-    .upload-box.has-file .file-name { display: block; }
-    .upload-box.has-file .upload-hint { display: none; }
-
-    .generate-btn {
-      width: 100%;
-      padding: 14px;
-      background: #2c6fad;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s;
+    .upload-zone-icon {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 8px;
+      color: var(--gray-300);
     }
-    .generate-btn:hover { background: #1a5490; }
-    .generate-btn:disabled { background: #aac4de; cursor: not-allowed; }
 
-    .status-area { display: none; margin-top: 14px; }
+    .upload-zone.done .upload-zone-icon { color: var(--green); }
+    .upload-zone:hover .upload-zone-icon,
+    .upload-zone.dragover .upload-zone-icon { color: var(--blue); }
+
+    .upload-zone h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 3px;
+    }
+
+    .upload-zone p.hint { font-size: 11px; color: var(--gray-400); }
+
+    .upload-zone .filename {
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 600;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: none;
+    }
+
+    .upload-zone.done .filename { display: block; }
+    .upload-zone.done .hint { display: none; }
+
+    /* ── Status ── */
+    .status-area { display: none; margin-top: 16px; }
     .status-area.visible { display: block; }
 
-    .progress-bar-wrap { background: #e8f0fe; border-radius: 8px; height: 6px; overflow: hidden; margin-bottom: 10px; }
-    .progress-bar { height: 100%; background: #2c6fad; border-radius: 8px; width: 0%; transition: width 0.5s; }
-
-    .status-log {
-      background: #1e2a38;
-      color: #a8d4a8;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-family: monospace;
-      font-size: 12px;
-      line-height: 1.8;
-      min-height: 60px;
-      max-height: 160px;
-      overflow-y: auto;
+    .progress-track {
+      height: 3px;
+      background: var(--gray-100);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 14px;
     }
-    .status-log .error { color: #ff8a80; }
-    .status-log .success { color: #69f0ae; }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .log-panel {
+      background: #0D1117;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      min-height: 72px;
+      max-height: 180px;
+      overflow-y: auto;
+      color: #8B949E;
+    }
+
+    .log-panel .log-ok { color: #3FB950; }
+    .log-panel .log-err { color: #F85149; }
+    .log-panel .log-info { color: #58A6FF; }
 
     /* ── Report History ── */
-    .report-list { display: flex; flex-direction: column; gap: 10px; }
+    .report-list { display: flex; flex-direction: column; }
 
-    .report-item {
+    .report-row {
       display: flex;
       align-items: center;
-      background: white;
-      border-radius: 10px;
-      padding: 14px 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      padding: 14px 0;
       gap: 14px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .report-row:last-child { border-bottom: none; }
+
+    .report-file-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #EEF2FF;
+      color: #4F46E5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
-    .report-item .report-icon { font-size: 24px; }
+    .report-info { flex: 1; min-width: 0; }
 
-    .report-item .report-info { flex: 1; }
-    .report-item .report-info .title { font-size: 14px; font-weight: 700; color: #1a3c5e; }
-    .report-item .report-info .date { font-size: 12px; color: #999; margin-top: 2px; }
-
-    .report-item .dl-btn {
-      background: #e8f0fe;
-      color: #2c6fad;
-      border: none;
-      padding: 7px 14px;
-      border-radius: 7px;
+    .report-info .report-title {
       font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .report-info .report-date {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .report-actions { display: flex; align-items: center; gap: 6px; }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--blue-light);
+      color: var(--blue);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.2s;
       text-decoration: none;
+      transition: background 0.15s;
     }
-    .report-item .dl-btn:hover { background: #d0e4f8; }
+    .btn-download:hover { background: #D6E9FC; }
 
-    .report-item .del-btn {
-      background: none;
-      border: none;
-      color: #ccc;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-      transition: color 0.2s;
-    }
-    .report-item .del-btn:hover { color: #e53935; }
+    /* ── SVG Icons (inline) ── */
+    svg { display: block; }
   </style>
 </head>
 <body>
 
+<!-- Header -->
 <header>
-  <div class="logo-dots">
-    <div class="dot" style="background:#4285F4"></div>
-    <div class="dot" style="background:#EA4335"></div>
-    <div class="dot" style="background:#FBBC05"></div>
-    <div class="dot" style="background:#34A853"></div>
-  </div>
-  <h1 onclick="showPage('stores')">MEOレポーター</h1>
-  <span class="breadcrumb" id="breadcrumb"></span>
-  <div class="spacer"></div>
-  <div class="header-api">
-    <span>APIキー</span>
-    <input type="password" id="apiKey" placeholder="sk-ant-..." oninput="saveApiKey()">
-    <span class="api-saved" id="apiSaved">保存済み</span>
+  <a class="logo" onclick="showPage('stores')">
+    <div class="logo-mark">
+      <div class="logo-dot" style="background:#4285F4"></div>
+      <div class="logo-dot" style="background:#EA4335"></div>
+      <div class="logo-dot" style="background:#FBBC05"></div>
+      <div class="logo-dot" style="background:#34A853"></div>
+    </div>
+    <span class="logo-text">MEOレポーター</span>
+  </a>
+
+  <div class="header-sep"></div>
+  <div class="breadcrumb" id="breadcrumb">店舗一覧 / <span id="breadcrumbStore"></span></div>
+
+  <div class="header-spacer"></div>
+
+  <div class="api-field">
+    <span class="api-label">API Key</span>
+    <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-..." oninput="saveApiKey()">
+    <span class="api-status" id="apiStatus">Saved</span>
   </div>
 </header>
 
-<!-- ── Page: Store List ── -->
+
+<!-- Page: Store List -->
 <div class="page active" id="page-stores">
-  <div class="page-header">
-    <h2>対策店舗一覧</h2>
-    <button class="btn-primary" onclick="showAddStoreModal()">＋ 店舗を追加</button>
+  <div class="section-header">
+    <div>
+      <div class="section-title">対策店舗一覧</div>
+      <div class="section-subtitle">登録店舗の管理とレポート生成</div>
+    </div>
+    <button class="btn btn-primary" onclick="showAddModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      店舗を追加
+    </button>
   </div>
   <div class="store-grid" id="storeGrid"></div>
 </div>
 
-<!-- ── Page: Store Detail ── -->
+
+<!-- Page: Store Detail -->
 <div class="page" id="page-detail">
-  <div class="store-detail-header">
-    <button class="back-btn" onclick="showPage('stores')">← 一覧に戻る</button>
-    <h2 id="detailStoreName"></h2>
-    <button class="btn-primary" onclick="scrollToForm()">＋ 新規レポート生成</button>
+  <div class="detail-nav">
+    <button class="btn btn-ghost" style="padding:7px 10px" onclick="showPage('stores')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 id="detailName"></h2>
+    <div class="detail-actions">
+      <button class="btn btn-primary" onclick="scrollToForm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新規レポート
+      </button>
+    </div>
   </div>
 
-  <!-- Report history -->
+  <!-- Report History -->
   <div class="card">
-    <h3>レポート履歴</h3>
-    <div class="report-list" id="reportList">
-      <div class="empty-state">
-        <div class="icon">📄</div>
-        <p>まだレポートがありません</p>
-      </div>
+    <div class="card-header">
+      <span class="card-title">レポート履歴</span>
+    </div>
+    <div class="card-body" style="padding:0 24px">
+      <div class="report-list" id="reportList"></div>
     </div>
   </div>
 
-  <!-- Generate form -->
-  <div class="card" id="generateForm">
-    <h3>新規レポート生成</h3>
-    <div class="form-row">
-      <div class="form-group">
-        <label>対象月</label>
-        <select id="month"></select>
-      </div>
-      <div class="form-group">
-        <label>対象年</label>
-        <input type="number" id="year" min="2020" max="2030">
-      </div>
+  <!-- Generate Form -->
+  <div class="card" id="generateCard">
+    <div class="card-header">
+      <span class="card-title">新規レポート生成</span>
     </div>
+    <div class="card-body">
 
-    <div class="upload-grid">
-      <div class="upload-box" id="box-keyword">
-        <input type="file" accept="image/*" onchange="onFileSelected(this,'keyword')">
-        <div class="icon">📊</div>
-        <h4>キーワード順位</h4>
-        <p class="upload-hint">PNG / JPG</p>
-        <p class="file-name" id="name-keyword"></p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="field-label">対象月</label>
+          <select id="month"></select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">対象年</label>
+          <input type="number" id="year" min="2020" max="2035">
+        </div>
       </div>
-      <div class="upload-box" id="box-views">
-        <input type="file" accept="image/*" onchange="onFileSelected(this,'views')">
-        <div class="icon">👁️</div>
-        <h4>閲覧ユーザー数</h4>
-        <p class="upload-hint">PNG / JPG</p>
-        <p class="file-name" id="name-views"></p>
-      </div>
-      <div class="upload-box" id="box-interactions">
-        <input type="file" accept="image/*" onchange="onFileSelected(this,'interactions')">
-        <div class="icon">🔄</div>
-        <h4>インタラクション数</h4>
-        <p class="upload-hint">PNG / JPG</p>
-        <p class="file-name" id="name-interactions"></p>
-      </div>
-      <div class="upload-box" id="box-userActions">
-        <input type="file" accept="image/*" onchange="onFileSelected(this,'userActions')">
-        <div class="icon">📍</div>
-        <h4>ユーザー行動データ</h4>
-        <p class="upload-hint">PNG / JPG</p>
-        <p class="file-name" id="name-userActions"></p>
-      </div>
-    </div>
 
-    <button class="generate-btn" id="generateBtn" onclick="generateReport()">レポートを生成する</button>
+      <label class="field-label" style="margin-bottom:10px">スクリーンショット（MEO管理システムより）</label>
 
-    <div class="status-area" id="statusArea">
-      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="status-log" id="statusLog"></div>
+      <div class="upload-grid">
+
+        <div class="upload-zone" id="zone-keyword">
+          <input type="file" accept="image/*" onchange="onFile(this,'keyword')">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+          <h4>キーワード順位</h4>
+          <p class="hint">PNG / JPG</p>
+          <p class="filename" id="fn-keyword"></p>
+        </div>
+
+        <div class="upload-zone" id="zone-views">
+          <input type="file" accept="image/*" onchange="onFile(this,'views')">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <h4>閲覧ユーザー数</h4>
+          <p class="hint">PNG / JPG</p>
+          <p class="filename" id="fn-views"></p>
+        </div>
+
+        <div class="upload-zone" id="zone-interactions">
+          <input type="file" accept="image/*" onchange="onFile(this,'interactions')">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <h4>インタラクション数</h4>
+          <p class="hint">PNG / JPG</p>
+          <p class="filename" id="fn-interactions"></p>
+        </div>
+
+        <div class="upload-zone" id="zone-userActions">
+          <input type="file" accept="image/*" onchange="onFile(this,'userActions')">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <h4>ユーザー行動データ</h4>
+          <p class="hint">PNG / JPG</p>
+          <p class="filename" id="fn-userActions"></p>
+        </div>
+
+      </div>
+
+      <button class="btn btn-primary btn-full" id="genBtn" onclick="generate()">レポートを生成する</button>
+
+      <div class="status-area" id="statusArea">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="log-panel" id="logPanel"></div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- ── Add Store Modal ── -->
-<div class="modal-overlay" id="addStoreModal">
+
+<!-- Modal: Add Store -->
+<div class="overlay" id="addModal">
   <div class="modal">
-    <h3>店舗を追加</h3>
-    <input type="text" id="newStoreName" placeholder="例：○○整骨院 名古屋駅前店"
+    <div class="modal-title">店舗を追加</div>
+    <label class="field-label">店舗名</label>
+    <input class="field-input" type="text" id="newName" placeholder="例：○○整骨院 名古屋駅前店"
       onkeydown="if(event.key==='Enter') addStore()">
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
-      <button class="btn-primary" onclick="addStore()">追加</button>
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="addStore()">追加する</button>
     </div>
   </div>
 </div>
 
+
 <script>
+  /* ── State ── */
   let currentStoreId = null;
   let currentStoreName = '';
 
-  // ── Init ──
-  const saved = localStorage.getItem('anthropic_api_key');
-  if (saved) {
-    document.getElementById('apiKey').value = saved;
-    document.getElementById('apiSaved').classList.add('show');
-  }
+  /* ── Init ── */
+  const savedKey = localStorage.getItem('anthropic_api_key');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
 
   const now = new Date();
-  const monthSel = document.getElementById('month');
+  const sel = document.getElementById('month');
   for (let m = 1; m <= 12; m++) {
-    const opt = document.createElement('option');
-    opt.value = m;
-    opt.textContent = m + '月';
-    if (m === now.getMonth() + 1) opt.selected = true;
-    monthSel.appendChild(opt);
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m + '月';
+    if (m === now.getMonth() + 1) o.selected = true;
+    sel.appendChild(o);
   }
   document.getElementById('year').value = now.getFullYear();
 
+  /* ── API Key ── */
   function saveApiKey() {
-    const key = document.getElementById('apiKey').value.trim();
-    localStorage.setItem('anthropic_api_key', key);
-    const badge = document.getElementById('apiSaved');
-    badge.classList.add('show');
-    setTimeout(() => badge.classList.remove('show'), 2000);
+    localStorage.setItem('anthropic_api_key', document.getElementById('apiKey').value.trim());
+    const s = document.getElementById('apiStatus');
+    s.classList.add('show');
+    setTimeout(() => s.classList.remove('show'), 1800);
   }
 
-  // ── Pages ──
-  function showPage(page) {
+  /* ── Navigation ── */
+  function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('page-' + id).classList.add('active');
     document.getElementById('breadcrumb').classList.remove('visible');
-    if (page === 'stores') loadStores();
+    if (id === 'stores') loadStores();
   }
 
-  function showStoreDetail(storeId, storeName) {
-    currentStoreId = storeId;
-    currentStoreName = storeName;
-    document.getElementById('detailStoreName').textContent = storeName;
-    document.getElementById('breadcrumb').textContent = '/ ' + storeName;
+  function openStore(id, name) {
+    currentStoreId = id;
+    currentStoreName = name;
+    document.getElementById('detailName').textContent = name;
+    document.getElementById('breadcrumbStore').textContent = name;
     document.getElementById('breadcrumb').classList.add('visible');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-detail').classList.add('active');
-    loadReports(storeId);
+    loadReports(id);
     resetForm();
   }
 
   function scrollToForm() {
-    document.getElementById('generateForm').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('generateCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // ── Store API ──
+  /* ── Stores ── */
   async function loadStores() {
-    const stores = await fetch('/api/stores').then(r => r.json());
+    const data = await fetch('/api/stores').then(r => r.json());
     const grid = document.getElementById('storeGrid');
-    if (stores.length === 0) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-        <div class="icon">🏪</div>
-        <p>まだ店舗が登録されていません</p>
-        <p style="margin-top:8px">「店舗を追加」から登録してください</p>
-      </div>`;
+
+    if (data.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <h3>店舗が登録されていません</h3>
+          <p>右上の「店舗を追加」から登録してください</p>
+        </div>`;
       return;
     }
-    grid.innerHTML = stores.map(s => `
-      <div class="store-card" onclick="showStoreDetail('${s.id}', '${escHtml(s.name)}')">
-        <button class="delete-btn" onclick="event.stopPropagation(); deleteStore('${s.id}', '${escHtml(s.name)}')">×</button>
-        <h3>${escHtml(s.name)}</h3>
-        <div class="meta">
-          <span>登録日: ${formatDate(s.createdAt)}</span>
-          ${s.latestReport ? `<span>最終レポート: ${s.latestReport.year}年${s.latestReport.month}月</span>` : ''}
+
+    grid.innerHTML = data.map(s => `
+      <div class="store-card" onclick="openStore('${s.id}','${esc(s.name)}')">
+        <div class="store-card-top">
+          <div class="store-initial">${Array.from(s.name)[0]}</div>
+          <button class="btn-danger-ghost" onclick="event.stopPropagation();deleteStore('${s.id}','${esc(s.name)}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
-        <span class="report-badge">レポート ${s.reportCount}件</span>
+        <h3>${esc(s.name)}</h3>
+        <div class="meta">
+          <span>登録日：${fmtDate(s.createdAt)}</span>
+          ${s.latestReport ? `<span>最終：${s.latestReport.year}年${s.latestReport.month}月</span>` : ''}
+        </div>
+        <div class="store-card-footer">
+          <span class="badge badge-blue">レポート ${s.reportCount}件</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
     `).join('');
   }
 
-  function showAddStoreModal() {
-    document.getElementById('newStoreName').value = '';
-    document.getElementById('addStoreModal').classList.add('show');
-    setTimeout(() => document.getElementById('newStoreName').focus(), 100);
+  function showAddModal() {
+    document.getElementById('newName').value = '';
+    document.getElementById('addModal').classList.add('show');
+    setTimeout(() => document.getElementById('newName').focus(), 80);
   }
 
   function closeModal() {
-    document.getElementById('addStoreModal').classList.remove('show');
+    document.getElementById('addModal').classList.remove('show');
   }
 
   async function addStore() {
-    const name = document.getElementById('newStoreName').value.trim();
+    const name = document.getElementById('newName').value.trim();
     if (!name) return;
-    await fetch('/api/stores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    await fetch('/api/stores', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
     closeModal();
     loadStores();
   }
 
   async function deleteStore(id, name) {
-    if (!confirm(`「${name}」を削除しますか？\n（関連するレポートもすべて削除されます）`)) return;
-    await fetch(`/api/stores/${id}`, { method: 'DELETE' });
+    if (!confirm(`「${name}」を削除しますか？\n関連するレポートもすべて削除されます。`)) return;
+    await fetch(`/api/stores/${id}`, { method:'DELETE' });
     loadStores();
   }
 
-  // ── Report API ──
+  /* ── Reports ── */
   async function loadReports(storeId) {
-    const reports = await fetch(`/api/stores/${storeId}/reports`).then(r => r.json());
+    const data = await fetch(`/api/stores/${storeId}/reports`).then(r => r.json());
     const list = document.getElementById('reportList');
-    if (reports.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="icon">📄</div><p>まだレポートがありません</p></div>`;
+
+    if (data.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state" style="padding:40px 0">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <h3>レポートがありません</h3>
+          <p>下のフォームから生成してください</p>
+        </div>`;
       return;
     }
-    list.innerHTML = reports.map(r => `
-      <div class="report-item">
-        <span class="report-icon">📊</span>
-        <div class="report-info">
-          <div class="title">${r.year}年${r.month}月度 MEO対策レポート</div>
-          <div class="date">生成日時: ${formatDateTime(r.generatedAt)}</div>
+
+    list.innerHTML = data.map(r => `
+      <div class="report-row">
+        <div class="report-file-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
         </div>
-        <a class="dl-btn" href="/api/reports/${r.id}/download" download>📥 ダウンロード</a>
-        <button class="del-btn" onclick="deleteReport('${r.id}')">×</button>
+        <div class="report-info">
+          <div class="report-title">${r.year}年${r.month}月度 MEO対策レポート</div>
+          <div class="report-date">生成：${fmtDateTime(r.generatedAt)}</div>
+        </div>
+        <div class="report-actions">
+          <a class="btn-download" href="/api/reports/${r.id}/download" download>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            ダウンロード
+          </a>
+          <button class="btn-danger-ghost" onclick="deleteReport('${r.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
       </div>
     `).join('');
   }
 
   async function deleteReport(id) {
     if (!confirm('このレポートを削除しますか？')) return;
-    await fetch(`/api/reports/${id}`, { method: 'DELETE' });
+    await fetch(`/api/reports/${id}`, { method:'DELETE' });
     loadReports(currentStoreId);
   }
 
-  // ── Generate ──
-  function onFileSelected(input, type) {
-    const file = input.files[0];
-    if (!file) return;
-    document.getElementById('box-' + type).classList.add('has-file');
-    document.getElementById('name-' + type).textContent = file.name;
+  /* ── Generate ── */
+  function onFile(input, type) {
+    const f = input.files[0];
+    if (!f) return;
+    document.getElementById('zone-' + type).classList.add('done');
+    document.getElementById('fn-' + type).textContent = f.name;
   }
 
   function resetForm() {
-    ['keyword', 'views', 'interactions', 'userActions'].forEach(t => {
-      const box = document.getElementById('box-' + t);
-      box.classList.remove('has-file');
-      document.getElementById('name-' + t).textContent = '';
-      box.querySelector('input[type=file]').value = '';
+    ['keyword','views','interactions','userActions'].forEach(t => {
+      document.getElementById('zone-' + t).classList.remove('done');
+      document.getElementById('fn-' + t).textContent = '';
+      document.querySelector(`#zone-${t} input`).value = '';
     });
     document.getElementById('statusArea').classList.remove('visible');
-    document.getElementById('statusLog').innerHTML = '';
-    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('logPanel').innerHTML = '';
+    document.getElementById('progressFill').style.width = '0%';
   }
 
-  function log(msg, type = 'info') {
-    const el = document.getElementById('statusLog');
+  function appendLog(msg, cls = '') {
+    const p = document.getElementById('logPanel');
     const line = document.createElement('div');
-    line.className = type;
-    line.textContent = '> ' + msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    p.appendChild(line);
+    p.scrollTop = p.scrollHeight;
   }
 
-  async function generateReport() {
+  function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  async function generate() {
     const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { alert('画面上部のAPIキーを入力してください'); return; }
+    if (!apiKey) { alert('画面上部にAPIキーを入力してください'); return; }
 
     const month = document.getElementById('month').value;
-    const year = document.getElementById('year').value;
+    const year  = document.getElementById('year').value;
 
-    const formData = new FormData();
-    formData.append('storeName', currentStoreName);
-    formData.append('storeId', currentStoreId);
-    formData.append('month', month);
-    formData.append('year', year);
-    formData.append('apiKey', apiKey);
+    const fd = new FormData();
+    fd.append('storeName', currentStoreName);
+    fd.append('storeId', currentStoreId);
+    fd.append('month', month);
+    fd.append('year', year);
+    fd.append('apiKey', apiKey);
 
-    const types = ['keyword', 'views', 'interactions', 'userActions'];
     let hasFile = false;
-    for (const t of types) {
-      const input = document.querySelector(`#box-${t} input[type=file]`);
-      if (input.files[0]) { formData.append(t, input.files[0]); hasFile = true; }
+    for (const t of ['keyword','views','interactions','userActions']) {
+      const inp = document.querySelector(`#zone-${t} input[type=file]`);
+      if (inp.files[0]) { fd.append(t, inp.files[0]); hasFile = true; }
     }
+    if (!hasFile) { alert('スクリーンショットを1枚以上アップロードしてください'); return; }
 
-    if (!hasFile) { alert('スクショを1枚以上アップロードしてください'); return; }
-
-    const btn = document.getElementById('generateBtn');
+    const btn = document.getElementById('genBtn');
     btn.disabled = true;
     btn.textContent = '生成中...';
     document.getElementById('statusArea').classList.add('visible');
-    document.getElementById('statusLog').innerHTML = '';
-    document.getElementById('progressBar').style.width = '10%';
+    document.getElementById('logPanel').innerHTML = '';
+    setProgress(8);
 
-    log(`${currentStoreName} ${year}年${month}月度レポートを生成中...`);
+    appendLog(`${currentStoreName}  ${year}年${month}月度`, 'log-info');
+    appendLog('Claude AI がスクリーンショットを解析しています...');
 
     try {
-      document.getElementById('progressBar').style.width = '30%';
-      log('Claude AI がスクリーンショットを解析中...');
-
-      const res = await fetch('/api/generate', { method: 'POST', body: formData });
-      document.getElementById('progressBar').style.width = '85%';
+      setProgress(25);
+      const res = await fetch('/api/generate', { method:'POST', body:fd });
+      setProgress(82);
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'サーバーエラー');
+        const e = await res.json();
+        throw new Error(e.error || 'サーバーエラー');
       }
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const filename = `MEO対策レポート_${currentStoreName}_${year}年${month}月.pptx`;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
+      const url  = URL.createObjectURL(blob);
+      const fn   = `MEO対策レポート_${currentStoreName}_${year}年${month}月.pptx`;
+      const a    = document.createElement('a');
+      a.href = url; a.download = fn; a.click();
       URL.revokeObjectURL(url);
 
-      document.getElementById('progressBar').style.width = '100%';
-      log('✅ 生成完了！ダウンロードが始まります。', 'success');
+      setProgress(100);
+      appendLog('レポートの生成が完了しました', 'log-ok');
+      appendLog('ダウンロードが開始されました', 'log-ok');
 
-      // Refresh report list
-      setTimeout(() => loadReports(currentStoreId), 500);
+      setTimeout(() => loadReports(currentStoreId), 600);
 
     } catch (err) {
-      log('❌ ' + err.message, 'error');
-      document.getElementById('progressBar').style.width = '0%';
+      appendLog('Error: ' + err.message, 'log-err');
+      setProgress(0);
     } finally {
       btn.disabled = false;
       btn.textContent = 'レポートを生成する';
     }
   }
 
-  // ── Helpers ──
-  function escHtml(s) {
+  /* ── Drag & Drop ── */
+  document.querySelectorAll('.upload-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      const inp = zone.querySelector('input[type=file]');
+      if (e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event('change')); }
+    });
+  });
+
+  document.getElementById('addModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  /* ── Helpers ── */
+  function esc(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  function formatDate(iso) {
+  function fmtDate(iso) {
     const d = new Date(iso);
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
   }
 
-  function formatDateTime(iso) {
+  function fmtDateTime(iso) {
     const d = new Date(iso);
-    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}  ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
-  // Drag & drop
-  document.querySelectorAll('.upload-box').forEach(box => {
-    box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('dragover'); });
-    box.addEventListener('dragleave', () => box.classList.remove('dragover'));
-    box.addEventListener('drop', e => {
-      e.preventDefault(); box.classList.remove('dragover');
-      const input = box.querySelector('input[type=file]');
-      if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); }
-    });
-  });
-
-  // Modal close on backdrop click
-  document.getElementById('addStoreModal').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-
-  // Initial load
+  /* ── Initial load ── */
   loadStores();
 </script>
 </body>
