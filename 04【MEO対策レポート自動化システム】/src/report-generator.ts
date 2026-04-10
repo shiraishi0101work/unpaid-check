@@ -143,7 +143,7 @@ export class ReportGenerator {
   }
 
   // 複数キーワード画像を1スライドに横並び配置
-  private async addKeywordsSlide(keywordSlides: SlideData[], month: number): Promise<void> {
+  private addKeywordsSlide(keywordSlides: SlideData[], month: number): void {
     const slide = this.pptx.addSlide();
     slide.background = { color: 'F2F2F2' };
 
