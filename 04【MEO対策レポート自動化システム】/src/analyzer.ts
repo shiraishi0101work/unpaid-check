@@ -8,11 +8,17 @@ import type {
   UserActionData,
 } from './types.js';
 
+export type CommentProvider = 'claude' | 'openai' | 'gemini';
+
 export class MeoAnalyzer {
   private client: Anthropic;
+  private commentProvider: CommentProvider;
+  private commentApiKey: string;
 
-  constructor(apiKey: string) {
-    this.client = new Anthropic({ apiKey });
+  constructor(anthropicKey: string, commentProvider: CommentProvider = 'claude', commentApiKey?: string) {
+    this.client = new Anthropic({ apiKey: anthropicKey });
+    this.commentProvider = commentProvider;
+    this.commentApiKey = commentApiKey ?? anthropicKey;
   }
 
   private loadImage(imagePath: string): { base64: string; mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' } {
