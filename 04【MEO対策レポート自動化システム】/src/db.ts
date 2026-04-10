@@ -170,6 +170,12 @@ export function setDefaultPrompts(prompts: Partial<PromptSet>): void {
   writeDB(db);
 }
 
+export function clearDefaultPrompts(): void {
+  const db = readDB();
+  db.defaultPrompts = {};
+  writeDB(db);
+}
+
 export function getStorePrompts(storeId: string): Partial<PromptSet> {
   return readDB().storePrompts[storeId] ?? {};
 }
