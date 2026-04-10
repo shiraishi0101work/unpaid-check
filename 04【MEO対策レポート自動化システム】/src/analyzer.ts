@@ -183,6 +183,7 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' },
         }),
       }
     );
