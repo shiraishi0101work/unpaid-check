@@ -279,38 +279,108 @@ ${dataText}
 {"current":"...","analysis":"..."}`;
   }
 
+  // ─── テンプレートフォールバック（AIが応答しない場合に使用）────────────────
+
+  private templateKeyword(data: KeywordData, month: number): { current: string; analysis: string } {
+    const ranked = data.keywords.filter(k => String(k.rank) !== '圏外' && String(k.rank) !== '');
+    const gaiken = data.keywords.filter(k => String(k.rank) === '圏外');
+    const rankList = ranked.map(k => `「${k.keyword}」${k.rank}位`).join('、');
+    const gaikenList = gaiken.map(k => `「${k.keyword}」`).join('、');
+
+    const cur = ranked.length > 0
+      ? `${month}月の対策キーワード順位は、${rankList}となっています。${gaiken.length > 0 ? `${gaikenList}は現在圏外です。` : ''}`
+      : `${month}月の対策キーワードは現在圏外が中心の状況です。`;
+
+    const ana = `Googleマップ検索での表示順位は、MEO対策の継続によって徐々に改善されていきます。\n上位表示を目指すためには、口コミの獲得・丁寧な返信対応、写真や投稿の定期的な更新が重要です。\n特に検索数の多いキーワードで上位表示されると、閲覧数・来店数の大幅な向上が期待できます。\n引き続き対策を継続し、安定した上位表示の維持を目指してまいります。`;
+
+    return { current: cur, analysis: ana };
+  }
+
+  private templateViews(data: ViewsData, month: number): { current: string; analysis: string } {
+    const cur = `${month}月の閲覧ユーザー数は${data.currentMonth.toLocaleString()}件でした。`;
+    const ratio = data.previousYear > 0
+      ? `前年同月（${data.previousYear.toLocaleString()}件）比${Math.round(data.currentMonth / data.previousYear * 100)}%`
+      : null;
+    const trendMap: Record<string, string> = { up: '上昇傾向にあり', down: '前年を下回っており', flat: '前年並みで', new: 'MEO対策開始初月であり' };
+    const trendText = trendMap[data.trend] ?? '';
+
+    const ana = `Googleマップ上での閲覧ユーザーが${data.currentMonth.toLocaleString()}件を記録しました。\n${ratio ? ratio + 'と、' : ''}${trendText}、MEO対策の効果が着実に積み重なっています。\n閲覧数の増加はGoogleマップ上での認知度向上を示す重要な指標です。\n引き続きプロフィール情報の充実・写真の追加・口コミ対応を継続することで、さらなる閲覧数の向上が期待できます。`;
+
+    return { current: cur, analysis: ana };
+  }
+
+  private templateInteractions(data: InteractionData, month: number): { current: string; analysis: string } {
+    const cur = `${month}月のインタラクション数は${data.currentMonth.toLocaleString()}件（インタラクション率${data.interactionRate}%）でした。`;
+    const total = data.currentMonth;
+    const ana = `${month}月は閲覧ユーザーのうち${data.interactionRate}%にあたる${total.toLocaleString()}件のインタラクション（行動）が発生しました。\nこれは、Googleマップを見たユーザーが実際に「興味を持って行動した」ことを示すポジティブなシグナルです。\nインタラクション率をさらに高めるには、魅力的な写真の追加、正確な営業時間・サービス情報の掲載が効果的です。\n引き続き情報の充実を図り、閲覧から来店への転換率向上を目指してまいります。`;
+
+    return { current: cur, analysis: ana };
+  }
+
+  private templateUserActions(data: UserActionData, month: number): { current: string; analysis: string } {
+    const total = data.calls + data.website + data.routes + data.reservations;
+    const cur = `${month}月のユーザー行動は、通話${data.calls}件・Webサイト${data.website}件・ルート検索${data.routes}件・予約${data.reservations}件でした。`;
+
+    const highlights: string[] = [];
+    if (data.calls > 0) highlights.push(`通話${data.calls}件は直接問い合わせへの意欲が高いことを示しています`);
+    if (data.routes > 0) highlights.push(`ルート検索${data.routes}件は来店意欲の高さを示す重要な指標です`);
+    if (data.website > 0) highlights.push(`Webサイト訪問${data.website}件はさらなる情報収集への関心を示しています`);
+
+    const ana = `${month}月は来店・問い合わせに直結するユーザー行動が合計${total.toLocaleString()}件発生しました。\n${highlights.slice(0, 2).join('。\n')}。\n各指標を向上させるには、電話番号・Webサイトリンクの正確な掲載と、魅力的な写真・最新情報の投稿継続が重要です。\n引き続きGoogleビジネスプロフィールの充実を図り、来店数の増加を目指してまいります。`;
+
+    return { current: cur, analysis: ana };
+  }
+
+  // ─── コメント生成（AI → テンプレートフォールバック）──────────────────────
+
+  private withTemplateFallback<T>(
+    aiResult: { current: string; analysis: string },
+    templateFn: () => { current: string; analysis: string }
+  ): { current: string; analysis: string } {
+    if (!aiResult.current && !aiResult.analysis) {
+      console.warn('[analyzer] AI returned empty text → using template fallback');
+      this.templateFallback = true;
+      return templateFn();
+    }
+    return aiResult;
+  }
+
   async generateKeywordComment(data: KeywordData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
-    return this.callComment(this.buildPrompt(
+    const ai = await this.callComment(this.buildPrompt(
       'キーワード順位', month, JSON.stringify(data, null, 2),
       curInst ?? '1〜2文で、対策キーワードの順位状況を事実として簡潔に記載してください。',
       anaInst ?? '3〜5文で、MEOの専門的な視点から順位の意味を前向きに解説してください。課題があれば改善提案も含めてください。',
     ));
+    return this.withTemplateFallback(ai, () => this.templateKeyword(data, month));
   }
 
   async generateViewsComment(data: ViewsData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / トレンド: ${data.trend}`;
-    return this.callComment(this.buildPrompt(
+    const ai = await this.callComment(this.buildPrompt(
       '閲覧ユーザー数', month, dataText,
       curInst ?? '1文で、今月の閲覧ユーザー数を明記してください。',
       anaInst ?? '3〜5文で、マーケティング視点から閲覧数の意味を前向きに解説してください。前年比・トレンドにも触れてください。',
     ));
+    return this.withTemplateFallback(ai, () => this.templateViews(data, month));
   }
 
   async generateInteractionComment(data: InteractionData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / インタラクション率: ${data.interactionRate}% / トレンド: ${data.trend}`;
-    return this.callComment(this.buildPrompt(
+    const ai = await this.callComment(this.buildPrompt(
       'インタラクション数', month, dataText,
       curInst ?? '1文で、今月のインタラクション数とインタラクション率を明記してください。',
       anaInst ?? '3〜5文で、「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。',
     ));
+    return this.withTemplateFallback(ai, () => this.templateInteractions(data, month));
   }
 
   async generateUserActionComment(data: UserActionData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `通話: ${data.calls}件(前年${data.previousCalls}) / Web: ${data.website}件(前年${data.previousWebsite}) / ルート: ${data.routes}件(前年${data.previousRoutes}) / 予約: ${data.reservations}件(前年${data.previousReservations})`;
-    return this.callComment(this.buildPrompt(
+    const ai = await this.callComment(this.buildPrompt(
       'ユーザー行動データ', month, dataText,
       curInst ?? '1〜2文で、各指標の数値を列挙してください。',
       anaInst ?? '4〜6文で、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。',
     ));
+    return this.withTemplateFallback(ai, () => this.templateUserActions(data, month));
   }
 }
