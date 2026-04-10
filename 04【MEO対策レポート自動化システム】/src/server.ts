@@ -67,10 +67,14 @@ app.get('/api/prompts/default', (_req, res) => {
 });
 
 app.put('/api/prompts/default', (req, res) => {
-  const { prompts, applyToAll } = req.body as { prompts: Partial<db.PromptSet>; applyToAll: boolean };
-  db.setDefaultPrompts(prompts);
-  if (applyToAll) {
-    db.clearAllStorePromptsForKeys(Object.keys(prompts) as (keyof db.PromptSet)[]);
+  const { prompts, applyToAll, resetToDefault } = req.body as { prompts: Partial<db.PromptSet>; applyToAll: boolean; resetToDefault?: boolean };
+  if (resetToDefault) {
+    db.clearDefaultPrompts();
+  } else {
+    db.setDefaultPrompts(prompts);
+    if (applyToAll) {
+      db.clearAllStorePromptsForKeys(Object.keys(prompts) as (keyof db.PromptSet)[]);
+    }
   }
   res.json({ ok: true });
 });
