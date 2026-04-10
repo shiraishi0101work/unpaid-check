@@ -1022,23 +1022,50 @@
         </summary>
         <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
           <p style="font-size:12px;color:var(--gray-500);line-height:1.7">入力したコメントはAI生成より優先されます。空欄の場合はAI生成を使用します。</p>
-          ${[
-            ['keyword', 'キーワード順位'],
-            ['views', '閲覧ユーザー数'],
-            ['interactions', 'インタラクション数'],
-            ['userActions', 'ユーザー行動データ'],
-          ].map(([k,label]) => `
           <div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">${label}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">キーワード順位</div>
             <div style="margin-bottom:6px">
               <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
-              <textarea id="manual_current_${k}" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
+              <textarea id="manual_current_keyword" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
             </div>
             <div>
               <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
-              <textarea id="manual_analysis_${k}" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
+              <textarea id="manual_analysis_keyword" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
             </div>
-          </div>`).join('')}
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">閲覧ユーザー数</div>
+            <div style="margin-bottom:6px">
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
+              <textarea id="manual_current_views" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+            <div>
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
+              <textarea id="manual_analysis_views" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">インタラクション数</div>
+            <div style="margin-bottom:6px">
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
+              <textarea id="manual_current_interactions" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+            <div>
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
+              <textarea id="manual_analysis_interactions" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">ユーザー行動データ</div>
+            <div style="margin-bottom:6px">
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
+              <textarea id="manual_current_userActions" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+            <div>
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
+              <textarea id="manual_analysis_userActions" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+          </div>
         </div>
       </details>
 
