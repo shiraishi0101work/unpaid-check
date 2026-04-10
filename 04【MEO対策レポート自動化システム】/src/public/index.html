@@ -1021,7 +1021,8 @@
     let hasFile = false;
     for (const t of ['keyword','views','interactions','userActions']) {
       const inp = document.querySelector(`#zone-${t} input[type=file]`);
-      if (inp.files[0]) { fd.append(t, inp.files[0]); hasFile = true; }
+      const f = droppedFiles[t] || inp.files[0];
+      if (f) { fd.append(t, f); hasFile = true; }
     }
     if (!hasFile) { alert('スクリーンショットを1枚以上アップロードしてください'); return; }
 
