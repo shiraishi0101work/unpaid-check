@@ -22,9 +22,40 @@ export interface Report {
   generatedAt: string;
 }
 
+export interface PromptSet {
+  keyword: string;
+  views: string;
+  interactions: string;
+  userActions: string;
+}
+
+export const DEFAULT_PROMPTS: PromptSet = {
+  keyword: `MEO対策レポートの{month}月度キーワード順位について、クライアント向けの説明文を生成してください。
+
+【現状】は1〜2文で事実を簡潔に記載してください。
+【分析】は3〜5文でMEOの専門的な視点から前向きに記述し、課題があれば改善提案も含めてください。`,
+
+  views: `MEO対策レポートの{month}月度閲覧ユーザー数について、クライアント向けの説明文を生成してください。
+
+【現状】は1文で件数を明記してください。
+【分析】は3〜5文でマーケティング視点から前向きに記述し、前年比・トレンドにも触れてください。`,
+
+  interactions: `MEO対策レポートの{month}月度インタラクション数について、クライアント向けの説明文を生成してください。
+
+【現状】は1文で件数とインタラクション率を明記してください。
+【分析】は3〜5文で「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。`,
+
+  userActions: `MEO対策レポートの{month}月度ユーザー行動データについて、クライアント向けの説明文を生成してください。
+
+【現状】は1〜2文で各指標の数値を列挙してください。
+【分析】は4〜6文で記述し、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。`,
+};
+
 interface DB {
   stores: Store[];
   reports: Report[];
+  defaultPrompts: Partial<PromptSet>;
+  storePrompts: Record<string, Partial<PromptSet>>;
 }
 
 function ensureDirs(): void {
