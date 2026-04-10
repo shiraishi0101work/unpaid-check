@@ -1234,6 +1234,27 @@
     setTimeout(() => s.classList.remove('show'), 1800);
   }
 
+  async function testConnection() {
+    const btn = document.getElementById('testConnBtn');
+    btn.disabled = true; btn.textContent = 'テスト中...';
+    try {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const commentAI = document.getElementById('commentAI')?.value ?? 'claude';
+      const commentApiKey = document.getElementById('commentApiKeyInput')?.value?.trim() ?? '';
+      const res = await fetch('/api/test-connection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey, commentAI, commentApiKey }),
+      });
+      const data = await res.json();
+      const lines = Object.values(data.results).map(r => r.message).join('\n');
+      alert('【API接続テスト結果】\n\n' + lines + (data.ok ? '\n\n✅ 問題ありません' : '\n\n❌ エラーがあります。APIキーを確認してください'));
+    } catch (err) {
+      alert('接続テストエラー: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '接続テスト';
+    }
+  }
+
   /* ── Navigation ── */
   function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
