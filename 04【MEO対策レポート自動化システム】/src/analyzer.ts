@@ -50,9 +50,14 @@ export class MeoAnalyzer {
             { inline_data: { mime_type: image.mediaType, data: image.base64 } },
             { text: prompt },
           ]}],
+          generationConfig: { responseMimeType: 'application/json' },
         }),
       }
     );
+    if (!res.ok) {
+      console.warn(`[Gemini Vision] エラー ${res.status}`);
+      return '{}';
+    }
     const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
     return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
   }
