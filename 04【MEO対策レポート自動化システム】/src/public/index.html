@@ -2102,20 +2102,26 @@
     const field = document.getElementById('commentApiKeyField');
     const label = document.getElementById('commentApiKeyLabel');
     const input = document.getElementById('commentApiKey');
+    const apiKeyField = document.getElementById('apiKeyField');  // ヘッダーのClaudeキー欄全体
     const apiKeyLabel = document.getElementById('apiKeyLabel');
     if (!field) return;
-    if (provider === 'claude') {
+    if (provider === 'gemini') {
+      // Gemini選択時: Claudeキー欄を非表示、GeminiキーのみでOK
+      field.style.display = 'block';
+      label.textContent = 'Google AI APIキー (AIza...)';
+      input.placeholder = 'AIza...';
+      if (apiKeyField) apiKeyField.style.display = 'none';  // Claudeキー欄を隠す
+    } else if (provider === 'claude') {
       field.style.display = 'none';
+      if (apiKeyField) apiKeyField.style.display = '';
       if (apiKeyLabel) apiKeyLabel.textContent = 'Claude Key（画像解析用・必須）';
     } else {
+      // OpenAI
       field.style.display = 'block';
-      label.textContent = provider === 'openai' ? 'OpenAI APIキー (sk-...)' : 'Google AI APIキー (AIza...)';
-      input.placeholder = provider === 'openai' ? 'sk-proj-...' : 'AIza...';
-      if (apiKeyLabel) {
-        apiKeyLabel.textContent = provider === 'gemini'
-          ? 'Claude Key（Gemini使用時は不要）'
-          : 'Claude Key（画像解析用・必須）';
-      }
+      label.textContent = 'OpenAI APIキー (sk-...)';
+      input.placeholder = 'sk-proj-...';
+      if (apiKeyField) apiKeyField.style.display = '';
+      if (apiKeyLabel) apiKeyLabel.textContent = 'Claude Key（画像解析用・必須）';
     }
   }
 
