@@ -1543,15 +1543,23 @@
     fd.append('year', year);
     fd.append('apiKey', apiKey);
 
+    const achievementDays = document.getElementById('achievementDays').value.trim();
+    if (achievementDays) fd.append('achievementDays', achievementDays);
+
+    // 手動コメント
+    for (const section of ['keyword', 'views', 'interactions', 'userActions']) {
+      const cur = document.getElementById(`manual_current_${section}`)?.value.trim() ?? '';
+      const ana = document.getElementById(`manual_analysis_${section}`)?.value.trim() ?? '';
+      if (cur) fd.append(`current_${section}`, cur);
+      if (ana) fd.append(`analysis_${section}`, ana);
+    }
+
     let hasFile = false;
 
-    // keyword は File[] として保持されているので個別に append
-    const keywordFiles = Array.isArray(droppedFiles['keyword'])
-      ? droppedFiles['keyword']
-      : [];
-    if (keywordFiles.length > 0) {
-      for (const f of keywordFiles) fd.append('keyword', f);
-      hasFile = true;
+    // keyword（単一ファイル）
+    const kwFile = droppedFiles['keyword'];
+    if (kwFile && !Array.isArray(kwFile)) {
+      fd.append('keyword', kwFile); hasFile = true;
     } else {
       const inp = document.querySelector('#zone-keyword input[type=file]');
       if (inp && inp.files[0]) { fd.append('keyword', inp.files[0]); hasFile = true; }
@@ -1559,10 +1567,16 @@
 
     for (const t of ['views','interactions','userActions']) {
       const inp = document.querySelector(`#zone-${t} input[type=file]`);
-      const f = droppedFiles[t] || inp.files[0];
+      const f = droppedFiles[t] || inp?.files[0];
       if (f) { fd.append(t, f); hasFile = true; }
     }
-    if (!hasFile) { alert('スクリーンショットを1枚以上アップロードしてください'); return; }
+
+    // 手動コメントのみでもスクショなしで生成可能
+    const hasManual = ['keyword', 'views', 'interactions', 'userActions'].some(s =>
+      document.getElementById(`manual_current_${s}`)?.value.trim() ||
+      document.getElementById(`manual_analysis_${s}`)?.value.trim()
+    );
+    if (!hasFile && !hasManual) { alert('スクリーンショットを1枚以上アップロードするか、コメントを手入力してください'); return; }
 
     // 文章生成AI設定
     const commentAI = commentAIEarly;
