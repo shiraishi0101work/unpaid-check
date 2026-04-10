@@ -192,6 +192,12 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
     return text;
   }
 
+  private recordError(err: unknown, context: string): void {
+    const msg = err instanceof Error ? err.message : String(err);
+    this.lastError = `[${context}] ${msg}`;
+    console.error(this.lastError);
+  }
+
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
     let text = '';
     try {
@@ -203,7 +209,10 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
             response_format: { type: 'json_object' } }),
         });
         if (!res.ok) {
-          console.warn(`[OpenAI] エラー ${res.status} → Claude にフォールバック`);
+          const body = await res.text().catch(() => '');
+          const errMsg = `OpenAI APIエラー ${res.status}: ${body.slice(0, 200)}`;
+          this.lastError = errMsg;
+          console.warn(`${errMsg} → Claude にフォールバック`);
           this.commentFallback = true;
           text = await this.callClaudeComment(prompt);
         } else {
@@ -215,16 +224,21 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
         try {
           text = await this.callGeminiText(prompt);
         } catch (err) {
-          console.warn(`${err} → Claude にフォールバック`);
+          this.recordError(err, 'Gemini');
+          console.warn(`${this.lastError} → Claude にフォールバック`);
           this.commentFallback = true;
-          try { text = await this.callClaudeComment(prompt); } catch { /* ignore */ }
+          try {
+            text = await this.callClaudeComment(prompt);
+          } catch (claudeErr) {
+            this.recordError(claudeErr, 'Claude(fallback)');
+          }
         }
 
       } else {
         text = await this.callClaudeComment(prompt);
       }
     } catch (err) {
-      console.error(`[${this.commentProvider}] 文章生成エラー:`, err);
+      this.recordError(err, this.commentProvider);
     }
 
     // コードブロック内のJSONも抽出できるように
