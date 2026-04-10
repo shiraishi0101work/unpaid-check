@@ -757,6 +757,46 @@
       margin-top: 4px;
     }
 
+    /* ── Search bar ── */
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .search-wrapper .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      pointer-events: none;
+    }
+    .search-wrapper input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--gray-900);
+      outline: none;
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+    .search-wrapper input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
+    .search-wrapper input::placeholder { color: var(--gray-400); }
+
+    .badge-custom {
+      background: #FEF3C7;
+      color: #92400E;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
     /* ── Confirm Modal ── */
     .confirm-modal { width: 380px; }
     .confirm-modal p { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-top: 8px; }
