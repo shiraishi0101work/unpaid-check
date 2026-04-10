@@ -65,7 +65,7 @@ export class MeoAnalyzer {
   private async extractWithClaude(imagePath: string, prompt: string, maxTokens = 1024): Promise<string> {
     const image = this.loadImage(imagePath);
     const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       messages: [{
         role: 'user',
