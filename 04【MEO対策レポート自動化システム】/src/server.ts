@@ -44,6 +44,7 @@ app.get('/api/stores', (_req, res) => {
     ...s,
     reportCount: reports.filter(r => r.storeId === s.id).length,
     latestReport: reports.filter(r => r.storeId === s.id)[0] ?? null,
+    hasCustomPrompts: Object.keys(db.getStorePrompts(s.id)).length > 0,
   }));
   res.json(result);
 });
