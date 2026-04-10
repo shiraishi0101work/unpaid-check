@@ -85,70 +85,70 @@ export class MeoAnalyzer {
   }
 
   async extractKeywordData(imagePath: string): Promise<KeywordData> {
-    const text = await this.extractImage(imagePath, `このMEO対策のキーワード順位レポート画像から、以下のJSON形式でデータを抽出してください。
-順位が表示されていないキーワードは "圏外" と記載してください。
+    const text = await this.extractImage(imagePath, `画像はGoogleビジネスプロフィールのMEO対策キーワード順位レポートです。
+画像内に表示されているすべてのキーワードとその順位を読み取り、以下のJSON形式で返してください。
+順位が表示されていないキーワードは rank を "圏外" としてください。
+必ずJSONのみを返してください（説明文不要）。
 
-{
-  "keywords": [
-    { "keyword": "キーワード名", "rank": "順位（数字または圏外）" }
-  ],
-  "summary": "全体的な順位状況の一言まとめ（例：圏外中心、3〜5位が多い、など）"
-}
-
-JSONのみ返してください。`, 1024);
+{"keywords":[{"keyword":"キーワード文字列","rank":"数字または圏外"}],"summary":"順位状況の一言まとめ"}`, 1024);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as KeywordData : { keywords: [], summary: '順位データなし' };
+    try {
+      return jsonMatch ? JSON.parse(jsonMatch[0]) as KeywordData : { keywords: [], summary: '順位データなし' };
+    } catch {
+      console.warn('[extractKeywordData] JSON parse failed:', text.slice(0, 300));
+      return { keywords: [], summary: '解析失敗（再解析を試してください）' };
+    }
   }
 
   async extractViewsData(imagePath: string): Promise<ViewsData> {
-    const text = await this.extractImage(imagePath, `この閲覧ユーザー数グラフから数値を抽出してください。
+    const text = await this.extractImage(imagePath, `画像はGoogleビジネスプロフィールの閲覧ユーザー数グラフです。
+グラフから当月と前年同月の数値を読み取り、以下のJSON形式のみを返してください（説明文不要）。
+trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"flat"、初月なら"new"。
 
-{
-  "currentMonth": 当月件数（数字）,
-  "previousYear": 前年同月件数（数字、不明なら0）,
-  "trend": "up/down/flat/new のいずれか（newは対策開始初月）"
-}
-
-JSONのみ返してください。`);
+{"currentMonth":数字,"previousYear":数字,"trend":"up/down/flat/new"}`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as ViewsData : { currentMonth: 0, previousYear: 0, trend: 'new' };
+    try {
+      return jsonMatch ? JSON.parse(jsonMatch[0]) as ViewsData : { currentMonth: 0, previousYear: 0, trend: 'new' };
+    } catch {
+      console.warn('[extractViewsData] JSON parse failed:', text.slice(0, 300));
+      return { currentMonth: 0, previousYear: 0, trend: 'new' };
+    }
   }
 
   async extractInteractionData(imagePath: string): Promise<InteractionData> {
-    const text = await this.extractImage(imagePath, `このインタラクション数グラフから数値を抽出してください。
+    const text = await this.extractImage(imagePath, `画像はGoogleビジネスプロフィールのインタラクション数グラフです。
+グラフから当月・前年同月の数値とインタラクション率を読み取り、以下のJSON形式のみを返してください（説明文不要）。
+trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"flat"、初月なら"new"。
 
-{
-  "currentMonth": 当月件数（数字）,
-  "previousYear": 前年同月件数（数字、不明なら0）,
-  "interactionRate": インタラクション率（%の数字、不明なら0）,
-  "trend": "up/down/flat/new のいずれか"
-}
-
-JSONのみ返してください。`);
+{"currentMonth":数字,"previousYear":数字,"interactionRate":パーセントの数字,"trend":"up/down/flat/new"}`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as InteractionData : { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' };
+    try {
+      return jsonMatch ? JSON.parse(jsonMatch[0]) as InteractionData : { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' };
+    } catch {
+      console.warn('[extractInteractionData] JSON parse failed:', text.slice(0, 300));
+      return { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' };
+    }
   }
 
   async extractUserActionData(imagePath: string): Promise<UserActionData> {
-    const text = await this.extractImage(imagePath, `このユーザー行動データから数値を抽出してください（通話数、Webサイト、ルート検索数、予約数）。
+    const text = await this.extractImage(imagePath, `画像はGoogleビジネスプロフィールのユーザー行動データです（通話数・Webサイト・ルート検索・予約数が含まれます）。
+各指標の当月と前年同月の数値を読み取り、以下のJSON形式のみを返してください（説明文不要）。
+表示されていない項目は0としてください。
 
-{
-  "calls": 通話数当月（数字）,
-  "website": Webサイト当月（数字）,
-  "routes": ルート検索数当月（数字）,
-  "reservations": 予約数当月（数字）,
-  "previousCalls": 通話数前年同月（数字、不明なら0）,
-  "previousWebsite": Webサイト前年同月（数字、不明なら0）,
-  "previousRoutes": ルート検索数前年同月（数字、不明なら0）,
-  "previousReservations": 予約数前年同月（数字、不明なら0）
-}
-
-JSONのみ返してください。`);
+{"calls":数字,"website":数字,"routes":数字,"reservations":数字,"previousCalls":数字,"previousWebsite":数字,"previousRoutes":数字,"previousReservations":数字}`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as UserActionData : {
-      calls: 0, website: 0, routes: 0, reservations: 0,
-      previousCalls: 0, previousWebsite: 0, previousRoutes: 0, previousReservations: 0,
-    };
+    try {
+      return jsonMatch ? JSON.parse(jsonMatch[0]) as UserActionData : {
+        calls: 0, website: 0, routes: 0, reservations: 0,
+        previousCalls: 0, previousWebsite: 0, previousRoutes: 0, previousReservations: 0,
+      };
+    } catch {
+      console.warn('[extractUserActionData] JSON parse failed:', text.slice(0, 300));
+      return {
+        calls: 0, website: 0, routes: 0, reservations: 0,
+        previousCalls: 0, previousWebsite: 0, previousRoutes: 0, previousReservations: 0,
+      };
+    }
   }
 
   private async callClaudeComment(prompt: string): Promise<string> {
