@@ -320,31 +320,30 @@
         <thead class="table-danger">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th>担当者</th><th>支払期限</th>
             <th class="text-end">請求金額</th>
-            <th class="text-end">差額</th>
-            <th class="text-center">編集</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:70px">編集</th>
           </tr>
         </thead>
         <tbody>
           {% for b in overdue %}
-          {% set manual_amt = b.着金金額_手動 | default(0) | int %}
-          {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
           <tr>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
-            <td class="small">{{ b.担当者 }}</td>
-            <td class="small">{{ b.請求日 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
             <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="text-end small {% if manual_amt and diff < 0 %}text-danger fw-bold{% elif manual_amt and diff > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
-              {% if manual_amt %}
-                {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
-              {% else %}—{% endif %}
-            </td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
-              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
                 data-id="{{ b.請求書ID }}"
                 data-name="{{ b.取引先名 }}"
                 data-num="{{ b.請求番号 }}"
@@ -352,7 +351,7 @@
                 data-memo="{{ b.メモ_手動 }}"
                 data-kikin-date="{{ b.着金日_手動 }}"
                 data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
-                <i class="bi bi-pencil"></i>
+                <i class="bi bi-pencil-fill"></i> 編集
               </button>
             </td>
           </tr>
@@ -360,7 +359,8 @@
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="6">合計</td>
+            <td colspan="4">合計</td>
+            <td></td>
             <td class="text-end">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</td>
             <td colspan="2"></td>
           </tr>
@@ -382,10 +382,10 @@
         <thead class="table-warning">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th>担当者</th><th>支払期限</th>
             <th class="text-end">請求金額</th>
-            <th>メモ</th>
-            <th class="text-center">編集</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:70px">編集</th>
           </tr>
         </thead>
         <tbody>
@@ -394,13 +394,18 @@
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
-            <td class="small">{{ b.担当者 }}</td>
-            <td class="small">{{ b.請求日 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
             <td class="small">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="text-muted small">{{ b.メモ_手動 or b.メモ }}</td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
-              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
                 data-id="{{ b.請求書ID }}"
                 data-name="{{ b.取引先名 }}"
                 data-num="{{ b.請求番号 }}"
@@ -408,7 +413,7 @@
                 data-memo="{{ b.メモ_手動 }}"
                 data-kikin-date="{{ b.着金日_手動 }}"
                 data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
-                <i class="bi bi-pencil"></i>
+                <i class="bi bi-pencil-fill"></i> 編集
               </button>
             </td>
           </tr>
@@ -416,7 +421,8 @@
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="6">合計</td>
+            <td colspan="4">合計</td>
+            <td></td>
             <td class="text-end">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</td>
             <td colspan="2"></td>
           </tr>
