@@ -259,8 +259,9 @@ ${dataText}
 【現状】の指示: ${curInst}
 【分析】の指示: ${anaInst}
 
-必ず以下のキーを持つJSONオブジェクトのみを返してください（余分なテキスト不要）:
-{"current":"【現状】の説明文","analysis":"【分析】の説明文"}`;
+以下のJSON形式で返してください。currentキーに【現状】の文章、analysisキーに【分析】の文章を入れてください。
+改行は\\nで表してください。JSONのみ返してください。
+{"current":"...","analysis":"..."}`;
   }
 
   async generateKeywordComment(data: KeywordData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
