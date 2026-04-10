@@ -1488,7 +1488,20 @@
     fd.append('apiKey', apiKey);
 
     let hasFile = false;
-    for (const t of ['keyword','views','interactions','userActions']) {
+
+    // keyword は File[] として保持されているので個別に append
+    const keywordFiles = Array.isArray(droppedFiles['keyword'])
+      ? droppedFiles['keyword']
+      : [];
+    if (keywordFiles.length > 0) {
+      for (const f of keywordFiles) fd.append('keyword', f);
+      hasFile = true;
+    } else {
+      const inp = document.querySelector('#zone-keyword input[type=file]');
+      if (inp && inp.files[0]) { fd.append('keyword', inp.files[0]); hasFile = true; }
+    }
+
+    for (const t of ['views','interactions','userActions']) {
       const inp = document.querySelector(`#zone-${t} input[type=file]`);
       const f = droppedFiles[t] || inp.files[0];
       if (f) { fd.append(t, f); hasFile = true; }
