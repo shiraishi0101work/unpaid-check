@@ -90,21 +90,19 @@ export class ReportGenerator {
       align: 'left', fontFace: 'メイリオ',
     });
 
-    // Screenshot area
+    // Screenshot area（画像あり・なし両方で枠を表示）
     const imageAreaY = 0.75;
-    const imageAreaH = slideData.imagePath
-      ? (showCommentary ? 4.8 : SLIDE_H - imageAreaY - 0.2)
-      : 0;
+    const imageAreaH = showCommentary ? 4.8 : SLIDE_H - imageAreaY - 0.2;
 
+    // 画像枠（常に表示）
+    slide.addShape(this.pptx.ShapeType.rect, {
+      x: 0.15, y: imageAreaY, w: SLIDE_W - 0.3, h: imageAreaH,
+      fill: { color: 'FFFFFF' },
+      line: { color: 'DDDDDD', width: 1 },
+    });
+
+    // 画像を挿入（ある場合のみ・元サイズ維持で引き延ばさない）
     if (slideData.imagePath && fs.existsSync(slideData.imagePath)) {
-      // White background for image
-      slide.addShape(this.pptx.ShapeType.rect, {
-        x: 0.15, y: imageAreaY, w: SLIDE_W - 0.3, h: imageAreaH,
-        fill: { color: 'FFFFFF' },
-        line: { color: 'DDDDDD', width: 1 },
-      });
-
-      // Insert screenshot
       slide.addImage({
         path: slideData.imagePath,
         x: 0.2, y: imageAreaY + 0.05,
