@@ -77,7 +77,7 @@ app.get('/api/csv-template', (req, res) => {
     [`ユーザー行動データ（5ページ目）`, `${month}月のユーザー行動データを記載してください`, `ユーザー行動の分析コメントを記載してください`],
   ];
   const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\r\n');
-  const filename = encodeURIComponent(`MEOレポートテキスト_${month}月.csv`);
+  const filename = encodeURIComponent(`MEOレポートテキスト_ひな型.csv`);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${filename}`);
   res.send(bom + csv);
