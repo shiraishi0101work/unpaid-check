@@ -1105,6 +1105,8 @@
       document.getElementById('fn-' + t).textContent = '';
       document.getElementById('preview-' + t).src = '';
       document.querySelector(`#zone-${t} input`).value = '';
+      const badge = document.getElementById('badge-' + t);
+      badge.textContent = ''; badge.dataset.count = '1';
     });
     document.getElementById('statusArea').classList.remove('visible');
     document.getElementById('logPanel').innerHTML = '';
