@@ -1443,7 +1443,13 @@
 
   async function generate() {
     const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { alert('画面右上にAnthropicのAPIキーを入力してください。\n（画像解析に使用します。文章生成AIの設定とは別です）'); return; }
+    const { provider: commentAIEarly, key: commentApiKeyEarly } = getCommentAIForRequest();
+
+    // Gemini選択時はClaudeキー不要（Gemini Visionで画像解析も行う）
+    if (commentAIEarly !== 'gemini' && !apiKey) {
+      alert('画面右上にAnthropicのAPIキーを入力してください。\n（画像解析に使用します。文章生成AIの設定とは別です）');
+      return;
+    }
 
     const month = document.getElementById('month').value;
     const year  = document.getElementById('year').value;
