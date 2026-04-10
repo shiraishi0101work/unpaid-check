@@ -119,14 +119,13 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
             remark = branch.get("remark", "") or memo
 
             result.append({
-                "着金日":       txn_date,
-                "取引先名":     partner,
-                "入金金額":     amount,
-                "科目（借方）": db_account,
-                "科目（貸方）": cr_account,
-                "備考":         remark,
-                "仕訳ID":       jid,
-                "_matched":     False,
+                "取引ID":   jid,
+                "着金日":   txn_date,
+                "取引先名": partner,
+                "入金金額": amount,
+                "科目":     db_account,   # 借方科目（普通預金など）
+                "備考":     remark,
+                "_matched": False,
             })
 
     print(f"[会計] 入金仕訳 {len(result)}件 抽出完了")
