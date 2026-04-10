@@ -3,7 +3,6 @@ import multer from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
-import { MeoAnalyzer, type CommentProvider } from './analyzer.js';
 import { ReportGenerator } from './report-generator.js';
 import * as db from './db.js';
 import type { ReportInput, SlideData } from './types.js';
@@ -28,130 +27,60 @@ const upload = multer({
 });
 
 const uploadFields = upload.fields([
-  { name: 'keyword', maxCount: 1 },
+  { name: 'keyword', maxCount: 5 },
   { name: 'views', maxCount: 1 },
   { name: 'interactions', maxCount: 1 },
   { name: 'userActions', maxCount: 1 },
+  { name: 'csv', maxCount: 1 },
 ]);
 
-// ── Session storage ───────────────────────────────────────
+// ── CSV パーサー ───────────────────────────────────────────
 
-import type { KeywordData, ViewsData, InteractionData, UserActionData } from './types.js';
-
-interface ExtractedData {
-  keyword?: KeywordData;
-  views?: ViewsData;
-  interactions?: InteractionData;
-  userActions?: UserActionData;
+function parseCSVRow(line: string): string[] {
+  const cols: string[] = [];
+  let field = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i]!;
+    if (c === '"') {
+      if (inQuote && line[i + 1] === '"') { field += '"'; i++; }
+      else { inQuote = !inQuote; }
+    } else if (c === ',' && !inQuote) {
+      cols.push(field); field = '';
+    } else { field += c; }
+  }
+  cols.push(field);
+  return cols;
 }
-interface AnalysisSession {
-  storeId: string;
-  storeName: string;
-  month: number;
-  year: number;
-  apiKey: string;
-  provider: CommentProvider;
-  commentKey: string;
-  prompts: db.PromptSet;
-  tmpFiles: string[];
-  screenshots: ReportInput['screenshots'];
-  extractedData: ExtractedData;  // Step1: 画像から抽出した数値データ
-  createdAt: number;
+
+function parseCSV(text: string): Array<{ current: string; analysis: string }> {
+  const cleaned = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = cleaned.split('\n').filter(l => l.trim());
+  const result: Array<{ current: string; analysis: string }> = [];
+  for (let i = 1; i < lines.length; i++) { // ヘッダー行をスキップ
+    const cols = parseCSVRow(lines[i]!);
+    result.push({ current: (cols[1] ?? '').trim(), analysis: (cols[2] ?? '').trim() });
+  }
+  return result;
 }
-const sessions = new Map<string, AnalysisSession>();
-function newSid(): string { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-// 2時間超のセッションは定期クリーンアップ
-setInterval(() => {
-  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
-  for (const [id, s] of sessions) {
-    if (s.createdAt < cutoff) {
-      s.tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch { /* ignore */ } });
-      sessions.delete(id);
-    }
-  }
-}, 30 * 60 * 1000);
+// ── CSV テンプレートダウンロード ────────────────────────────
 
-// ── API接続テスト ─────────────────────────────────────────
-
-app.post('/api/test-connection', async (req, res) => {
-  const { apiKey, commentAI, commentApiKey } = req.body as Record<string, string>;
-  const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
-  const commentKey = commentApiKey?.trim() || apiKey;
-  const results: Record<string, { ok: boolean; message: string }> = {};
-
-  // Claude（画像解析用）のテスト
-  if (provider === 'gemini') {
-    // Gemini使用時は画像解析もGeminiが担うため、ClaudeキーはGeminiフォールバック用のみ
-    if (apiKey) {
-      results['claude'] = { ok: true, message: '✅ Claudeキーあり（Gemini障害時のフォールバックとして使用）' };
-    } else {
-      results['claude'] = { ok: true, message: '✅ Gemini使用時はClaudeキー不要です（画像解析・テキスト生成ともにGeminiを使用）' };
-    }
-  } else if (apiKey && apiKey !== 'dummy-not-used') {
-    try {
-      const { default: Anthropic } = await import('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey });
-      await client.messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 10,
-        messages: [{ role: 'user', content: '応答してください' }],
-      });
-      results['claude'] = { ok: true, message: '✅ Claude API 接続OK（画像解析・テキスト生成に使用）' };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      results['claude'] = { ok: false, message: `❌ Claude APIエラー: ${msg.slice(0, 150)}` };
-    }
-  } else {
-    results['claude'] = { ok: false, message: '❌ Anthropic APIキーが未入力です（設定でGeminiを選択するとキー不要になります）' };
-  }
-
-  // Geminiのテスト
-  if (provider === 'gemini') {
-    if (!commentKey) {
-      results['gemini'] = { ok: false, message: '❌ Gemini APIキーが未入力です' };
-    } else {
-      try {
-        const r = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${commentKey}`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: 'hello' }] }] }) }
-        );
-        if (r.ok) {
-          results['gemini'] = { ok: true, message: '✅ Gemini API 接続OK（テキスト生成・画像解析に使用）' };
-        } else {
-          const body = await r.text().catch(() => '');
-          results['gemini'] = { ok: false, message: `❌ Gemini APIエラー ${r.status}: ${body.slice(0, 150)}` };
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results['gemini'] = { ok: false, message: `❌ Gemini接続エラー: ${msg.slice(0, 150)}` };
-      }
-    }
-  }
-
-  // OpenAIのテスト
-  if (provider === 'openai') {
-    if (!commentKey) {
-      results['openai'] = { ok: false, message: '❌ OpenAI APIキーが未入力です' };
-    } else {
-      try {
-        const r = await fetch('https://api.openai.com/v1/models', {
-          headers: { 'Authorization': `Bearer ${commentKey}` },
-        });
-        if (r.ok) {
-          results['openai'] = { ok: true, message: '✅ OpenAI API 接続OK（テキスト生成に使用）' };
-        } else {
-          results['openai'] = { ok: false, message: `❌ OpenAI APIエラー ${r.status}` };
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results['openai'] = { ok: false, message: `❌ OpenAI接続エラー: ${msg.slice(0, 150)}` };
-      }
-    }
-  }
-
-  const allOk = Object.values(results).every(r => r.ok);
-  res.json({ ok: allOk, results });
+app.get('/api/csv-template', (req, res) => {
+  const month = req.query['month'] ?? '〇';
+  const bom = '\uFEFF';
+  const rows = [
+    ['ページ', '【現状】テキスト', '【分析】テキスト'],
+    [`キーワード順位（2ページ目）`, `${month}月のキーワード順位を記載してください`, `キーワード順位の分析コメントを記載してください`],
+    [`閲覧ユーザー数（3ページ目）`, `${month}月の閲覧ユーザー数を記載してください`, `閲覧数の分析コメントを記載してください`],
+    [`インタラクション数（4ページ目）`, `${month}月のインタラクション数を記載してください`, `インタラクションの分析コメントを記載してください`],
+    [`ユーザー行動データ（5ページ目）`, `${month}月のユーザー行動データを記載してください`, `ユーザー行動の分析コメントを記載してください`],
+  ];
+  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const filename = encodeURIComponent(`MEOレポートテキスト_${month}月.csv`);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${filename}`);
+  res.send(bom + csv);
 });
 
 // ── Store API ─────────────────────────────────────────────
@@ -159,12 +88,10 @@ app.post('/api/test-connection', async (req, res) => {
 app.get('/api/stores', (_req, res) => {
   const stores = db.getStores();
   const reports = db.getReports();
-  // Attach report count to each store
   const result = stores.map(s => ({
     ...s,
     reportCount: reports.filter(r => r.storeId === s.id).length,
     latestReport: reports.filter(r => r.storeId === s.id)[0] ?? null,
-    hasCustomPrompts: Object.keys(db.getStorePrompts(s.id)).length > 0,
   }));
   res.json(result);
 });
@@ -178,34 +105,6 @@ app.post('/api/stores', (req, res) => {
 
 app.delete('/api/stores/:id', (req, res) => {
   db.deleteStore(req.params['id'] ?? '');
-  res.json({ ok: true });
-});
-
-// ── Prompt API ────────────────────────────────────────────
-
-app.get('/api/prompts/default', (_req, res) => {
-  res.json(db.getDefaultPrompts());
-});
-
-app.put('/api/prompts/default', (req, res) => {
-  const { prompts, applyToAll, resetToDefault } = req.body as { prompts: Partial<db.PromptSet>; applyToAll: boolean; resetToDefault?: boolean };
-  if (resetToDefault) {
-    db.clearDefaultPrompts();
-  } else {
-    db.setDefaultPrompts(prompts);
-    if (applyToAll) {
-      db.clearAllStorePromptsForKeys(Object.keys(prompts) as (keyof db.PromptSet)[]);
-    }
-  }
-  res.json({ ok: true });
-});
-
-app.get('/api/stores/:storeId/prompts', (req, res) => {
-  res.json(db.getStorePrompts(req.params['storeId'] ?? ''));
-});
-
-app.put('/api/stores/:storeId/prompts', (req, res) => {
-  db.setStorePrompts(req.params['storeId'] ?? '', req.body as Partial<db.PromptSet>);
   res.json({ ok: true });
 });
 
@@ -232,29 +131,32 @@ app.delete('/api/reports/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Step1: Extract API（画像から数値データを抽出）──────────
+// ── レポート生成: 画像 + CSV → PPTX ────────────────────────
 
-app.post('/api/extract', uploadFields, async (req, res) => {
+app.post('/api/generate-report', uploadFields, async (req, res) => {
   const tmpFiles: string[] = [];
-  try {
-    const { storeName, month, year, apiKey, storeId: existingStoreId, commentAI, commentApiKey } =
-      req.body as Record<string, string>;
+  const tmpOutput = path.join(os.tmpdir(), `meo-report-${Date.now()}.pptx`);
 
-    const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
-    const commentKey = commentApiKey?.trim() || apiKey;
+  try {
+    const { storeName, month, year, storeId: existingStoreId } =
+      req.body as Record<string, string>;
 
     if (!storeName || !month || !year) {
       const missing = [!storeName && 'storeName', !month && 'month', !year && 'year'].filter(Boolean).join(', ');
       res.status(400).json({ error: `必須パラメータが不足しています (${missing})` }); return;
     }
-    if (provider === 'gemini' && !commentKey) {
-      res.status(400).json({ error: 'GeminiのAPIキーが設定されていません' }); return;
-    }
-    if (provider !== 'gemini' && !apiKey) {
-      res.status(400).json({ error: 'Anthropic APIキーが設定されていません（画像解析に使用します）' }); return;
-    }
 
     const files = req.files as Record<string, Express.Multer.File[]>;
+
+    // CSV ファイルを読み込む
+    const csvFile = files['csv']?.[0];
+    if (!csvFile) { res.status(400).json({ error: 'CSVファイルをアップロードしてください' }); return; }
+    tmpFiles.push(csvFile.path);
+    const csvText = fs.readFileSync(csvFile.path, 'utf-8');
+    const csvData = parseCSV(csvText);
+    // csvData[0]=キーワード, [1]=閲覧, [2]=インタラクション, [3]=ユーザー行動
+
+    // 画像ファイルを収集
     const screenshots: ReportInput['screenshots'] = {};
     const keywordFiles = files['keyword'] ?? [];
     for (const f of keywordFiles) tmpFiles.push(f.path);
@@ -263,211 +165,16 @@ app.post('/api/extract', uploadFields, async (req, res) => {
       const file = files[key]?.[0];
       if (file) { screenshots[key] = file.path; tmpFiles.push(file.path); }
     }
-    if (tmpFiles.length === 0) { res.status(400).json({ error: 'スクリーンショットを1枚以上アップロードしてください' }); return; }
 
-    const store = existingStoreId ? (db.getStore(existingStoreId) ?? db.addStore(storeName)) : db.addStore(storeName);
-    const prompts = { ...db.getDefaultPrompts(), ...db.getStorePrompts(store.id) };
-    const analyzer = new MeoAnalyzer(apiKey, provider, commentKey);
+    // 店舗を登録 or 取得
+    const store = existingStoreId
+      ? (db.getStore(existingStoreId) ?? db.addStore(storeName))
+      : db.addStore(storeName);
+
     const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
 
-    // 画像から数値のみを抽出（文章生成はしない）
-    const extractedData: ExtractedData = {};
-    if (screenshots.keyword) {
-      console.log('🔍 [解析] キーワード順位...');
-      extractedData.keyword = await analyzer.extractKeywordData(screenshots.keyword);
-    }
-    if (screenshots.views) {
-      console.log('👁️  [解析] 閲覧ユーザー数...');
-      extractedData.views = await analyzer.extractViewsData(screenshots.views);
-    }
-    if (screenshots.interactions) {
-      console.log('🔄 [解析] インタラクション数...');
-      extractedData.interactions = await analyzer.extractInteractionData(screenshots.interactions);
-    }
-    if (screenshots.userActions) {
-      console.log('📍 [解析] ユーザー行動データ...');
-      extractedData.userActions = await analyzer.extractUserActionData(screenshots.userActions);
-    }
-
-    console.log('📊 [抽出完了] extractedData:', JSON.stringify(extractedData, null, 2).slice(0, 800));
-
-    const sid = newSid();
-    sessions.set(sid, {
-      storeId: store.id, storeName, month: monthNum, year: parseInt(year, 10),
-      apiKey, provider, commentKey, prompts,
-      tmpFiles, screenshots, extractedData, createdAt: Date.now(),
-    });
-
-    res.json({ sessionId: sid, storeId: store.id, extracted: extractedData, hasImages: Object.keys(screenshots) });
-
-  } catch (err) {
-    for (const f of tmpFiles) { try { fs.unlinkSync(f); } catch { /* ignore */ } }
-    console.error('抽出エラー:', err);
-    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
-  }
-});
-
-// ── Step1b: Re-extract API（1セクション再解析）──────────────
-
-app.post('/api/re-extract', async (req, res) => {
-  const { sessionId, section } = req.body as { sessionId: string; section: string };
-  const session = sessions.get(sessionId);
-  if (!session) { res.status(404).json({ error: 'セッションが見つかりません' }); return; }
-  try {
-    const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
-    const { screenshots } = session;
-    let extracted: ExtractedData[keyof ExtractedData] = undefined;
-
-    if (section === 'keyword' && screenshots.keyword && fs.existsSync(screenshots.keyword)) {
-      extracted = await analyzer.extractKeywordData(screenshots.keyword);
-      session.extractedData.keyword = extracted as KeywordData;
-    } else if (section === 'views' && screenshots.views && fs.existsSync(screenshots.views)) {
-      extracted = await analyzer.extractViewsData(screenshots.views);
-      session.extractedData.views = extracted as ViewsData;
-    } else if (section === 'interactions' && screenshots.interactions && fs.existsSync(screenshots.interactions)) {
-      extracted = await analyzer.extractInteractionData(screenshots.interactions);
-      session.extractedData.interactions = extracted as InteractionData;
-    } else if (section === 'userActions' && screenshots.userActions && fs.existsSync(screenshots.userActions)) {
-      extracted = await analyzer.extractUserActionData(screenshots.userActions);
-      session.extractedData.userActions = extracted as UserActionData;
-    }
-    res.json({ section, extracted });
-  } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
-  }
-});
-
-// ── Step1.5: Template Text API（AI不要・即時テンプレート生成）────
-
-app.post('/api/template-text', (req, res) => {
-  const { sessionId, extractedData: overrideData } = req.body as { sessionId: string; extractedData?: ExtractedData };
-  const session = sessions.get(sessionId);
-  if (!session) { res.status(404).json({ error: 'セッションが見つかりません' }); return; }
-
-  if (overrideData) {
-    session.extractedData = { ...session.extractedData, ...overrideData };
-  }
-  const { extractedData, month, screenshots } = session;
-  const t = new MeoAnalyzer('dummy', 'claude');  // AI呼び出しは一切しない
-
-  const sections: Record<string, { title: string; current: string; analysis: string; hasImage: boolean }> = {};
-
-  const kwData = extractedData.keyword ?? { keywords: [], summary: '' };
-  sections['keyword'] = { title: `${month}月対策キーワード順位ご報告`, ...t.getTemplateKeyword(kwData, month), hasImage: !!screenshots.keyword };
-
-  if (extractedData.views) {
-    sections['views'] = { title: '閲覧したユーザー数', ...t.getTemplateViews(extractedData.views, month), hasImage: !!screenshots.views };
-  }
-  if (extractedData.interactions) {
-    sections['interactions'] = { title: 'インタラクション数', ...t.getTemplateInteractions(extractedData.interactions, month), hasImage: !!screenshots.interactions };
-  }
-  if (extractedData.userActions) {
-    sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...t.getTemplateUserActions(extractedData.userActions, month), hasImage: !!screenshots.userActions };
-  }
-
-  res.json({ sections });
-});
-
-// ── Step2: Generate Text API（抽出データ → 説明文生成）───────
-
-app.post('/api/generate-text', async (req, res) => {
-  const { sessionId, extractedData: overrideData } = req.body as { sessionId: string; extractedData?: ExtractedData };
-  const session = sessions.get(sessionId);
-  if (!session) { res.status(404).json({ error: 'セッションが見つかりません（タイムアウトした可能性があります）' }); return; }
-
-  try {
-    // フォームから送られてきたデータがあればセッションを上書き
-    if (overrideData) {
-      session.extractedData = { ...session.extractedData, ...overrideData };
-    }
-    const { extractedData, prompts, month, screenshots } = session;
-    const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
-
-    const sections: Record<string, { title: string; current: string; analysis: string; hasImage: boolean }> = {};
-
-    // キーワードは常に含める（画像なしなら空データで生成）
-    console.log('✍️  [文章生成] キーワード順位...');
-    const kwData = extractedData.keyword ?? { keywords: [], summary: '' };
-    const kwComment = await analyzer.generateKeywordComment(kwData, month, prompts.keyword_current, prompts.keyword_analysis);
-    sections['keyword'] = { title: `${month}月対策キーワード順位ご報告`, ...kwComment, hasImage: !!screenshots.keyword };
-
-    if (extractedData.views) {
-      console.log('✍️  [文章生成] 閲覧ユーザー数...');
-      const c = await analyzer.generateViewsComment(extractedData.views, month, prompts.views_current, prompts.views_analysis);
-      sections['views'] = { title: '閲覧したユーザー数', ...c, hasImage: !!screenshots.views };
-    }
-    if (extractedData.interactions) {
-      console.log('✍️  [文章生成] インタラクション数...');
-      const c = await analyzer.generateInteractionComment(extractedData.interactions, month, prompts.interactions_current, prompts.interactions_analysis);
-      sections['interactions'] = { title: 'インタラクション数', ...c, hasImage: !!screenshots.interactions };
-    }
-    if (extractedData.userActions) {
-      console.log('✍️  [文章生成] ユーザー行動データ...');
-      const c = await analyzer.generateUserActionComment(extractedData.userActions, month, prompts.userActions_current, prompts.userActions_analysis);
-      sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...c, hasImage: !!screenshots.userActions };
-    }
-
-    res.json({
-      sections,
-      commentFallback: analyzer.commentFallback,
-      templateFallback: analyzer.templateFallback,
-      apiError: analyzer.lastError,  // テキスト生成時のAPIエラー詳細
-    });
-  } catch (err) {
-    console.error('文章生成エラー:', err);
-    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
-  }
-});
-
-// ── Step2b: Regenerate Text API（1セクションだけテキスト再生成）
-
-app.post('/api/regenerate', async (req, res) => {
-  const { sessionId, section } = req.body as { sessionId: string; section: string };
-  const session = sessions.get(sessionId);
-  if (!session) { res.status(404).json({ error: 'セッションが見つかりません' }); return; }
-  try {
-    const { extractedData, prompts, month } = session;
-    const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
-    let comment = { current: '', analysis: '' };
-
-    if (section === 'keyword') {
-      const data = extractedData.keyword ?? { keywords: [], summary: '' };
-      comment = await analyzer.generateKeywordComment(data, month, prompts.keyword_current, prompts.keyword_analysis);
-    } else if (section === 'views') {
-      const data = extractedData.views ?? { currentMonth: 0, previousYear: 0, trend: 'new' as const };
-      comment = await analyzer.generateViewsComment(data, month, prompts.views_current, prompts.views_analysis);
-    } else if (section === 'interactions') {
-      const data = extractedData.interactions ?? { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' as const };
-      comment = await analyzer.generateInteractionComment(data, month, prompts.interactions_current, prompts.interactions_analysis);
-    } else if (section === 'userActions') {
-      const data = extractedData.userActions ?? { calls: 0, website: 0, routes: 0, reservations: 0, previousCalls: 0, previousWebsite: 0, previousRoutes: 0, previousReservations: 0 };
-      comment = await analyzer.generateUserActionComment(data, month, prompts.userActions_current, prompts.userActions_analysis);
-    }
-    res.json(comment);
-  } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
-  }
-});
-
-// ── Finalize API（確認済みコメント → PPTX生成・ダウンロード）
-
-app.post('/api/finalize', async (req, res) => {
-  const { sessionId, sections } = req.body as {
-    sessionId: string;
-    sections: {
-      keyword: { current: string; analysis: string };
-      views?: { current: string; analysis: string };
-      interactions?: { current: string; analysis: string };
-      userActions?: { current: string; analysis: string };
-    };
-  };
-  const session = sessions.get(sessionId);
-  if (!session) { res.status(404).json({ error: 'セッションが見つかりません（タイムアウトした可能性があります）' }); return; }
-
-  const tmpOutput = path.join(os.tmpdir(), `meo-report-${Date.now()}.pptx`);
-  try {
-    const { screenshots, storeName, month, year, storeId } = session;
-
+    // スライドデータを構築
     const slides: {
       keywords?: SlideData[];
       views?: SlideData;
@@ -475,43 +182,79 @@ app.post('/api/finalize', async (req, res) => {
       userActions?: SlideData;
     } = {};
 
-    slides.keywords = [{
-      title: `${month}月対策キーワード順位ご報告`,
-      imagePath: screenshots.keyword,
-      currentStatus: sections.keyword.current,
-      analysis: sections.keyword.analysis,
-    }];
-    if (sections.views) {
-      slides.views = { title: '閲覧したユーザー数', imagePath: screenshots.views, currentStatus: sections.views.current, analysis: sections.views.analysis };
-    }
-    if (sections.interactions) {
-      slides.interactions = { title: 'インタラクション数', imagePath: screenshots.interactions, currentStatus: sections.interactions.current, analysis: sections.interactions.analysis };
-    }
-    if (sections.userActions) {
-      slides.userActions = { title: 'ユーザー行動データ（来店・売上に直結）', imagePath: screenshots.userActions, currentStatus: sections.userActions.current, analysis: sections.userActions.analysis };
+    const kwData = csvData[0];
+    if (kwData) {
+      if (keywordFiles.length > 1) {
+        // 複数キーワード画像 → 1スライド横並び
+        slides.keywords = keywordFiles.map((f, i) => ({
+          title: `${monthNum}月対策キーワード順位ご報告`,
+          imagePath: f.path,
+          currentStatus: i === 0 ? kwData.current : '',
+          analysis: i === 0 ? kwData.analysis : '',
+        }));
+      } else {
+        slides.keywords = [{
+          title: `${monthNum}月対策キーワード順位ご報告`,
+          imagePath: screenshots.keyword,
+          currentStatus: kwData.current,
+          analysis: kwData.analysis,
+        }];
+      }
     }
 
-    const input: ReportInput = { storeName, month, year, screenshots, apiKey: session.apiKey };
+    const viewsData = csvData[1];
+    if (viewsData && (viewsData.current || viewsData.analysis || screenshots.views)) {
+      slides.views = {
+        title: '閲覧したユーザー数',
+        imagePath: screenshots.views,
+        currentStatus: viewsData.current,
+        analysis: viewsData.analysis,
+      };
+    }
+
+    const interactData = csvData[2];
+    if (interactData && (interactData.current || interactData.analysis || screenshots.interactions)) {
+      slides.interactions = {
+        title: 'インタラクション数',
+        imagePath: screenshots.interactions,
+        currentStatus: interactData.current,
+        analysis: interactData.analysis,
+      };
+    }
+
+    const userActData = csvData[3];
+    if (userActData && (userActData.current || userActData.analysis || screenshots.userActions)) {
+      slides.userActions = {
+        title: 'ユーザー行動データ（来店・売上に直結）',
+        imagePath: screenshots.userActions,
+        currentStatus: userActData.current,
+        analysis: userActData.analysis,
+      };
+    }
+
+    const input: ReportInput = { storeName, month: monthNum, year: yearNum, screenshots, apiKey: '' };
     const generator = new ReportGenerator();
     await generator.generateReport(input, slides, tmpOutput);
 
-    const saved = db.saveReport({ storeId, storeName, month, year, generatedAt: new Date().toISOString() }, tmpOutput);
+    const saved = db.saveReport(
+      { storeId: store.id, storeName, month: monthNum, year: yearNum, generatedAt: new Date().toISOString() },
+      tmpOutput
+    );
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(saved.fileName)}`);
     res.setHeader('X-Report-Id', saved.id);
-    res.setHeader('X-Store-Id', storeId);
+    res.setHeader('X-Store-Id', store.id);
     res.sendFile(saved.filePath, err => {
       if (err) console.error('送信エラー:', err);
-      // セッション片付け
-      session.tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch { /* ignore */ } });
+      tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch { /* ignore */ } });
       try { fs.unlinkSync(tmpOutput); } catch { /* ignore */ }
-      sessions.delete(sessionId);
     });
 
   } catch (err) {
+    tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch { /* ignore */ } });
     try { fs.unlinkSync(tmpOutput); } catch { /* ignore */ }
-    console.error('finalizeエラー:', err);
+    console.error('レポート生成エラー:', err);
     res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
   }
 });
