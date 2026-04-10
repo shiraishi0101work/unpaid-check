@@ -72,6 +72,81 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000);
 
+// ── API接続テスト ─────────────────────────────────────────
+
+app.post('/api/test-connection', async (req, res) => {
+  const { apiKey, commentAI, commentApiKey } = req.body as Record<string, string>;
+  const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
+  const commentKey = commentApiKey?.trim() || apiKey;
+  const results: Record<string, { ok: boolean; message: string }> = {};
+
+  // Claude（画像解析用）のテスト
+  if (apiKey && apiKey !== 'dummy-not-used') {
+    try {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey });
+      await client.messages.create({
+        model: 'claude-sonnet-4-6', max_tokens: 10,
+        messages: [{ role: 'user', content: '応答してください' }],
+      });
+      results['claude'] = { ok: true, message: '✅ Claude API 接続OK（画像解析に使用）' };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      results['claude'] = { ok: false, message: `❌ Claude APIエラー: ${msg.slice(0, 150)}` };
+    }
+  } else if (provider !== 'gemini') {
+    results['claude'] = { ok: false, message: '❌ Anthropic APIキーが未入力です' };
+  }
+
+  // Geminiのテスト
+  if (provider === 'gemini') {
+    if (!commentKey) {
+      results['gemini'] = { ok: false, message: '❌ Gemini APIキーが未入力です' };
+    } else {
+      try {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${commentKey}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'hello' }] }] }) }
+        );
+        if (r.ok) {
+          results['gemini'] = { ok: true, message: '✅ Gemini API 接続OK（テキスト生成・画像解析に使用）' };
+        } else {
+          const body = await r.text().catch(() => '');
+          results['gemini'] = { ok: false, message: `❌ Gemini APIエラー ${r.status}: ${body.slice(0, 150)}` };
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        results['gemini'] = { ok: false, message: `❌ Gemini接続エラー: ${msg.slice(0, 150)}` };
+      }
+    }
+  }
+
+  // OpenAIのテスト
+  if (provider === 'openai') {
+    if (!commentKey) {
+      results['openai'] = { ok: false, message: '❌ OpenAI APIキーが未入力です' };
+    } else {
+      try {
+        const r = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${commentKey}` },
+        });
+        if (r.ok) {
+          results['openai'] = { ok: true, message: '✅ OpenAI API 接続OK（テキスト生成に使用）' };
+        } else {
+          results['openai'] = { ok: false, message: `❌ OpenAI APIエラー ${r.status}` };
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        results['openai'] = { ok: false, message: `❌ OpenAI接続エラー: ${msg.slice(0, 150)}` };
+      }
+    }
+  }
+
+  const allOk = Object.values(results).every(r => r.ok);
+  res.json({ ok: allOk, results });
+});
+
 // ── Store API ─────────────────────────────────────────────
 
 app.get('/api/stores', (_req, res) => {
