@@ -109,7 +109,7 @@ def _update_status(**kwargs):
 def _run_check(from_date=None, to_date=None):
     """バックグラウンドで照合処理を実行"""
     try:
-        _update_status(running=True, error=None, progress=10, message="請求書データを取得中...")
+        _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
             auth.get_access_token("invoice")
         except Exception as e:
@@ -119,7 +119,8 @@ def _run_check(from_date=None, to_date=None):
         if len(all_billings) == 0:
             raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
-        _update_status(progress=60, message="請求書を分類中...")
+        print(f"[照合] 請求書 {len(all_billings)}件 取得完了")
+        _update_status(progress=40, message=f"請求書 {len(all_billings)}件 取得完了。メタデータをマージ中...")
 
         today_str = datetime.now().strftime("%Y-%m-%d")
         meta = load_meta()
@@ -128,35 +129,72 @@ def _run_check(from_date=None, to_date=None):
         for b in all_billings:
             bid = b.get("請求書ID", "")
             m = meta.get(bid, {})
-            b["担当者"]     = m.get("担当者", "")
-            b["メモ_手動"]  = m.get("メモ", "")
-            b["着金日_手動"]    = m.get("着金日_手動", "")
-            b["着金金額_手動"]  = m.get("着金金額_手動", 0)
+            b["担当者"]        = m.get("担当者", "")
+            b["メモ_手動"]     = m.get("メモ", "")
+            b["着金日_手動"]   = m.get("着金日_手動", "")
+            b["着金金額_手動"] = m.get("着金金額_手動", 0)
 
-        unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
+        # MF Invoice のステータスで一次分類
+        mf_unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
+        mf_paid   = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
+
+        paid_billings   = list(mf_paid)
+        diff_billings   = []
+        unpaid_billings = list(mf_unpaid)
+        unmatched_deals = []
+
+        # ── MF会計と照合（連携済みの場合）──────────────────────────
+        if auth.is_authenticated("accounting"):
+            _update_status(progress=60, message="会計データを取得して照合中...")
+            try:
+                income_deals = get_income_deals(from_date=from_date, to_date=to_date)
+                print(f"[照合] 入金データ {len(income_deals)}件で照合開始")
+
+                if income_deals:
+                    matched = match(mf_unpaid, income_deals)
+                    # 会計照合で入金確認できたものを追加
+                    paid_billings   += matched["paid"]
+                    diff_billings    = matched["diff"]
+                    unpaid_billings  = matched["unpaid"]
+                    unmatched_deals  = matched["unmatched_deals"]
+                    print(
+                        f"[照合] 完了: 入金確認={len(paid_billings)}件 "
+                        f"差額={len(diff_billings)}件 "
+                        f"未入金={len(unpaid_billings)}件"
+                    )
+                else:
+                    print("[照合] 入金データ0件のため照合スキップ、MF請求書ステータスのみで分類")
+            except Exception as e:
+                import traceback
+                print(f"[照合] 会計API照合エラー（MFステータスのみで分類）: {e}")
+                traceback.print_exc()
+        else:
+            print("[照合] 会計未連携のため、MF請求書ステータスのみで分類")
+
+        # ── 未入金を期限超過/期日前に分類 ───────────────────────────
+        _update_status(progress=80, message="分類中...")
         overdue  = sorted(
-            [b for b in unpaid if b.get("支払期限", "") < today_str and b.get("支払期限","")],
+            [b for b in unpaid_billings if b.get("支払期限", "") and b.get("支払期限", "") < today_str],
             key=lambda x: x.get("支払期限", "")
         )
         upcoming = sorted(
-            [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")],
+            [b for b in unpaid_billings if not b.get("支払期限") or b.get("支払期限", "") >= today_str],
             key=lambda x: x.get("支払期限", "")
         )
-        paid = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
 
         result = {
-            "unpaid":          unpaid,
+            "unpaid":          unpaid_billings,
             "overdue":         overdue,
             "upcoming":        upcoming,
-            "paid":            paid,
-            "diff":            [],
-            "unmatched_deals": [],
+            "paid":            paid_billings,
+            "diff":            diff_billings,
+            "unmatched_deals": unmatched_deals,
             "total":           len(all_billings),
             "from_date":       from_date or "",
             "to_date":         to_date or "",
         }
 
-        _update_status(progress=85, message="Excelレポートを生成中...")
+        _update_status(progress=90, message="Excelレポートを生成中...")
         output_path = generate_report(result)
         _save_result(result, output_path)
 
