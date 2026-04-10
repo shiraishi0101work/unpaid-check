@@ -172,21 +172,6 @@ JSONのみ返してください。`,
     };
   }
 
-  private buildCommentPrompt(instruction: string, month: number, dataText: string): string {
-    return `${instruction.replace(/\{month\}/g, String(month))}
-
-データ:
-${dataText}
-
-以下のJSON形式で返してください:
-{
-  "current": "【現状】の説明文",
-  "analysis": "【分析】の説明文"
-}
-
-JSONのみ返してください。`;
-  }
-
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
     const response = await this.client.messages.create({
       model: 'claude-opus-4-6',
@@ -198,26 +183,56 @@ JSONのみ返してください。`;
     return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
   }
 
-  async generateKeywordComment(data: KeywordData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
-    const instruction = customPrompt ?? `MEO対策レポートの{month}月度キーワード順位について、クライアント向けの説明文を生成してください。\n\n【現状】は1〜2文で事実を簡潔に記載してください。\n【分析】は3〜5文でMEOの専門的な視点から前向きに記述し、課題があれば改善提案も含めてください。`;
-    return this.callComment(this.buildCommentPrompt(instruction, month, JSON.stringify(data, null, 2)));
+  private buildPrompt(sectionLabel: string, month: number, dataText: string, curInst: string, anaInst: string): string {
+    return `MEO対策レポートの${month}月度${sectionLabel}について、クライアント向けの説明文を生成してください。
+
+データ:
+${dataText}
+
+【現状】の指示: ${curInst}
+【分析】の指示: ${anaInst}
+
+以下のJSON形式で返してください:
+{
+  "current": "【現状】の説明文",
+  "analysis": "【分析】の説明文"
+}
+
+JSONのみ返してください。`;
   }
 
-  async generateViewsComment(data: ViewsData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
-    const instruction = customPrompt ?? `MEO対策レポートの{month}月度閲覧ユーザー数について、クライアント向けの説明文を生成してください。\n\n【現状】は1文で件数を明記してください。\n【分析】は3〜5文でマーケティング視点から前向きに記述し、前年比・トレンドにも触れてください。`;
+  async generateKeywordComment(data: KeywordData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
+    return this.callComment(this.buildPrompt(
+      'キーワード順位', month, JSON.stringify(data, null, 2),
+      curInst ?? '1〜2文で、対策キーワードの順位状況を事実として簡潔に記載してください。',
+      anaInst ?? '3〜5文で、MEOの専門的な視点から順位の意味を前向きに解説してください。課題があれば改善提案も含めてください。',
+    ));
+  }
+
+  async generateViewsComment(data: ViewsData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / トレンド: ${data.trend}`;
-    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
+    return this.callComment(this.buildPrompt(
+      '閲覧ユーザー数', month, dataText,
+      curInst ?? '1文で、今月の閲覧ユーザー数を明記してください。',
+      anaInst ?? '3〜5文で、マーケティング視点から閲覧数の意味を前向きに解説してください。前年比・トレンドにも触れてください。',
+    ));
   }
 
-  async generateInteractionComment(data: InteractionData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
-    const instruction = customPrompt ?? `MEO対策レポートの{month}月度インタラクション数について、クライアント向けの説明文を生成してください。\n\n【現状】は1文で件数とインタラクション率を明記してください。\n【分析】は3〜5文で「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。`;
+  async generateInteractionComment(data: InteractionData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / インタラクション率: ${data.interactionRate}% / トレンド: ${data.trend}`;
-    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
+    return this.callComment(this.buildPrompt(
+      'インタラクション数', month, dataText,
+      curInst ?? '1文で、今月のインタラクション数とインタラクション率を明記してください。',
+      anaInst ?? '3〜5文で、「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。',
+    ));
   }
 
-  async generateUserActionComment(data: UserActionData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
-    const instruction = customPrompt ?? `MEO対策レポートの{month}月度ユーザー行動データについて、クライアント向けの説明文を生成してください。\n\n【現状】は1〜2文で各指標の数値を列挙してください。\n【分析】は4〜6文で記述し、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。`;
+  async generateUserActionComment(data: UserActionData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
     const dataText = `通話: ${data.calls}件(前年${data.previousCalls}) / Web: ${data.website}件(前年${data.previousWebsite}) / ルート: ${data.routes}件(前年${data.previousRoutes}) / 予約: ${data.reservations}件(前年${data.previousReservations})`;
-    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
+    return this.callComment(this.buildPrompt(
+      'ユーザー行動データ', month, dataText,
+      curInst ?? '1〜2文で、各指標の数値を列挙してください。',
+      anaInst ?? '4〜6文で、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。',
+    ));
   }
 }
