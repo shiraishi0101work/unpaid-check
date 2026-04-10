@@ -169,16 +169,29 @@ JSONのみ返してください。`);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'object',
+              properties: {
+                current:  { type: 'string' },
+                analysis: { type: 'string' },
+              },
+              required: ['current', 'analysis'],
+            },
+          },
         }),
       }
     );
     if (!res.ok) {
-      const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}`;
+      const body = await res.text().catch(() => '');
+      const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}: ${body.slice(0, 200)}`;
       throw new Error(`[Gemini] ${reason}`);
     }
     const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
-    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+    console.log('[Gemini comment] response:', text.slice(0, 300));
+    return text;
   }
 
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
