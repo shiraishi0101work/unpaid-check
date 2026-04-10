@@ -968,6 +968,18 @@
 </div>
 
 
+<!-- Modal: Apply to All Stores -->
+<div class="overlay" id="applyAllModal">
+  <div class="modal confirm-modal">
+    <div class="modal-title">デフォルトプロンプトの変更を反映</div>
+    <p>変更したセクションについて、店舗ごとの個別設定を削除して<br>全店舗にデフォルトを適用しますか？</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="confirmApplyAll(false)">いいえ（デフォルトのみ更新）</button>
+      <button class="btn btn-primary" onclick="confirmApplyAll(true)">はい（全店舗に適用）</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.js"></script>
 <script>
   /* ── PDF.js worker ── */
