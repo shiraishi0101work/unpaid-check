@@ -655,6 +655,89 @@
     }
     .btn-download:hover { background: #D6E9FC; }
 
+    /* ── Prompt Settings ── */
+    .prompt-card { margin-bottom: 20px; }
+
+    .prompt-section {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .prompt-section:last-child { border-bottom: none; }
+
+    .prompt-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .prompt-section-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .prompt-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+    .prompt-badge.custom { background: #FEF3C7; color: #92400E; }
+
+    .prompt-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--gray-500);
+      cursor: pointer;
+    }
+    .prompt-toggle input[type=checkbox] { cursor: pointer; accent-color: var(--blue); }
+
+    textarea.prompt-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      color: var(--gray-900);
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+    textarea.prompt-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
+    textarea.prompt-textarea:disabled { background: var(--gray-50); color: var(--gray-400); cursor: not-allowed; }
+
+    .prompt-hint {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 5px;
+    }
+
+    .settings-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-100);
+      margin-top: 4px;
+    }
+
+    /* ── Confirm Modal ── */
+    .confirm-modal { width: 380px; }
+    .confirm-modal p { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-top: 8px; }
+
     /* ── SVG Icons (inline) ── */
     svg { display: block; }
   </style>
