@@ -1910,8 +1910,11 @@
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const data = await res.json();
+      if (data.apiError) {
+        appendLog(`⚠️ APIエラー: ${data.apiError}`, 'log-err');
+      }
       if (data.templateFallback) {
-        appendLog('⚠️ AIがテキストを生成できなかったため、数値から自動生成したテンプレート文章を使用しました。Step2で内容を確認・編集してください。', 'log-info');
+        appendLog('⚠️ AIによるテキスト生成に失敗したため、テンプレート文章を使用しました。Step2で内容を確認・編集してください。', 'log-info');
       } else if (data.commentFallback) {
         appendLog('⚠️ 文章生成AIの制限に達したため Claude で生成しました', 'log-info');
       }
