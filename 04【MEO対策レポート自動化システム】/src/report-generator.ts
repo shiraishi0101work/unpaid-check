@@ -224,7 +224,7 @@ export class ReportGenerator {
     // Keyword slides（複数枚→1スライドに横並び、1枚→通常スライド）
     const keywordSlides = slides.keywords ?? (slides.keyword ? [slides.keyword] : []);
     if (keywordSlides.length > 1) {
-      await this.addKeywordsSlide(keywordSlides, input.month);
+      this.addKeywordsSlide(keywordSlides, input.month);
     } else if (keywordSlides.length === 1) {
       this.addContentSlide(keywordSlides[0]!, input.month, true);
     }
