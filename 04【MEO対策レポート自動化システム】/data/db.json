@@ -21,7 +21,38 @@
       "createdAt": "2026-04-10T03:21:21.779Z"
     }
   ],
-  "reports": [],
+  "reports": [
+    {
+      "id": "mnsqwu589hoe",
+      "storeId": "mnqupujm8li9",
+      "storeName": "ピタットハウス栄住吉店",
+      "month": 3,
+      "year": 2026,
+      "generatedAt": "2026-04-10T10:10:58.825Z",
+      "fileName": "MEO対策レポート_ピタットハウス栄住吉店様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnqupujm8li9\\MEO対策レポート_ピタットハウス栄住吉店様_2026年3月.pptx"
+    },
+    {
+      "id": "mnsrcre0yws9",
+      "storeId": "mnsc9sh5hrqh",
+      "storeName": "3ピース 徳島",
+      "month": 3,
+      "year": 2026,
+      "generatedAt": "2026-04-10T10:23:21.744Z",
+      "fileName": "MEO対策レポート_3ピース 徳島様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsc9sh5hrqh\\MEO対策レポート_3ピース 徳島様_2026年3月.pptx"
+    },
+    {
+      "id": "mnsrslg78ovl",
+      "storeId": "mnsca2czfpsh",
+      "storeName": "3ピース香川",
+      "month": 3,
+      "year": 2026,
+      "generatedAt": "2026-04-10T10:35:40.551Z",
+      "fileName": "MEO対策レポート_3ピース香川様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsca2czfpsh\\MEO対策レポート_3ピース香川様_2026年3月.pptx"
+    }
+  ],
   "defaultPrompts": {
     "keyword_current": "1〜2文で、対策キーワードの順位状況を事実として簡潔に記載してください。",
     "keyword_analysis": "3〜5文で、MEOの専門的な視点から順位の意味を前向きに解説してください。課題があれば改善提案も含めてください。\n優しく、WEBマーケティングが分からない人にも伝わる文章で",

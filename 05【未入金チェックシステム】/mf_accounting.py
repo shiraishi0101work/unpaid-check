@@ -1,13 +1,25 @@
 """
-MFクラウド会計APIクライアント
-入金データ（収入仕訳）を取得する
-API docs: https://accounting.moneyforward.com/api/v1
+MFクラウド会計APIクライアント (v3)
+入金データ（売掛金回収仕訳）を取得する
+
+API: https://api-accounting.moneyforward.com
+仕訳一覧 GET /api/v3/journals
+  - start_date / end_date で期間指定
+  - per_page 最大 10000
+  - レスポンス: { journals: [...], metadata: { total_count, total_pages } }
+
+各 journal の branches[] に creditor（貸方）/ debitor（借方）が入っている。
+入金 = 借方が「普通預金・現金」かつ 貸方が「売掛金」の仕訳を対象とする。
 """
 
 import requests
 from auth import get_access_token
 
-BASE_URL = "https://accounting.moneyforward.com/api/v1"
+BASE_URL = "https://api-accounting.moneyforward.com"
+
+# 入金と判定する勘定科目キーワード
+_CASH_ACCOUNTS   = ("普通預金", "当座預金", "現金")   # 借方（お金が入ってくる口座）
+_RECEIVABLE_ACCS = ("売掛金",)                        # 貸方（売掛金が消える）
 
 
 def _headers() -> dict:
@@ -18,33 +30,27 @@ def _headers() -> dict:
     }
 
 
-def _get_all_pages(endpoint: str, params: dict) -> list:
-    """ページネーションを自動処理して全件取得"""
+def _get_all_pages(params: dict) -> list:
+    """仕訳一覧を全ページ取得して返す"""
     results = []
     page = 1
     while True:
         params["page"] = page
-        resp = requests.get(f"{BASE_URL}{endpoint}", headers=_headers(), params=params)
+        resp = requests.get(
+            f"{BASE_URL}/api/v3/journals",
+            headers=_headers(),
+            params=params,
+        )
         resp.raise_for_status()
         data = resp.json()
 
-        # レスポンス構造はエンドポイントによって異なる
-        if isinstance(data, list):
-            items = data
-        else:
-            # {"data": [...], "meta": {...}} 形式
-            items = data.get("data", [])
-
-        if not items:
+        journals = data.get("journals", [])
+        if not journals:
             break
 
-        results.extend(items)
+        results.extend(journals)
 
-        if isinstance(data, list):
-            # リスト形式の場合はページネーションなし
-            break
-
-        meta = data.get("meta", {})
+        meta = data.get("metadata", {})
         total_pages = meta.get("total_pages", 1)
         if page >= total_pages:
             break
@@ -53,67 +59,75 @@ def _get_all_pages(endpoint: str, params: dict) -> list:
     return results
 
 
+def _is_cash(account_name: str) -> bool:
+    return any(k in account_name for k in _CASH_ACCOUNTS)
+
+
+def _is_receivable(account_name: str) -> bool:
+    return any(k in account_name for k in _RECEIVABLE_ACCS)
+
+
 def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     """
-    収入仕訳（入金）データを全件取得
-    from_date, to_date: "YYYY-MM-DD"形式
+    入金仕訳（売掛金回収）を全件取得して返す。
 
-    MF Cloud Accounting API v1 の /journals エンドポイントを使用
-    収入系の仕訳（売掛金回収・売上計上など）を取得する
+    戻り値の各要素:
+        着金日         : str  "YYYY-MM-DD"
+        取引先名       : str
+        入金金額       : int
+        科目（借方）   : str  "普通預金" など
+        科目（貸方）   : str  "売掛金" など
+        備考           : str
+        仕訳ID         : str
+        _matched       : bool  照合済みフラグ（matcher.py が使用）
     """
-    print("[会計] 入金データを取得中...")
+    print("[会計] 入金データを取得中 (API v3)...")
 
-    params = {
-        "per_page": 100,
-    }
+    params: dict = {"per_page": 1000}
     if from_date:
-        params["from_date"] = from_date
+        params["start_date"] = from_date
     if to_date:
-        params["to_date"] = to_date
+        params["end_date"] = to_date
 
-    # まず /journals エンドポイントを試す
-    try:
-        journals = _get_all_pages("/journals", params)
-        print(f"[会計] 仕訳データ {len(journals)}件取得完了")
+    journals = _get_all_pages(params)
+    print(f"[会計] 仕訳 {len(journals)}件 取得完了")
 
-        result = []
-        for j in journals:
-            # 仕訳の構造を解析して収入系のエントリを抽出
-            entry_side = j.get("debit_or_credit", "")  # "debit" or "credit"
-            account_item_name = j.get("account_item_name", "")
+    result = []
+    for j in journals:
+        txn_date = j.get("transaction_date", "")
+        memo     = j.get("memo", "")
+        jid      = j.get("id", "")
 
-            # 収入判定: 売掛金の借方（回収）、または売上の貸方
-            is_income = (
-                ("売掛金" in account_item_name and entry_side == "debit")
-                or ("売上" in account_item_name and entry_side == "credit")
-                or ("売上高" in account_item_name and entry_side == "credit")
-                or ("普通預金" in account_item_name and entry_side == "debit")
-                or ("現金" in account_item_name and entry_side == "debit")
+        for branch in j.get("branches", []):
+            creditor = branch.get("creditor", {})
+            debitor  = branch.get("debitor",  {})
+
+            cr_account = creditor.get("account_name", "")
+            db_account = debitor.get("account_name",  "")
+
+            # 入金パターン: 借方=普通預金/現金 かつ 貸方=売掛金
+            if not (_is_cash(db_account) and _is_receivable(cr_account)):
+                continue
+
+            # 取引先名は貸方（売掛金側）を優先、なければ借方
+            partner = (
+                creditor.get("trade_partner_name")
+                or debitor.get("trade_partner_name")
+                or ""
             )
+            amount = int(creditor.get("value", 0))
+            remark = branch.get("remark", "") or memo
 
             result.append({
-                "取引ID":   j.get("id", ""),
-                "着金日":   j.get("date", j.get("deal_date", "")),
-                "取引先名": j.get("partner_name", ""),
-                "入金金額": int(j.get("amount", 0)),
-                "残額":     0,
-                "科目":     account_item_name,
-                "備考":     j.get("description", ""),
-                "_is_income": is_income,
-                "_raw": j,
-                "_matched": False,
+                "着金日":       txn_date,
+                "取引先名":     partner,
+                "入金金額":     amount,
+                "科目（借方）": db_account,
+                "科目（貸方）": cr_account,
+                "備考":         remark,
+                "仕訳ID":       jid,
+                "_matched":     False,
             })
 
-        # 収入系のみフィルタ（もし判定できる場合）
-        income_result = [r for r in result if r["_is_income"]]
-        if income_result:
-            print(f"[会計] うち収入系: {len(income_result)}件")
-            return income_result
-        else:
-            # 判定できなかった場合は全件返す
-            print("[会計] 収入フィルタなし: 全仕訳を返します")
-            return result
-
-    except Exception as e:
-        print(f"[会計] /journals エラー: {e}")
-        raise
+    print(f"[会計] 入金仕訳 {len(result)}件 抽出完了")
+    return result
