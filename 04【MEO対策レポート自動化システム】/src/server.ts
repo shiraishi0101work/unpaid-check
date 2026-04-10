@@ -207,6 +207,8 @@ app.post('/api/extract', uploadFields, async (req, res) => {
       extractedData.userActions = await analyzer.extractUserActionData(screenshots.userActions);
     }
 
+    console.log('📊 [抽出完了] extractedData:', JSON.stringify(extractedData, null, 2).slice(0, 800));
+
     const sid = newSid();
     sessions.set(sid, {
       storeId: store.id, storeName, month: monthNum, year: parseInt(year, 10),
