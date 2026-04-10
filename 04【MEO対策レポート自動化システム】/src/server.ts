@@ -258,11 +258,15 @@ app.post('/api/re-extract', async (req, res) => {
 // ── Step2: Generate Text API（抽出データ → 説明文生成）───────
 
 app.post('/api/generate-text', async (req, res) => {
-  const { sessionId } = req.body as { sessionId: string };
+  const { sessionId, extractedData: overrideData } = req.body as { sessionId: string; extractedData?: ExtractedData };
   const session = sessions.get(sessionId);
   if (!session) { res.status(404).json({ error: 'セッションが見つかりません（タイムアウトした可能性があります）' }); return; }
 
   try {
+    // フォームから送られてきたデータがあればセッションを上書き
+    if (overrideData) {
+      session.extractedData = { ...session.extractedData, ...overrideData };
+    }
     const { extractedData, prompts, month, screenshots } = session;
     const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
 
