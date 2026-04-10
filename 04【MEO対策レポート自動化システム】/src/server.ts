@@ -118,7 +118,15 @@ app.post('/api/generate', uploadFields, async (req, res) => {
   const tmpFiles: string[] = [];
 
   try {
-    const { storeName, month, year, apiKey, storeId: existingStoreId, commentAI, commentApiKey } = req.body as Record<string, string>;
+    const {
+      storeName, month, year, apiKey,
+      storeId: existingStoreId, commentAI, commentApiKey,
+      achievementDays,
+      current_keyword, analysis_keyword,
+      current_views, analysis_views,
+      current_interactions, analysis_interactions,
+      current_userActions, analysis_userActions,
+    } = req.body as Record<string, string>;
 
     const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
     const commentKey = commentApiKey?.trim() || apiKey;
