@@ -34,6 +34,47 @@ const uploadFields = upload.fields([
   { name: 'userActions', maxCount: 1 },
 ]);
 
+// ── Session storage ───────────────────────────────────────
+
+interface SectionResult {
+  title: string;
+  current: string;
+  analysis: string;
+  hasImage: boolean;
+}
+interface AnalysisSession {
+  storeId: string;
+  storeName: string;
+  month: number;
+  year: number;
+  apiKey: string;
+  provider: CommentProvider;
+  commentKey: string;
+  prompts: db.PromptSet;
+  tmpFiles: string[];
+  screenshots: ReportInput['screenshots'];
+  sections: {
+    keyword: SectionResult;
+    views?: SectionResult;
+    interactions?: SectionResult;
+    userActions?: SectionResult;
+  };
+  createdAt: number;
+}
+const sessions = new Map<string, AnalysisSession>();
+function newSid(): string { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+// 2時間超のセッションは定期クリーンアップ
+setInterval(() => {
+  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  for (const [id, s] of sessions) {
+    if (s.createdAt < cutoff) {
+      s.tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch { /* ignore */ } });
+      sessions.delete(id);
+    }
+  }
+}, 30 * 60 * 1000);
+
 // ── Store API ─────────────────────────────────────────────
 
 app.get('/api/stores', (_req, res) => {
