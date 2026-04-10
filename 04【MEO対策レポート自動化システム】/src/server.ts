@@ -141,7 +141,14 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     const files = req.files as Record<string, Express.Multer.File[]>;
     const screenshots: ReportInput['screenshots'] = {};
 
-    for (const key of ['keyword', 'views', 'interactions', 'userActions'] as const) {
+    // keyword は複数ファイル対応（最初の1枚をscreenshotsに保持、全パスは別管理）
+    const keywordFiles = files['keyword'] ?? [];
+    for (const f of keywordFiles) tmpFiles.push(f.path);
+    if (keywordFiles.length > 0) {
+      screenshots.keyword = keywordFiles[0]!.path;
+    }
+
+    for (const key of ['views', 'interactions', 'userActions'] as const) {
       const file = files[key]?.[0];
       if (file) {
         screenshots[key] = file.path;
@@ -149,7 +156,7 @@ app.post('/api/generate', uploadFields, async (req, res) => {
       }
     }
 
-    if (Object.keys(screenshots).length === 0) {
+    if (keywordFiles.length === 0 && Object.keys(screenshots).length === 0) {
       res.status(400).json({ error: 'スクショが1枚もアップロードされていません' });
       return;
     }
