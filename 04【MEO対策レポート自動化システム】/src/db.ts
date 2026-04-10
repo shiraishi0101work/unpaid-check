@@ -165,4 +165,36 @@ export function deleteReport(id: string): void {
   writeDB(db);
 }
 
+// Prompts
+export function getDefaultPrompts(): PromptSet {
+  const db = readDB();
+  return { ...DEFAULT_PROMPTS, ...db.defaultPrompts };
+}
+
+export function setDefaultPrompts(prompts: Partial<PromptSet>): void {
+  const db = readDB();
+  db.defaultPrompts = { ...db.defaultPrompts, ...prompts };
+  writeDB(db);
+}
+
+export function getStorePrompts(storeId: string): Partial<PromptSet> {
+  return readDB().storePrompts[storeId] ?? {};
+}
+
+export function setStorePrompts(storeId: string, prompts: Partial<PromptSet>): void {
+  const db = readDB();
+  db.storePrompts[storeId] = prompts;
+  writeDB(db);
+}
+
+export function clearAllStorePromptsForKeys(keys: (keyof PromptSet)[]): void {
+  const db = readDB();
+  for (const storeId of Object.keys(db.storePrompts)) {
+    for (const key of keys) {
+      delete db.storePrompts[storeId]?.[key];
+    }
+  }
+  writeDB(db);
+}
+
 export { REPORTS_DIR };
