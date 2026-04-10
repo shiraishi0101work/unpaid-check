@@ -179,6 +179,15 @@ JSONのみ返してください。`,
     };
   }
 
+  private async callClaudeComment(prompt: string): Promise<string> {
+    const response = await this.client.messages.create({
+      model: 'claude-opus-4-6',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+  }
+
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
     let text = '';
     try {
@@ -188,8 +197,14 @@ JSONのみ返してください。`,
           headers: { 'Authorization': `Bearer ${this.commentApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: prompt }], max_tokens: 800 }),
         });
-        const data = await res.json() as { choices: Array<{ message: { content: string } }> };
-        text = data.choices?.[0]?.message?.content ?? '{}';
+        if (!res.ok) {
+          console.warn(`[OpenAI] エラー ${res.status} → Claude にフォールバック`);
+          this.commentFallback = true;
+          text = await this.callClaudeComment(prompt);
+        } else {
+          const data = await res.json() as { choices: Array<{ message: { content: string } }> };
+          text = data.choices?.[0]?.message?.content ?? '{}';
+        }
 
       } else if (this.commentProvider === 'gemini') {
         const res = await fetch(
@@ -200,19 +215,23 @@ JSONのみ返してください。`,
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
           }
         );
-        const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
-        text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+        if (!res.ok) {
+          const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}`;
+          console.warn(`[Gemini] ${reason} → Claude にフォールバック`);
+          this.commentFallback = true;
+          text = await this.callClaudeComment(prompt);
+        } else {
+          const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
+          text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+        }
 
       } else {
-        const response = await this.client.messages.create({
-          model: 'claude-opus-4-6',
-          max_tokens: 800,
-          messages: [{ role: 'user', content: prompt }],
-        });
-        text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+        text = await this.callClaudeComment(prompt);
       }
     } catch (err) {
-      console.error(`[${this.commentProvider}] 文章生成エラー:`, err);
+      console.error(`[${this.commentProvider}] 文章生成エラー → Claude にフォールバック:`, err);
+      this.commentFallback = true;
+      try { text = await this.callClaudeComment(prompt); } catch { /* ignore */ }
     }
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
