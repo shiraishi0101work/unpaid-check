@@ -1662,46 +1662,199 @@
     { key: 'userActions',  label: 'ユーザー行動データ', page: '5ページ目' },
   ];
 
-  /* ── 解析データの表示用フォーマッタ ── */
-  function formatExtracted(key, data) {
-    if (!data) return '<span style="color:var(--gray-400)">画像なし（テキスト生成時は空データで処理）</span>';
-    if (key === 'keyword') {
-      const kws = data.keywords ?? [];
-      if (kws.length === 0) {
-        return '<span style="color:var(--gray-400)">キーワードデータを抽出できませんでした。再解析を試してください。</span>' +
-          (data.summary ? `<div style="margin-top:6px;font-size:12px;color:var(--gray-500)">${esc(data.summary)}</div>` : '');
-      }
-      const rows = kws.map(k => {
-        const rank = String(k.rank);
-        const rankDisplay = rank === '圏外' ? '<span style="color:#e57373">圏外</span>' : `<b>${esc(rank)}</b>位`;
-        return `<tr><td style="padding:3px 14px 3px 0">${esc(String(k.keyword))}</td><td>${rankDisplay}</td></tr>`;
-      }).join('');
-      return `<table style="border-collapse:collapse;font-size:13px">${rows}</table>` +
-        (data.summary ? `<div style="margin-top:6px;font-size:12px;color:var(--gray-500)">${esc(data.summary)}</div>` : '');
+  /* ── Step1: 手動入力フォームのレンダラー ── */
+  const INP = 'width:100%;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px;box-sizing:border-box';
+  const INP_SM = 'width:70px;padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:13px';
+  const TREND_OPTS = `
+    <option value="up">↑ 上昇（前年比増）</option>
+    <option value="down">↓ 下降（前年比減）</option>
+    <option value="flat">→ 横ばい</option>
+    <option value="new">NEW 初月（前年比なし）</option>`;
+
+  function renderKeywordForm(data) {
+    const kws = (data?.keywords ?? []);
+    const rows = (kws.length > 0 ? kws : [{ keyword: '', rank: '' }]).map(k => `
+      <div class="kw-row" style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
+        <input type="text" placeholder="キーワード" value="${esc(String(k.keyword ?? ''))}"
+          style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+        <input type="text" placeholder="順位 or 圏外" value="${esc(String(k.rank ?? ''))}"
+          style="width:90px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+        <button onclick="this.closest('.kw-row').remove()"
+          style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>
+      </div>`).join('');
+    return `
+      <div id="kw-rows">${rows}</div>
+      <button onclick="addKwRow()"
+        style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;padding:3px 0;margin-top:2px">＋ キーワードを追加</button>
+      <div style="margin-top:10px">
+        <label style="font-size:12px;color:var(--gray-500)">まとめコメント（任意）</label>
+        <input type="text" id="kw-summary" value="${esc(data?.summary ?? '')}"
+          placeholder="例：3〜5位が多い、圏外中心" style="${INP};margin-top:3px">
+      </div>`;
+  }
+
+  function renderViewsForm(data) {
+    const t = data?.trend ?? 'new';
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">当月 閲覧数（件）</label>
+          <input type="number" id="v-cur" value="${data?.currentMonth ?? 0}" min="0" style="${INP};margin-top:3px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">前年同月 閲覧数（件）</label>
+          <input type="number" id="v-prev" value="${data?.previousYear ?? 0}" min="0" style="${INP};margin-top:3px">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--gray-500)">トレンド</label>
+        <select id="v-trend" style="${INP};margin-top:3px">
+          ${TREND_OPTS.replace(`value="${t}"`, `value="${t}" selected`)}
+        </select>
+      </div>`;
+  }
+
+  function renderInteractionsForm(data) {
+    const t = data?.trend ?? 'new';
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">当月 インタラクション数（件）</label>
+          <input type="number" id="i-cur" value="${data?.currentMonth ?? 0}" min="0" style="${INP};margin-top:3px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">前年同月（件）</label>
+          <input type="number" id="i-prev" value="${data?.previousYear ?? 0}" min="0" style="${INP};margin-top:3px">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">インタラクション率（%）</label>
+          <input type="number" id="i-rate" value="${data?.interactionRate ?? 0}" min="0" max="100" step="0.1" style="${INP};margin-top:3px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--gray-500)">トレンド</label>
+          <select id="i-trend" style="${INP};margin-top:3px">
+            ${TREND_OPTS.replace(`value="${t}"`, `value="${t}" selected`)}
+          </select>
+        </div>
+      </div>`;
+  }
+
+  function renderUserActionsForm(data) {
+    const rows = [
+      ['calls', '通話', data?.calls, data?.previousCalls],
+      ['website', 'Webサイト', data?.website, data?.previousWebsite],
+      ['routes', 'ルート検索', data?.routes, data?.previousRoutes],
+      ['reservations', '予約', data?.reservations, data?.previousReservations],
+    ];
+    return `
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:4px 8px 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal">項目</th>
+            <th style="padding:4px 8px 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal;text-align:center">当月（件）</th>
+            <th style="padding:4px 0 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal;text-align:center">前年同月（件）</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(([id, label, cur, prev]) => `
+            <tr>
+              <td style="padding:5px 8px 5px 0;font-size:13px">${label}</td>
+              <td style="padding:5px 8px 5px 0;text-align:center">
+                <input type="number" id="ua-${id}" value="${cur ?? 0}" min="0" style="${INP_SM}">
+              </td>
+              <td style="text-align:center">
+                <input type="number" id="ua-prev-${id}" value="${prev ?? 0}" min="0" style="${INP_SM}">
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function renderSectionForm(key, data) {
+    const hasImg = !!data;
+    const aiNote = hasImg
+      ? '<span style="font-size:11px;color:var(--gray-400);margin-left:6px">AIが読み取った値を確認・修正できます</span>'
+      : '<span style="font-size:11px;color:#e57373;margin-left:6px">画像なし ─ 数値を手入力してください</span>';
+    let form = '';
+    if (key === 'keyword')      form = renderKeywordForm(data);
+    else if (key === 'views')   form = renderViewsForm(data);
+    else if (key === 'interactions') form = renderInteractionsForm(data);
+    else if (key === 'userActions')  form = renderUserActionsForm(data);
+    return `<div id="rvx-form-${key}" style="padding:10px 0 2px">${aiNote}${form ? '<div style="margin-top:10px">'+form+'</div>' : ''}</div>`;
+  }
+
+  function addKwRow() {
+    const row = document.createElement('div');
+    row.className = 'kw-row';
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:5px';
+    row.innerHTML = `
+      <input type="text" placeholder="キーワード"
+        style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+      <input type="text" placeholder="順位 or 圏外"
+        style="width:90px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
+      <button onclick="this.closest('.kw-row').remove()"
+        style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>`;
+    document.getElementById('kw-rows').appendChild(row);
+  }
+
+  /* ── Step1 フォームから数値を収集 ── */
+  function collectExtractedFromForm(extracted) {
+    // keyword: 常に収集
+    const kwRowEls = document.querySelectorAll('#kw-rows .kw-row');
+    const keywords = Array.from(kwRowEls).map(row => {
+      const [kwIn, rankIn] = row.querySelectorAll('input');
+      return { keyword: kwIn?.value?.trim() ?? '', rank: rankIn?.value?.trim() ?? '' };
+    }).filter(k => k.keyword);
+    const keyword = { keywords, summary: document.getElementById('kw-summary')?.value ?? '' };
+
+    // views
+    let views = extracted.views ?? null;
+    if (document.getElementById('v-cur')) {
+      views = {
+        currentMonth: parseInt(document.getElementById('v-cur').value) || 0,
+        previousYear: parseInt(document.getElementById('v-prev').value) || 0,
+        trend: document.getElementById('v-trend').value,
+      };
     }
-    if (key === 'views') {
-      const trend = { up:'↑ 上昇', down:'↓ 下降', flat:'→ 横ばい', new:'NEW 初月' }[data.trend] ?? data.trend;
-      return `当月 <b>${data.currentMonth.toLocaleString()}</b>件 ／ 前年同月 ${data.previousYear.toLocaleString()}件 ／ ${trend}`;
+
+    // interactions
+    let interactions = extracted.interactions ?? null;
+    if (document.getElementById('i-cur')) {
+      interactions = {
+        currentMonth: parseInt(document.getElementById('i-cur').value) || 0,
+        previousYear: parseInt(document.getElementById('i-prev').value) || 0,
+        interactionRate: parseFloat(document.getElementById('i-rate').value) || 0,
+        trend: document.getElementById('i-trend').value,
+      };
     }
-    if (key === 'interactions') {
-      const trend = { up:'↑ 上昇', down:'↓ 下降', flat:'→ 横ばい', new:'NEW 初月' }[data.trend] ?? data.trend;
-      return `当月 <b>${data.currentMonth.toLocaleString()}</b>件 ／ 前年同月 ${data.previousYear.toLocaleString()}件 ／ 率 ${data.interactionRate}% ／ ${trend}`;
+
+    // userActions
+    let userActions = extracted.userActions ?? null;
+    if (document.getElementById('ua-calls')) {
+      userActions = {
+        calls:         parseInt(document.getElementById('ua-calls').value) || 0,
+        website:       parseInt(document.getElementById('ua-website').value) || 0,
+        routes:        parseInt(document.getElementById('ua-routes').value) || 0,
+        reservations:  parseInt(document.getElementById('ua-reservations').value) || 0,
+        previousCalls:        parseInt(document.getElementById('ua-prev-calls').value) || 0,
+        previousWebsite:      parseInt(document.getElementById('ua-prev-website').value) || 0,
+        previousRoutes:       parseInt(document.getElementById('ua-prev-routes').value) || 0,
+        previousReservations: parseInt(document.getElementById('ua-prev-reservations').value) || 0,
+      };
     }
-    if (key === 'userActions') {
-      return [
-        `通話 <b>${data.calls}</b>件（前年 ${data.previousCalls}）`,
-        `Web <b>${data.website}</b>件（前年 ${data.previousWebsite}）`,
-        `ルート <b>${data.routes}</b>件（前年 ${data.previousRoutes}）`,
-        `予約 <b>${data.reservations}</b>件（前年 ${data.previousReservations}）`,
-      ].join(' ／ ');
-    }
-    return JSON.stringify(data);
+
+    return { keyword, views, interactions, userActions };
   }
 
   /* ── Step1: 解析結果モーダル ── */
+  let _extracted = {};   // 最後にサーバーから返ってきた extracted を保持
+
   function showExtractModal(sessionId, storeId, extracted) {
-    _sid     = sessionId;
-    _storeId = storeId;
+    _sid      = sessionId;
+    _storeId  = storeId;
+    _extracted = extracted ?? {};
     document.getElementById('rv-step1').style.display = 'flex';
     document.getElementById('rv-step2').style.display = 'none';
     document.getElementById('reviewOverlay').classList.add('show');
@@ -1715,10 +1868,11 @@
         <div class="rv-section-header">
           <span class="rv-label">${label}</span>
           <span class="rv-badge rv-badge-gray">${page}</span>
-          ${hasImg ? '' : '<span class="rv-badge rv-badge-warn">画像なし</span>'}
-          ${hasImg ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="reExtract('${key}')">再解析</button>` : ''}
+          ${hasImg
+            ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="reExtract('${key}')">再解析</button>`
+            : '<span class="rv-badge rv-badge-warn" style="margin-left:auto">画像なし</span>'}
         </div>
-        <div class="rv-data" id="rvx-data-${key}" style="font-size:13px;color:var(--gray-700);line-height:1.8">${formatExtracted(key, data)}</div>
+        ${renderSectionForm(key, data)}
       </div>`;
     }).join('');
   }
@@ -1733,9 +1887,10 @@
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const { extracted } = await res.json();
-      document.getElementById(`rvx-data-${key}`).innerHTML = formatExtracted(key, extracted);
-      const warn = document.querySelector(`#rvx-${key} .rv-badge-warn`);
-      if (warn && extracted) warn.remove();
+      _extracted[key] = extracted;
+      // フォームを再描画（新しい値で）
+      const formEl = document.getElementById(`rvx-form-${key}`);
+      if (formEl) formEl.outerHTML = renderSectionForm(key, extracted);
     } catch (err) {
       alert('再解析エラー: ' + err.message);
     } finally {
@@ -1743,14 +1898,15 @@
     }
   }
 
-  /* ── Step1 → Step2: テキスト生成 ── */
+  /* ── Step1 → Step2: フォームの数値を使ってテキスト生成 ── */
   async function generateText() {
     const genBtn = document.getElementById('rv-gen-text-btn');
     genBtn.disabled = true; genBtn.textContent = 'テキスト生成中...';
     try {
+      const extractedData = collectExtractedFromForm(_extracted);
       const res = await fetch('/api/generate-text', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ sessionId: _sid }),
+        body: JSON.stringify({ sessionId: _sid, extractedData }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const data = await res.json();
