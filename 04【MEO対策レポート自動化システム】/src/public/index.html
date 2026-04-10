@@ -1539,6 +1539,61 @@
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}  ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
+  /* ── AI Settings ── */
+  const AI_LABELS = { claude: 'Claude', openai: 'ChatGPT (gpt-4o)', gemini: 'Gemini (gemini-2.0-flash)' };
+
+  function loadCommentAISettings() {
+    const provider = localStorage.getItem('comment_ai_provider') ?? 'claude';
+    const key = localStorage.getItem('comment_ai_key') ?? '';
+    const radio = document.querySelector(`input[name=commentAI][value="${provider}"]`);
+    if (radio) radio.checked = true;
+    const input = document.getElementById('commentApiKey');
+    if (input) input.value = key;
+    updateCommentApiKeyField(provider);
+    updateAIBadge(provider);
+  }
+
+  function onAIChange() {
+    const provider = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
+    updateCommentApiKeyField(provider);
+    updateAIBadge(provider);
+    saveCommentAISettings();
+  }
+
+  function updateCommentApiKeyField(provider) {
+    const field = document.getElementById('commentApiKeyField');
+    const label = document.getElementById('commentApiKeyLabel');
+    const input = document.getElementById('commentApiKey');
+    if (!field) return;
+    if (provider === 'claude') {
+      field.style.display = 'none';
+    } else {
+      field.style.display = 'block';
+      label.textContent = provider === 'openai' ? 'OpenAI APIキー (sk-...)' : 'Google AI APIキー (AIza...)';
+      input.placeholder = provider === 'openai' ? 'sk-proj-...' : 'AIza...';
+    }
+  }
+
+  function updateAIBadge(provider) {
+    const badge = document.getElementById('aiIndicatorBadge');
+    if (badge) badge.textContent = `文章生成: ${AI_LABELS[provider] ?? provider}`;
+  }
+
+  function saveCommentAISettings() {
+    const provider = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
+    const key = document.getElementById('commentApiKey')?.value ?? '';
+    localStorage.setItem('comment_ai_provider', provider);
+    localStorage.setItem('comment_ai_key', key);
+  }
+
+  function getCommentAIForRequest() {
+    const provider = localStorage.getItem('comment_ai_provider') ?? 'claude';
+    const key = provider === 'claude'
+      ? document.getElementById('apiKey').value.trim()
+      : (localStorage.getItem('comment_ai_key') ?? '');
+    return { provider, key };
+  }
+
   /* ── Prompt Settings ── */
   const PROMPT_SECTIONS = [
     { key: 'keyword',      page: '2ページ目', title: '〇月対策キーワード順位ご報告' },
