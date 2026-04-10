@@ -160,28 +160,28 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     if (screenshots.keyword) {
       console.log('🔍 キーワード順位を解析中...');
       const data = await analyzer.extractKeywordData(screenshots.keyword);
-      const comment = await analyzer.generateKeywordComment(data, monthNum, prompts.keyword);
+      const comment = await analyzer.generateKeywordComment(data, monthNum, prompts.keyword_current, prompts.keyword_analysis);
       slides.keyword = { title: `${monthNum}月対策キーワード順位ご報告`, imagePath: screenshots.keyword, currentStatus: comment.current, analysis: comment.analysis };
     }
 
     if (screenshots.views) {
       console.log('👁️  閲覧ユーザー数を解析中...');
       const data = await analyzer.extractViewsData(screenshots.views);
-      const comment = await analyzer.generateViewsComment(data, monthNum, prompts.views);
+      const comment = await analyzer.generateViewsComment(data, monthNum, prompts.views_current, prompts.views_analysis);
       slides.views = { title: '閲覧したユーザー数', imagePath: screenshots.views, currentStatus: comment.current, analysis: comment.analysis };
     }
 
     if (screenshots.interactions) {
       console.log('🔄 インタラクション数を解析中...');
       const data = await analyzer.extractInteractionData(screenshots.interactions);
-      const comment = await analyzer.generateInteractionComment(data, monthNum, prompts.interactions);
+      const comment = await analyzer.generateInteractionComment(data, monthNum, prompts.interactions_current, prompts.interactions_analysis);
       slides.interactions = { title: 'インタラクション数', imagePath: screenshots.interactions, currentStatus: comment.current, analysis: comment.analysis };
     }
 
     if (screenshots.userActions) {
       console.log('📍 ユーザー行動データを解析中...');
       const data = await analyzer.extractUserActionData(screenshots.userActions);
-      const comment = await analyzer.generateUserActionComment(data, monthNum, prompts.userActions);
+      const comment = await analyzer.generateUserActionComment(data, monthNum, prompts.userActions_current, prompts.userActions_analysis);
       slides.userActions = { title: 'ユーザー行動データ（来店・売上に直結）', imagePath: screenshots.userActions, currentStatus: comment.current, analysis: comment.analysis };
     }
 
