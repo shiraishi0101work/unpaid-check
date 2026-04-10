@@ -36,21 +36,51 @@ export class MeoAnalyzer {
     return { base64, mediaType };
   }
 
-  async extractKeywordData(imagePath: string): Promise<KeywordData> {
+  // Gemini Vision で画像解析
+  private async extractWithGemini(imagePath: string, prompt: string): Promise<string> {
+    const image = this.loadImage(imagePath);
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.commentApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { inline_data: { mime_type: image.mediaType, data: image.base64 } },
+            { text: prompt },
+          ]}],
+        }),
+      }
+    );
+    const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+  }
+
+  // Claude Vision で画像解析
+  private async extractWithClaude(imagePath: string, prompt: string, maxTokens = 1024): Promise<string> {
     const image = this.loadImage(imagePath);
     const response = await this.client.messages.create({
       model: 'claude-opus-4-6',
-      max_tokens: 1024,
+      max_tokens: maxTokens,
       messages: [{
         role: 'user',
         content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: image.mediaType, data: image.base64 },
-          },
-          {
-            type: 'text',
-            text: `このMEO対策のキーワード順位レポート画像から、以下のJSON形式でデータを抽出してください。
+          { type: 'image', source: { type: 'base64', media_type: image.mediaType, data: image.base64 } },
+          { type: 'text', text: prompt },
+        ],
+      }],
+    });
+    return response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+  }
+
+  private async extractImage(imagePath: string, prompt: string, maxTokens = 512): Promise<string> {
+    return this.commentProvider === 'gemini'
+      ? this.extractWithGemini(imagePath, prompt)
+      : this.extractWithClaude(imagePath, prompt, maxTokens);
+  }
+
+  async extractKeywordData(imagePath: string): Promise<KeywordData> {
+    const text = await this.extractImage(imagePath, `このMEO対策のキーワード順位レポート画像から、以下のJSON形式でデータを抽出してください。
 順位が表示されていないキーワードは "圏外" と記載してください。
 
 {
@@ -60,32 +90,13 @@ export class MeoAnalyzer {
   "summary": "全体的な順位状況の一言まとめ（例：圏外中心、3〜5位が多い、など）"
 }
 
-JSONのみ返してください。`,
-          },
-        ],
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+JSONのみ返してください。`, 1024);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as KeywordData : { keywords: [], summary: '順位データなし' };
   }
 
   async extractViewsData(imagePath: string): Promise<ViewsData> {
-    const image = this.loadImage(imagePath);
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 512,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: image.mediaType, data: image.base64 },
-          },
-          {
-            type: 'text',
-            text: `この閲覧ユーザー数グラフから数値を抽出してください。
+    const text = await this.extractImage(imagePath, `この閲覧ユーザー数グラフから数値を抽出してください。
 
 {
   "currentMonth": 当月件数（数字）,
@@ -93,32 +104,13 @@ JSONのみ返してください。`,
   "trend": "up/down/flat/new のいずれか（newは対策開始初月）"
 }
 
-JSONのみ返してください。`,
-          },
-        ],
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+JSONのみ返してください。`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as ViewsData : { currentMonth: 0, previousYear: 0, trend: 'new' };
   }
 
   async extractInteractionData(imagePath: string): Promise<InteractionData> {
-    const image = this.loadImage(imagePath);
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 512,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: image.mediaType, data: image.base64 },
-          },
-          {
-            type: 'text',
-            text: `このインタラクション数グラフから数値を抽出してください。
+    const text = await this.extractImage(imagePath, `このインタラクション数グラフから数値を抽出してください。
 
 {
   "currentMonth": 当月件数（数字）,
@@ -127,32 +119,13 @@ JSONのみ返してください。`,
   "trend": "up/down/flat/new のいずれか"
 }
 
-JSONのみ返してください。`,
-          },
-        ],
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+JSONのみ返してください。`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as InteractionData : { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' };
   }
 
   async extractUserActionData(imagePath: string): Promise<UserActionData> {
-    const image = this.loadImage(imagePath);
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 512,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: image.mediaType, data: image.base64 },
-          },
-          {
-            type: 'text',
-            text: `このユーザー行動データから数値を抽出してください（通話数、Webサイト、ルート検索数、予約数）。
+    const text = await this.extractImage(imagePath, `このユーザー行動データから数値を抽出してください（通話数、Webサイト、ルート検索数、予約数）。
 
 {
   "calls": 通話数当月（数字）,
@@ -165,13 +138,7 @@ JSONのみ返してください。`,
   "previousReservations": 予約数前年同月（数字、不明なら0）
 }
 
-JSONのみ返してください。`,
-          },
-        ],
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+JSONのみ返してください。`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as UserActionData : {
       calls: 0, website: 0, routes: 0, reservations: 0,
