@@ -164,8 +164,10 @@ app.post('/api/generate', uploadFields, async (req, res) => {
       }
     }
 
-    if (keywordFiles.length === 0 && Object.keys(screenshots).length === 0) {
-      res.status(400).json({ error: 'スクショが1枚もアップロードされていません' });
+    const hasManualText = [current_keyword, analysis_keyword, current_views, analysis_views,
+      current_interactions, analysis_interactions, current_userActions, analysis_userActions].some(v => v?.trim());
+    if (keywordFiles.length === 0 && Object.keys(screenshots).length === 0 && !hasManualText) {
+      res.status(400).json({ error: 'スクショまたは手動コメントが必要です' });
       return;
     }
 
