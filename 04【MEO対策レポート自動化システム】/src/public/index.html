@@ -537,6 +537,15 @@
     .upload-zone.done .preview-img { display: block; }
     .upload-zone.done .upload-zone-icon { display: none; }
 
+    .upload-zone.processing {
+      border-color: var(--blue);
+      background: var(--blue-light);
+      pointer-events: none;
+    }
+    .upload-zone.processing .upload-zone-icon { color: var(--blue); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .upload-zone.processing .upload-zone-icon { animation: spin 1s linear infinite; }
+
     /* ── Status ── */
     .status-area { display: none; margin-top: 16px; }
     .status-area.visible { display: block; }
