@@ -72,7 +72,7 @@ export class ReportGenerator {
     });
   }
 
-  private addContentSlide(slideData: SlideData, month: number): void {
+  private addContentSlide(slideData: SlideData, month: number, showCommentary = true): void {
     const slide = this.pptx.addSlide();
     slide.background = { color: 'F2F2F2' };
 
@@ -92,7 +92,9 @@ export class ReportGenerator {
 
     // Screenshot area
     const imageAreaY = 0.75;
-    const imageAreaH = slideData.imagePath ? 4.8 : 0;
+    const imageAreaH = slideData.imagePath
+      ? (showCommentary ? 4.8 : SLIDE_H - imageAreaY - 0.2)
+      : 0;
 
     if (slideData.imagePath && fs.existsSync(slideData.imagePath)) {
       // White background for image
@@ -110,6 +112,8 @@ export class ReportGenerator {
         sizing: { type: 'contain', w: SLIDE_W - 0.4, h: imageAreaH - 0.1 },
       });
     }
+
+    if (!showCommentary) return;
 
     // Commentary box
     const boxY = imageAreaY + imageAreaH + 0.15;
