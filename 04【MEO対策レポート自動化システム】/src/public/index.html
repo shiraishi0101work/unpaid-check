@@ -757,6 +757,36 @@
       margin-top: 4px;
     }
 
+    /* ── AI Selector ── */
+    .ai-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ai-option {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .ai-option:has(input:checked) {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .ai-option input[type=radio] { accent-color: var(--blue); flex-shrink: 0; }
+
+    .ai-name  { font-size: 13px; font-weight: 700; color: var(--gray-900); display: block; }
+    .ai-model { font-size: 10px; color: var(--gray-500); margin-top: 1px; }
+
     /* ── Search bar ── */
     .search-wrapper {
       position: relative;
