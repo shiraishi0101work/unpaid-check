@@ -54,7 +54,15 @@ def _run_check(from_date=None, to_date=None):
     """バックグラウンドで照合処理を実行"""
     try:
         _update_status(running=True, error=None, progress=10, message="請求書データを取得中...")
+        # トークンを事前に取得・リフレッシュしてからスレッドで使えるようにする
+        try:
+            auth.get_access_token("invoice")
+        except Exception as e:
+            raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
+
         all_billings = get_all_billings(from_date=from_date, to_date=to_date)
+        if len(all_billings) == 0:
+            raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
         _update_status(progress=60, message="請求書を分類中...")
 
