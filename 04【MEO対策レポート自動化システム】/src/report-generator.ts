@@ -1,7 +1,6 @@
 import PptxGenJS from 'pptxgenjs';
 import * as fs from 'fs';
 import * as path from 'path';
-import sharp from 'sharp';
 import type { ReportInput, SlideData } from './types.js';
 
 // Color constants matching the template
