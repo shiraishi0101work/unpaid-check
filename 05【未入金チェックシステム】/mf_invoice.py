@@ -29,16 +29,21 @@ def _headers() -> dict:
 
 def _get_all_pages(params: dict) -> list:
     """ページネーションを自動処理して全請求書を取得"""
+    import sys
     results = []
     page = 1
     while True:
         params["page"] = page
         resp = requests.get(f"{BASE_URL}/billings", headers=_headers(), params=params)
-        resp.raise_for_status()
+        print(f"[請求書API] page={page} status={resp.status_code}", flush=True)
+        if resp.status_code != 200:
+            print(f"[請求書API] エラーレスポンス: {resp.text[:300]}", flush=True)
+            resp.raise_for_status()
         data = resp.json()
-
         items = data.get("data", [])
+        print(f"[請求書API] page={page} items={len(items)} keys={list(data.keys())}", flush=True)
         if not items:
+            print(f"[請求書API] data空のためbreak。pagination={data.get('pagination')}", flush=True)
             break
         results.extend(items)
 
