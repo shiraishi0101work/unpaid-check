@@ -1921,31 +1921,52 @@
     }
   }
 
-  /* ── Step1 → Step2: フォームの数値を使ってテキスト生成 ── */
+  /* ── Step1 → Step2: テンプレートで即時生成（APIキー不要）── */
   async function generateText() {
-    const genBtn = document.getElementById('rv-gen-text-btn');
-    genBtn.disabled = true; genBtn.textContent = 'テキスト生成中...';
+    const btn = document.getElementById('rv-gen-text-btn');
+    btn.disabled = true; btn.textContent = '生成中...';
     try {
       const extractedData = collectExtractedFromForm(_extracted);
-      const res = await fetch('/api/generate-text', {
-        method:'POST', headers:{'Content-Type':'application/json'},
+      const res = await fetch('/api/template-text', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: _sid, extractedData }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const data = await res.json();
-      if (data.apiError) {
-        appendLog(`⚠️ APIエラー: ${data.apiError}`, 'log-err');
-      }
-      if (data.templateFallback) {
-        appendLog('⚠️ AIによるテキスト生成に失敗したため、テンプレート文章を使用しました。Step2で内容を確認・編集してください。', 'log-info');
-      } else if (data.commentFallback) {
-        appendLog('⚠️ 文章生成AIの制限に達したため Claude で生成しました', 'log-info');
-      }
-      showTextStep(data.sections, data.templateFallback);
+      showTextStep(data.sections, true);
+      appendLog('✅ テンプレートからテキストを生成しました。Step2で内容を確認・編集してください。', 'log-ok');
     } catch (err) {
       alert('テキスト生成エラー: ' + err.message);
     } finally {
-      genBtn.disabled = false; genBtn.textContent = 'テキストを生成する';
+      btn.disabled = false; btn.textContent = 'テキストを生成する →';
+    }
+  }
+
+  /* ── Step1 → Step2: AIで生成（APIキー必要）── */
+  async function generateTextWithAI() {
+    const btn = document.getElementById('rv-ai-gen-btn');
+    btn.disabled = true; btn.textContent = 'AI生成中...';
+    try {
+      const extractedData = collectExtractedFromForm(_extracted);
+      const res = await fetch('/api/generate-text', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: _sid, extractedData }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const data = await res.json();
+      if (data.apiError) appendLog(`⚠️ APIエラー: ${data.apiError}`, 'log-err');
+      if (data.templateFallback) {
+        appendLog('⚠️ AIが応答しなかったためテンプレートで生成しました', 'log-info');
+      } else if (data.commentFallback) {
+        appendLog('⚠️ Claude フォールバックで生成しました', 'log-info');
+      } else {
+        appendLog('✅ AIでテキストを生成しました', 'log-ok');
+      }
+      showTextStep(data.sections, data.templateFallback);
+    } catch (err) {
+      alert('AI生成エラー: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'AIで生成';
     }
   }
 
