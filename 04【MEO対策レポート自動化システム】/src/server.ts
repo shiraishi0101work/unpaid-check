@@ -120,8 +120,20 @@ app.post('/api/generate', uploadFields, async (req, res) => {
   try {
     const { storeName, month, year, apiKey, storeId: existingStoreId, commentAI, commentApiKey } = req.body as Record<string, string>;
 
-    if (!storeName || !month || !year || !apiKey) {
+    const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
+    const commentKey = commentApiKey?.trim() || apiKey;
+
+    if (!storeName || !month || !year) {
       res.status(400).json({ error: '必須パラメータが不足しています' });
+      return;
+    }
+    // Gemini使用時はClaudeキー不要。それ以外はClaudeキー必須
+    if (provider === 'gemini' && !commentKey) {
+      res.status(400).json({ error: 'GeminiのAPIキーが設定されていません' });
+      return;
+    }
+    if (provider !== 'gemini' && !apiKey) {
+      res.status(400).json({ error: 'Anthropic APIキーが設定されていません（画像解析に使用します）' });
       return;
     }
 
