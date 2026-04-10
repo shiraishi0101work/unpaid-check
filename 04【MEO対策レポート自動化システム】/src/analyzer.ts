@@ -202,7 +202,13 @@ JSONのみ返してください。`);
       try { text = await this.callClaudeComment(prompt); } catch { /* ignore */ }
     }
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
+    if (!jsonMatch) return { current: '', analysis: '' };
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { current?: string; analysis?: string };
+      return { current: parsed.current ?? '', analysis: parsed.analysis ?? '' };
+    } catch {
+      return { current: '', analysis: '' };
+    }
   }
 
   private buildPrompt(sectionLabel: string, month: number, dataText: string, curInst: string, anaInst: string): string {
