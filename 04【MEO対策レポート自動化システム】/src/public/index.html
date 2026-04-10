@@ -977,15 +977,68 @@
     loadReports(currentStoreId);
   }
 
+  /* ── PDF→PNG変換 ── */
+  async function pdfToImageBlob(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      const canvases = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        canvases.push(canvas);
+      }
+      // 全ページを縦に結合
+      const totalH = canvases.reduce((h, c) => h + c.height, 0);
+      const maxW = Math.max(...canvases.map(c => c.width));
+      const combined = document.createElement('canvas');
+      combined.width = maxW;
+      combined.height = totalH;
+      const ctx = combined.getContext('2d');
+      let y = 0;
+      for (const c of canvases) { ctx.drawImage(c, 0, y); y += c.height; }
+      return new Promise(resolve => combined.toBlob(resolve, 'image/png'));
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
   /* ── Generate ── */
-  function setFile(type, file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    droppedFiles[type] = file;
-    document.getElementById('zone-' + type).classList.add('done');
-    document.getElementById('fn-' + type).textContent = file.name;
+  async function setFile(type, file) {
+    if (!file) return;
+    const zone = document.getElementById('zone-' + type);
+    const fnEl = document.getElementById('fn-' + type);
+    let processedFile = file;
+
+    if (file.type === 'application/pdf') {
+      zone.classList.add('processing');
+      fnEl.textContent = 'PDF変換中...';
+      fnEl.style.display = 'block';
+      try {
+        const blob = await pdfToImageBlob(file);
+        processedFile = new File([blob], file.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' });
+      } catch (err) {
+        zone.classList.remove('processing');
+        fnEl.style.display = '';
+        fnEl.textContent = '';
+        alert('PDF変換エラー: ' + err.message);
+        return;
+      }
+      zone.classList.remove('processing');
+    } else if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    droppedFiles[type] = processedFile;
+    zone.classList.add('done');
+    fnEl.textContent = file.name;
     const reader = new FileReader();
     reader.onload = e => { document.getElementById('preview-' + type).src = e.target.result; };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(processedFile);
   }
 
   function onFile(input, type) {
