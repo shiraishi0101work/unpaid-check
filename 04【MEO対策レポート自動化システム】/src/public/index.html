@@ -1632,109 +1632,176 @@
 
     try {
       setProgress(25);
-      const res = await fetch('/api/analyze', { method:'POST', body:fd });
-      setProgress(82);
-
-      if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error || 'サーバーエラー');
-      }
-
+      // Step1: 画像から数値を抽出
+      const res = await fetch('/api/extract', { method:'POST', body:fd });
+      setProgress(80);
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'サーバーエラー'); }
       const data = await res.json();
       setProgress(100);
-
-      if (data.commentFallback) {
-        appendLog(`⚠️ ${AI_LABELS[commentAI] ?? commentAI} の制限に達したため Claude で文章を生成しました`, 'log-info');
-      }
-
-      // 文章が1つでも空ならワーニング表示
-      const hasMissing = ['keyword','views','interactions','userActions'].some(k => {
-        const s = data.sections[k];
-        return s && (!s.current || !s.analysis);
-      });
-      if (hasMissing) {
-        appendLog('⚠️ 一部のコメントが生成されませんでした。モーダルで確認・編集してください', 'log-info');
-      } else {
-        appendLog('AI解析が完了しました。コメントを確認してください', 'log-ok');
-      }
-
-      // レビューモーダルを開く
-      showReviewModal(data.sessionId, data.storeId, data.sections);
-
+      appendLog('画像解析が完了しました。数値データを確認してください', 'log-ok');
+      showExtractModal(data.sessionId, data.storeId, data.extracted);
     } catch (err) {
       appendLog('Error: ' + err.message, 'log-err');
       setProgress(0);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'レポートを生成する';
+      btn.textContent = '解析する';
     }
   }
 
-  /* ── Review Modal ── */
-  let _reviewSessionId = '';
-  let _reviewStoreId   = '';
+  /* ══════════════════════════════════════════════════════════
+     Review Modal  ─  Step1: 解析結果  /  Step2: テキスト確認
+  ══════════════════════════════════════════════════════════ */
+  let _sid      = '';
+  let _storeId  = '';
 
-  const REVIEW_SECTIONS = [
-    { key: 'keyword',      label: 'キーワード順位（2ページ目）' },
-    { key: 'views',        label: '閲覧ユーザー数（3ページ目）' },
-    { key: 'interactions', label: 'インタラクション数（4ページ目）' },
-    { key: 'userActions',  label: 'ユーザー行動データ（5ページ目）' },
+  const RV_SECTIONS = [
+    { key: 'keyword',      label: 'キーワード順位', page: '2ページ目' },
+    { key: 'views',        label: '閲覧ユーザー数', page: '3ページ目' },
+    { key: 'interactions', label: 'インタラクション数', page: '4ページ目' },
+    { key: 'userActions',  label: 'ユーザー行動データ', page: '5ページ目' },
   ];
 
-  function showReviewModal(sessionId, storeId, sections) {
-    _reviewSessionId = sessionId;
-    _reviewStoreId   = storeId;
+  /* ── 解析データの表示用フォーマッタ ── */
+  function formatExtracted(key, data) {
+    if (!data) return '<span style="color:var(--gray-400)">画像なし（テキスト生成時は空データで処理）</span>';
+    if (key === 'keyword') {
+      const rows = (data.keywords ?? []).map(k =>
+        `<tr><td style="padding:3px 10px 3px 0">${esc(String(k.keyword))}</td><td><b>${esc(String(k.rank))}</b>位</td></tr>`
+      ).join('');
+      return `<table style="border-collapse:collapse;font-size:13px">${rows}</table>` +
+        (data.summary ? `<div style="margin-top:6px;font-size:12px;color:var(--gray-500)">${esc(data.summary)}</div>` : '');
+    }
+    if (key === 'views') {
+      const trend = { up:'↑ 上昇', down:'↓ 下降', flat:'→ 横ばい', new:'NEW 初月' }[data.trend] ?? data.trend;
+      return `当月 <b>${data.currentMonth.toLocaleString()}</b>件 ／ 前年同月 ${data.previousYear.toLocaleString()}件 ／ ${trend}`;
+    }
+    if (key === 'interactions') {
+      const trend = { up:'↑ 上昇', down:'↓ 下降', flat:'→ 横ばい', new:'NEW 初月' }[data.trend] ?? data.trend;
+      return `当月 <b>${data.currentMonth.toLocaleString()}</b>件 ／ 前年同月 ${data.previousYear.toLocaleString()}件 ／ 率 ${data.interactionRate}% ／ ${trend}`;
+    }
+    if (key === 'userActions') {
+      return [
+        `通話 <b>${data.calls}</b>件（前年 ${data.previousCalls}）`,
+        `Web <b>${data.website}</b>件（前年 ${data.previousWebsite}）`,
+        `ルート <b>${data.routes}</b>件（前年 ${data.previousRoutes}）`,
+        `予約 <b>${data.reservations}</b>件（前年 ${data.previousReservations}）`,
+      ].join(' ／ ');
+    }
+    return JSON.stringify(data);
+  }
 
-    const body = document.getElementById('reviewBody');
-    body.innerHTML = REVIEW_SECTIONS.map(({ key, label }) => {
+  /* ── Step1: 解析結果モーダル ── */
+  function showExtractModal(sessionId, storeId, extracted) {
+    _sid     = sessionId;
+    _storeId = storeId;
+    document.getElementById('rv-step1').style.display = 'flex';
+    document.getElementById('rv-step2').style.display = 'none';
+    document.getElementById('reviewOverlay').classList.add('show');
+
+    const body = document.getElementById('rv-extract-body');
+    body.innerHTML = RV_SECTIONS.map(({ key, label, page }) => {
+      const data = extracted[key];
+      const hasImg = !!data;
+      return `
+      <div class="rv-section" id="rvx-${key}">
+        <div class="rv-section-header">
+          <span class="rv-label">${label}</span>
+          <span class="rv-badge rv-badge-gray">${page}</span>
+          ${hasImg ? '' : '<span class="rv-badge rv-badge-warn">画像なし</span>'}
+          ${hasImg ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="reExtract('${key}')">再解析</button>` : ''}
+        </div>
+        <div class="rv-data" id="rvx-data-${key}" style="font-size:13px;color:var(--gray-700);line-height:1.8">${formatExtracted(key, data)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function reExtract(key) {
+    const btn = document.querySelector(`#rvx-${key} .rv-regen-btn`);
+    if (btn) { btn.disabled = true; btn.textContent = '解析中...'; }
+    try {
+      const res = await fetch('/api/re-extract', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sessionId: _sid, section: key }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const { extracted } = await res.json();
+      document.getElementById(`rvx-data-${key}`).innerHTML = formatExtracted(key, extracted);
+      const warn = document.querySelector(`#rvx-${key} .rv-badge-warn`);
+      if (warn && extracted) warn.remove();
+    } catch (err) {
+      alert('再解析エラー: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '再解析'; }
+    }
+  }
+
+  /* ── Step1 → Step2: テキスト生成 ── */
+  async function generateText() {
+    const genBtn = document.getElementById('rv-gen-text-btn');
+    genBtn.disabled = true; genBtn.textContent = 'テキスト生成中...';
+    try {
+      const res = await fetch('/api/generate-text', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sessionId: _sid }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const data = await res.json();
+      if (data.commentFallback) {
+        appendLog('⚠️ 文章生成AIの制限に達したため Claude で生成しました', 'log-info');
+      }
+      showTextStep(data.sections);
+    } catch (err) {
+      alert('テキスト生成エラー: ' + err.message);
+    } finally {
+      genBtn.disabled = false; genBtn.textContent = 'テキストを生成する';
+    }
+  }
+
+  /* ── Step2: テキスト確認・編集モーダル ── */
+  function showTextStep(sections) {
+    document.getElementById('rv-step1').style.display = 'none';
+    document.getElementById('rv-step2').style.display = 'flex';
+
+    const body = document.getElementById('rv-text-body');
+    body.innerHTML = RV_SECTIONS.map(({ key, label, page }) => {
       const s = sections[key];
       if (!s) return '';
       const missing = !s.current && !s.analysis;
-      const hasImg  = s.hasImage;
       return `
       <div class="rv-section" id="rv-${key}">
         <div class="rv-section-header">
           <span class="rv-label">${label}</span>
+          <span class="rv-badge rv-badge-gray">${page}</span>
           ${missing ? '<span class="rv-badge rv-badge-warn">要編集</span>' : ''}
-          ${!hasImg ? '<span class="rv-badge rv-badge-gray">画像なし</span>' : ''}
+          ${s.hasImage ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="regenerateText('${key}')">AI再生成</button>` : ''}
         </div>
         <div class="rv-field">
           <label class="field-label">【現状】</label>
-          <textarea class="prompt-textarea rv-textarea" id="rv-cur-${key}" rows="3">${esc(s.current)}</textarea>
+          <textarea class="prompt-textarea rv-textarea" id="rv-cur-${key}" rows="3">${esc(s.current ?? '')}</textarea>
         </div>
         <div class="rv-field" style="margin-top:8px">
           <label class="field-label">【分析】</label>
-          <textarea class="prompt-textarea rv-textarea" id="rv-ana-${key}" rows="4">${esc(s.analysis)}</textarea>
+          <textarea class="prompt-textarea rv-textarea" id="rv-ana-${key}" rows="4">${esc(s.analysis ?? '')}</textarea>
         </div>
-        ${hasImg ? `<button class="btn btn-secondary rv-regen-btn" onclick="regenerateSection('${key}')">AI再生成</button>` : ''}
       </div>`;
     }).join('');
-
-    document.getElementById('reviewOverlay').classList.add('show');
   }
 
-  function closeReviewModal() {
-    document.getElementById('reviewOverlay').classList.remove('show');
-  }
-
-  async function regenerateSection(key) {
+  async function regenerateText(key) {
     const btn = document.querySelector(`#rv-${key} .rv-regen-btn`);
     if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
     try {
       const res = await fetch('/api/regenerate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: _reviewSessionId, section: key }),
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sessionId: _sid, section: key }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const { current, analysis } = await res.json();
-      document.getElementById(`rv-cur-${key}`).value = current;
-      document.getElementById(`rv-ana-${key}`).value = analysis;
-      // 要編集バッジを消す
-      if (current || analysis) {
-        const badge = document.querySelector(`#rv-${key} .rv-badge-warn`);
-        if (badge) badge.remove();
-      }
+      document.getElementById(`rv-cur-${key}`).value = current ?? '';
+      document.getElementById(`rv-ana-${key}`).value = analysis ?? '';
+      const badge = document.querySelector(`#rv-${key} .rv-badge-warn`);
+      if (badge && (current || analysis)) badge.remove();
     } catch (err) {
       alert('再生成エラー: ' + err.message);
     } finally {
@@ -1742,44 +1809,39 @@
     }
   }
 
+  /* ── Step3: レポート作成 ── */
   async function finalizeReport() {
     const finBtn = document.getElementById('finalizeBtn');
-    finBtn.disabled = true;
-    finBtn.textContent = 'PPTXを生成中...';
+    finBtn.disabled = true; finBtn.textContent = 'レポート作成中...';
     try {
       const sections = {};
-      for (const { key } of REVIEW_SECTIONS) {
+      for (const { key } of RV_SECTIONS) {
         const cur = document.getElementById(`rv-cur-${key}`);
-        const ana = document.getElementById(`rv-ana-${key}`);
-        if (cur) {
-          sections[key] = { current: cur.value, analysis: ana ? ana.value : '' };
-        }
+        if (cur) sections[key] = { current: cur.value, analysis: document.getElementById(`rv-ana-${key}`)?.value ?? '' };
       }
       const res = await fetch('/api/finalize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: _reviewSessionId, sections }),
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sessionId: _sid, sections }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const fn   = res.headers.get('Content-Disposition')?.match(/filename\*=UTF-8''(.+)/)?.[1];
       const a    = document.createElement('a');
-      a.href = url;
-      a.download = fn ? decodeURIComponent(fn) : 'レポート.pptx';
-      a.click();
+      a.href = url; a.download = fn ? decodeURIComponent(fn) : 'レポート.pptx'; a.click();
       URL.revokeObjectURL(url);
-
       closeReviewModal();
       appendLog('PPTXのダウンロードが開始されました', 'log-ok');
-      setTimeout(() => loadReports(_reviewStoreId), 800);
+      setTimeout(() => loadReports(_storeId), 800);
     } catch (err) {
-      alert('PPTX生成エラー: ' + err.message);
+      alert('レポート作成エラー: ' + err.message);
     } finally {
-      finBtn.disabled = false;
-      finBtn.textContent = 'PPTXを生成・ダウンロード';
+      finBtn.disabled = false; finBtn.textContent = 'レポートを作成する';
     }
+  }
+
+  function closeReviewModal() {
+    document.getElementById('reviewOverlay').classList.remove('show');
   }
 
   /* ── Drag & Drop ── */
