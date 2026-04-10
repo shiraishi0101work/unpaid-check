@@ -1379,6 +1379,178 @@
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}  ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
+  /* ── Prompt Settings ── */
+  const PROMPT_LABELS = {
+    keyword:      { label: 'キーワード順位', icon: '🔍' },
+    views:        { label: '閲覧ユーザー数', icon: '👁️' },
+    interactions: { label: 'インタラクション数', icon: '🔄' },
+    userActions:  { label: 'ユーザー行動データ', icon: '📍' },
+  };
+  const PROMPT_KEYS = ['keyword', 'views', 'interactions', 'userActions'];
+
+  let defaultPromptsCache = {};
+  let pendingDefaultSave = null; // { prompts, changedKeys }
+
+  async function loadDefaultPrompts() {
+    defaultPromptsCache = await fetch('/api/prompts/default').then(r => r.json());
+    renderDefaultPromptSections();
+  }
+
+  function renderDefaultPromptSections() {
+    const container = document.getElementById('defaultPromptSections');
+    container.innerHTML = PROMPT_KEYS.map(key => {
+      const { label, icon } = PROMPT_LABELS[key];
+      return `
+        <div class="prompt-section">
+          <div class="prompt-section-header">
+            <span class="prompt-section-label">${icon} ${label}</span>
+          </div>
+          <textarea class="prompt-textarea" id="dp-${key}" rows="4">${esc(defaultPromptsCache[key] ?? '')}</textarea>
+          <p class="prompt-hint">{month} と書くと対象月が入ります</p>
+        </div>`;
+    }).join('');
+  }
+
+  function saveDefaultPrompts() {
+    const changed = {};
+    const changedKeys = [];
+    for (const key of PROMPT_KEYS) {
+      const val = document.getElementById(`dp-${key}`).value;
+      if (val !== defaultPromptsCache[key]) { changed[key] = val; changedKeys.push(key); }
+    }
+    if (changedKeys.length === 0) {
+      // Nothing changed — just show saved
+      showMsg('defaultSaveMsg');
+      return;
+    }
+    pendingDefaultSave = { prompts: {}, changedKeys };
+    // Collect ALL current values (not just changed)
+    for (const key of PROMPT_KEYS) {
+      pendingDefaultSave.prompts[key] = document.getElementById(`dp-${key}`).value;
+    }
+    document.getElementById('applyAllModal').classList.add('show');
+  }
+
+  async function confirmApplyAll(applyToAll) {
+    document.getElementById('applyAllModal').classList.remove('show');
+    if (!pendingDefaultSave) return;
+    const { prompts, changedKeys } = pendingDefaultSave;
+    pendingDefaultSave = null;
+    await fetch('/api/prompts/default', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompts, applyToAll }),
+    });
+    defaultPromptsCache = { ...defaultPromptsCache, ...prompts };
+    showMsg('defaultSaveMsg');
+    // If current store has prompts open, refresh
+    if (currentStoreId) loadStorePrompts(currentStoreId);
+  }
+
+  async function resetDefaultPrompts() {
+    if (!confirm('デフォルトプロンプトを初期値に戻しますか？')) return;
+    const defaults = await fetch('/api/prompts/default').then(r => r.json());
+    // Reset to system defaults by clearing DB (send empty object is not enough, need server-side reset)
+    // We send a special request with original defaults
+    await fetch('/api/prompts/default', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompts: {}, applyToAll: false }),
+    });
+    await loadDefaultPrompts();
+    showMsg('defaultSaveMsg');
+  }
+
+  // Store prompts
+  let storePromptsCache = {};
+
+  async function loadStorePrompts(storeId) {
+    storePromptsCache = await fetch(`/api/stores/${storeId}/prompts`).then(r => r.json());
+    renderStorePromptSections();
+  }
+
+  function renderStorePromptSections() {
+    const container = document.getElementById('storePromptSections');
+    container.innerHTML = PROMPT_KEYS.map(key => {
+      const { label, icon } = PROMPT_LABELS[key];
+      const hasCustom = !!storePromptsCache[key];
+      const promptVal = storePromptsCache[key] ?? defaultPromptsCache[key] ?? '';
+      return `
+        <div class="prompt-section">
+          <div class="prompt-section-header">
+            <span class="prompt-section-label">
+              ${icon} ${label}
+              <span class="prompt-badge${hasCustom ? ' custom' : ''}" id="sp-badge-${key}">${hasCustom ? 'カスタム' : 'デフォルト'}</span>
+            </span>
+            <label class="prompt-toggle">
+              <input type="checkbox" id="sp-use-default-${key}" ${hasCustom ? '' : 'checked'}
+                onchange="toggleStorePromptDefault('${key}')">
+              デフォルトを使用
+            </label>
+          </div>
+          <textarea class="prompt-textarea" id="sp-${key}" rows="4"
+            ${hasCustom ? '' : 'disabled'}>${esc(promptVal)}</textarea>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleStorePromptDefault(key) {
+    const useDefault = document.getElementById(`sp-use-default-${key}`).checked;
+    const textarea = document.getElementById(`sp-${key}`);
+    const badge = document.getElementById(`sp-badge-${key}`);
+    textarea.disabled = useDefault;
+    badge.textContent = useDefault ? 'デフォルト' : 'カスタム';
+    badge.className = 'prompt-badge' + (useDefault ? '' : ' custom');
+    if (useDefault) {
+      textarea.value = defaultPromptsCache[key] ?? '';
+    }
+  }
+
+  async function saveStorePrompts() {
+    const prompts = {};
+    for (const key of PROMPT_KEYS) {
+      const useDefault = document.getElementById(`sp-use-default-${key}`)?.checked;
+      if (!useDefault) {
+        prompts[key] = document.getElementById(`sp-${key}`).value;
+      }
+    }
+    await fetch(`/api/stores/${currentStoreId}/prompts`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(prompts),
+    });
+    storePromptsCache = prompts;
+    renderStorePromptSections();
+    showMsg('storeSaveMsg');
+  }
+
+  function toggleStorePrompts() {
+    const body = document.getElementById('storePromptBody');
+    const chevron = document.getElementById('storePromptChevron');
+    const open = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    chevron.style.transform = open ? 'rotate(180deg)' : '';
+  }
+
+  function showMsg(id) {
+    const el = document.getElementById(id);
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 2000);
+  }
+
+  /* ── Navigation (update to load prompts) ── */
+  const _origOpenStore = openStore;
+  openStore = function(id, name) {
+    _origOpenStore(id, name);
+    loadDefaultPrompts().then(() => loadStorePrompts(id));
+  };
+
+  const _origShowPage = showPage;
+  showPage = function(id) {
+    _origShowPage(id);
+    if (id === 'settings') loadDefaultPrompts();
+  };
+
   /* ── Initial load ── */
   loadStores();
 </script>
