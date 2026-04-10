@@ -287,6 +287,12 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
   }
 
   private buildPrompt(sectionLabel: string, month: number, dataText: string, curInst: string, anaInst: string): string {
+    // Gemini使用時はJSON強制モード（responseMimeType）で呼ぶため、プロンプト末尾のJSON例は不要
+    // Claude/OpenAI使用時は末尾のJSON例がフォーマット指示として機能する
+    const jsonInstruction = this.commentProvider === 'gemini'
+      ? 'currentキーに【現状】の文章、analysisキーに【分析】の文章を入れたJSONを返してください。改行は\\nで表してください。'
+      : '以下のJSON形式で返してください。currentキーに【現状】の文章、analysisキーに【分析】の文章を入れてください。改行は\\nで表してください。JSONのみ返してください。\n{"current":"...","analysis":"..."}';
+
     return `MEO対策レポートの${month}月度${sectionLabel}について、クライアント向けの説明文を日本語で生成してください。
 
 データ:
@@ -295,9 +301,7 @@ ${dataText}
 【現状】の指示: ${curInst}
 【分析】の指示: ${anaInst}
 
-以下のJSON形式で返してください。currentキーに【現状】の文章、analysisキーに【分析】の文章を入れてください。
-改行は\\nで表してください。JSONのみ返してください。
-{"current":"...","analysis":"..."}`;
+${jsonInstruction}`;
   }
 
   // ─── テンプレートフォールバック（AIが応答しない場合に使用）────────────────
