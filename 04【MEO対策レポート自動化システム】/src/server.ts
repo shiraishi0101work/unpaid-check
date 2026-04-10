@@ -209,6 +209,7 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(saved.fileName)}`);
     res.setHeader('X-Report-Id', saved.id);
     res.setHeader('X-Store-Id', store.id);
+    res.setHeader('X-Comment-Fallback', analyzer.commentFallback ? '1' : '0');
     res.sendFile(saved.filePath, err => {
       if (err) console.error('送信エラー:', err);
       for (const f of tmpFiles) { try { fs.unlinkSync(f); } catch { /* ignore */ } }
