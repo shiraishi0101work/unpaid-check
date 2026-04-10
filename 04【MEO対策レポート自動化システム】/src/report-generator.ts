@@ -32,6 +32,31 @@ export class ReportGenerator {
     this.pptx.layout = 'A4_PORTRAIT';
   }
 
+  // 画像のアスペクト比を保ったまま指定エリアに収まるサイズを計算（引き延ばしなし）
+  private containImage(
+    imagePath: string, maxW: number, maxH: number
+  ): { w: number; h: number; offsetX: number; offsetY: number } {
+    try {
+      const dims = imageSize(imagePath);
+      const pw = dims.width ?? 0;
+      const ph = dims.height ?? 0;
+      if (!pw || !ph) return { w: maxW, h: maxH, offsetX: 0, offsetY: 0 };
+      const ratio = pw / ph;
+      const containerRatio = maxW / maxH;
+      let w: number, h: number;
+      if (ratio > containerRatio) {
+        w = maxW;
+        h = maxW / ratio;
+      } else {
+        h = maxH;
+        w = maxH * ratio;
+      }
+      return { w, h, offsetX: (maxW - w) / 2, offsetY: (maxH - h) / 2 };
+    } catch {
+      return { w: maxW, h: maxH, offsetX: 0, offsetY: 0 };
+    }
+  }
+
   private addCoverSlide(storeName: string, month: number, year: number): void {
     const slide = this.pptx.addSlide();
     slide.background = { color: 'F2F2F2' };
