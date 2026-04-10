@@ -199,7 +199,8 @@ app.post('/api/generate', uploadFields, async (req, res) => {
       return aiGen();
     };
 
-    if (keywordFiles.length > 0 || current_keyword || analysis_keyword) {
+    // キーワードスライドは常に生成（画像・手動コメントがない場合もプレースホルダーとして含める）
+    {
       console.log('🔍 キーワード順位を処理中...');
       const imagePath = keywordFiles[0]?.path;
       const comment = await resolveComment(current_keyword, analysis_keyword, async () => {
