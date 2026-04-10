@@ -1371,9 +1371,35 @@
     zone.classList.remove('done');
     zone.classList.add('processing');
     fnEl.style.display = 'block';
-    fnEl.textContent = files.length > 1 ? `${files.length}枚 結合中...` : '変換中...';
+    fnEl.textContent = '変換中...';
 
     try {
+      // キーワードは複数枚を個別スライドに配置するためステッチしない
+      if (type === 'keyword') {
+        const fileList = [];
+        for (const f of files) {
+          if (f.type === 'application/pdf') {
+            const blob = await pdfToImageBlob(f);
+            fileList.push(new File([blob], f.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' }));
+          } else if (f.type.startsWith('image/')) {
+            fileList.push(f);
+          }
+        }
+        if (fileList.length === 0) { zone.classList.remove('processing'); return; }
+        droppedFiles['keyword'] = fileList;  // File[] として保持
+        zone.classList.remove('processing');
+        zone.classList.add('done');
+        fnEl.textContent = fileList.length > 1 ? `${fileList[0].name} ほか${fileList.length - 1}枚` : fileList[0].name;
+        badge.textContent = `${fileList.length}枚`;
+        badge.dataset.count = fileList.length;
+        // 1枚目だけプレビュー
+        const reader = new FileReader();
+        reader.onload = e => { document.getElementById('preview-keyword').src = e.target.result; };
+        reader.readAsDataURL(fileList[0]);
+        return;
+      }
+
+      // その他のタイプは従来通りステッチ
       const canvases = [];
       for (const f of files) {
         if (f.type === 'application/pdf') {
