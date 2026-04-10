@@ -2,6 +2,7 @@ export interface ReportInput {
   storeName: string;
   month: number; // 1-12
   year: number;
+  achievementDays?: number; // 成果日数
   screenshots: {
     keyword?: string;       // キーワード順位スクショのパス
     views?: string;         // 閲覧ユーザー数スクショのパス
