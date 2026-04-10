@@ -23,32 +23,25 @@ export interface Report {
 }
 
 export interface PromptSet {
-  keyword: string;
-  views: string;
-  interactions: string;
-  userActions: string;
+  keyword_current: string;
+  keyword_analysis: string;
+  views_current: string;
+  views_analysis: string;
+  interactions_current: string;
+  interactions_analysis: string;
+  userActions_current: string;
+  userActions_analysis: string;
 }
 
 export const DEFAULT_PROMPTS: PromptSet = {
-  keyword: `MEO対策レポートの{month}月度キーワード順位について、クライアント向けの説明文を生成してください。
-
-【現状】は1〜2文で事実を簡潔に記載してください。
-【分析】は3〜5文でMEOの専門的な視点から前向きに記述し、課題があれば改善提案も含めてください。`,
-
-  views: `MEO対策レポートの{month}月度閲覧ユーザー数について、クライアント向けの説明文を生成してください。
-
-【現状】は1文で件数を明記してください。
-【分析】は3〜5文でマーケティング視点から前向きに記述し、前年比・トレンドにも触れてください。`,
-
-  interactions: `MEO対策レポートの{month}月度インタラクション数について、クライアント向けの説明文を生成してください。
-
-【現状】は1文で件数とインタラクション率を明記してください。
-【分析】は3〜5文で「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。`,
-
-  userActions: `MEO対策レポートの{month}月度ユーザー行動データについて、クライアント向けの説明文を生成してください。
-
-【現状】は1〜2文で各指標の数値を列挙してください。
-【分析】は4〜6文で記述し、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。`,
+  keyword_current:      '1〜2文で、対策キーワードの順位状況を事実として簡潔に記載してください。',
+  keyword_analysis:     '3〜5文で、MEOの専門的な視点から順位の意味を前向きに解説してください。課題があれば改善提案も含めてください。',
+  views_current:        '1文で、今月の閲覧ユーザー数を明記してください。',
+  views_analysis:       '3〜5文で、マーケティング視点から閲覧数の意味を前向きに解説してください。前年比・トレンドにも触れてください。',
+  interactions_current: '1文で、今月のインタラクション数とインタラクション率を明記してください。',
+  interactions_analysis:'3〜5文で、「閲覧から行動への転換」という視点でインタラクション数を分析し、ポジティブシグナルとしての意味を伝えてください。',
+  userActions_current:  '1〜2文で、通話・Webサイト・ルート検索・予約の各指標の数値を列挙してください。',
+  userActions_analysis: '4〜6文で、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。',
 };
 
 interface DB {
