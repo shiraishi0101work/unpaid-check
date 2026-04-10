@@ -14,6 +14,7 @@ export class MeoAnalyzer {
   private client: Anthropic;
   private commentProvider: CommentProvider;
   private commentApiKey: string;
+  public commentFallback = false; // Gemini/OpenAI → Claude フォールバックが発生したか
 
   constructor(anthropicKey: string, commentProvider: CommentProvider = 'claude', commentApiKey?: string) {
     this.client = new Anthropic({ apiKey: anthropicKey });
