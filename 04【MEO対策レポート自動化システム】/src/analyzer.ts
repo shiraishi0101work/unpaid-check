@@ -50,7 +50,6 @@ export class MeoAnalyzer {
             { inline_data: { mime_type: image.mediaType, data: image.base64 } },
             { text: prompt },
           ]}],
-          generationConfig: { responseMimeType: 'application/json' },
         }),
       }
     );
