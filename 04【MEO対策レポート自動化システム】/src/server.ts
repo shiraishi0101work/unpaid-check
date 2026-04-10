@@ -3,7 +3,7 @@ import multer from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
-import { MeoAnalyzer } from './analyzer.js';
+import { MeoAnalyzer, type CommentProvider } from './analyzer.js';
 import { ReportGenerator } from './report-generator.js';
 import * as db from './db.js';
 import type { ReportInput, SlideData } from './types.js';
