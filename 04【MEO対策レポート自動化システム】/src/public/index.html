@@ -1470,7 +1470,8 @@
     if (!hasFile) { alert('スクリーンショットを1枚以上アップロードしてください'); return; }
 
     // 文章生成AI設定
-    const { provider: commentAI, key: commentApiKey } = getCommentAIForRequest();
+    const commentAI = commentAIEarly;
+    const commentApiKey = commentApiKeyEarly;
     if (commentAI !== 'claude' && !commentApiKey) {
       alert(`${AI_LABELS[commentAI] ?? commentAI} のAPIキーが設定されていません。\n⚙️ 設定ページで入力してください。`);
       return;
