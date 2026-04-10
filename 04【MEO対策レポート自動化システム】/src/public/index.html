@@ -1508,35 +1508,22 @@
       </div>`).join('');
   }
 
-  function saveDefaultPrompts() {
-    const allPrompts = {};
-    let hasChange = false;
+  async function saveDefaultPrompts() {
+    const prompts = {};
     for (const { key } of PROMPT_SECTIONS) {
       for (const field of ['current', 'analysis']) {
-        const fk  = `${key}_${field}`;
-        const val = document.getElementById(`dp-${fk}`)?.value ?? '';
-        allPrompts[fk] = val;
-        if (val !== (defaultPromptsCache?.[fk] ?? '')) hasChange = true;
+        const fk = `${key}_${field}`;
+        prompts[fk] = document.getElementById(`dp-${fk}`)?.value ?? '';
       }
     }
-    if (!hasChange) { showMsg('defaultSaveMsg'); return; }
-    pendingDefaultSave = allPrompts;
-    document.getElementById('applyAllModal').classList.add('show');
-  }
-
-  async function confirmApplyAll(applyToAll) {
-    document.getElementById('applyAllModal').classList.remove('show');
-    if (!pendingDefaultSave) return;
-    const prompts = pendingDefaultSave;
-    pendingDefaultSave = null;
     await fetch('/api/prompts/default', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts, applyToAll }),
+      body: JSON.stringify({ prompts, applyToAll: false }),
     });
     defaultPromptsCache = { ...defaultPromptsCache, ...prompts };
     showMsg('defaultSaveMsg');
-    if (currentStoreId) await loadStorePrompts(currentStoreId);
+    // カスタム設定済み店舗はそのまま — 何もしない
   }
 
   async function resetDefaultPrompts() {
