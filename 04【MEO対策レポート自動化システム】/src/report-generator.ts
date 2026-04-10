@@ -127,13 +127,17 @@ export class ReportGenerator {
       line: { color: 'DDDDDD', width: 1 },
     });
 
-    // 画像を挿入（ある場合のみ・元サイズ維持で引き延ばさない）
+    // 画像を挿入（ある場合のみ・アスペクト比を保ってエリアに収める）
     if (slideData.imagePath && fs.existsSync(slideData.imagePath)) {
+      const maxW = SLIDE_W - 0.4;
+      const maxH = imageAreaH - 0.1;
+      const { w, h, offsetX, offsetY } = this.containImage(slideData.imagePath, maxW, maxH);
       slide.addImage({
         path: slideData.imagePath,
-        x: 0.2, y: imageAreaY + 0.05,
-        w: SLIDE_W - 0.4, h: imageAreaH - 0.1,
-        sizing: { type: 'contain', w: SLIDE_W - 0.4, h: imageAreaH - 0.1 },
+        x: 0.2 + offsetX,
+        y: imageAreaY + 0.05 + offsetY,
+        w,
+        h,
       });
     }
 
