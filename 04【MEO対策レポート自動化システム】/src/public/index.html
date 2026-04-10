@@ -1044,9 +1044,11 @@ function resetForm() {
     const zone = document.getElementById('zone-' + field);
     const fn = document.getElementById('fn-' + field);
     const inp = document.getElementById('img-' + field);
+    const prev = document.getElementById('preview-' + field);
     if (zone) zone.classList.remove('has-file');
     if (fn) fn.textContent = '';
     if (inp) inp.value = '';
+    if (prev) prev.src = '';
   }
   const csvZone = document.getElementById('zone-csv');
   const csvFn = document.getElementById('fn-csv');
