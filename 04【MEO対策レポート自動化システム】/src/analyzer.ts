@@ -408,4 +408,10 @@ ${jsonInstruction}`;
     ));
     return this.withTemplateFallback(ai, () => this.templateUserActions(data, month));
   }
+
+  // ─── テンプレートのみで生成（AI不要・即時）────────────────────────────────
+  getTemplateKeyword(data: KeywordData, month: number)     { return this.templateKeyword(data, month); }
+  getTemplateViews(data: ViewsData, month: number)         { return this.templateViews(data, month); }
+  getTemplateInteractions(data: InteractionData, month: number) { return this.templateInteractions(data, month); }
+  getTemplateUserActions(data: UserActionData, month: number)   { return this.templateUserActions(data, month); }
 }
