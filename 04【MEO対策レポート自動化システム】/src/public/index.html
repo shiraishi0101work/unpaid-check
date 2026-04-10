@@ -56,432 +56,225 @@
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .logo-mark {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .logo-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-    }
-
-    .logo-text {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--white);
-      letter-spacing: -0.01em;
-    }
-
-    .header-sep {
-      width: 1px;
-      height: 20px;
-      background: rgba(255,255,255,0.15);
-    }
-
-    .breadcrumb {
-      font-size: 13px;
-      color: rgba(255,255,255,0.5);
-      display: none;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+    .logo-mark { display: flex; gap: 4px; align-items: center; }
+    .logo-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .logo-text { font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
+    .header-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+    .breadcrumb { font-size: 13px; color: rgba(255,255,255,0.5); display: none; }
     .breadcrumb span { color: rgba(255,255,255,0.85); }
     .breadcrumb.visible { display: block; }
-
     .header-spacer { flex: 1; }
 
-    .api-field {
+    /* ── Layout ── */
+    .layout { display: flex; height: calc(100vh - 58px); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .api-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.45);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+    .sidebar-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--gray-100);
     }
 
-    .api-input {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.85);
+    .sidebar-title {
       font-size: 12px;
-      font-family: 'SF Mono', 'Consolas', monospace;
-      width: 210px;
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .api-input::placeholder { color: rgba(255,255,255,0.25); }
-    .api-input:focus { border-color: rgba(29,111,232,0.6); background: rgba(255,255,255,0.1); }
-
-    .api-status {
-      font-size: 11px;
-      color: #4ADE80;
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .api-status.show { opacity: 1; }
-
-    /* ── Pages ── */
-    .page { display: none; max-width: 900px; margin: 0 auto; padding: 36px 24px; }
-    .page.active { display: block; }
-
-    /* ── Section header ── */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--gray-900);
-      letter-spacing: -0.02em;
-    }
-
-    .section-subtitle {
-      font-size: 13px;
-      color: var(--gray-500);
-      margin-top: 3px;
-    }
-
-    /* ── Buttons ── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 18px;
-      border-radius: 8px;
-      font-size: 13px;
       font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      border: none;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: var(--blue);
-      color: var(--white);
-    }
-    .btn-primary:hover { background: var(--blue-hover); }
-
-    .btn-secondary {
-      background: var(--white);
-      color: var(--gray-700);
-      border: 1px solid var(--gray-200);
-    }
-    .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-300); }
-
-    .btn-ghost {
-      background: none;
-      color: var(--blue);
-      border: none;
-      padding: 8px 12px;
-    }
-    .btn-ghost:hover { background: var(--blue-light); }
-
-    .btn-danger-ghost {
-      background: none;
-      color: var(--gray-400);
-      border: none;
-      padding: 5px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: color 0.15s, background 0.15s;
-    }
-    .btn-danger-ghost:hover { color: var(--red); background: var(--red-light); }
-
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-    .btn-full {
-      width: 100%;
-      justify-content: center;
-      padding: 12px 24px;
-      font-size: 14px;
-    }
-
-    /* ── Store Grid ── */
-    .store-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
-    }
-
-    .store-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 22px 22px 18px;
-      box-shadow: var(--shadow-sm);
-      cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
-      border: 1.5px solid var(--gray-100);
-      position: relative;
-    }
-
-    .store-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-      border-color: var(--blue);
-    }
-
-    .store-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       margin-bottom: 12px;
     }
 
-    .store-initial {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--blue-light);
-      color: var(--blue);
-      font-size: 16px;
-      font-weight: 700;
+    .add-store-form { display: flex; gap: 8px; }
+
+    .add-store-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .add-store-input:focus { border-color: var(--blue); }
+
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 7px;
+      background: var(--blue);
+      color: var(--white);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 20px;
+      transition: background 0.15s;
+      flex-shrink: 0;
     }
+    .btn-icon:hover { background: var(--blue-hover); }
 
-    .store-card h3 {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--gray-900);
-      margin-bottom: 5px;
-      line-height: 1.4;
+    .store-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+    .store-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      group: true;
     }
+    .store-item:hover { background: var(--gray-100); }
+    .store-item.active { background: var(--blue-light); }
 
-    .store-card .meta {
-      font-size: 12px;
+    .store-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .store-item.active .store-icon { background: var(--blue); }
+
+    .store-info { flex: 1; min-width: 0; }
+    .store-name { font-size: 13px; font-weight: 500; color: var(--gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .store-meta { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+
+    .store-del {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: none;
+      border-radius: 5px;
+      cursor: pointer;
       color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s, background 0.15s;
+      font-size: 14px;
+    }
+    .store-item:hover .store-del { opacity: 1; }
+    .store-del:hover { color: var(--red); background: var(--red-light); }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; padding: 32px; }
+
+    /* ── Welcome ── */
+    .welcome {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-    }
-
-    .store-card-footer {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid var(--gray-100);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
-
-    .badge-blue { background: var(--blue-light); color: var(--blue); }
-    .badge-green { background: var(--green-light); color: var(--green); }
-
-    /* ── Empty State ── */
-    .empty-state {
-      text-align: center;
-      padding: 64px 20px;
-      color: var(--gray-400);
-    }
-
-    .empty-icon {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 16px;
-      color: var(--gray-300);
-    }
-
-    .empty-state h3 { font-size: 15px; color: var(--gray-500); margin-bottom: 6px; }
-    .empty-state p { font-size: 13px; }
-
-    /* ── Modal ── */
-    .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,30,56,0.5);
-      z-index: 200;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(2px);
+      height: 100%;
+      gap: 16px;
+      color: var(--gray-400);
+      text-align: center;
     }
-    .overlay.show { display: flex; }
+    .welcome-icon { font-size: 56px; }
+    .welcome h2 { font-size: 18px; font-weight: 600; color: var(--gray-600); }
+    .welcome p { font-size: 14px; line-height: 1.6; }
 
-    .modal {
-      background: var(--white);
-      border-radius: 14px;
-      padding: 28px;
-      width: 420px;
-      box-shadow: var(--shadow-lg);
-      animation: modal-in 0.18s ease;
-    }
+    /* ── Store Detail ── */
+    .store-detail { display: none; }
+    .store-detail.visible { display: block; }
 
-    @keyframes modal-in {
-      from { opacity: 0; transform: scale(0.96) translateY(-8px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .modal-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 20px; }
-
-    .field-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--gray-600);
-      margin-bottom: 6px;
-      letter-spacing: 0.02em;
-    }
-
-    .field-input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--gray-900);
-      outline: none;
-      transition: border-color 0.15s;
-      background: var(--white);
-    }
-    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
-
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-    /* ── Detail Page ── */
-    .detail-nav {
+    .store-detail-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       margin-bottom: 28px;
     }
+    .store-detail-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .store-detail-title h1 { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+    .store-detail-title p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
 
-    .detail-nav h2 { font-size: 20px; font-weight: 700; color: var(--gray-900); }
-
-    .detail-actions { margin-left: auto; }
+    /* ── Sections ── */
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+    }
 
     /* ── Card ── */
     .card {
       background: var(--white);
+      border: 1px solid var(--gray-200);
       border-radius: var(--radius);
+      padding: 24px;
       box-shadow: var(--shadow-sm);
-      border: 1px solid var(--gray-100);
-      margin-bottom: 20px;
-      overflow: hidden;
     }
 
-    .card-header {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--gray-100);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title {
+    /* ── Form fields ── */
+    .form-row { display: flex; gap: 16px; margin-bottom: 20px; }
+    .form-group { flex: 1; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--gray-600); display: block; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
       font-size: 14px;
-      font-weight: 700;
-      color: var(--gray-900);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--white);
     }
+    .form-input:focus { border-color: var(--blue); }
 
-    .card-body { padding: 24px; }
-
-    /* ── Form ── */
-    .form-row {
+    /* ── Upload zones ── */
+    .upload-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
       margin-bottom: 20px;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-
-    select {
-      padding: 9px 12px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--gray-900);
-      outline: none;
-      background: var(--white);
-      transition: border-color 0.15s;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 32px;
-    }
-
-    select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
-
-    input[type="number"] {
-      padding: 9px 12px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--gray-900);
-      outline: none;
-      width: 100%;
-      background: var(--white);
-      transition: border-color 0.15s;
-    }
-
-    input[type="number"]:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
-
-    /* ── Upload Grid ── */
-    .upload-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
     .upload-zone {
-      border: 1.5px dashed var(--gray-200);
+      border: 2px dashed var(--gray-300);
       border-radius: 8px;
-      padding: 18px 14px;
+      padding: 20px 16px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
       position: relative;
       background: var(--gray-50);
     }
-
     .upload-zone:hover { border-color: var(--blue); background: var(--blue-light); }
-    .upload-zone.dragover { border-color: var(--blue); background: var(--blue-light); }
-
-    .upload-zone.done {
-      border-style: solid;
-      border-color: #16A34A;
-      background: var(--green-light);
-    }
+    .upload-zone.has-file { border-color: var(--green); background: var(--green-light); }
+    .upload-zone.drag-over { border-color: var(--blue); background: var(--blue-light); transform: scale(1.01); }
 
     .upload-zone input[type="file"] {
       position: absolute;
@@ -492,1877 +285,749 @@
       height: 100%;
     }
 
-    .upload-zone-icon {
-      width: 28px;
-      height: 28px;
-      margin: 0 auto 8px;
-      color: var(--gray-300);
-    }
-
-    .upload-zone.done .upload-zone-icon { color: var(--green); }
-    .upload-zone:hover .upload-zone-icon,
-    .upload-zone.dragover .upload-zone-icon { color: var(--blue); }
-
-    .upload-zone h4 {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--gray-700);
-      margin-bottom: 3px;
-    }
-
-    .upload-zone p.hint { font-size: 11px; color: var(--gray-400); }
-
-    .upload-zone .filename {
-      font-size: 11px;
-      color: var(--green);
-      font-weight: 600;
-      margin-top: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      display: none;
-    }
-
-    .upload-zone.done .filename { display: block; }
-    .upload-zone.done .hint { display: none; }
-
-    .upload-zone .preview-img {
-      width: 100%;
-      max-height: 72px;
-      object-fit: cover;
-      border-radius: 5px;
-      margin-top: 6px;
-      display: none;
-    }
-    .upload-zone.done .preview-img { display: block; }
-    .upload-zone.done .upload-zone-icon { display: none; }
-
-    .upload-zone .multi-badge {
-      display: none;
-      position: absolute;
-      top: 6px; right: 6px;
-      background: var(--blue);
-      color: var(--white);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 20px;
-    }
-    .upload-zone.done .multi-badge { display: inline-block; }
-    .upload-zone.done .multi-badge[data-count="1"] { display: none; }
-
-    .upload-zone.processing {
-      border-color: var(--blue);
-      background: var(--blue-light);
-      pointer-events: none;
-    }
-    .upload-zone.processing .upload-zone-icon { color: var(--blue); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .upload-zone.processing .upload-zone-icon { animation: spin 1s linear infinite; }
-
-    /* ── Status ── */
-    .status-area { display: none; margin-top: 16px; }
-    .status-area.visible { display: block; }
-
-    .progress-track {
-      height: 3px;
-      background: var(--gray-100);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 14px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--blue);
-      border-radius: 2px;
-      width: 0%;
-      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-    }
-
-    .log-panel {
-      background: #0D1117;
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 12px;
-      line-height: 1.9;
-      min-height: 72px;
-      max-height: 180px;
-      overflow-y: auto;
-      color: #8B949E;
-    }
-
-    .log-panel .log-ok { color: #3FB950; }
-    .log-panel .log-err { color: #F85149; }
-    .log-panel .log-info { color: #58A6FF; }
-
-    /* ── Report History ── */
-    .report-list { display: flex; flex-direction: column; }
-
-    .report-row {
-      display: flex;
-      align-items: center;
-      padding: 14px 0;
-      gap: 14px;
-      border-bottom: 1px solid var(--gray-100);
-    }
-    .report-row:last-child { border-bottom: none; }
-
-    .report-file-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: #EEF2FF;
-      color: #4F46E5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .report-info { flex: 1; min-width: 0; }
-
-    .report-info .report-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--gray-900);
-    }
-
-    .report-info .report-date {
-      font-size: 11px;
-      color: var(--gray-400);
-      margin-top: 2px;
-    }
-
-    .report-actions { display: flex; align-items: center; gap: 6px; }
-
-    .btn-download {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: var(--blue-light);
-      color: var(--blue);
-      border: none;
-      border-radius: 6px;
+    .upload-label {
       font-size: 12px;
       font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      text-decoration: none;
-      transition: background 0.15s;
+      color: var(--gray-600);
+      margin-bottom: 4px;
     }
-    .btn-download:hover { background: #D6E9FC; }
+    .upload-sub { font-size: 11px; color: var(--gray-400); }
+    .upload-icon { font-size: 24px; margin-bottom: 6px; }
+    .upload-filename { font-size: 11px; color: var(--green); font-weight: 500; margin-top: 4px; word-break: break-all; }
 
-    /* ── Prompt Settings ── */
-    .prompt-card { margin-bottom: 20px; }
-
-    .prompt-section {
-      padding: 20px 0;
-      border-bottom: 1px solid var(--gray-100);
-    }
-    .prompt-section:last-child { border-bottom: none; }
-
-    .prompt-section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+    /* ── CSV section ── */
+    .csv-section {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
     }
 
-    .prompt-page-num {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--blue);
-      background: var(--blue-light);
-      padding: 3px 10px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-
-    .prompt-page-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--gray-900);
-    }
-
-    .prompt-section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .prompt-section-label {
+    .csv-section-title {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--gray-700);
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .prompt-badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      background: var(--blue-light);
-      color: var(--blue);
-    }
-    .prompt-badge.custom { background: #FEF3C7; color: #92400E; }
-
-    .prompt-toggle {
+    .csv-flow {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--gray-500);
-      cursor: pointer;
-    }
-    .prompt-toggle input[type=checkbox] { cursor: pointer; accent-color: var(--blue); }
-
-    textarea.prompt-textarea {
-      width: 100%;
-      min-height: 100px;
-      padding: 10px 12px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      color: var(--gray-900);
-      line-height: 1.7;
-      resize: vertical;
-      outline: none;
-      background: var(--white);
-      transition: border-color 0.15s;
-    }
-    textarea.prompt-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
-    textarea.prompt-textarea:disabled { background: var(--gray-50); color: var(--gray-400); cursor: not-allowed; }
-
-    .prompt-hint {
-      font-size: 11px;
-      color: var(--gray-400);
-      margin-top: 5px;
-    }
-
-    .settings-footer {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      padding-top: 16px;
-      border-top: 1px solid var(--gray-100);
-      margin-top: 4px;
-    }
-
-    /* ── AI Selector ── */
-    .ai-selector {
-      display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .ai-option {
-      flex: 1;
-      min-width: 130px;
+    .csv-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .csv-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.15s;
+      justify-content: center;
     }
 
-    .ai-option:has(input:checked) {
-      border-color: var(--blue);
-      background: var(--blue-light);
-    }
+    .csv-step-label { font-size: 11px; color: var(--gray-500); text-align: center; line-height: 1.3; }
 
-    .ai-option input[type=radio] { accent-color: var(--blue); flex-shrink: 0; }
+    .csv-arrow { color: var(--gray-300); font-size: 18px; margin-top: -10px; }
 
-    .ai-name  { font-size: 13px; font-weight: 700; color: var(--gray-900); display: block; }
-    .ai-model { font-size: 10px; color: var(--gray-500); margin-top: 1px; }
-
-    /* ── Search bar ── */
-    .search-wrapper {
-      position: relative;
-      margin-bottom: 20px;
-    }
-    .search-wrapper .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gray-400);
-      pointer-events: none;
-    }
-    .search-wrapper input {
-      width: 100%;
-      padding: 10px 14px 10px 38px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--gray-900);
-      outline: none;
-      background: var(--white);
-      transition: border-color 0.15s;
-    }
-    .search-wrapper input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,111,232,0.1); }
-    .search-wrapper input::placeholder { color: var(--gray-400); }
-
-    .badge-custom {
-      background: #FEF3C7;
-      color: #92400E;
+    .btn-csv-download {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 10px;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-700);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-csv-download:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+    /* ── CSV Upload zone (full width) ── */
+    .upload-zone-csv {
+      border: 2px dashed var(--gray-300);
+      border-radius: 8px;
+      padding: 18px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      background: var(--white);
+      margin-top: 12px;
+    }
+    .upload-zone-csv:hover { border-color: var(--blue); background: var(--blue-light); }
+    .upload-zone-csv.has-file { border-color: var(--green); background: var(--green-light); }
+    .upload-zone-csv input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
     }
+    .btn-primary:hover { background: var(--blue-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* ── Confirm Modal ── */
-    .confirm-modal { width: 380px; }
-    .confirm-modal p { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-top: 8px; }
+    /* ── Report history ── */
+    .report-list { display: flex; flex-direction: column; gap: 8px; }
 
-    /* ── Review Modal parts ── */
-    .rv-section {
-      background: var(--gray-50);
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 16px 18px;
-    }
-    .rv-section-header {
+    .report-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      transition: box-shadow 0.15s;
     }
-    .rv-label { font-size: 13px; font-weight: 700; color: var(--gray-700); }
-    .rv-badge {
+    .report-item:hover { box-shadow: var(--shadow-md); }
+
+    .report-icon { font-size: 22px; flex-shrink: 0; }
+    .report-info { flex: 1; min-width: 0; }
+    .report-name { font-size: 13px; font-weight: 500; color: var(--gray-900); }
+    .report-date { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+    .report-actions { display: flex; gap: 6px; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      color: var(--gray-600);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-sm:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .btn-sm.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+    .empty-reports {
+      text-align: center;
+      padding: 32px;
+      color: var(--gray-400);
+      font-size: 13px;
+    }
+    .empty-reports-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      font-size: 13px;
+      max-width: 380px;
+      animation: slideIn 0.2s ease;
+    }
+    .toast.success { background: var(--green-light); color: #166534; border: 1px solid #86efac; }
+    .toast.error { background: var(--red-light); color: #991b1b; border: 1px solid #fca5a5; }
+    .toast.info { background: var(--blue-light); color: #1e40af; border: 1px solid #93c5fd; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Progress overlay ── */
+    .progress-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,30,56,0.5);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-overlay.visible { display: flex; }
+    .progress-box {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 36px 48px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      min-width: 280px;
+    }
+    .progress-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-title { font-size: 16px; font-weight: 600; color: var(--gray-900); margin-bottom: 6px; }
+    .progress-sub { font-size: 13px; color: var(--gray-500); }
+
+    /* ── Utility ── */
+    .divider { height: 1px; background: var(--gray-200); margin: 20px 0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 99px;
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
     }
-    .rv-badge-warn { background: #FEF3C7; color: #92400E; }
-    .rv-badge-gray { background: var(--gray-200); color: var(--gray-500); }
-    .rv-textarea { font-size: 13px; min-height: 60px; }
-    .rv-regen-btn {
-      margin-top: 10px;
-      font-size: 12px;
-      padding: 5px 14px;
-    }
-    .rv-field { }
-    .rv-field .field-label { font-size: 11px; }
-
-    /* ── SVG Icons (inline) ── */
-    svg { display: block; }
+    .badge.blue { background: var(--blue-light); color: var(--blue); }
   </style>
 </head>
 <body>
 
 <!-- Header -->
 <header>
-  <a class="logo" onclick="showPage('stores')">
+  <a class="logo" onclick="goHome()">
     <div class="logo-mark">
       <div class="logo-dot" style="background:#4285F4"></div>
       <div class="logo-dot" style="background:#EA4335"></div>
       <div class="logo-dot" style="background:#FBBC05"></div>
       <div class="logo-dot" style="background:#34A853"></div>
     </div>
-    <span class="logo-text">MEOレポーター</span>
+    <div class="logo-text">MEOレポーター</div>
   </a>
-
   <div class="header-sep"></div>
-  <div class="breadcrumb" id="breadcrumb">店舗一覧 / <span id="breadcrumbStore"></span></div>
-
+  <div class="breadcrumb" id="breadcrumb"><span id="breadcrumbStore"></span></div>
   <div class="header-spacer"></div>
-
-  <div class="api-field" id="apiKeyField">
-    <span class="api-label" id="apiKeyLabel">Claude Key（画像解析用・必須）</span>
-    <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-..." oninput="saveApiKey()" style="width:240px">
-    <span class="api-status" id="apiStatus">Saved</span>
-  </div>
-  <button id="testConnBtn" onclick="testConnection()" style="margin-left:6px;padding:4px 10px;font-size:11px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:4px;color:white;cursor:pointer" title="APIキーの接続テスト">接続テスト</button>
-
-  <button onclick="showPage('settings')" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.5);transition:color 0.15s,background 0.15s;margin-left:8px" onmouseover="this.style.color='rgba(255,255,255,0.9)';this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.color='rgba(255,255,255,0.5)';this.style.background='none'" title="プロンプト設定">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  </button>
 </header>
 
+<!-- Layout -->
+<div class="layout">
 
-<!-- Page: Store List -->
-<div class="page active" id="page-stores">
-  <div class="section-header">
-    <div>
-      <div class="section-title">対策店舗一覧</div>
-      <div class="section-subtitle" id="storeCountLabel">登録 0店舗</div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">店舗一覧</div>
+      <div class="add-store-form">
+        <input class="add-store-input" type="text" id="newStoreName" placeholder="新しい店舗名を入力" onkeydown="if(event.key==='Enter')addStore()">
+        <button class="btn-icon" onclick="addStore()" title="追加">+</button>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="showAddModal()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      店舗を追加
-    </button>
-  </div>
-  <div class="search-wrapper">
-    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-    <input type="text" id="storeSearch" placeholder="店舗名で検索..." oninput="onStoreSearch()">
-  </div>
-  <div class="store-grid" id="storeGrid"></div>
+    <div class="store-list" id="storeList"></div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Welcome -->
+    <div class="welcome" id="welcomeView">
+      <div class="welcome-icon">📊</div>
+      <h2>MEOレポーターへようこそ</h2>
+      <p>左のサイドバーから店舗を選択するか、<br>新しい店舗を追加してください。</p>
+    </div>
+
+    <!-- Store detail -->
+    <div class="store-detail" id="storeDetail">
+
+      <div class="store-detail-header">
+        <div class="store-detail-icon">🏪</div>
+        <div class="store-detail-title">
+          <h1 id="detailStoreName">店舗名</h1>
+          <p id="detailStoreSub">レポートを作成してください</p>
+        </div>
+      </div>
+
+      <!-- Report creation form -->
+      <div class="section">
+        <div class="section-title">新規レポート作成</div>
+        <div class="card">
+
+          <!-- Month / Year -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">対象月</label>
+              <select class="form-input" id="reportMonth"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">対象年</label>
+              <select class="form-input" id="reportYear"></select>
+            </div>
+          </div>
+
+          <!-- Image uploads -->
+          <div class="section-title" style="margin-bottom:12px">📸 スクリーンショット（画像）</div>
+          <div class="upload-grid">
+            <div class="upload-zone" id="zone-keyword" ondragover="handleDragOver(event,'keyword')" ondragleave="handleDragLeave(event,'keyword')" ondrop="handleDrop(event,'keyword')">
+              <input type="file" id="img-keyword" accept="image/*" multiple onchange="handleFileSelect(this,'keyword')">
+              <div class="upload-icon">🔍</div>
+              <div class="upload-label">キーワード順位</div>
+              <div class="upload-sub">2ページ目（複数枚可）</div>
+              <div class="upload-filename" id="fn-keyword"></div>
+            </div>
+            <div class="upload-zone" id="zone-views" ondragover="handleDragOver(event,'views')" ondragleave="handleDragLeave(event,'views')" ondrop="handleDrop(event,'views')">
+              <input type="file" id="img-views" accept="image/*" onchange="handleFileSelect(this,'views')">
+              <div class="upload-icon">👁️</div>
+              <div class="upload-label">閲覧ユーザー数</div>
+              <div class="upload-sub">3ページ目</div>
+              <div class="upload-filename" id="fn-views"></div>
+            </div>
+            <div class="upload-zone" id="zone-interactions" ondragover="handleDragOver(event,'interactions')" ondragleave="handleDragLeave(event,'interactions')" ondrop="handleDrop(event,'interactions')">
+              <input type="file" id="img-interactions" accept="image/*" onchange="handleFileSelect(this,'interactions')">
+              <div class="upload-icon">🔄</div>
+              <div class="upload-label">インタラクション数</div>
+              <div class="upload-sub">4ページ目</div>
+              <div class="upload-filename" id="fn-interactions"></div>
+            </div>
+            <div class="upload-zone" id="zone-userActions" ondragover="handleDragOver(event,'userActions')" ondragleave="handleDragLeave(event,'userActions')" ondrop="handleDrop(event,'userActions')">
+              <input type="file" id="img-userActions" accept="image/*" onchange="handleFileSelect(this,'userActions')">
+              <div class="upload-icon">📍</div>
+              <div class="upload-label">ユーザー行動データ</div>
+              <div class="upload-sub">5ページ目</div>
+              <div class="upload-filename" id="fn-userActions"></div>
+            </div>
+          </div>
+
+          <!-- CSV section -->
+          <div class="csv-section">
+            <div class="csv-section-title">📝 テキストCSV</div>
+            <div class="csv-flow">
+              <div class="csv-step">
+                <div class="csv-step-num">1</div>
+                <div class="csv-step-label">ひな型を<br>ダウンロード</div>
+              </div>
+              <div class="csv-arrow">→</div>
+              <div class="csv-step">
+                <div class="csv-step-num">2</div>
+                <div class="csv-step-label">ChatGPTで<br>テキストを作成</div>
+              </div>
+              <div class="csv-arrow">→</div>
+              <div class="csv-step">
+                <div class="csv-step-num">3</div>
+                <div class="csv-step-label">CSVを<br>アップロード</div>
+              </div>
+              <div style="flex:1"></div>
+              <button class="btn-csv-download" id="btnCsvDownload" onclick="downloadCsvTemplate()">
+                ⬇️ CSVひな型ダウンロード
+              </button>
+            </div>
+
+            <div class="upload-zone-csv" id="zone-csv" ondragover="handleDragOver(event,'csv')" ondragleave="handleDragLeave(event,'csv')" ondrop="handleDrop(event,'csv')">
+              <input type="file" id="file-csv" accept=".csv,text/csv" onchange="handleFileSelect(this,'csv')">
+              <div style="font-size:22px;margin-bottom:6px">📄</div>
+              <div style="font-size:12px;font-weight:600;color:var(--gray-600)">CSVファイルをドロップ、またはクリックして選択</div>
+              <div class="upload-filename" id="fn-csv"></div>
+            </div>
+          </div>
+
+          <!-- Generate button -->
+          <button class="btn-primary" id="btnGenerate" onclick="generateReport()" style="width:100%">
+            📊 レポートを作成する
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Report history -->
+      <div class="section">
+        <div class="section-title">レポート履歴</div>
+        <div id="reportHistory"></div>
+      </div>
+
+    </div>
+
+  </main>
 </div>
 
-
-<!-- Page: Store Detail -->
-<div class="page" id="page-detail">
-  <div class="detail-nav">
-    <button class="btn btn-ghost" style="padding:7px 10px" onclick="showPage('stores')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <h2 id="detailName"></h2>
-    <div class="detail-actions">
-      <button class="btn btn-primary" onclick="scrollToForm()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        新規レポート
-      </button>
-    </div>
-  </div>
-
-  <!-- Report History -->
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">レポート履歴</span>
-    </div>
-    <div class="card-body" style="padding:0 24px">
-      <div class="report-list" id="reportList"></div>
-    </div>
-  </div>
-
-  <!-- Store Prompt Settings -->
-  <div class="card" id="storePromptCard" style="margin-bottom:20px">
-    <div class="card-header" style="cursor:pointer" onclick="toggleStorePrompts()">
-      <span class="card-title">プロンプト設定（この店舗専用）</span>
-      <svg id="storePromptChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2.5" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div id="storePromptBody" style="display:none">
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.7">
-          チェックを外すとデフォルト設定の代わりにこの店舗専用のプロンプトを使用します。
-        </p>
-        <div id="storePromptSections"></div>
-        <div class="settings-footer">
-          <span id="storeSaveMsg" style="font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s">保存しました</span>
-          <button class="btn btn-primary" onclick="saveStorePrompts()">この店舗の設定を保存</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Generate Form -->
-  <div class="card" id="generateCard">
-    <div class="card-header">
-      <span class="card-title">新規レポート生成</span>
-      <span id="aiIndicatorBadge" style="font-size:11px;color:var(--gray-400);font-weight:500"></span>
-    </div>
-    <div class="card-body">
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="field-label">対象月</label>
-          <select id="month"></select>
-        </div>
-        <div class="form-group">
-          <label class="field-label">対象年</label>
-          <input type="number" id="year" min="2020" max="2035">
-        </div>
-      </div>
-      <div class="form-row" style="grid-template-columns:1fr 2fr;margin-bottom:20px">
-        <div class="form-group">
-          <label class="field-label">成果日数</label>
-          <input type="number" id="achievementDays" min="0" max="31" placeholder="例: 28">
-        </div>
-      </div>
-
-      <label class="field-label" style="margin-bottom:10px">スクリーンショット（MEO管理システムより）</label>
-
-      <div class="upload-grid">
-
-        <div class="upload-zone" id="zone-keyword">
-          <span class="multi-badge" id="badge-keyword" data-count="1"></span>
-          <input type="file" accept="image/*,application/pdf" onchange="onFile(this,'keyword')">
-          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-          </svg>
-          <h4>キーワード順位</h4>
-          <p class="hint">PNG / JPG</p>
-          <img class="preview-img" id="preview-keyword" alt="">
-          <p class="filename" id="fn-keyword"></p>
-        </div>
-
-        <div class="upload-zone" id="zone-views">
-          <span class="multi-badge" id="badge-views" data-count="1"></span>
-          <input type="file" accept="image/*,application/pdf" multiple onchange="onFile(this,'views')">
-          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
-          <h4>閲覧ユーザー数</h4>
-          <p class="hint">PNG / JPG</p>
-          <img class="preview-img" id="preview-views" alt="">
-          <p class="filename" id="fn-views"></p>
-        </div>
-
-        <div class="upload-zone" id="zone-interactions">
-          <span class="multi-badge" id="badge-interactions" data-count="1"></span>
-          <input type="file" accept="image/*,application/pdf" multiple onchange="onFile(this,'interactions')">
-          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-          <h4>インタラクション数</h4>
-          <p class="hint">PNG / JPG</p>
-          <img class="preview-img" id="preview-interactions" alt="">
-          <p class="filename" id="fn-interactions"></p>
-        </div>
-
-        <div class="upload-zone" id="zone-userActions">
-          <span class="multi-badge" id="badge-userActions" data-count="1"></span>
-          <input type="file" accept="image/*,application/pdf" multiple onchange="onFile(this,'userActions')">
-          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-          </svg>
-          <h4>ユーザー行動データ</h4>
-          <p class="hint">PNG / JPG</p>
-          <img class="preview-img" id="preview-userActions" alt="">
-          <p class="filename" id="fn-userActions"></p>
-        </div>
-
-      </div>
-
-      <!-- 手動コメント入力 -->
-      <details id="manualCommentDetails" style="margin-bottom:16px;border:1.5px solid var(--gray-200);border-radius:8px;overflow:hidden">
-        <summary style="padding:12px 16px;font-size:13px;font-weight:700;color:var(--gray-700);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;background:var(--gray-50)">
-          <span>コメントを手入力する（AIが空の場合はこちらを使用）</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </summary>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
-          <p style="font-size:12px;color:var(--gray-500);line-height:1.7">入力したコメントはAI生成より優先されます。空欄の場合はAI生成を使用します。</p>
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">キーワード順位</div>
-            <div style="margin-bottom:6px">
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
-              <textarea id="manual_current_keyword" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-            <div>
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
-              <textarea id="manual_analysis_keyword" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">閲覧ユーザー数</div>
-            <div style="margin-bottom:6px">
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
-              <textarea id="manual_current_views" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-            <div>
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
-              <textarea id="manual_analysis_views" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">インタラクション数</div>
-            <div style="margin-bottom:6px">
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
-              <textarea id="manual_current_interactions" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-            <div>
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
-              <textarea id="manual_analysis_interactions" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">ユーザー行動データ</div>
-            <div style="margin-bottom:6px">
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
-              <textarea id="manual_current_userActions" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-            <div>
-              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
-              <textarea id="manual_analysis_userActions" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <button class="btn btn-primary btn-full" id="genBtn" onclick="generate()">解析する</button>
-
-      <div class="status-area" id="statusArea">
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="log-panel" id="logPanel"></div>
-      </div>
-
-    </div>
+<!-- Progress overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="progress-spinner"></div>
+    <div class="progress-title">レポートを生成中...</div>
+    <div class="progress-sub">しばらくお待ちください</div>
   </div>
 </div>
 
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
 
-<!-- Page: Settings -->
-<div class="page" id="page-settings">
-  <div class="detail-nav" style="margin-bottom:28px">
-    <button class="btn btn-ghost" style="padding:7px 10px" onclick="showPage('stores')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <h2>プロンプト設定（デフォルト）</h2>
-  </div>
-
-  <!-- AI設定カード -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-header"><span class="card-title">文章生成AI</span></div>
-    <div class="card-body">
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.7">
-        レポート文章の生成に使用するAIを選択します。<br>
-        スクリーンショットの画像解析は常にClaudeを使用します。
-      </p>
-      <div class="ai-selector">
-        <label class="ai-option">
-          <input type="radio" name="commentAI" value="claude" onchange="onAIChange()">
-          <div>
-            <span class="ai-name">Claude</span>
-            <span class="ai-model">claude-opus-4-6 · ヘッダーのAPIキーを使用</span>
-          </div>
-        </label>
-        <label class="ai-option">
-          <input type="radio" name="commentAI" value="openai" onchange="onAIChange()">
-          <div>
-            <span class="ai-name">ChatGPT</span>
-            <span class="ai-model">gpt-4o · OpenAI</span>
-          </div>
-        </label>
-        <label class="ai-option">
-          <input type="radio" name="commentAI" value="gemini" onchange="onAIChange()">
-          <div>
-            <span class="ai-name">Gemini</span>
-            <span class="ai-model">gemini-2.0-flash · Google</span>
-          </div>
-        </label>
-      </div>
-      <div id="commentApiKeyField" style="margin-top:14px;display:none">
-        <label class="field-label" id="commentApiKeyLabel" style="margin-bottom:6px">APIキー</label>
-        <input class="field-input" type="password" id="commentApiKey" placeholder="sk-..." oninput="saveCommentAISettings()">
-      </div>
-    </div>
-  </div>
-
-  <div class="card prompt-card">
-    <div class="card-header">
-      <span class="card-title">文章生成プロンプト</span>
-    </div>
-    <div class="card-body">
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.7">
-        各セクションの文章を生成する際の指示文を設定します。<code style="background:var(--gray-100);padding:1px 5px;border-radius:3px;font-size:12px">{month}</code> と書くと月が自動で入ります。<br>
-        データ（数値）と出力形式（JSON）は自動で付加されるため、記載不要です。
-      </p>
-
-      <div id="defaultPromptSections">
-        <!-- JS で生成 -->
-      </div>
-
-      <div class="settings-footer">
-        <span id="defaultSaveMsg" style="font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s">保存しました</span>
-        <button class="btn btn-secondary" onclick="resetDefaultPrompts()">デフォルトに戻す</button>
-        <button class="btn btn-primary" onclick="saveDefaultPrompts()">保存する</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Modal: Add Store -->
-<div class="overlay" id="addModal">
-  <div class="modal">
-    <div class="modal-title">店舗を追加</div>
-    <label class="field-label">店舗名</label>
-    <input class="field-input" type="text" id="newName" placeholder="例：○○整骨院 名古屋駅前店"
-      onkeydown="if(event.key==='Enter') addStore()">
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="addStore()">追加する</button>
-    </div>
-  </div>
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.js"></script>
 <script>
-  /* ── PDF.js worker ── */
-  if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.js';
-  }
+// ── State ────────────────────────────────────────────────
+let stores = [];
+let currentStoreId = null;
+let reports = [];
 
-  /* ── State ── */
-  let currentStoreId = null;
-  let currentStoreName = '';
-  let droppedFiles = {};
-
-  /* ── Init ── */
-  const savedKey = localStorage.getItem('anthropic_api_key');
-  if (savedKey) document.getElementById('apiKey').value = savedKey;
-
-  const now = new Date();
-  const sel = document.getElementById('month');
+// ── Init ─────────────────────────────────────────────────
+(function init() {
+  // Month selector
+  const monthEl = document.getElementById('reportMonth');
   for (let m = 1; m <= 12; m++) {
-    const o = document.createElement('option');
-    o.value = m; o.textContent = m + '月';
-    if (m === now.getMonth() + 1) o.selected = true;
-    sel.appendChild(o);
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = `${m}月`;
+    monthEl.appendChild(opt);
   }
-  document.getElementById('year').value = now.getFullYear();
+  monthEl.value = new Date().getMonth() + 1;
 
-  /* ── API Key ── */
-  function saveApiKey() {
-    localStorage.setItem('anthropic_api_key', document.getElementById('apiKey').value.trim());
-    const s = document.getElementById('apiStatus');
-    s.classList.add('show');
-    setTimeout(() => s.classList.remove('show'), 1800);
+  // Year selector
+  const yearEl = document.getElementById('reportYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear - 1; y <= thisYear + 1; y++) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = `${y}年`;
+    yearEl.appendChild(opt);
   }
+  yearEl.value = thisYear;
 
-  async function testConnection() {
-    const btn = document.getElementById('testConnBtn');
-    btn.disabled = true; btn.textContent = 'テスト中...';
-    try {
-      const apiKey = document.getElementById('apiKey').value.trim();
-      // ラジオボタンから正しく取得
-      const commentAI = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
-      const commentApiKey = document.getElementById('commentApiKey')?.value?.trim() ?? '';
-      const res = await fetch('/api/test-connection', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, commentAI, commentApiKey }),
-      });
-      const data = await res.json();
-      const lines = Object.values(data.results).map(r => r.message).join('\n');
-      alert('【API接続テスト結果】\n\n' + lines + (data.ok ? '\n\n✅ 問題ありません' : '\n\n❌ エラーがあります。APIキーを確認してください'));
-    } catch (err) {
-      alert('接続テストエラー: ' + err.message);
-    } finally {
-      btn.disabled = false; btn.textContent = '接続テスト';
-    }
-  }
-
-  /* ── Navigation ── */
-  function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    document.getElementById('breadcrumb').classList.remove('visible');
-    if (id === 'stores')   loadStores();
-    if (id === 'settings') openSettingsPage();
-  }
-
-  function openStore(id, name) {
-    currentStoreId = id;
-    currentStoreName = name;
-    document.getElementById('detailName').textContent = name;
-    document.getElementById('breadcrumbStore').textContent = name;
-    document.getElementById('breadcrumb').classList.add('visible');
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-detail').classList.add('active');
-    loadReports(id);
-    resetForm();
-    loadStorePrompts(id);
-    updateAIBadge(localStorage.getItem('comment_ai_provider') ?? 'claude');
-  }
-
-  function scrollToForm() {
-    document.getElementById('generateCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  /* ── Stores ── */
-  let cachedStores = [];
-
-  async function loadStores() {
-    cachedStores = await fetch('/api/stores').then(r => r.json());
-    const q = document.getElementById('storeSearch')?.value.trim() ?? '';
-    renderStoreGrid(q ? cachedStores.filter(s => s.name.includes(q)) : cachedStores);
-  }
-
-  function onStoreSearch() {
-    const q = document.getElementById('storeSearch')?.value.trim() ?? '';
-    const filtered = q ? cachedStores.filter(s => s.name.toLowerCase().includes(q.toLowerCase())) : cachedStores;
-    renderStoreGrid(filtered, q !== '');
-  }
-
-  function renderStoreGrid(stores, isFiltered = false) {
-    const total = cachedStores.length;
-    const label = document.getElementById('storeCountLabel');
-    label.textContent = isFiltered ? `${stores.length} / ${total}店舗` : `登録 ${total}店舗`;
-
-    const grid = document.getElementById('storeGrid');
-
-    if (total === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          <h3>店舗が登録されていません</h3>
-          <p>右上の「店舗を追加」から登録してください</p>
-        </div>`;
-      return;
-    }
-
-    if (stores.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <h3>検索結果がありません</h3>
-          <p>別のキーワードで試してください</p>
-        </div>`;
-      return;
-    }
-
-    grid.innerHTML = stores.map(s => `
-      <div class="store-card" onclick="openStore('${s.id}','${esc(s.name)}')">
-        <div class="store-card-top">
-          <div class="store-initial">${Array.from(s.name)[0]}</div>
-          <button class="btn-danger-ghost" onclick="event.stopPropagation();deleteStore('${s.id}','${esc(s.name)}')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <h3>${esc(s.name)}</h3>
-        <div class="meta">
-          <span>登録日：${fmtDate(s.createdAt)}</span>
-          ${s.latestReport ? `<span>最終：${s.latestReport.year}年${s.latestReport.month}月</span>` : ''}
-        </div>
-        <div class="store-card-footer">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span class="badge badge-blue">レポート ${s.reportCount}件</span>
-            ${s.hasCustomPrompts ? `<span class="badge-custom"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>個別設定</span>` : ''}
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function showAddModal() {
-    document.getElementById('newName').value = '';
-    document.getElementById('addModal').classList.add('show');
-    setTimeout(() => document.getElementById('newName').focus(), 80);
-  }
-
-  function closeModal() {
-    document.getElementById('addModal').classList.remove('show');
-  }
-
-  async function addStore() {
-    const name = document.getElementById('newName').value.trim();
-    if (!name) return;
-    await fetch('/api/stores', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
-    closeModal();
-    loadStores();
-  }
-
-  async function deleteStore(id, name) {
-    if (!confirm(`「${name}」を削除しますか？\n関連するレポートもすべて削除されます。`)) return;
-    await fetch(`/api/stores/${id}`, { method:'DELETE' });
-    loadStores();
-  }
-
-  /* ── Reports ── */
-  async function loadReports(storeId) {
-    const data = await fetch(`/api/stores/${storeId}/reports`).then(r => r.json());
-    const list = document.getElementById('reportList');
-
-    if (data.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state" style="padding:40px 0">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <h3>レポートがありません</h3>
-          <p>下のフォームから生成してください</p>
-        </div>`;
-      return;
-    }
-
-    list.innerHTML = data.map(r => `
-      <div class="report-row">
-        <div class="report-file-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-          </svg>
-        </div>
-        <div class="report-info">
-          <div class="report-title">${r.year}年${r.month}月度 MEO対策レポート</div>
-          <div class="report-date">生成：${fmtDateTime(r.generatedAt)}</div>
-        </div>
-        <div class="report-actions">
-          <a class="btn-download" href="/api/reports/${r.id}/download" download>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            ダウンロード
-          </a>
-          <button class="btn-danger-ghost" onclick="deleteReport('${r.id}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  async function deleteReport(id) {
-    if (!confirm('このレポートを削除しますか？')) return;
-    await fetch(`/api/reports/${id}`, { method:'DELETE' });
-    loadReports(currentStoreId);
-  }
-
-  /* ── PDF→PNG変換（全ページ縦結合） ── */
-  async function pdfToImageBlob(file) {
-    const url = URL.createObjectURL(file);
-    try {
-      const pdf = await pdfjsLib.getDocument(url).promise;
-      const canvases = [];
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        canvases.push(canvas);
-      }
-      return stitchCanvases(canvases);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
-
-  /* ── Canvas縦結合 ── */
-  function stitchCanvases(canvases) {
-    const totalH = canvases.reduce((h, c) => h + c.height, 0);
-    const maxW   = Math.max(...canvases.map(c => c.width));
-    const out    = document.createElement('canvas');
-    out.width = maxW; out.height = totalH;
-    const ctx = out.getContext('2d');
-    let y = 0;
-    for (const c of canvases) { ctx.drawImage(c, 0, y); y += c.height; }
-    return new Promise(resolve => out.toBlob(resolve, 'image/png'));
-  }
-
-  /* ── 画像ファイル→Canvas ── */
-  function imageFileToCanvas(file) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width  = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        resolve(canvas);
-      };
-      img.onerror = reject;
-      img.src = url;
-    });
-  }
-
-  /* ── Generate（複数ファイル対応） ── */
-  async function setFiles(type, files) {
-    if (!files || files.length === 0) return;
-    const zone  = document.getElementById('zone-' + type);
-    const fnEl  = document.getElementById('fn-' + type);
-    const badge = document.getElementById('badge-' + type);
-
-    zone.classList.remove('done');
-    zone.classList.add('processing');
-    fnEl.style.display = 'block';
-    fnEl.textContent = '変換中...';
-
-    try {
-      // キーワードは1枚のみ（複数選択された場合は1枚目のみ使用）
-      if (type === 'keyword') {
-        const f = files[0];
-        let finalFile = f;
-        if (f.type === 'application/pdf') {
-          const blob = await pdfToImageBlob(f);
-          finalFile = new File([blob], f.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' });
-        }
-        droppedFiles['keyword'] = finalFile;
-        zone.classList.remove('processing');
-        zone.classList.add('done');
-        fnEl.textContent = finalFile.name;
-        badge.textContent = '1枚';
-        badge.dataset.count = 1;
-        const reader = new FileReader();
-        reader.onload = e => { document.getElementById('preview-keyword').src = e.target.result; };
-        reader.readAsDataURL(finalFile);
-        return;
-      }
-
-      // その他のタイプは従来通りステッチ
-      const canvases = [];
-      for (const f of files) {
-        if (f.type === 'application/pdf') {
-          const blob   = await pdfToImageBlob(f);
-          const img    = await imageFileToCanvas(new File([blob], 'tmp.png', { type: 'image/png' }));
-          canvases.push(img);
-        } else if (f.type.startsWith('image/')) {
-          canvases.push(await imageFileToCanvas(f));
-        }
-      }
-      if (canvases.length === 0) { zone.classList.remove('processing'); return; }
-
-      const finalBlob = await stitchCanvases(canvases);
-      const baseName  = files[0].name.replace(/\.pdf$/i, '.png');
-      droppedFiles[type] = new File([finalBlob], baseName, { type: 'image/png' });
-
-      zone.classList.remove('processing');
-      zone.classList.add('done');
-      fnEl.textContent = files.length > 1 ? `${files[0].name} ほか${files.length - 1}枚` : files[0].name;
-      badge.textContent = `${files.length}枚`;
-      badge.dataset.count = files.length;
-
-      const reader = new FileReader();
-      reader.onload = e => { document.getElementById('preview-' + type).src = e.target.result; };
-      reader.readAsDataURL(droppedFiles[type]);
-
-    } catch (err) {
-      zone.classList.remove('processing');
-      fnEl.style.display = '';
-      fnEl.textContent = '';
-      alert('ファイル処理エラー: ' + err.message);
-    }
-  }
-
-  function onFile(input, type) {
-    if (!input.files.length) return;
-    setFiles(type, [...input.files]);
-  }
-
-  function resetForm() {
-    droppedFiles = {};
-    ['keyword','views','interactions','userActions'].forEach(t => {
-      document.getElementById('zone-' + t).classList.remove('done');
-      document.getElementById('fn-' + t).textContent = '';
-      document.getElementById('preview-' + t).src = '';
-      document.querySelector(`#zone-${t} input`).value = '';
-      const badge = document.getElementById('badge-' + t);
-      badge.textContent = ''; badge.dataset.count = '1';
-    });
-    document.getElementById('statusArea').classList.remove('visible');
-    document.getElementById('logPanel').innerHTML = '';
-    document.getElementById('progressFill').style.width = '0%';
-  }
-
-  function appendLog(msg, cls = '') {
-    const p = document.getElementById('logPanel');
-    const line = document.createElement('div');
-    if (cls) line.className = cls;
-    line.textContent = msg;
-    p.appendChild(line);
-    p.scrollTop = p.scrollHeight;
-  }
-
-  function setProgress(pct) {
-    document.getElementById('progressFill').style.width = pct + '%';
-  }
-
-  async function generate() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const { provider: commentAIEarly, key: commentApiKeyEarly } = getCommentAIForRequest();
-
-    // Gemini選択時はClaudeキー不要（Gemini Visionで画像解析も行う）
-    if (commentAIEarly !== 'gemini' && !apiKey) {
-      alert('画面右上にAnthropicのAPIキーを入力してください。\n（画像解析に使用します。文章生成AIの設定とは別です）');
-      return;
-    }
-
-    const month = document.getElementById('month').value;
-    const year  = document.getElementById('year').value;
-
-    const fd = new FormData();
-    fd.append('storeName', currentStoreName);
-    fd.append('storeId', currentStoreId);
-    fd.append('month', month);
-    fd.append('year', year);
-    fd.append('apiKey', apiKey);
-
-    const achievementDays = document.getElementById('achievementDays').value.trim();
-    if (achievementDays) fd.append('achievementDays', achievementDays);
-
-    // 手動コメント
-    for (const section of ['keyword', 'views', 'interactions', 'userActions']) {
-      const cur = document.getElementById(`manual_current_${section}`)?.value.trim() ?? '';
-      const ana = document.getElementById(`manual_analysis_${section}`)?.value.trim() ?? '';
-      if (cur) fd.append(`current_${section}`, cur);
-      if (ana) fd.append(`analysis_${section}`, ana);
-    }
-
-    let hasFile = false;
-
-    // keyword（単一ファイル）
-    const kwFile = droppedFiles['keyword'];
-    if (kwFile && !Array.isArray(kwFile)) {
-      fd.append('keyword', kwFile); hasFile = true;
-    } else {
-      const inp = document.querySelector('#zone-keyword input[type=file]');
-      if (inp && inp.files[0]) { fd.append('keyword', inp.files[0]); hasFile = true; }
-    }
-
-    for (const t of ['views','interactions','userActions']) {
-      const inp = document.querySelector(`#zone-${t} input[type=file]`);
-      const f = droppedFiles[t] || inp?.files[0];
-      if (f) { fd.append(t, f); hasFile = true; }
-    }
-
-    // 手動コメントのみでもスクショなしで生成可能
-    const hasManual = ['keyword', 'views', 'interactions', 'userActions'].some(s =>
-      document.getElementById(`manual_current_${s}`)?.value.trim() ||
-      document.getElementById(`manual_analysis_${s}`)?.value.trim()
-    );
-    if (!hasFile && !hasManual) { alert('スクリーンショットを1枚以上アップロードするか、コメントを手入力してください'); return; }
-
-    // 文章生成AI設定
-    const commentAI = commentAIEarly;
-    const commentApiKey = commentApiKeyEarly;
-    if (commentAI !== 'claude' && !commentApiKey) {
-      alert(`${AI_LABELS[commentAI] ?? commentAI} のAPIキーが設定されていません。\n⚙️ 設定ページで入力してください。`);
-      return;
-    }
-    fd.append('commentAI', commentAI);
-    fd.append('commentApiKey', commentApiKey);
-
-    const btn = document.getElementById('genBtn');
-    btn.disabled = true;
-    btn.textContent = '解析中...';
-    document.getElementById('statusArea').classList.add('visible');
-    document.getElementById('logPanel').innerHTML = '';
-    setProgress(8);
-
-    appendLog(`${currentStoreName}  ${year}年${month}月度`, 'log-info');
-    const analysisLabel = commentAI === 'gemini' ? 'Gemini' : 'Claude';
-    appendLog(`${analysisLabel} AI が画像から数値データを抽出しています...`);
-
-    try {
-      setProgress(25);
-      // Step1: 画像から数値を抽出
-      const res = await fetch('/api/extract', { method:'POST', body:fd });
-      setProgress(80);
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'サーバーエラー'); }
-      const data = await res.json();
-      setProgress(100);
-      appendLog('画像解析が完了しました。数値データを確認してください', 'log-ok');
-      showExtractModal(data.sessionId, data.storeId, data.extracted);
-    } catch (err) {
-      appendLog('Error: ' + err.message, 'log-err');
-      setProgress(0);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '解析する';
-    }
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     Review Modal  ─  Step1: 解析結果  /  Step2: テキスト確認
-  ══════════════════════════════════════════════════════════ */
-  let _sid      = '';
-  let _storeId  = '';
-
-  const RV_SECTIONS = [
-    { key: 'keyword',      label: 'キーワード順位', page: '2ページ目' },
-    { key: 'views',        label: '閲覧ユーザー数', page: '3ページ目' },
-    { key: 'interactions', label: 'インタラクション数', page: '4ページ目' },
-    { key: 'userActions',  label: 'ユーザー行動データ', page: '5ページ目' },
-  ];
-
-  /* ── Step1: 手動入力フォームのレンダラー ── */
-  const INP = 'width:100%;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px;box-sizing:border-box';
-  const INP_SM = 'width:70px;padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:13px';
-  const TREND_OPTS = `
-    <option value="up">↑ 上昇（前年比増）</option>
-    <option value="down">↓ 下降（前年比減）</option>
-    <option value="flat">→ 横ばい</option>
-    <option value="new">NEW 初月（前年比なし）</option>`;
-
-  function renderKeywordForm(data) {
-    const kws = (data?.keywords ?? []);
-    const rows = (kws.length > 0 ? kws : [{ keyword: '', rank: '' }]).map(k => `
-      <div class="kw-row" style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
-        <input type="text" placeholder="キーワード" value="${esc(String(k.keyword ?? ''))}"
-          style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
-        <input type="text" placeholder="順位 or 圏外" value="${esc(String(k.rank ?? ''))}"
-          style="width:90px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
-        <button onclick="this.closest('.kw-row').remove()"
-          style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>
-      </div>`).join('');
-    return `
-      <div id="kw-rows">${rows}</div>
-      <button onclick="addKwRow()"
-        style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;padding:3px 0;margin-top:2px">＋ キーワードを追加</button>
-      <div style="margin-top:10px">
-        <label style="font-size:12px;color:var(--gray-500)">まとめコメント（任意）</label>
-        <input type="text" id="kw-summary" value="${esc(data?.summary ?? '')}"
-          placeholder="例：3〜5位が多い、圏外中心" style="${INP};margin-top:3px">
-      </div>`;
-  }
-
-  function renderViewsForm(data) {
-    const t = data?.trend ?? 'new';
-    return `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">当月 閲覧数（件）</label>
-          <input type="number" id="v-cur" value="${data?.currentMonth ?? 0}" min="0" style="${INP};margin-top:3px">
-        </div>
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">前年同月 閲覧数（件）</label>
-          <input type="number" id="v-prev" value="${data?.previousYear ?? 0}" min="0" style="${INP};margin-top:3px">
-        </div>
-      </div>
-      <div>
-        <label style="font-size:12px;color:var(--gray-500)">トレンド</label>
-        <select id="v-trend" style="${INP};margin-top:3px">
-          ${TREND_OPTS.replace(`value="${t}"`, `value="${t}" selected`)}
-        </select>
-      </div>`;
-  }
-
-  function renderInteractionsForm(data) {
-    const t = data?.trend ?? 'new';
-    return `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">当月 インタラクション数（件）</label>
-          <input type="number" id="i-cur" value="${data?.currentMonth ?? 0}" min="0" style="${INP};margin-top:3px">
-        </div>
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">前年同月（件）</label>
-          <input type="number" id="i-prev" value="${data?.previousYear ?? 0}" min="0" style="${INP};margin-top:3px">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">インタラクション率（%）</label>
-          <input type="number" id="i-rate" value="${data?.interactionRate ?? 0}" min="0" max="100" step="0.1" style="${INP};margin-top:3px">
-        </div>
-        <div>
-          <label style="font-size:12px;color:var(--gray-500)">トレンド</label>
-          <select id="i-trend" style="${INP};margin-top:3px">
-            ${TREND_OPTS.replace(`value="${t}"`, `value="${t}" selected`)}
-          </select>
-        </div>
-      </div>`;
-  }
-
-  function renderUserActionsForm(data) {
-    const rows = [
-      ['calls', '通話', data?.calls, data?.previousCalls],
-      ['website', 'Webサイト', data?.website, data?.previousWebsite],
-      ['routes', 'ルート検索', data?.routes, data?.previousRoutes],
-      ['reservations', '予約', data?.reservations, data?.previousReservations],
-    ];
-    return `
-      <table style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:4px 8px 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal">項目</th>
-            <th style="padding:4px 8px 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal;text-align:center">当月（件）</th>
-            <th style="padding:4px 0 6px 0;font-size:12px;color:var(--gray-500);font-weight:normal;text-align:center">前年同月（件）</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map(([id, label, cur, prev]) => `
-            <tr>
-              <td style="padding:5px 8px 5px 0;font-size:13px">${label}</td>
-              <td style="padding:5px 8px 5px 0;text-align:center">
-                <input type="number" id="ua-${id}" value="${cur ?? 0}" min="0" style="${INP_SM}">
-              </td>
-              <td style="text-align:center">
-                <input type="number" id="ua-prev-${id}" value="${prev ?? 0}" min="0" style="${INP_SM}">
-              </td>
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
-  }
-
-  function renderSectionForm(key, data) {
-    const hasImg = !!data;
-    const aiNote = hasImg
-      ? '<span style="font-size:11px;color:var(--gray-400);margin-left:6px">AIが読み取った値を確認・修正できます</span>'
-      : '<span style="font-size:11px;color:#e57373;margin-left:6px">画像なし ─ 数値を手入力してください</span>';
-    let form = '';
-    if (key === 'keyword')      form = renderKeywordForm(data);
-    else if (key === 'views')   form = renderViewsForm(data);
-    else if (key === 'interactions') form = renderInteractionsForm(data);
-    else if (key === 'userActions')  form = renderUserActionsForm(data);
-    return `<div id="rvx-form-${key}" style="padding:10px 0 2px">${aiNote}${form ? '<div style="margin-top:10px">'+form+'</div>' : ''}</div>`;
-  }
-
-  function addKwRow() {
-    const row = document.createElement('div');
-    row.className = 'kw-row';
-    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:5px';
-    row.innerHTML = `
-      <input type="text" placeholder="キーワード"
-        style="flex:1;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
-      <input type="text" placeholder="順位 or 圏外"
-        style="width:90px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px">
-      <button onclick="this.closest('.kw-row').remove()"
-        style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>`;
-    document.getElementById('kw-rows').appendChild(row);
-  }
-
-  /* ── Step1 フォームから数値を収集 ── */
-  function collectExtractedFromForm(extracted) {
-    // keyword: 常に収集
-    const kwRowEls = document.querySelectorAll('#kw-rows .kw-row');
-    const keywords = Array.from(kwRowEls).map(row => {
-      const [kwIn, rankIn] = row.querySelectorAll('input');
-      return { keyword: kwIn?.value?.trim() ?? '', rank: rankIn?.value?.trim() ?? '' };
-    }).filter(k => k.keyword);
-    const keyword = { keywords, summary: document.getElementById('kw-summary')?.value ?? '' };
-
-    // views
-    let views = extracted.views ?? null;
-    if (document.getElementById('v-cur')) {
-      views = {
-        currentMonth: parseInt(document.getElementById('v-cur').value) || 0,
-        previousYear: parseInt(document.getElementById('v-prev').value) || 0,
-        trend: document.getElementById('v-trend').value,
-      };
-    }
-
-    // interactions
-    let interactions = extracted.interactions ?? null;
-    if (document.getElementById('i-cur')) {
-      interactions = {
-        currentMonth: parseInt(document.getElementById('i-cur').value) || 0,
-        previousYear: parseInt(document.getElementById('i-prev').value) || 0,
-        interactionRate: parseFloat(document.getElementById('i-rate').value) || 0,
-        trend: document.getElementById('i-trend').value,
-      };
-    }
-
-    // userActions
-    let userActions = extracted.userActions ?? null;
-    if (document.getElementById('ua-calls')) {
-      userActions = {
-        calls:         parseInt(document.getElementById('ua-calls').value) || 0,
-        website:       parseInt(document.getElementById('ua-website').value) || 0,
-        routes:        parseInt(document.getElementById('ua-routes').value) || 0,
-        reservations:  parseInt(document.getElementById('ua-reservations').value) || 0,
-        previousCalls:        parseInt(document.getElementById('ua-prev-calls').value) || 0,
-        previousWebsite:      parseInt(document.getElementById('ua-prev-website').value) || 0,
-        previousRoutes:       parseInt(document.getElementById('ua-prev-routes').value) || 0,
-        previousReservations: parseInt(document.getElementById('ua-prev-reservations').value) || 0,
-      };
-    }
-
-    return { keyword, views, interactions, userActions };
-  }
-
-  /* ── Step1: 解析結果モーダル ── */
-  let _extracted = {};   // 最後にサーバーから返ってきた extracted を保持
-
-  function showExtractModal(sessionId, storeId, extracted) {
-    _sid      = sessionId;
-    _storeId  = storeId;
-    _extracted = extracted ?? {};
-    document.getElementById('rv-step1').style.display = 'flex';
-    document.getElementById('rv-step2').style.display = 'none';
-    document.getElementById('reviewOverlay').classList.add('show');
-
-    const body = document.getElementById('rv-extract-body');
-    body.innerHTML = RV_SECTIONS.map(({ key, label, page }) => {
-      const data = extracted[key];
-      const hasImg = !!data;
-      return `
-      <div class="rv-section" id="rvx-${key}">
-        <div class="rv-section-header">
-          <span class="rv-label">${label}</span>
-          <span class="rv-badge rv-badge-gray">${page}</span>
-          ${hasImg
-            ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="reExtract('${key}')">再解析</button>`
-            : '<span class="rv-badge rv-badge-warn" style="margin-left:auto">画像なし</span>'}
-        </div>
-        ${renderSectionForm(key, data)}
-      </div>`;
-    }).join('');
-  }
-
-  async function reExtract(key) {
-    const btn = document.querySelector(`#rvx-${key} .rv-regen-btn`);
-    if (btn) { btn.disabled = true; btn.textContent = '解析中...'; }
-    try {
-      const res = await fetch('/api/re-extract', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ sessionId: _sid, section: key }),
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-      const { extracted } = await res.json();
-      _extracted[key] = extracted;
-      // フォームを再描画（新しい値で）
-      const formEl = document.getElementById(`rvx-form-${key}`);
-      if (formEl) formEl.outerHTML = renderSectionForm(key, extracted);
-    } catch (err) {
-      alert('再解析エラー: ' + err.message);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '再解析'; }
-    }
-  }
-
-  /* ── Step1 → Step2: テンプレートで即時生成（APIキー不要）── */
-  async function generateText() {
-    const btn = document.getElementById('rv-gen-text-btn');
-    btn.disabled = true; btn.textContent = '生成中...';
-    try {
-      const extractedData = collectExtractedFromForm(_extracted);
-      const res = await fetch('/api/template-text', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: _sid, extractedData }),
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-      const data = await res.json();
-      showTextStep(data.sections, true);
-      appendLog('✅ テンプレートからテキストを生成しました。Step2で内容を確認・編集してください。', 'log-ok');
-    } catch (err) {
-      alert('テキスト生成エラー: ' + err.message);
-    } finally {
-      btn.disabled = false; btn.textContent = 'テキストを生成する →';
-    }
-  }
-
-  /* ── Step1 → Step2: AIで生成（APIキー必要）── */
-  async function generateTextWithAI() {
-    const btn = document.getElementById('rv-ai-gen-btn');
-    btn.disabled = true; btn.textContent = 'AI生成中...';
-    try {
-      const extractedData = collectExtractedFromForm(_extracted);
-      const res = await fetch('/api/generate-text', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: _sid, extractedData }),
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-      const data = await res.json();
-      if (data.apiError) appendLog(`⚠️ APIエラー: ${data.apiError}`, 'log-err');
-      if (data.templateFallback) {
-        appendLog('⚠️ AIが応答しなかったためテンプレートで生成しました', 'log-info');
-      } else if (data.commentFallback) {
-        appendLog('⚠️ Claude フォールバックで生成しました', 'log-info');
-      } else {
-        appendLog('✅ AIでテキストを生成しました', 'log-ok');
-      }
-      showTextStep(data.sections, data.templateFallback);
-    } catch (err) {
-      alert('AI生成エラー: ' + err.message);
-    } finally {
-      btn.disabled = false; btn.textContent = 'AIで生成';
-    }
-  }
-
-  /* ── Step2: テキスト確認・編集モーダル ── */
-  function showTextStep(sections, isTemplate) {
-    document.getElementById('rv-step1').style.display = 'none';
-    document.getElementById('rv-step2').style.display = 'flex';
-
-    const body = document.getElementById('rv-text-body');
-    const templateBanner = isTemplate
-      ? `<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 14px;font-size:12px;color:#795548;margin-bottom:12px">
-          ⚠️ AIがテキストを生成できなかったため、入力数値から<b>テンプレート文章</b>を自動作成しました。<br>
-          内容を確認・編集してからレポートを作成してください。「AI再生成」ボタンでAI生成を再試行できます。
-        </div>`
-      : '';
-
-    body.innerHTML = templateBanner + RV_SECTIONS.map(({ key, label, page }) => {
-      const s = sections[key];
-      if (!s) return '';
-      const missing = !s.current && !s.analysis;
-      return `
-      <div class="rv-section" id="rv-${key}">
-        <div class="rv-section-header">
-          <span class="rv-label">${label}</span>
-          <span class="rv-badge rv-badge-gray">${page}</span>
-          ${missing ? '<span class="rv-badge rv-badge-warn">要編集</span>' : ''}
-          <button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="regenerateText('${key}')">AI再生成</button>
-        </div>
-        <div class="rv-field">
-          <label class="field-label">【現状】</label>
-          <textarea class="prompt-textarea rv-textarea" id="rv-cur-${key}" rows="3">${esc(s.current ?? '')}</textarea>
-        </div>
-        <div class="rv-field" style="margin-top:8px">
-          <label class="field-label">【分析】</label>
-          <textarea class="prompt-textarea rv-textarea" id="rv-ana-${key}" rows="4">${esc(s.analysis ?? '')}</textarea>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  async function regenerateText(key) {
-    const btn = document.querySelector(`#rv-${key} .rv-regen-btn`);
-    if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
-    try {
-      const res = await fetch('/api/regenerate', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ sessionId: _sid, section: key }),
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-      const { current, analysis } = await res.json();
-      document.getElementById(`rv-cur-${key}`).value = current ?? '';
-      document.getElementById(`rv-ana-${key}`).value = analysis ?? '';
-      const badge = document.querySelector(`#rv-${key} .rv-badge-warn`);
-      if (badge && (current || analysis)) badge.remove();
-    } catch (err) {
-      alert('再生成エラー: ' + err.message);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'AI再生成'; }
-    }
-  }
-
-  /* ── Step3: レポート作成 ── */
-  async function finalizeReport() {
-    const finBtn = document.getElementById('finalizeBtn');
-    finBtn.disabled = true; finBtn.textContent = 'レポート作成中...';
-    try {
-      const sections = {};
-      for (const { key } of RV_SECTIONS) {
-        const cur = document.getElementById(`rv-cur-${key}`);
-        if (cur) sections[key] = { current: cur.value, analysis: document.getElementById(`rv-ana-${key}`)?.value ?? '' };
-      }
-      const res = await fetch('/api/finalize', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ sessionId: _sid, sections }),
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const fn   = res.headers.get('Content-Disposition')?.match(/filename\*=UTF-8''(.+)/)?.[1];
-      const a    = document.createElement('a');
-      a.href = url; a.download = fn ? decodeURIComponent(fn) : 'レポート.pptx'; a.click();
-      URL.revokeObjectURL(url);
-      closeReviewModal();
-      appendLog('PPTXのダウンロードが開始されました', 'log-ok');
-      setTimeout(() => loadReports(_storeId), 800);
-    } catch (err) {
-      alert('レポート作成エラー: ' + err.message);
-    } finally {
-      finBtn.disabled = false; finBtn.textContent = 'レポートを作成する';
-    }
-  }
-
-  function closeReviewModal() {
-    document.getElementById('reviewOverlay').classList.remove('show');
-  }
-
-  /* ── Drag & Drop ── */
-  document.querySelectorAll('.upload-zone').forEach(zone => {
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-    zone.addEventListener('dragleave', e => {
-      if (!zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
-    });
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('dragover');
-      const type  = zone.id.replace('zone-', '');
-      const files = [...e.dataTransfer.files].filter(f =>
-        f.type.startsWith('image/') || f.type === 'application/pdf'
-      );
-      if (files.length) setFiles(type, files);
-    });
-  });
-
-  document.getElementById('addModal').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-
-  /* ── Helpers ── */
-  function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-
-  function fmtDate(iso) {
-    const d = new Date(iso);
-    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-  }
-
-  function fmtDateTime(iso) {
-    const d = new Date(iso);
-    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}  ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-  }
-
-  /* ── AI Settings ── */
-  const AI_LABELS = { claude: 'Claude', openai: 'ChatGPT (gpt-4o)', gemini: 'Gemini (gemini-2.0-flash)' };
-
-  function loadCommentAISettings() {
-    const provider = localStorage.getItem('comment_ai_provider') ?? 'claude';
-    const key = localStorage.getItem('comment_ai_key') ?? '';
-    const radio = document.querySelector(`input[name=commentAI][value="${provider}"]`);
-    if (radio) radio.checked = true;
-    const input = document.getElementById('commentApiKey');
-    if (input) input.value = key;
-    updateCommentApiKeyField(provider);
-    updateAIBadge(provider);
-  }
-
-  function onAIChange() {
-    const provider = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
-    updateCommentApiKeyField(provider);
-    updateAIBadge(provider);
-    saveCommentAISettings();
-  }
-
-  function updateCommentApiKeyField(provider) {
-    const field = document.getElementById('commentApiKeyField');
-    const label = document.getElementById('commentApiKeyLabel');
-    const input = document.getElementById('commentApiKey');
-    const apiKeyField = document.getElementById('apiKeyField');  // ヘッダーのClaudeキー欄全体
-    const apiKeyLabel = document.getElementById('apiKeyLabel');
-    if (!field) return;
-    if (provider === 'gemini') {
-      // Gemini選択時: Claudeキー欄を非表示、GeminiキーのみでOK
-      field.style.display = 'block';
-      label.textContent = 'Google AI APIキー (AIza...)';
-      input.placeholder = 'AIza...';
-      if (apiKeyField) apiKeyField.style.display = 'none';  // Claudeキー欄を隠す
-    } else if (provider === 'claude') {
-      field.style.display = 'none';
-      if (apiKeyField) apiKeyField.style.display = '';
-      if (apiKeyLabel) apiKeyLabel.textContent = 'Claude Key（画像解析用・必須）';
-    } else {
-      // OpenAI
-      field.style.display = 'block';
-      label.textContent = 'OpenAI APIキー (sk-...)';
-      input.placeholder = 'sk-proj-...';
-      if (apiKeyField) apiKeyField.style.display = '';
-      if (apiKeyLabel) apiKeyLabel.textContent = 'Claude Key（画像解析用・必須）';
-    }
-  }
-
-  function updateAIBadge(provider) {
-    const badge = document.getElementById('aiIndicatorBadge');
-    if (badge) badge.textContent = `文章生成: ${AI_LABELS[provider] ?? provider}`;
-  }
-
-  function saveCommentAISettings() {
-    const provider = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
-    const key = document.getElementById('commentApiKey')?.value ?? '';
-    localStorage.setItem('comment_ai_provider', provider);
-    localStorage.setItem('comment_ai_key', key);
-  }
-
-  function getCommentAIForRequest() {
-    const provider = localStorage.getItem('comment_ai_provider') ?? 'claude';
-    const key = provider === 'claude'
-      ? document.getElementById('apiKey').value.trim()
-      : (localStorage.getItem('comment_ai_key') ?? '');
-    return { provider, key };
-  }
-
-  /* ── Prompt Settings ── */
-  const PROMPT_SECTIONS = [
-    { key: 'keyword',      page: '2ページ目', title: '〇月対策キーワード順位ご報告' },
-    { key: 'views',        page: '3ページ目', title: '閲覧したユーザー数' },
-    { key: 'interactions', page: '4ページ目', title: 'インタラクション数' },
-    { key: 'userActions',  page: '5ページ目', title: 'ユーザー行動データ（来店・売上に直結）' },
-  ];
-
-  let defaultPromptsCache = null;
-  let storePromptsCache   = {};
-
-  async function ensureDefaultPrompts() {
-    if (!defaultPromptsCache) {
-      defaultPromptsCache = await fetch('/api/prompts/default').then(r => r.json());
-    }
-  }
-
-  /* ── Default prompts page ── */
-  async function openSettingsPage() {
-    loadCommentAISettings();
-    await ensureDefaultPrompts();
-    const container = document.getElementById('defaultPromptSections');
-    container.innerHTML = PROMPT_SECTIONS.map(({ key, page, title }) => `
-      <div class="prompt-section">
-        <div class="prompt-section-title">
-          <span class="prompt-page-num">${page}</span>
-          <span class="prompt-page-name">${title}</span>
-        </div>
-        <div class="prompt-field" style="margin-bottom:10px">
-          <label class="field-label" style="margin-bottom:5px">【現状】に入れる文章の指示</label>
-          <textarea class="prompt-textarea" id="dp-${key}_current" rows="3">${esc(defaultPromptsCache[key + '_current'] ?? '')}</textarea>
-        </div>
-        <div class="prompt-field">
-          <label class="field-label" style="margin-bottom:5px">【分析】に入れる文章の指示</label>
-          <textarea class="prompt-textarea" id="dp-${key}_analysis" rows="4">${esc(defaultPromptsCache[key + '_analysis'] ?? '')}</textarea>
-        </div>
-      </div>`).join('');
-  }
-
-  async function saveDefaultPrompts() {
-    const prompts = {};
-    for (const { key } of PROMPT_SECTIONS) {
-      for (const field of ['current', 'analysis']) {
-        const fk = `${key}_${field}`;
-        prompts[fk] = document.getElementById(`dp-${fk}`)?.value ?? '';
-      }
-    }
-    await fetch('/api/prompts/default', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts, applyToAll: false }),
-    });
-    defaultPromptsCache = { ...defaultPromptsCache, ...prompts };
-    showMsg('defaultSaveMsg');
-    // カスタム設定済み店舗はそのまま — 何もしない
-  }
-
-  async function resetDefaultPrompts() {
-    if (!confirm('デフォルトプロンプトを初期値（システム設定）に戻しますか？')) return;
-    await fetch('/api/prompts/default', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts: {}, applyToAll: false, resetToDefault: true }),
-    });
-    defaultPromptsCache = null;
-    await openSettingsPage();
-    showMsg('defaultSaveMsg');
-  }
-
-  /* ── Store prompts ── */
-  async function loadStorePrompts(storeId) {
-    await ensureDefaultPrompts();
-    storePromptsCache = await fetch(`/api/stores/${storeId}/prompts`).then(r => r.json());
-    renderStorePromptSections();
-  }
-
-  function renderStorePromptSections() {
-    const container = document.getElementById('storePromptSections');
-    container.innerHTML = PROMPT_SECTIONS.map(({ key, page, title }) => {
-      const hasCur = !!storePromptsCache[`${key}_current`];
-      const hasAna = !!storePromptsCache[`${key}_analysis`];
-      const isCustom = hasCur || hasAna;
-      const curVal = storePromptsCache[`${key}_current`]  ?? defaultPromptsCache?.[`${key}_current`]  ?? '';
-      const anaVal = storePromptsCache[`${key}_analysis`] ?? defaultPromptsCache?.[`${key}_analysis`] ?? '';
-      return `
-        <div class="prompt-section">
-          <div class="prompt-section-header">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span class="prompt-page-num">${page}</span>
-              <span class="prompt-page-name" style="font-size:13px">${title}</span>
-            </div>
-            <label class="prompt-toggle">
-              <input type="checkbox" id="sp-use-default-${key}" ${isCustom ? '' : 'checked'}
-                onchange="onStorePromptToggle('${key}')">
-              デフォルトを使用
-            </label>
-          </div>
-          <div style="margin-top:12px">
-            <div class="prompt-field" style="margin-bottom:10px">
-              <label class="field-label" style="margin-bottom:5px">【現状】に入れる文章の指示</label>
-              <textarea class="prompt-textarea" id="sp-${key}_current" rows="3" ${isCustom ? '' : 'disabled'}>${esc(curVal)}</textarea>
-            </div>
-            <div class="prompt-field">
-              <label class="field-label" style="margin-bottom:5px">【分析】に入れる文章の指示</label>
-              <textarea class="prompt-textarea" id="sp-${key}_analysis" rows="4" ${isCustom ? '' : 'disabled'}>${esc(anaVal)}</textarea>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  function onStorePromptToggle(key) {
-    const useDefault = document.getElementById(`sp-use-default-${key}`).checked;
-    for (const field of ['current', 'analysis']) {
-      const ta = document.getElementById(`sp-${key}_${field}`);
-      ta.disabled = useDefault;
-      if (useDefault) ta.value = defaultPromptsCache?.[`${key}_${field}`] ?? '';
-    }
-  }
-
-  async function saveStorePrompts() {
-    const prompts = {};
-    for (const { key } of PROMPT_SECTIONS) {
-      const useDefault = document.getElementById(`sp-use-default-${key}`)?.checked;
-      if (!useDefault) {
-        prompts[`${key}_current`]  = document.getElementById(`sp-${key}_current`)?.value  ?? '';
-        prompts[`${key}_analysis`] = document.getElementById(`sp-${key}_analysis`)?.value ?? '';
-      }
-    }
-    await fetch(`/api/stores/${currentStoreId}/prompts`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prompts),
-    });
-    storePromptsCache = prompts;
-    renderStorePromptSections();
-    showMsg('storeSaveMsg');
-  }
-
-  function toggleStorePrompts() {
-    const body    = document.getElementById('storePromptBody');
-    const chevron = document.getElementById('storePromptChevron');
-    const open    = body.style.display === 'none';
-    body.style.display       = open ? 'block' : 'none';
-    chevron.style.transform  = open ? 'rotate(180deg)' : '';
-  }
-
-  function showMsg(id) {
-    const el = document.getElementById(id);
-    el.style.opacity = '1';
-    setTimeout(() => { el.style.opacity = '0'; }, 2000);
-  }
-
-  /* ── Initial load ── */
   loadStores();
+})();
+
+// ── Store management ─────────────────────────────────────
+
+async function loadStores() {
+  try {
+    const res = await fetch('/api/stores');
+    stores = await res.json();
+    renderStoreList();
+  } catch (e) {
+    showToast('店舗一覧の読み込みに失敗しました', 'error');
+  }
+}
+
+function renderStoreList() {
+  const el = document.getElementById('storeList');
+  el.innerHTML = '';
+  if (stores.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--gray-400)">店舗を追加してください</div>';
+    return;
+  }
+  stores.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'store-item' + (s.id === currentStoreId ? ' active' : '');
+    div.innerHTML = `
+      <div class="store-icon">${s.id === currentStoreId ? '🏪' : '🏬'}</div>
+      <div class="store-info">
+        <div class="store-name">${esc(s.name)}</div>
+        <div class="store-meta">${s.reportCount || 0}件のレポート</div>
+      </div>
+      <button class="store-del" onclick="deleteStore(event,'${s.id}')" title="削除">✕</button>
+    `;
+    div.onclick = (e) => { if (!e.target.classList.contains('store-del')) selectStore(s.id); };
+    el.appendChild(div);
+  });
+}
+
+async function addStore() {
+  const input = document.getElementById('newStoreName');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    const res = await fetch('/api/stores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const store = await res.json();
+    input.value = '';
+    await loadStores();
+    selectStore(store.id);
+  } catch (e) {
+    showToast('店舗の追加に失敗しました', 'error');
+  }
+}
+
+async function deleteStore(event, storeId) {
+  event.stopPropagation();
+  if (!confirm('この店舗を削除しますか？')) return;
+  try {
+    await fetch(`/api/stores/${storeId}`, { method: 'DELETE' });
+    if (currentStoreId === storeId) { currentStoreId = null; showWelcome(); }
+    await loadStores();
+    showToast('店舗を削除しました', 'success');
+  } catch (e) {
+    showToast('削除に失敗しました', 'error');
+  }
+}
+
+function selectStore(storeId) {
+  currentStoreId = storeId;
+  const store = stores.find(s => s.id === storeId);
+  renderStoreList();
+  showStoreDetail(store);
+}
+
+// ── Views ─────────────────────────────────────────────────
+
+function goHome() {
+  currentStoreId = null;
+  renderStoreList();
+  showWelcome();
+}
+
+function showWelcome() {
+  document.getElementById('welcomeView').style.display = '';
+  document.getElementById('storeDetail').classList.remove('visible');
+  document.getElementById('breadcrumb').classList.remove('visible');
+}
+
+async function showStoreDetail(store) {
+  document.getElementById('welcomeView').style.display = 'none';
+  document.getElementById('storeDetail').classList.add('visible');
+  document.getElementById('detailStoreName').textContent = store.name;
+  document.getElementById('detailStoreSub').textContent = `${store.reportCount || 0}件のレポートがあります`;
+  document.getElementById('breadcrumbStore').textContent = store.name;
+  document.getElementById('breadcrumb').classList.add('visible');
+  await loadReports(store.id);
+}
+
+// ── Report history ─────────────────────────────────────────
+
+async function loadReports(storeId) {
+  try {
+    const res = await fetch(`/api/stores/${storeId}/reports`);
+    reports = await res.json();
+    renderReports();
+  } catch (e) {
+    console.error('レポート読み込みエラー:', e);
+  }
+}
+
+function renderReports() {
+  const el = document.getElementById('reportHistory');
+  if (!reports || reports.length === 0) {
+    el.innerHTML = `<div class="empty-reports"><div class="empty-reports-icon">📂</div>まだレポートがありません</div>`;
+    return;
+  }
+  el.innerHTML = '<div class="report-list">' + reports.map(r => `
+    <div class="report-item">
+      <div class="report-icon">📊</div>
+      <div class="report-info">
+        <div class="report-name">${esc(r.fileName)}</div>
+        <div class="report-date">${formatDate(r.generatedAt)}</div>
+      </div>
+      <div class="report-actions">
+        <button class="btn-sm" onclick="downloadReport('${r.id}')">⬇️ ダウンロード</button>
+        <button class="btn-sm danger" onclick="deleteReport('${r.id}')">削除</button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+async function downloadReport(reportId) {
+  window.location.href = `/api/reports/${reportId}/download`;
+}
+
+async function deleteReport(reportId) {
+  if (!confirm('このレポートを削除しますか？')) return;
+  try {
+    await fetch(`/api/reports/${reportId}`, { method: 'DELETE' });
+    await loadReports(currentStoreId);
+    showToast('レポートを削除しました', 'success');
+  } catch (e) {
+    showToast('削除に失敗しました', 'error');
+  }
+}
+
+// ── File upload handling ──────────────────────────────────
+
+function handleFileSelect(input, field) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  updateUploadZone(field, files);
+}
+
+function handleDragOver(event, field) {
+  event.preventDefault();
+  document.getElementById('zone-' + field)?.classList.add('drag-over');
+}
+
+function handleDragLeave(event, field) {
+  document.getElementById('zone-' + field)?.classList.remove('drag-over');
+}
+
+function handleDrop(event, field) {
+  event.preventDefault();
+  const zone = document.getElementById('zone-' + field);
+  zone?.classList.remove('drag-over');
+  const files = event.dataTransfer.files;
+  if (!files || files.length === 0) return;
+  // Assign to the hidden input
+  const inputId = field === 'csv' ? 'file-csv' : 'img-' + field;
+  const input = document.getElementById(inputId);
+  if (input) {
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    input.files = dt.files;
+  }
+  updateUploadZone(field, files);
+}
+
+function updateUploadZone(field, files) {
+  const zoneId = 'zone-' + field;
+  const fnId = 'fn-' + field;
+  const zone = document.getElementById(zoneId);
+  const fn = document.getElementById(fnId);
+  if (!zone || !fn) return;
+  zone.classList.add('has-file');
+  if (files.length === 1) {
+    fn.textContent = '✓ ' + files[0].name;
+  } else {
+    fn.textContent = `✓ ${files.length}枚選択済み`;
+  }
+}
+
+// ── CSV template download ─────────────────────────────────
+
+function downloadCsvTemplate() {
+  const month = document.getElementById('reportMonth').value;
+  window.location.href = `/api/csv-template?month=${month}`;
+}
+
+// ── Generate report ───────────────────────────────────────
+
+async function generateReport() {
+  if (!currentStoreId) { showToast('店舗を選択してください', 'error'); return; }
+
+  const store = stores.find(s => s.id === currentStoreId);
+  const month = document.getElementById('reportMonth').value;
+  const year = document.getElementById('reportYear').value;
+  const csvInput = document.getElementById('file-csv');
+
+  if (!csvInput.files || csvInput.files.length === 0) {
+    showToast('CSVファイルをアップロードしてください', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('storeName', store.name);
+  formData.append('storeId', currentStoreId);
+  formData.append('month', month);
+  formData.append('year', year);
+  formData.append('csv', csvInput.files[0]);
+
+  // Images
+  const kwInput = document.getElementById('img-keyword');
+  if (kwInput.files && kwInput.files.length > 0) {
+    for (const f of kwInput.files) formData.append('keyword', f);
+  }
+  for (const field of ['views', 'interactions', 'userActions']) {
+    const inp = document.getElementById('img-' + field);
+    if (inp.files && inp.files.length > 0) formData.append(field, inp.files[0]);
+  }
+
+  document.getElementById('progressOverlay').classList.add('visible');
+  document.getElementById('btnGenerate').disabled = true;
+
+  try {
+    const res = await fetch('/api/generate-report', { method: 'POST', body: formData });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'エラーが発生しました' }));
+      showToast(err.error || 'エラーが発生しました', 'error');
+      return;
+    }
+
+    // Download the PPTX
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    let filename = 'report.pptx';
+    const match = disposition.match(/filename\*=UTF-8''(.+)/i);
+    if (match) filename = decodeURIComponent(match[1]);
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('レポートを作成しました！', 'success');
+    await loadStores();
+    await loadReports(currentStoreId);
+
+    // Reset form
+    resetForm();
+
+  } catch (e) {
+    console.error(e);
+    showToast('通信エラーが発生しました', 'error');
+  } finally {
+    document.getElementById('progressOverlay').classList.remove('visible');
+    document.getElementById('btnGenerate').disabled = false;
+  }
+}
+
+function resetForm() {
+  for (const field of ['keyword', 'views', 'interactions', 'userActions']) {
+    const zone = document.getElementById('zone-' + field);
+    const fn = document.getElementById('fn-' + field);
+    const inp = document.getElementById('img-' + field);
+    if (zone) zone.classList.remove('has-file');
+    if (fn) fn.textContent = '';
+    if (inp) inp.value = '';
+  }
+  const csvZone = document.getElementById('zone-csv');
+  const csvFn = document.getElementById('fn-csv');
+  const csvInp = document.getElementById('file-csv');
+  if (csvZone) csvZone.classList.remove('has-file');
+  if (csvFn) csvFn.textContent = '';
+  if (csvInp) csvInp.value = '';
+}
+
+// ── Utilities ─────────────────────────────────────────────
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch { return isoStr; }
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  toast.innerHTML = `<span>${icon}</span><span>${esc(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+}
 </script>
-
-<!-- ══════════════════════════════════════
-     Review Modal（2ステップ）
-═══════════════════════════════════════ -->
-<div class="overlay" id="reviewOverlay">
-
-  <!-- Step1: 解析結果 -->
-  <div id="rv-step1" class="modal" style="width:660px;max-width:95vw;height:min(700px,88vh);display:flex;flex-direction:column;padding:0;overflow:hidden">
-    <div style="padding:20px 26px 14px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
-      <div style="font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:3px">
-        Step 1 ／ 2　　画像解析結果の確認
-      </div>
-      <div style="font-size:12px;color:var(--gray-500)">数値を確認・修正して「テキストを生成する」を押してください（APIキー不要）。</div>
-    </div>
-    <div id="rv-extract-body" style="overflow-y:auto;padding:18px 26px;flex:1;display:flex;flex-direction:column;gap:14px;min-height:0"></div>
-    <div style="padding:14px 26px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-shrink:0">
-      <button class="btn btn-secondary" onclick="closeReviewModal()">キャンセル</button>
-      <button class="btn btn-secondary" id="rv-ai-gen-btn" onclick="generateTextWithAI()" title="APIキーが必要です">AIで生成</button>
-      <button class="btn btn-primary" id="rv-gen-text-btn" onclick="generateText()">テキストを生成する →</button>
-    </div>
-  </div>
-
-  <!-- Step2: テキスト確認・編集 -->
-  <div id="rv-step2" class="modal" style="width:660px;max-width:95vw;height:min(700px,88vh);display:none;flex-direction:column;padding:0;overflow:hidden">
-    <div style="padding:20px 26px 14px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
-      <div style="font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:3px">
-        Step 2 ／ 2　　生成テキストの確認・編集
-      </div>
-      <div style="font-size:12px;color:var(--gray-500)">各セクションのコメントを確認・編集してください。「AI再生成」で作り直すこともできます。</div>
-    </div>
-    <div id="rv-text-body" style="overflow-y:auto;padding:18px 26px;flex:1;display:flex;flex-direction:column;gap:14px"></div>
-    <div style="padding:14px 26px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:space-between;align-items:center;flex-shrink:0">
-      <button class="btn btn-secondary" onclick="document.getElementById('rv-step1').style.display='flex';document.getElementById('rv-step2').style.display='none'">← 解析結果に戻る</button>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-secondary" onclick="closeReviewModal()">キャンセル</button>
-        <button class="btn btn-primary" id="finalizeBtn" onclick="finalizeReport()">レポートを作成する</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
 </body>
 </html>
