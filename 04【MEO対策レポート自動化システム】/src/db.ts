@@ -119,7 +119,7 @@ export function saveReport(data: Omit<Report, 'id' | 'filePath' | 'fileName'>, t
   const storeDir = path.join(REPORTS_DIR, data.storeId);
   if (!fs.existsSync(storeDir)) fs.mkdirSync(storeDir, { recursive: true });
 
-  const fileName = `MEO対策レポート_${data.storeName}_${data.year}年${data.month}月.pptx`;
+  const fileName = `MEO対策レポート_${data.storeName}様_${data.year}年${data.month}月.pptx`;
   const filePath = path.join(storeDir, fileName);
 
   // Copy file to permanent location
