@@ -625,31 +625,43 @@
           <div class="upload-grid">
             <div class="upload-zone" id="zone-keyword" ondragover="handleDragOver(event,'keyword')" ondragleave="handleDragLeave(event,'keyword')" ondrop="handleDrop(event,'keyword')">
               <input type="file" id="img-keyword" accept="image/*" multiple onchange="handleFileSelect(this,'keyword')">
-              <div class="upload-icon">🔍</div>
-              <div class="upload-label">キーワード順位</div>
-              <div class="upload-sub">2ページ目（複数枚可）</div>
-              <div class="upload-filename" id="fn-keyword"></div>
+              <div class="upload-inner">
+                <div class="upload-icon">🔍</div>
+                <div class="upload-label">キーワード順位</div>
+                <div class="upload-sub">2ページ目（複数枚可）</div>
+              </div>
+              <img class="upload-preview-img" id="preview-keyword" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-keyword"></span></div>
             </div>
             <div class="upload-zone" id="zone-views" ondragover="handleDragOver(event,'views')" ondragleave="handleDragLeave(event,'views')" ondrop="handleDrop(event,'views')">
               <input type="file" id="img-views" accept="image/*" onchange="handleFileSelect(this,'views')">
-              <div class="upload-icon">👁️</div>
-              <div class="upload-label">閲覧ユーザー数</div>
-              <div class="upload-sub">3ページ目</div>
-              <div class="upload-filename" id="fn-views"></div>
+              <div class="upload-inner">
+                <div class="upload-icon">👁️</div>
+                <div class="upload-label">閲覧ユーザー数</div>
+                <div class="upload-sub">3ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-views" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-views"></span></div>
             </div>
             <div class="upload-zone" id="zone-interactions" ondragover="handleDragOver(event,'interactions')" ondragleave="handleDragLeave(event,'interactions')" ondrop="handleDrop(event,'interactions')">
               <input type="file" id="img-interactions" accept="image/*" onchange="handleFileSelect(this,'interactions')">
-              <div class="upload-icon">🔄</div>
-              <div class="upload-label">インタラクション数</div>
-              <div class="upload-sub">4ページ目</div>
-              <div class="upload-filename" id="fn-interactions"></div>
+              <div class="upload-inner">
+                <div class="upload-icon">🔄</div>
+                <div class="upload-label">インタラクション数</div>
+                <div class="upload-sub">4ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-interactions" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-interactions"></span></div>
             </div>
             <div class="upload-zone" id="zone-userActions" ondragover="handleDragOver(event,'userActions')" ondragleave="handleDragLeave(event,'userActions')" ondrop="handleDrop(event,'userActions')">
               <input type="file" id="img-userActions" accept="image/*" onchange="handleFileSelect(this,'userActions')">
-              <div class="upload-icon">📍</div>
-              <div class="upload-label">ユーザー行動データ</div>
-              <div class="upload-sub">5ページ目</div>
-              <div class="upload-filename" id="fn-userActions"></div>
+              <div class="upload-inner">
+                <div class="upload-icon">📍</div>
+                <div class="upload-label">ユーザー行動データ</div>
+                <div class="upload-sub">5ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-userActions" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-userActions"></span></div>
             </div>
           </div>
 
