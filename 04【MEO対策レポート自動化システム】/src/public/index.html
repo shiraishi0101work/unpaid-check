@@ -1161,6 +1161,7 @@
     loadReports(id);
     resetForm();
     loadStorePrompts(id);
+    updateAIBadge(localStorage.getItem('comment_ai_provider') ?? 'claude');
   }
 
   function scrollToForm() {
