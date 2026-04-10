@@ -139,6 +139,11 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     // Save or get store
     const store = existingStoreId ? (db.getStore(existingStoreId) ?? db.addStore(storeName)) : db.addStore(storeName);
 
+    // Resolve prompts: store-specific overrides default
+    const defaultPrompts = db.getDefaultPrompts();
+    const storePrompts = db.getStorePrompts(store.id);
+    const prompts = { ...defaultPrompts, ...storePrompts };
+
     const analyzer = new MeoAnalyzer(apiKey);
     const monthNum = parseInt(month, 10);
     const slides: {
