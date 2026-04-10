@@ -2313,12 +2313,13 @@
       <div style="font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:3px">
         Step 1 ／ 2　　画像解析結果の確認
       </div>
-      <div style="font-size:12px;color:var(--gray-500)">AIが画像から抽出した数値です。内容を確認し、必要なら「再解析」してください。</div>
+      <div style="font-size:12px;color:var(--gray-500)">数値を確認・修正して「テキストを生成する」を押してください（APIキー不要）。</div>
     </div>
     <div id="rv-extract-body" style="overflow-y:auto;padding:18px 26px;flex:1;display:flex;flex-direction:column;gap:14px;min-height:0"></div>
-    <div style="padding:14px 26px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0">
+    <div style="padding:14px 26px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-shrink:0">
       <button class="btn btn-secondary" onclick="closeReviewModal()">キャンセル</button>
-      <button class="btn btn-primary" id="rv-gen-text-btn" onclick="generateText()">この数値でテキストを生成する →</button>
+      <button class="btn btn-secondary" id="rv-ai-gen-btn" onclick="generateTextWithAI()" title="APIキーが必要です">AIで生成</button>
+      <button class="btn btn-primary" id="rv-gen-text-btn" onclick="generateText()">テキストを生成する →</button>
     </div>
   </div>
 
