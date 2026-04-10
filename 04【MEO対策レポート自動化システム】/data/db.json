@@ -21,7 +21,18 @@
       "createdAt": "2026-04-10T03:21:21.779Z"
     }
   ],
-  "reports": [],
+  "reports": [
+    {
+      "id": "mnsk9ob7k6re",
+      "storeId": "mnsc9ikhayjy",
+      "storeName": "Sun east planning株式会社",
+      "month": 3,
+      "year": 2026,
+      "generatedAt": "2026-04-10T07:05:00.497Z",
+      "fileName": "MEO対策レポート_Sun east planning株式会社様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsc9ikhayjy\\MEO対策レポート_Sun east planning株式会社様_2026年3月.pptx"
+    }
+  ],
   "defaultPrompts": {
     "keyword_current": "1〜2文で、対策キーワードの順位状況を事実として簡潔に記載してください。",
     "keyword_analysis": "3〜5文で、MEOの専門的な視点から順位の意味を前向きに解説してください。課題があれば改善提案も含めてください。\n優しく、WEBマーケティングが分からない人にも伝わる文章で",
