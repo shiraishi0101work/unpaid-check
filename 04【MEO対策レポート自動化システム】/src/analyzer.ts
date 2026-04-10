@@ -17,7 +17,8 @@ export class MeoAnalyzer {
   public commentFallback = false; // Gemini/OpenAI → Claude フォールバックが発生したか
 
   constructor(anthropicKey: string, commentProvider: CommentProvider = 'claude', commentApiKey?: string) {
-    this.client = new Anthropic({ apiKey: anthropicKey });
+    // Gemini使用時はClaudeを呼ばないので、ダミーキーでSDKを初期化する（空文字列だとSDKがエラーを投げるため）
+    this.client = new Anthropic({ apiKey: anthropicKey || 'dummy-not-used' });
     this.commentProvider = commentProvider;
     this.commentApiKey = commentApiKey ?? anthropicKey;
   }
