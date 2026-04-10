@@ -166,29 +166,21 @@ export class ReportGenerator {
     const totalW = SLIDE_W - 0.3;
     const perW = (totalW - gap * (n - 1)) / n;
 
+    // 画像枠のみ（手動差し込み用プレースホルダー）
+    const placeholderH = SLIDE_H - imageAreaY - 5.4; // コメントボックスの上まで
     for (let i = 0; i < n; i++) {
-      const sd = keywordSlides[i]!;
-      if (!sd.imagePath || !fs.existsSync(sd.imagePath)) continue;
-
-      // 元のアスペクト比を維持した高さを計算
-      let displayH = perW * 1.8; // デフォルト比率
-      try {
-        const meta = await sharp(sd.imagePath).metadata();
-        if (meta.width && meta.height) {
-          displayH = perW * (meta.height / meta.width);
-        }
-      } catch { /* ignore */ }
-
       const x = 0.15 + i * (perW + gap);
+      // 枠線付き白背景
       slide.addShape(this.pptx.ShapeType.rect, {
-        x, y: imageAreaY, w: perW, h: displayH,
+        x, y: imageAreaY, w: perW, h: placeholderH,
         fill: { color: 'FFFFFF' },
-        line: { color: 'DDDDDD', width: 1 },
+        line: { color: 'AAAAAA', width: 1 },
       });
-      slide.addImage({
-        path: sd.imagePath,
-        x, y: imageAreaY,
-        w: perW, h: displayH,
+      // ラベル
+      slide.addText(`スクリーンショット ${i + 1}`, {
+        x, y: imageAreaY + placeholderH / 2 - 0.2, w: perW, h: 0.4,
+        fontSize: 10, color: 'AAAAAA',
+        align: 'center', fontFace: 'メイリオ',
       });
     }
 
