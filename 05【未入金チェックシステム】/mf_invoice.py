@@ -92,10 +92,11 @@ def get_all_billings(from_date: str = None, to_date: str = None) -> list[dict]:
     print(f"[請求書] API取得: {len(billings_raw)}件")
 
     # 日付範囲フィルタ（Python側）
+    # APIはYYYY/MM/DD形式で返すためnormalize後に比較する
     if from_date or to_date:
         filtered = []
         for b in billings_raw:
-            bill_date = b.get("billing_date", "") or b.get("due_date", "")
+            bill_date = _normalize_date(b.get("billing_date", "") or b.get("due_date", ""))
             if from_date and bill_date and bill_date < from_date:
                 continue
             if to_date and bill_date and bill_date > to_date:
