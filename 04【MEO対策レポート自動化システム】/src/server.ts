@@ -149,7 +149,9 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     const storePrompts = db.getStorePrompts(store.id);
     const prompts = { ...defaultPrompts, ...storePrompts };
 
-    const analyzer = new MeoAnalyzer(apiKey);
+    const provider  = (commentAI as CommentProvider | undefined) ?? 'claude';
+    const commentKey = commentApiKey?.trim() || apiKey;
+    const analyzer = new MeoAnalyzer(apiKey, provider, commentKey);
     const monthNum = parseInt(month, 10);
     const slides: {
       keyword?: SlideData;
