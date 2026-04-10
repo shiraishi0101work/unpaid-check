@@ -179,12 +179,40 @@ JSONのみ返してください。`,
   }
 
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }],
-    });
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+    let text = '';
+    try {
+      if (this.commentProvider === 'openai') {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${this.commentApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: prompt }], max_tokens: 800 }),
+        });
+        const data = await res.json() as { choices: Array<{ message: { content: string } }> };
+        text = data.choices?.[0]?.message?.content ?? '{}';
+
+      } else if (this.commentProvider === 'gemini') {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.commentApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+          }
+        );
+        const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
+        text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+
+      } else {
+        const response = await this.client.messages.create({
+          model: 'claude-opus-4-6',
+          max_tokens: 800,
+          messages: [{ role: 'user', content: prompt }],
+        });
+        text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+      }
+    } catch (err) {
+      console.error(`[${this.commentProvider}] 文章生成エラー:`, err);
+    }
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
   }
