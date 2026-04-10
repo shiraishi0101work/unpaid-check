@@ -172,115 +172,52 @@ JSONのみ返してください。`,
     };
   }
 
-  async generateKeywordComment(data: KeywordData, month: number): Promise<{ current: string; analysis: string }> {
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: `MEO対策レポートの${month}月度キーワード順位について、クライアント向けの説明文を生成してください。
+  private buildCommentPrompt(instruction: string, month: number, dataText: string): string {
+    return `${instruction.replace(/\{month\}/g, String(month))}
 
 データ:
-${JSON.stringify(data, null, 2)}
+${dataText}
 
 以下のJSON形式で返してください:
 {
-  "current": "【現状】の説明文（1〜2文、事実を簡潔に）",
-  "analysis": "【分析】の説明文（3〜5文、MEOの専門的な視点で前向きに、課題があれば改善提案も含める）"
+  "current": "【現状】の説明文",
+  "analysis": "【分析】の説明文"
 }
 
-JSONのみ返してください。`,
-      }],
-    });
+JSONのみ返してください。`;
+  }
 
+  private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
+    const response = await this.client.messages.create({
+      model: 'claude-opus-4-6',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }],
+    });
     const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
   }
 
-  async generateViewsComment(data: ViewsData, month: number): Promise<{ current: string; analysis: string }> {
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: `MEO対策レポートの${month}月度閲覧ユーザー数について、クライアント向けの説明文を生成してください。
-
-データ:
-- 当月: ${data.currentMonth}件
-- 前年同月: ${data.previousYear}件
-- トレンド: ${data.trend}
-
-以下のJSON形式で返してください:
-{
-  "current": "【現状】の説明文（1文、件数を明記）",
-  "analysis": "【分析】の説明文（3〜5文、マーケティング視点で前向きに。前年比・トレンドに触れる）"
-}
-
-JSONのみ返してください。`,
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
+  async generateKeywordComment(data: KeywordData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
+    const instruction = customPrompt ?? `MEO対策レポートの{month}月度キーワード順位について、クライアント向けの説明文を生成してください。\n\n【現状】は1〜2文で事実を簡潔に記載してください。\n【分析】は3〜5文でMEOの専門的な視点から前向きに記述し、課題があれば改善提案も含めてください。`;
+    return this.callComment(this.buildCommentPrompt(instruction, month, JSON.stringify(data, null, 2)));
   }
 
-  async generateInteractionComment(data: InteractionData, month: number): Promise<{ current: string; analysis: string }> {
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: `MEO対策レポートの${month}月度インタラクション数について、クライアント向けの説明文を生成してください。
-
-データ:
-- 当月: ${data.currentMonth}件
-- 前年同月: ${data.previousYear}件
-- インタラクション率: ${data.interactionRate}%
-- トレンド: ${data.trend}
-
-以下のJSON形式で返してください:
-{
-  "current": "【現状】の説明文（1文、件数とインタラクション率を明記）",
-  "analysis": "【分析】の説明文（3〜5文、「閲覧から行動への転換」という視点で分析。ポジティブシグナルとしての意味を伝える）"
-}
-
-JSONのみ返してください。`,
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
+  async generateViewsComment(data: ViewsData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
+    const instruction = customPrompt ?? `MEO対策レポートの{month}月度閲覧ユーザー数について、クライアント向けの説明文を生成してください。\n\n【現状】は1文で件数を明記してください。\n【分析】は3〜5文でマーケティング視点から前向きに記述し、前年比・トレンドにも触れてください。`;
+    const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / トレンド: ${data.trend}`;
+    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
   }
 
-  async generateUserActionComment(data: UserActionData, month: number): Promise<{ current: string; analysis: string }> {
-    const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: `MEO対策レポートの${month}月度ユーザー行動データについて、クライアント向けの説明文を生成してください。
+  async generateInteractionComment(data: InteractionData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
+    const instruction = customPrompt ?? `MEO対策レポートの{month}月度インタラクション数について、クライアント向けの説明文を生成してください。\n\n【現状】は1文で件数とインタラクション率を明記してください。\n【分析】は3〜5文で「閲覧から行動への転換」という視点で分析し、ポジティブシグナルとしての意味を伝えてください。`;
+    const dataText = `当月: ${data.currentMonth}件 / 前年同月: ${data.previousYear}件 / インタラクション率: ${data.interactionRate}% / トレンド: ${data.trend}`;
+    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
+  }
 
-データ:
-- 通話数: ${data.calls}件（前年同月: ${data.previousCalls}件）
-- Webサイト: ${data.website}件（前年同月: ${data.previousWebsite}件）
-- ルート検索: ${data.routes}件（前年同月: ${data.previousRoutes}件）
-- 予約数: ${data.reservations}件（前年同月: ${data.previousReservations}件）
-
-以下のJSON形式で返してください:
-{
-  "current": "【現状】の説明文（1〜2文、各指標の数値を列挙）",
-  "analysis": "【分析】の説明文（4〜6文。強い指標は来店意欲の高さとして評価。弱い指標はCTA・情報設計の改善提案として伝える）"
-}
-
-JSONのみ返してください。`,
-      }],
-    });
-
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) as { current: string; analysis: string } : { current: '', analysis: '' };
+  async generateUserActionComment(data: UserActionData, month: number, customPrompt?: string): Promise<{ current: string; analysis: string }> {
+    const instruction = customPrompt ?? `MEO対策レポートの{month}月度ユーザー行動データについて、クライアント向けの説明文を生成してください。\n\n【現状】は1〜2文で各指標の数値を列挙してください。\n【分析】は4〜6文で記述し、強い指標は来店意欲の高さとして評価し、弱い指標はCTA・情報設計の改善提案として伝えてください。`;
+    const dataText = `通話: ${data.calls}件(前年${data.previousCalls}) / Web: ${data.website}件(前年${data.previousWebsite}) / ルート: ${data.routes}件(前年${data.previousRoutes}) / 予約: ${data.reservations}件(前年${data.previousReservations})`;
+    return this.callComment(this.buildCommentPrompt(instruction, month, dataText));
   }
 }
