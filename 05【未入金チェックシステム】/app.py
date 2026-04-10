@@ -164,6 +164,25 @@ def dashboard():
     )
 
 
+@app.route("/api/debug-check")
+def debug_check():
+    """デバッグ用: 請求書取得を同期実行してそのまま返す"""
+    try:
+        token = auth.get_access_token("invoice")
+        billings = get_all_billings()
+        from collections import Counter
+        status_count = Counter(b["入金状態"] for b in billings)
+        return jsonify({
+            "total": len(billings),
+            "token_prefix": token[:10] + "...",
+            "status_counts": dict(status_count),
+            "sample_due_date": billings[0].get("支払期限") if billings else None,
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+
 @app.route("/run", methods=["POST"])
 def run():
     with _status_lock:
