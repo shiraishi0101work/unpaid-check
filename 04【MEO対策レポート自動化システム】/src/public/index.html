@@ -1487,7 +1487,8 @@
     setProgress(8);
 
     appendLog(`${currentStoreName}  ${year}年${month}月度`, 'log-info');
-    appendLog('Claude AI がスクリーンショットを解析しています...');
+    const analysisLabel = commentAI === 'gemini' ? 'Gemini' : 'Claude';
+    appendLog(`${analysisLabel} AI がスクリーンショットを解析しています...`);
 
     try {
       setProgress(25);
