@@ -294,7 +294,12 @@ app.post('/api/generate-text', async (req, res) => {
       sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...c, hasImage: !!screenshots.userActions };
     }
 
-    res.json({ sections, commentFallback: analyzer.commentFallback, templateFallback: analyzer.templateFallback });
+    res.json({
+      sections,
+      commentFallback: analyzer.commentFallback,
+      templateFallback: analyzer.templateFallback,
+      apiError: analyzer.lastError,  // テキスト生成時のAPIエラー詳細
+    });
   } catch (err) {
     console.error('文章生成エラー:', err);
     res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
