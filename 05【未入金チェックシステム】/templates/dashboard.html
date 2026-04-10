@@ -60,8 +60,9 @@
   <div class="sidebar-label">照合実行</div>
 
   <form method="POST" action="{{ url_for('run') }}" id="run-form">
+    <input type="hidden" name="fiscal_year" value="{{ fiscal_year }}">
     <div class="sidebar-item">
-      <label class="sidebar-sublabel">開始日</label>
+      <label class="sidebar-sublabel">開始日（省略で年度自動）</label>
       <input type="date" name="from_date" class="form-control form-control-sm">
     </div>
     <div class="sidebar-item">
@@ -106,7 +107,7 @@
 
 <hr class="sidebar-divider">
 
-<!-- ダウンロード -->
+<!-- レポート -->
 <div class="sidebar-section">
   <div class="sidebar-label">レポート</div>
   <div class="sidebar-item">
@@ -122,7 +123,7 @@
 
 <!-- 集計サマリー（サイドバー） -->
 <div class="sidebar-section">
-  <div class="sidebar-label">集計</div>
+  <div class="sidebar-label">集計（{{ fiscal_year }}年度）</div>
 
   <a href="#tab-overdue" class="sidebar-stat-item text-decoration-none" data-tab="tab-overdue">
     <span class="d-flex align-items-center gap-2">
@@ -140,36 +141,58 @@
     <span class="badge bg-warning text-dark">{{ upcoming|length }}</span>
   </a>
 
-  <a href="#tab-diff" class="sidebar-stat-item text-decoration-none" data-tab="tab-diff">
-    <span class="d-flex align-items-center gap-2">
-      <i class="bi bi-exclamation-diamond-fill" style="color:#7030A0"></i>
-      <span class="small text-dark">差額あり</span>
-    </span>
-    <span class="badge" style="background:#7030A0">{{ result.diff|length }}</span>
-  </a>
-
   <a href="#tab-paid" class="sidebar-stat-item text-decoration-none" data-tab="tab-paid">
     <span class="d-flex align-items-center gap-2">
       <i class="bi bi-check-circle-fill text-success"></i>
       <span class="small text-dark">入金確認済み</span>
     </span>
-    <span class="badge bg-success">{{ result.paid|length }}</span>
+    <span class="badge bg-success">{{ paid_fy|length }}</span>
   </a>
 
-  <a href="#tab-unmatched" class="sidebar-stat-item text-decoration-none" data-tab="tab-unmatched">
+  <a href="#tab-monthly" class="sidebar-stat-item text-decoration-none" data-tab="tab-monthly">
     <span class="d-flex align-items-center gap-2">
-      <i class="bi bi-question-circle-fill text-secondary"></i>
-      <span class="small text-dark">照合不能</span>
+      <i class="bi bi-calendar3 text-info"></i>
+      <span class="small text-dark">着金月別一覧</span>
     </span>
-    <span class="badge bg-secondary">{{ result.unmatched_deals|length }}</span>
+    <span class="badge bg-info text-dark">{{ monthly_sorted|length }}ヶ月</span>
   </a>
 </div>
 {% endif %}
+
+<hr class="sidebar-divider">
+
+<!-- 設定 -->
+<div class="sidebar-section">
+  <div class="sidebar-item">
+    <a href="{{ url_for('settings_page') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-gear me-1"></i>設定
+    </a>
+  </div>
+</div>
 
 {% endblock %}
 
 {# ==================== メインコンテンツ ==================== #}
 {% block content %}
+
+{# ===== 年度ナビゲーション ===== #}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center gap-3">
+    <a href="{{ url_for('dashboard', year=prev_year) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-chevron-left"></i> {{ prev_year }}年度
+    </a>
+    <div class="text-center">
+      <h5 class="fw-bold mb-0">{{ fiscal_year }}年度</h5>
+      <small class="text-muted">{{ fy_from }} 〜 {{ fy_to }}</small>
+    </div>
+    <a href="{{ url_for('dashboard', year=next_year) }}" class="btn btn-outline-secondary btn-sm">
+      {{ next_year }}年度 <i class="bi bi-chevron-right"></i>
+    </a>
+  </div>
+  {% if settings.company_name %}
+  <span class="text-muted small"><i class="bi bi-building me-1"></i>{{ settings.company_name }}</span>
+  {% endif %}
+</div>
 
 {% if not result %}
 {# まだ実行されていない #}
@@ -220,31 +243,31 @@
   </div>
 
   <div class="col-sm-6 col-xl-3">
-    <div class="card shadow-sm h-100" style="border-color:#7030A0">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <div class="fw-bold small mb-1" style="color:#7030A0">差額あり</div>
-            <div class="fs-3 fw-bold" style="color:#7030A0">{{ result.diff|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
-          </div>
-          <i class="bi bi-exclamation-diamond-fill opacity-25" style="font-size:2.5rem;color:#7030A0"></i>
-        </div>
-        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(result.diff|sum(attribute='請求金額')) }}</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-sm-6 col-xl-3">
     <div class="card border-success shadow-sm h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between">
           <div>
             <div class="text-success fw-bold small mb-1">入金確認済み</div>
-            <div class="fs-3 fw-bold text-success">{{ result.paid|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+            <div class="fs-3 fw-bold text-success">{{ paid_fy|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
           </div>
           <i class="bi bi-check-circle-fill text-success opacity-25" style="font-size:2.5rem"></i>
         </div>
-        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}</div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(paid_fy|sum(attribute='請求金額')) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-info fw-bold small mb-1">全請求書（年度計）</div>
+            <div class="fs-3 fw-bold text-info">{{ (overdue|length) + (upcoming|length) + (paid_fy|length) }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-collection-fill text-info opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">{{ monthly_sorted|length }}ヶ月分</div>
       </div>
     </div>
   </div>
@@ -266,23 +289,25 @@
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-diff" id="btn-tab-diff">
-      <i class="bi bi-exclamation-diamond" style="color:#7030A0"></i> 差額あり
-      <span class="badge ms-1" style="background:#7030A0">{{ result.diff|length }}</span>
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid" id="btn-tab-paid">
+      <i class="bi bi-check-circle text-success"></i> 入金確認済み
+      <span class="badge bg-success ms-1">{{ paid_fy|length }}</span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid" id="btn-tab-paid">
-      <i class="bi bi-check-circle text-success"></i> 入金確認済み
-      <span class="badge bg-success ms-1">{{ result.paid|length }}</span>
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-monthly" id="btn-tab-monthly">
+      <i class="bi bi-calendar3 text-info"></i> 着金月別一覧
+      <span class="badge bg-info text-dark ms-1">{{ monthly_sorted|length }}ヶ月</span>
     </a>
   </li>
+  {% if result.unmatched_deals %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-unmatched" id="btn-tab-unmatched">
       <i class="bi bi-question-circle text-secondary"></i> 照合不能
       <span class="badge bg-secondary ms-1">{{ result.unmatched_deals|length }}</span>
     </a>
   </li>
+  {% endif %}
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom p-3 bg-white shadow-sm">
@@ -295,28 +320,49 @@
         <thead class="table-danger">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th>
-            <th class="text-center">ステータス</th>
+            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th class="text-end">差額</th>
+            <th class="text-center">編集</th>
           </tr>
         </thead>
         <tbody>
           {% for b in overdue %}
+          {% set manual_amt = b.着金金額_手動 | default(0) | int %}
+          {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
           <tr>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.担当者 }}</td>
             <td class="small">{{ b.請求日 }}</td>
             <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="text-center"><span class="badge bg-danger">期限超過</span></td>
+            <td class="text-end small {% if manual_amt and diff < 0 %}text-danger fw-bold{% elif manual_amt and diff > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
+              {% if manual_amt %}
+                {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="text-center">
+              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="5">合計</td>
+            <td colspan="6">合計</td>
             <td class="text-end">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</td>
-            <td></td>
+            <td colspan="2"></td>
           </tr>
         </tfoot>
       </table>
@@ -336,7 +382,10 @@
         <thead class="table-warning">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th><th>メモ</th>
+            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>メモ</th>
+            <th class="text-center">編集</th>
           </tr>
         </thead>
         <tbody>
@@ -345,18 +394,31 @@
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.担当者 }}</td>
             <td class="small">{{ b.請求日 }}</td>
             <td class="small">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="text-muted small">{{ b.メモ }}</td>
+            <td class="text-muted small">{{ b.メモ_手動 or b.メモ }}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="5">合計</td>
+            <td colspan="6">合計</td>
             <td class="text-end">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</td>
-            <td></td>
+            <td colspan="2"></td>
           </tr>
         </tfoot>
       </table>
@@ -368,78 +430,63 @@
     {% endif %}
   </div>
 
-  {# --- 差額あり --- #}
-  <div class="tab-pane fade" id="tab-diff">
-    {% if result.diff %}
-    <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle mb-0">
-        <thead style="background:#E2CFED">
-          <tr>
-            <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>支払期限</th>
-            <th class="text-end">請求金額</th>
-            <th>着金日</th>
-            <th class="text-end">着金金額</th>
-            <th class="text-end">差額</th>
-            <th>照合結果</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for b in result.diff %}
-          {% set diff = b.差額 | default(0) %}
-          <tr>
-            <td class="text-muted small">{{ b.請求番号 }}</td>
-            <td class="fw-semibold">{{ b.取引先名 }}</td>
-            <td class="text-muted small">{{ b.件名 }}</td>
-            <td class="small">{{ b.支払期限 }}</td>
-            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
-            <td class="small">{{ b.着金日 }}</td>
-            <td class="text-end">¥{{ "{:,.0f}".format(b.着金金額 | default(0)) }}</td>
-            <td class="text-end fw-bold {% if diff < 0 %}text-danger{% else %}text-purple{% endif %}">
-              {% if diff < 0 %}▲{% else %}+{% endif %}¥{{ "{:,.0f}".format(diff | abs) }}
-            </td>
-            <td class="small">{{ b.照合結果 }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <div class="text-center text-muted py-4">
-      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>差額のある請求書はありません
-    </div>
-    {% endif %}
-  </div>
-
   {# --- 入金確認済み --- #}
   <div class="tab-pane fade" id="tab-paid">
-    {% if result.paid %}
+    {% if paid_fy %}
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-success">
           <tr>
             <th>請求番号</th><th>取引先名</th><th>件名</th>
-            <th>請求日</th><th>支払期限</th><th class="text-end">請求金額</th><th>入金状態</th>
+            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th class="text-end">着金金額</th>
+            <th class="text-end">差額</th>
+            <th>入金状態</th>
+            <th class="text-center">編集</th>
           </tr>
         </thead>
         <tbody>
-          {% for b in result.paid %}
+          {% for b in paid_fy %}
+          {% set manual_amt = b.着金金額_手動 | default(0) | int %}
+          {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
           <tr>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.担当者 }}</td>
             <td class="small">{{ b.請求日 }}</td>
             <td class="small">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="text-end small">
+              {% if manual_amt %}¥{{ "{:,.0f}".format(manual_amt) }}{% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td class="text-end small {% if manual_amt and diff < 0 %}text-danger fw-bold{% elif manual_amt and diff > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
+              {% if manual_amt %}
+                {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
+              {% else %}—{% endif %}
+            </td>
             <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
+            <td class="text-center">
+              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
-            <td colspan="5">合計</td>
-            <td class="text-end">¥{{ "{:,.0f}".format(result.paid|sum(attribute='請求金額')) }}</td>
-            <td></td>
+            <td colspan="6">合計</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(paid_fy|sum(attribute='請求金額')) }}</td>
+            <td colspan="4"></td>
           </tr>
         </tfoot>
       </table>
@@ -449,9 +496,97 @@
     {% endif %}
   </div>
 
+  {# --- 着金月別一覧 --- #}
+  <div class="tab-pane fade" id="tab-monthly">
+    {% if monthly_sorted %}
+    <div class="accordion" id="monthlyAccordion">
+      {% for ym, items in monthly_sorted %}
+      {% set loop_idx = loop.index %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="head-{{ ym }}">
+          <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+            data-bs-toggle="collapse" data-bs-target="#col-{{ ym }}"
+            aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="col-{{ ym }}">
+            <span class="fw-bold me-3">{{ ym[:4] }}年{{ ym[5:7] }}月</span>
+            <span class="badge bg-success me-2">{{ items|length }}件</span>
+            <span class="text-muted small">¥{{ "{:,.0f}".format(items|sum(attribute='請求金額')) }}</span>
+          </button>
+        </h2>
+        <div id="col-{{ ym }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+          data-bs-parent="#monthlyAccordion">
+          <div class="accordion-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>請求番号</th><th>取引先名</th><th>件名</th>
+                    <th>担当者</th><th>支払期限</th>
+                    <th class="text-end">請求金額</th>
+                    <th class="text-end">着金金額</th>
+                    <th class="text-end">差額</th>
+                    <th>入金状態</th>
+                    <th class="text-center">編集</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for b in items %}
+                  {% set manual_amt = b.着金金額_手動 | default(0) | int %}
+                  {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
+                  <tr>
+                    <td class="text-muted small">{{ b.請求番号 }}</td>
+                    <td class="fw-semibold">{{ b.取引先名 }}</td>
+                    <td class="text-muted small">{{ b.件名 }}</td>
+                    <td class="small">{{ b.担当者 }}</td>
+                    <td class="small">{{ b.支払期限 }}</td>
+                    <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+                    <td class="text-end small">
+                      {% if manual_amt %}¥{{ "{:,.0f}".format(manual_amt) }}{% else %}<span class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td class="text-end small {% if manual_amt and diff < 0 %}text-danger fw-bold{% elif manual_amt and diff > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
+                      {% if manual_amt %}
+                        {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
+                      {% else %}—{% endif %}
+                    </td>
+                    <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
+                    <td class="text-center">
+                      <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+                        data-id="{{ b.請求書ID }}"
+                        data-name="{{ b.取引先名 }}"
+                        data-num="{{ b.請求番号 }}"
+                        data-tantou="{{ b.担当者 }}"
+                        data-memo="{{ b.メモ_手動 }}"
+                        data-kikin-date="{{ b.着金日_手動 }}"
+                        data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                  <tr>
+                    <td colspan="5">{{ ym[:4] }}年{{ ym[5:7] }}月 合計</td>
+                    <td class="text-end">¥{{ "{:,.0f}".format(items|sum(attribute='請求金額')) }}</td>
+                    <td colspan="4"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-calendar-x fs-3"></i><br>この年度に入金済みの請求書はありません
+    </div>
+    {% endif %}
+  </div>
+
   {# --- 照合不能 --- #}
+  {% if result.unmatched_deals %}
   <div class="tab-pane fade" id="tab-unmatched">
-    {% if result.unmatched_deals %}
     <p class="text-muted small mb-2">請求書と紐付けできなかった入金データです。手動で確認してください。</p>
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
@@ -475,15 +610,59 @@
         </tbody>
       </table>
     </div>
-    {% else %}
-    <div class="text-center text-muted py-4">
-      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>照合不能な入金データはありません
-    </div>
-    {% endif %}
   </div>
+  {% endif %}
 
 </div>
 {% endif %}
+
+{# ===== 案件編集モーダル ===== #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel"><i class="bi bi-pencil-square me-2"></i>案件情報編集</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-invoice-id">
+        <div class="mb-2">
+          <span class="text-muted small" id="edit-invoice-info"></span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">担当者</label>
+          <input type="text" id="edit-tantou" class="form-control" placeholder="例: 田中 太郎">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">メモ</label>
+          <textarea id="edit-memo" class="form-control" rows="2" placeholder="社内メモ・備考など"></textarea>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label fw-semibold">着金日（手動）</label>
+            <input type="date" id="edit-kikin-date" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">着金金額（手動）</label>
+            <div class="input-group">
+              <span class="input-group-text">¥</span>
+              <input type="number" id="edit-kikin-amt" class="form-control" placeholder="0">
+            </div>
+          </div>
+        </div>
+        <div class="mt-2" id="edit-diff-display" style="display:none">
+          <span class="badge bg-warning text-dark fs-6" id="edit-diff-badge"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="edit-save-btn">
+          <i class="bi bi-save me-1"></i>保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -533,6 +712,68 @@ document.querySelectorAll('.sidebar-stat-item[data-tab]').forEach(el => {
     const tabBtn = document.getElementById('btn-' + tabId);
     if (tabBtn) tabBtn.click();
     document.getElementById(tabId)?.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+// 編集モーダル
+const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const id    = this.dataset.id;
+    const name  = this.dataset.name;
+    const num   = this.dataset.num;
+    const amt   = this.dataset.kikinAmt;
+
+    document.getElementById('edit-invoice-id').value    = id;
+    document.getElementById('edit-invoice-info').textContent = `${num} / ${name}`;
+    document.getElementById('edit-tantou').value         = this.dataset.tantou || '';
+    document.getElementById('edit-memo').value           = this.dataset.memo || '';
+    document.getElementById('edit-kikin-date').value     = this.dataset.kikinDate || '';
+    document.getElementById('edit-kikin-amt').value      = amt || '';
+
+    updateDiffDisplay();
+    editModal.show();
+  });
+});
+
+function updateDiffDisplay() {
+  // 差額表示はリアルタイムでは計算しない（請求金額がモーダルにないため）
+  document.getElementById('edit-diff-display').style.display = 'none';
+}
+
+document.getElementById('edit-save-btn')?.addEventListener('click', function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  const payload = {
+    担当者:       document.getElementById('edit-tantou').value.trim(),
+    メモ:         document.getElementById('edit-memo').value.trim(),
+    着金日_手動:   document.getElementById('edit-kikin-date').value,
+    着金金額_手動: parseInt(document.getElementById('edit-kikin-amt').value) || 0,
+  };
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+
+  fetch(`/api/invoice/${id}/meta`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      editModal.hide();
+      window.location.reload();
+    } else {
+      alert('保存に失敗しました');
+    }
+  })
+  .catch(e => {
+    alert('エラー: ' + e);
+  })
+  .finally(() => {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-save me-1"></i>保存';
   });
 });
 </script>
