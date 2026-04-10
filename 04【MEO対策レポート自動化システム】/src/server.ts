@@ -245,7 +245,10 @@ app.post('/api/generate', uploadFields, async (req, res) => {
       slides.userActions = { title: 'ユーザー行動データ（来店・売上に直結）', imagePath: screenshots.userActions, currentStatus: comment.current, analysis: comment.analysis };
     }
 
-    const input: ReportInput = { storeName, month: monthNum, year: parseInt(year, 10), screenshots, apiKey };
+    const input: ReportInput = {
+      storeName, month: monthNum, year: parseInt(year, 10), screenshots, apiKey,
+      achievementDays: achievementDays ? parseInt(achievementDays, 10) : undefined,
+    };
     const tmpOutput = path.join(os.tmpdir(), `meo-report-${Date.now()}.pptx`);
     tmpFiles.push(tmpOutput);
 
