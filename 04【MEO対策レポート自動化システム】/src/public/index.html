@@ -1196,9 +1196,11 @@
     });
     zone.addEventListener('drop', e => {
       e.preventDefault(); zone.classList.remove('dragover');
-      const type = zone.id.replace('zone-', '');
-      const f = e.dataTransfer.files[0];
-      if (f) setFile(type, f);
+      const type  = zone.id.replace('zone-', '');
+      const files = [...e.dataTransfer.files].filter(f =>
+        f.type.startsWith('image/') || f.type === 'application/pdf'
+      );
+      if (files.length) setFiles(type, files);
     });
   });
 
