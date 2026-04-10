@@ -1028,6 +1028,44 @@
     <h2>プロンプト設定（デフォルト）</h2>
   </div>
 
+  <!-- AI設定カード -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">文章生成AI</span></div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.7">
+        レポート文章の生成に使用するAIを選択します。<br>
+        スクリーンショットの画像解析は常にClaudeを使用します。
+      </p>
+      <div class="ai-selector">
+        <label class="ai-option">
+          <input type="radio" name="commentAI" value="claude" onchange="onAIChange()">
+          <div>
+            <span class="ai-name">Claude</span>
+            <span class="ai-model">claude-opus-4-6 · ヘッダーのAPIキーを使用</span>
+          </div>
+        </label>
+        <label class="ai-option">
+          <input type="radio" name="commentAI" value="openai" onchange="onAIChange()">
+          <div>
+            <span class="ai-name">ChatGPT</span>
+            <span class="ai-model">gpt-4o · OpenAI</span>
+          </div>
+        </label>
+        <label class="ai-option">
+          <input type="radio" name="commentAI" value="gemini" onchange="onAIChange()">
+          <div>
+            <span class="ai-name">Gemini</span>
+            <span class="ai-model">gemini-2.0-flash · Google</span>
+          </div>
+        </label>
+      </div>
+      <div id="commentApiKeyField" style="margin-top:14px;display:none">
+        <label class="field-label" id="commentApiKeyLabel" style="margin-bottom:6px">APIキー</label>
+        <input class="field-input" type="password" id="commentApiKey" placeholder="sk-..." oninput="saveCommentAISettings()">
+      </div>
+    </div>
+  </div>
+
   <div class="card prompt-card">
     <div class="card-header">
       <span class="card-title">文章生成プロンプト</span>
