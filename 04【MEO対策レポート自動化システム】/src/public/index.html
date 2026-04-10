@@ -941,16 +941,20 @@ function handleDrop(event, field) {
 }
 
 function updateUploadZone(field, files) {
-  const zoneId = 'zone-' + field;
-  const fnId = 'fn-' + field;
-  const zone = document.getElementById(zoneId);
-  const fn = document.getElementById(fnId);
-  if (!zone || !fn) return;
+  const zone = document.getElementById('zone-' + field);
+  const fn = document.getElementById('fn-' + field);
+  if (!zone) return;
   zone.classList.add('has-file');
-  if (files.length === 1) {
-    fn.textContent = '✓ ' + files[0].name;
-  } else {
-    fn.textContent = `✓ ${files.length}枚選択済み`;
+
+  const label = files.length === 1 ? '✓ ' + files[0].name : `✓ ${files.length}枚選択済み`;
+  if (fn) fn.textContent = label;
+
+  // Show image preview (first file)
+  const previewImg = document.getElementById('preview-' + field);
+  if (previewImg && files[0] && files[0].type.startsWith('image/')) {
+    const url = URL.createObjectURL(files[0]);
+    previewImg.src = url;
+    previewImg.onload = () => URL.revokeObjectURL(url);
   }
 }
 
