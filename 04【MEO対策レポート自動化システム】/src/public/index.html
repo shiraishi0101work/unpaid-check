@@ -1462,6 +1462,15 @@
     }
     if (!hasFile) { alert('スクリーンショットを1枚以上アップロードしてください'); return; }
 
+    // 文章生成AI設定
+    const { provider: commentAI, key: commentApiKey } = getCommentAIForRequest();
+    if (commentAI !== 'claude' && !commentApiKey) {
+      alert(`${AI_LABELS[commentAI] ?? commentAI} のAPIキーが設定されていません。\n⚙️ 設定ページで入力してください。`);
+      return;
+    }
+    fd.append('commentAI', commentAI);
+    fd.append('commentApiKey', commentApiKey);
+
     const btn = document.getElementById('genBtn');
     btn.disabled = true;
     btn.textContent = '生成中...';
