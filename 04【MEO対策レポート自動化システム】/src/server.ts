@@ -60,6 +60,30 @@ app.delete('/api/stores/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Prompt API ────────────────────────────────────────────
+
+app.get('/api/prompts/default', (_req, res) => {
+  res.json(db.getDefaultPrompts());
+});
+
+app.put('/api/prompts/default', (req, res) => {
+  const { prompts, applyToAll } = req.body as { prompts: Partial<db.PromptSet>; applyToAll: boolean };
+  db.setDefaultPrompts(prompts);
+  if (applyToAll) {
+    db.clearAllStorePromptsForKeys(Object.keys(prompts) as (keyof db.PromptSet)[]);
+  }
+  res.json({ ok: true });
+});
+
+app.get('/api/stores/:storeId/prompts', (req, res) => {
+  res.json(db.getStorePrompts(req.params['storeId'] ?? ''));
+});
+
+app.put('/api/stores/:storeId/prompts', (req, res) => {
+  db.setStorePrompts(req.params['storeId'] ?? '', req.body as Partial<db.PromptSet>);
+  res.json({ ok: true });
+});
+
 // ── Report API ────────────────────────────────────────────
 
 app.get('/api/stores/:storeId/reports', (req, res) => {
