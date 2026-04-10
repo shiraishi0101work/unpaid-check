@@ -638,10 +638,12 @@
         <div class="mb-3">
           <label class="form-label fw-semibold">担当者</label>
           <input type="text" id="edit-tantou" class="form-control" placeholder="例: 田中 太郎">
+          <div class="form-text">このシステム内のみで管理します</div>
         </div>
         <div class="mb-3">
-          <label class="form-label fw-semibold">メモ</label>
-          <textarea id="edit-memo" class="form-control" rows="2" placeholder="社内メモ・備考など"></textarea>
+          <label class="form-label fw-semibold">社内メモ <span class="badge bg-light text-muted border" style="font-size:0.65rem">MFとは別</span></label>
+          <textarea id="edit-memo" class="form-control" rows="2" placeholder="社内用の備考・連絡事項など"></textarea>
+          <div class="form-text">マネーフォワードのメモとは別に、このシステム内で保存されます</div>
         </div>
         <div class="row g-2">
           <div class="col-6">
