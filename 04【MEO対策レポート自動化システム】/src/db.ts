@@ -65,8 +65,11 @@ function ensureDirs(): void {
 
 function readDB(): DB {
   ensureDirs();
-  if (!fs.existsSync(DB_FILE)) return { stores: [], reports: [] };
-  return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8')) as DB;
+  if (!fs.existsSync(DB_FILE)) return { stores: [], reports: [], defaultPrompts: {}, storePrompts: {} };
+  const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8')) as DB;
+  if (!data.defaultPrompts) data.defaultPrompts = {};
+  if (!data.storePrompts) data.storePrompts = {};
+  return data;
 }
 
 function writeDB(db: DB): void {
