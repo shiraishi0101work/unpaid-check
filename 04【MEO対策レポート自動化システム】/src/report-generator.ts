@@ -58,14 +58,14 @@ export class ReportGenerator {
     });
 
     // Subtitle
-    slide.addText('Googleマップ上での表示・行動分析', {
+    slide.addText('Googleマップ上での表示・行動分析ご報告', {
       x: 0.5, y: 4.75, w: SLIDE_W - 1.0, h: 0.4,
       fontSize: 13, color: '666666',
       align: 'center', fontFace: 'メイリオ',
     });
 
     // Store name
-    slide.addText(`（${storeName}）様`, {
+    slide.addText(`${storeName} 様`, {
       x: 0.5, y: 5.6, w: SLIDE_W - 1.0, h: 0.6,
       fontSize: 22, bold: true, color: COLORS.titleText,
       align: 'center', fontFace: 'メイリオ',
