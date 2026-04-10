@@ -315,12 +315,15 @@ app.post('/api/regenerate', async (req, res) => {
     if (section === 'keyword') {
       const data = extractedData.keyword ?? { keywords: [], summary: '' };
       comment = await analyzer.generateKeywordComment(data, month, prompts.keyword_current, prompts.keyword_analysis);
-    } else if (section === 'views' && extractedData.views) {
-      comment = await analyzer.generateViewsComment(extractedData.views, month, prompts.views_current, prompts.views_analysis);
-    } else if (section === 'interactions' && extractedData.interactions) {
-      comment = await analyzer.generateInteractionComment(extractedData.interactions, month, prompts.interactions_current, prompts.interactions_analysis);
-    } else if (section === 'userActions' && extractedData.userActions) {
-      comment = await analyzer.generateUserActionComment(extractedData.userActions, month, prompts.userActions_current, prompts.userActions_analysis);
+    } else if (section === 'views') {
+      const data = extractedData.views ?? { currentMonth: 0, previousYear: 0, trend: 'new' as const };
+      comment = await analyzer.generateViewsComment(data, month, prompts.views_current, prompts.views_analysis);
+    } else if (section === 'interactions') {
+      const data = extractedData.interactions ?? { currentMonth: 0, previousYear: 0, interactionRate: 0, trend: 'new' as const };
+      comment = await analyzer.generateInteractionComment(data, month, prompts.interactions_current, prompts.interactions_analysis);
+    } else if (section === 'userActions') {
+      const data = extractedData.userActions ?? { calls: 0, website: 0, routes: 0, reservations: 0, previousCalls: 0, previousWebsite: 0, previousRoutes: 0, previousReservations: 0 };
+      comment = await analyzer.generateUserActionComment(data, month, prompts.userActions_current, prompts.userActions_analysis);
     }
     res.json(comment);
   } catch (err) {
