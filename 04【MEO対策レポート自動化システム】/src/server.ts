@@ -348,33 +348,24 @@ app.post('/api/template-text', (req, res) => {
     session.extractedData = { ...session.extractedData, ...overrideData };
   }
   const { extractedData, month, screenshots } = session;
-
-  // テンプレート関数を直接呼ぶ（AIなし・即時）
-  const analyzer = new MeoAnalyzer('dummy', 'claude');
+  const t = new MeoAnalyzer('dummy', 'claude');  // AI呼び出しは一切しない
 
   const sections: Record<string, { title: string; current: string; analysis: string; hasImage: boolean }> = {};
 
-  // キーワード（常に生成）
   const kwData = extractedData.keyword ?? { keywords: [], summary: '' };
-  const kwTpl = (analyzer as unknown as { templateKeyword: (d: KeywordData, m: number) => { current: string; analysis: string } })['templateKeyword'](kwData, month);
-  sections['keyword'] = { title: `${month}月対策キーワード順位ご報告`, ...kwTpl, hasImage: !!screenshots.keyword };
+  sections['keyword'] = { title: `${month}月対策キーワード順位ご報告`, ...t.getTemplateKeyword(kwData, month), hasImage: !!screenshots.keyword };
 
-  const viewsTpl = extractedData.views
-    ? (analyzer as unknown as { templateViews: (d: ViewsData, m: number) => { current: string; analysis: string } })['templateViews'](extractedData.views, month)
-    : null;
-  if (viewsTpl) sections['views'] = { title: '閲覧したユーザー数', ...viewsTpl, hasImage: !!screenshots.views };
+  if (extractedData.views) {
+    sections['views'] = { title: '閲覧したユーザー数', ...t.getTemplateViews(extractedData.views, month), hasImage: !!screenshots.views };
+  }
+  if (extractedData.interactions) {
+    sections['interactions'] = { title: 'インタラクション数', ...t.getTemplateInteractions(extractedData.interactions, month), hasImage: !!screenshots.interactions };
+  }
+  if (extractedData.userActions) {
+    sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...t.getTemplateUserActions(extractedData.userActions, month), hasImage: !!screenshots.userActions };
+  }
 
-  const interTpl = extractedData.interactions
-    ? (analyzer as unknown as { templateInteractions: (d: InteractionData, m: number) => { current: string; analysis: string } })['templateInteractions'](extractedData.interactions, month)
-    : null;
-  if (interTpl) sections['interactions'] = { title: 'インタラクション数', ...interTpl, hasImage: !!screenshots.interactions };
-
-  const uaTpl = extractedData.userActions
-    ? (analyzer as unknown as { templateUserActions: (d: UserActionData, m: number) => { current: string; analysis: string } })['templateUserActions'](extractedData.userActions, month)
-    : null;
-  if (uaTpl) sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...uaTpl, hasImage: !!screenshots.userActions };
-
-  res.json({ sections, templateFallback: true });
+  res.json({ sections });
 });
 
 // ── Step2: Generate Text API（抽出データ → 説明文生成）───────
