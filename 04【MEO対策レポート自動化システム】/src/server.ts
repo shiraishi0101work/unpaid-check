@@ -124,7 +124,8 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     const commentKey = commentApiKey?.trim() || apiKey;
 
     if (!storeName || !month || !year) {
-      res.status(400).json({ error: '必須パラメータが不足しています' });
+      const missing = [!storeName && 'storeName', !month && 'month', !year && 'year'].filter(Boolean).join(', ');
+      res.status(400).json({ error: `必須パラメータが不足しています (${missing})` });
       return;
     }
     // Gemini使用時はClaudeキー不要。それ以外はClaudeキー必須
