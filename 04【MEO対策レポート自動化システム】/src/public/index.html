@@ -1435,28 +1435,23 @@
     fnEl.textContent = '変換中...';
 
     try {
-      // キーワードは複数枚を個別スライドに配置するためステッチしない
+      // キーワードは1枚のみ（複数選択された場合は1枚目のみ使用）
       if (type === 'keyword') {
-        const fileList = [];
-        for (const f of files) {
-          if (f.type === 'application/pdf') {
-            const blob = await pdfToImageBlob(f);
-            fileList.push(new File([blob], f.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' }));
-          } else if (f.type.startsWith('image/')) {
-            fileList.push(f);
-          }
+        const f = files[0];
+        let finalFile = f;
+        if (f.type === 'application/pdf') {
+          const blob = await pdfToImageBlob(f);
+          finalFile = new File([blob], f.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' });
         }
-        if (fileList.length === 0) { zone.classList.remove('processing'); return; }
-        droppedFiles['keyword'] = fileList;  // File[] として保持
+        droppedFiles['keyword'] = finalFile;
         zone.classList.remove('processing');
         zone.classList.add('done');
-        fnEl.textContent = fileList.length > 1 ? `${fileList[0].name} ほか${fileList.length - 1}枚` : fileList[0].name;
-        badge.textContent = `${fileList.length}枚`;
-        badge.dataset.count = fileList.length;
-        // 1枚目だけプレビュー
+        fnEl.textContent = finalFile.name;
+        badge.textContent = '1枚';
+        badge.dataset.count = 1;
         const reader = new FileReader();
         reader.onload = e => { document.getElementById('preview-keyword').src = e.target.result; };
-        reader.readAsDataURL(fileList[0]);
+        reader.readAsDataURL(finalFile);
         return;
       }
 
