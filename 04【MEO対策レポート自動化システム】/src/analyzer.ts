@@ -152,12 +152,20 @@ JSONのみ返してください。`);
   }
 
   private async callClaudeComment(prompt: string): Promise<string> {
+    // prefill でJSONを強制（{"current":" から始まる応答を保証）
+    const prefill = '{"current":"';
     const response = await this.client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }],
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: prefill },
+      ],
     });
-    return response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const fullText = prefill + rawText;
+    console.log('[Claude comment] raw response:', fullText.slice(0, 400));
+    return fullText;
   }
 
   private async callGeminiText(prompt: string): Promise<string> {
