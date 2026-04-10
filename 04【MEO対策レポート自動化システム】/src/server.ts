@@ -81,7 +81,14 @@ app.post('/api/test-connection', async (req, res) => {
   const results: Record<string, { ok: boolean; message: string }> = {};
 
   // Claude（画像解析用）のテスト
-  if (apiKey && apiKey !== 'dummy-not-used') {
+  if (provider === 'gemini') {
+    // Gemini使用時は画像解析もGeminiが担うため、ClaudeキーはGeminiフォールバック用のみ
+    if (apiKey) {
+      results['claude'] = { ok: true, message: '✅ Claudeキーあり（Gemini障害時のフォールバックとして使用）' };
+    } else {
+      results['claude'] = { ok: true, message: '✅ Gemini使用時はClaudeキー不要です（画像解析・テキスト生成ともにGeminiを使用）' };
+    }
+  } else if (apiKey && apiKey !== 'dummy-not-used') {
     try {
       const { default: Anthropic } = await import('@anthropic-ai/sdk');
       const client = new Anthropic({ apiKey });
@@ -89,13 +96,13 @@ app.post('/api/test-connection', async (req, res) => {
         model: 'claude-sonnet-4-6', max_tokens: 10,
         messages: [{ role: 'user', content: '応答してください' }],
       });
-      results['claude'] = { ok: true, message: '✅ Claude API 接続OK（画像解析に使用）' };
+      results['claude'] = { ok: true, message: '✅ Claude API 接続OK（画像解析・テキスト生成に使用）' };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       results['claude'] = { ok: false, message: `❌ Claude APIエラー: ${msg.slice(0, 150)}` };
     }
-  } else if (provider !== 'gemini') {
-    results['claude'] = { ok: false, message: '❌ Anthropic APIキーが未入力です' };
+  } else {
+    results['claude'] = { ok: false, message: '❌ Anthropic APIキーが未入力です（設定でGeminiを選択するとキー不要になります）' };
   }
 
   // Geminiのテスト
