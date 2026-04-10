@@ -156,6 +156,26 @@ JSONのみ返してください。`);
     return response.content[0]?.type === 'text' ? response.content[0].text : '{}';
   }
 
+  private async callGeminiText(prompt: string): Promise<string> {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.commentApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}`;
+      throw new Error(`[Gemini] ${reason}`);
+    }
+    const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+  }
+
   private async callComment(prompt: string): Promise<{ current: string; analysis: string }> {
     let text = '';
     try {
@@ -163,7 +183,8 @@ JSONのみ返してください。`);
         const res = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${this.commentApiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: prompt }], max_tokens: 800 }),
+          body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: prompt }], max_tokens: 800,
+            response_format: { type: 'json_object' } }),
         });
         if (!res.ok) {
           console.warn(`[OpenAI] エラー ${res.status} → Claude にフォールバック`);
@@ -175,44 +196,37 @@ JSONのみ返してください。`);
         }
 
       } else if (this.commentProvider === 'gemini') {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.commentApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-          }
-        );
-        if (!res.ok) {
-          const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}`;
-          console.warn(`[Gemini] ${reason} → Claude にフォールバック`);
+        try {
+          text = await this.callGeminiText(prompt);
+        } catch (err) {
+          console.warn(`${err} → Claude にフォールバック`);
           this.commentFallback = true;
-          text = await this.callClaudeComment(prompt);
-        } else {
-          const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
-          text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+          try { text = await this.callClaudeComment(prompt); } catch { /* ignore */ }
         }
 
       } else {
         text = await this.callClaudeComment(prompt);
       }
     } catch (err) {
-      console.error(`[${this.commentProvider}] 文章生成エラー → Claude にフォールバック:`, err);
-      this.commentFallback = true;
-      try { text = await this.callClaudeComment(prompt); } catch { /* ignore */ }
+      console.error(`[${this.commentProvider}] 文章生成エラー:`, err);
     }
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { current: '', analysis: '' };
+    if (!jsonMatch) {
+      console.warn('[callComment] JSON not found in response:', text.slice(0, 200));
+      return { current: '', analysis: '' };
+    }
     try {
       const parsed = JSON.parse(jsonMatch[0]) as { current?: string; analysis?: string };
       return { current: parsed.current ?? '', analysis: parsed.analysis ?? '' };
     } catch {
+      console.warn('[callComment] JSON parse error:', jsonMatch[0].slice(0, 200));
       return { current: '', analysis: '' };
     }
   }
 
   private buildPrompt(sectionLabel: string, month: number, dataText: string, curInst: string, anaInst: string): string {
-    return `MEO対策レポートの${month}月度${sectionLabel}について、クライアント向けの説明文を生成してください。
+    return `MEO対策レポートの${month}月度${sectionLabel}について、クライアント向けの説明文を日本語で生成してください。
 
 データ:
 ${dataText}
@@ -220,13 +234,8 @@ ${dataText}
 【現状】の指示: ${curInst}
 【分析】の指示: ${anaInst}
 
-以下のJSON形式で返してください:
-{
-  "current": "【現状】の説明文",
-  "analysis": "【分析】の説明文"
-}
-
-JSONのみ返してください。`;
+必ず以下のキーを持つJSONオブジェクトのみを返してください（余分なテキスト不要）:
+{"current":"【現状】の説明文","analysis":"【分析】の説明文"}`;
   }
 
   async generateKeywordComment(data: KeywordData, month: number, curInst?: string, anaInst?: string): Promise<{ current: string; analysis: string }> {
