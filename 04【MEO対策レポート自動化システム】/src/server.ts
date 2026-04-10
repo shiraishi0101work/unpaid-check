@@ -150,35 +150,26 @@ app.delete('/api/reports/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Analyze API（AI解析 → JSON返却、PPTXはまだ生成しない）────
+// ── Step1: Extract API（画像から数値データを抽出）──────────
 
-app.post('/api/analyze', uploadFields, async (req, res) => {
+app.post('/api/extract', uploadFields, async (req, res) => {
   const tmpFiles: string[] = [];
   try {
-    const {
-      storeName, month, year, apiKey,
-      storeId: existingStoreId, commentAI, commentApiKey,
-      current_keyword, analysis_keyword,
-      current_views, analysis_views,
-      current_interactions, analysis_interactions,
-      current_userActions, analysis_userActions,
-    } = req.body as Record<string, string>;
+    const { storeName, month, year, apiKey, storeId: existingStoreId, commentAI, commentApiKey } =
+      req.body as Record<string, string>;
 
     const provider = (commentAI as CommentProvider | undefined) ?? 'claude';
     const commentKey = commentApiKey?.trim() || apiKey;
 
     if (!storeName || !month || !year) {
       const missing = [!storeName && 'storeName', !month && 'month', !year && 'year'].filter(Boolean).join(', ');
-      res.status(400).json({ error: `必須パラメータが不足しています (${missing})` });
-      return;
+      res.status(400).json({ error: `必須パラメータが不足しています (${missing})` }); return;
     }
     if (provider === 'gemini' && !commentKey) {
-      res.status(400).json({ error: 'GeminiのAPIキーが設定されていません' });
-      return;
+      res.status(400).json({ error: 'GeminiのAPIキーが設定されていません' }); return;
     }
     if (provider !== 'gemini' && !apiKey) {
-      res.status(400).json({ error: 'Anthropic APIキーが設定されていません（画像解析に使用します）' });
-      return;
+      res.status(400).json({ error: 'Anthropic APIキーが設定されていません（画像解析に使用します）' }); return;
     }
 
     const files = req.files as Record<string, Express.Multer.File[]>;
@@ -190,148 +181,143 @@ app.post('/api/analyze', uploadFields, async (req, res) => {
       const file = files[key]?.[0];
       if (file) { screenshots[key] = file.path; tmpFiles.push(file.path); }
     }
-
-    const hasAny = tmpFiles.length > 0 || [
-      current_keyword, analysis_keyword, current_views, analysis_views,
-      current_interactions, analysis_interactions, current_userActions, analysis_userActions,
-    ].some(v => v?.trim());
-    if (!hasAny) { res.status(400).json({ error: 'スクショまたは手動コメントが必要です' }); return; }
+    if (tmpFiles.length === 0) { res.status(400).json({ error: 'スクリーンショットを1枚以上アップロードしてください' }); return; }
 
     const store = existingStoreId ? (db.getStore(existingStoreId) ?? db.addStore(storeName)) : db.addStore(storeName);
     const prompts = { ...db.getDefaultPrompts(), ...db.getStorePrompts(store.id) };
     const analyzer = new MeoAnalyzer(apiKey, provider, commentKey);
     const monthNum = parseInt(month, 10);
 
-    const resolveComment = async (
-      manualCur: string | undefined, manualAna: string | undefined,
-      aiGen: () => Promise<{ current: string; analysis: string }>
-    ) => {
-      const cur = manualCur?.trim() ?? '';
-      const ana = manualAna?.trim() ?? '';
-      if (cur || ana) return { current: cur, analysis: ana };
-      return aiGen();
-    };
-
-    // キーワードは常にスライドとして含める
-    console.log('🔍 キーワード順位を処理中...');
-    const kwImagePath = keywordFiles[0]?.path;
-    const kwComment = await resolveComment(current_keyword, analysis_keyword, async () => {
-      if (!kwImagePath) return { current: '', analysis: '' };
-      const data = await analyzer.extractKeywordData(kwImagePath);
-      return analyzer.generateKeywordComment(data, monthNum, prompts.keyword_current, prompts.keyword_analysis);
-    });
-    const sectionKeyword: SectionResult = {
-      title: `${monthNum}月対策キーワード順位ご報告`,
-      current: kwComment.current,
-      analysis: kwComment.analysis,
-      hasImage: !!kwImagePath,
-    };
-
-    let sectionViews: SectionResult | undefined;
-    if (screenshots.views || current_views || analysis_views) {
-      console.log('👁️  閲覧ユーザー数を処理中...');
-      const c = await resolveComment(current_views, analysis_views, async () => {
-        if (!screenshots.views) return { current: '', analysis: '' };
-        const data = await analyzer.extractViewsData(screenshots.views);
-        return analyzer.generateViewsComment(data, monthNum, prompts.views_current, prompts.views_analysis);
-      });
-      sectionViews = { title: '閲覧したユーザー数', current: c.current, analysis: c.analysis, hasImage: !!screenshots.views };
+    // 画像から数値のみを抽出（文章生成はしない）
+    const extractedData: ExtractedData = {};
+    if (screenshots.keyword) {
+      console.log('🔍 [解析] キーワード順位...');
+      extractedData.keyword = await analyzer.extractKeywordData(screenshots.keyword);
+    }
+    if (screenshots.views) {
+      console.log('👁️  [解析] 閲覧ユーザー数...');
+      extractedData.views = await analyzer.extractViewsData(screenshots.views);
+    }
+    if (screenshots.interactions) {
+      console.log('🔄 [解析] インタラクション数...');
+      extractedData.interactions = await analyzer.extractInteractionData(screenshots.interactions);
+    }
+    if (screenshots.userActions) {
+      console.log('📍 [解析] ユーザー行動データ...');
+      extractedData.userActions = await analyzer.extractUserActionData(screenshots.userActions);
     }
 
-    let sectionInteractions: SectionResult | undefined;
-    if (screenshots.interactions || current_interactions || analysis_interactions) {
-      console.log('🔄 インタラクション数を処理中...');
-      const c = await resolveComment(current_interactions, analysis_interactions, async () => {
-        if (!screenshots.interactions) return { current: '', analysis: '' };
-        const data = await analyzer.extractInteractionData(screenshots.interactions);
-        return analyzer.generateInteractionComment(data, monthNum, prompts.interactions_current, prompts.interactions_analysis);
-      });
-      sectionInteractions = { title: 'インタラクション数', current: c.current, analysis: c.analysis, hasImage: !!screenshots.interactions };
-    }
-
-    let sectionUserActions: SectionResult | undefined;
-    if (screenshots.userActions || current_userActions || analysis_userActions) {
-      console.log('📍 ユーザー行動データを処理中...');
-      const c = await resolveComment(current_userActions, analysis_userActions, async () => {
-        if (!screenshots.userActions) return { current: '', analysis: '' };
-        const data = await analyzer.extractUserActionData(screenshots.userActions);
-        return analyzer.generateUserActionComment(data, monthNum, prompts.userActions_current, prompts.userActions_analysis);
-      });
-      sectionUserActions = { title: 'ユーザー行動データ（来店・売上に直結）', current: c.current, analysis: c.analysis, hasImage: !!screenshots.userActions };
-    }
-
-    // セッション保存（画像パスをキープしてfinalizeで使用）
     const sid = newSid();
     sessions.set(sid, {
-      storeId: store.id,
-      storeName,
-      month: monthNum,
-      year: parseInt(year, 10),
-      apiKey,
-      provider,
-      commentKey,
-      prompts,
-      tmpFiles,          // finalizeまで削除しない
-      screenshots,
-      sections: {
-        keyword: sectionKeyword,
-        views: sectionViews,
-        interactions: sectionInteractions,
-        userActions: sectionUserActions,
-      },
-      createdAt: Date.now(),
+      storeId: store.id, storeName, month: monthNum, year: parseInt(year, 10),
+      apiKey, provider, commentKey, prompts,
+      tmpFiles, screenshots, extractedData, createdAt: Date.now(),
     });
 
-    res.json({
-      sessionId: sid,
-      storeId: store.id,
-      commentFallback: analyzer.commentFallback,
-      sections: {
-        keyword: sectionKeyword,
-        views: sectionViews,
-        interactions: sectionInteractions,
-        userActions: sectionUserActions,
-      },
-    });
+    res.json({ sessionId: sid, storeId: store.id, extracted: extractedData, hasImages: Object.keys(screenshots) });
 
   } catch (err) {
     for (const f of tmpFiles) { try { fs.unlinkSync(f); } catch { /* ignore */ } }
-    console.error('解析エラー:', err);
+    console.error('抽出エラー:', err);
     res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
   }
 });
 
-// ── Regenerate API（1セクションだけAI再生成）──────────────
+// ── Step1b: Re-extract API（1セクション再解析）──────────────
 
-app.post('/api/regenerate', async (req, res) => {
+app.post('/api/re-extract', async (req, res) => {
   const { sessionId, section } = req.body as { sessionId: string; section: string };
+  const session = sessions.get(sessionId);
+  if (!session) { res.status(404).json({ error: 'セッションが見つかりません' }); return; }
+  try {
+    const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
+    const { screenshots } = session;
+    let extracted: ExtractedData[keyof ExtractedData] = undefined;
+
+    if (section === 'keyword' && screenshots.keyword && fs.existsSync(screenshots.keyword)) {
+      extracted = await analyzer.extractKeywordData(screenshots.keyword);
+      session.extractedData.keyword = extracted as KeywordData;
+    } else if (section === 'views' && screenshots.views && fs.existsSync(screenshots.views)) {
+      extracted = await analyzer.extractViewsData(screenshots.views);
+      session.extractedData.views = extracted as ViewsData;
+    } else if (section === 'interactions' && screenshots.interactions && fs.existsSync(screenshots.interactions)) {
+      extracted = await analyzer.extractInteractionData(screenshots.interactions);
+      session.extractedData.interactions = extracted as InteractionData;
+    } else if (section === 'userActions' && screenshots.userActions && fs.existsSync(screenshots.userActions)) {
+      extracted = await analyzer.extractUserActionData(screenshots.userActions);
+      session.extractedData.userActions = extracted as UserActionData;
+    }
+    res.json({ section, extracted });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
+  }
+});
+
+// ── Step2: Generate Text API（抽出データ → 説明文生成）───────
+
+app.post('/api/generate-text', async (req, res) => {
+  const { sessionId } = req.body as { sessionId: string };
   const session = sessions.get(sessionId);
   if (!session) { res.status(404).json({ error: 'セッションが見つかりません（タイムアウトした可能性があります）' }); return; }
 
   try {
+    const { extractedData, prompts, month, screenshots } = session;
     const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
-    const { prompts, month, screenshots } = session;
+
+    const sections: Record<string, { title: string; current: string; analysis: string; hasImage: boolean }> = {};
+
+    // キーワードは常に含める（画像なしなら空データで生成）
+    console.log('✍️  [文章生成] キーワード順位...');
+    const kwData = extractedData.keyword ?? { keywords: [], summary: '' };
+    const kwComment = await analyzer.generateKeywordComment(kwData, month, prompts.keyword_current, prompts.keyword_analysis);
+    sections['keyword'] = { title: `${month}月対策キーワード順位ご報告`, ...kwComment, hasImage: !!screenshots.keyword };
+
+    if (extractedData.views) {
+      console.log('✍️  [文章生成] 閲覧ユーザー数...');
+      const c = await analyzer.generateViewsComment(extractedData.views, month, prompts.views_current, prompts.views_analysis);
+      sections['views'] = { title: '閲覧したユーザー数', ...c, hasImage: !!screenshots.views };
+    }
+    if (extractedData.interactions) {
+      console.log('✍️  [文章生成] インタラクション数...');
+      const c = await analyzer.generateInteractionComment(extractedData.interactions, month, prompts.interactions_current, prompts.interactions_analysis);
+      sections['interactions'] = { title: 'インタラクション数', ...c, hasImage: !!screenshots.interactions };
+    }
+    if (extractedData.userActions) {
+      console.log('✍️  [文章生成] ユーザー行動データ...');
+      const c = await analyzer.generateUserActionComment(extractedData.userActions, month, prompts.userActions_current, prompts.userActions_analysis);
+      sections['userActions'] = { title: 'ユーザー行動データ（来店・売上に直結）', ...c, hasImage: !!screenshots.userActions };
+    }
+
+    res.json({ sections, commentFallback: analyzer.commentFallback });
+  } catch (err) {
+    console.error('文章生成エラー:', err);
+    res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
+  }
+});
+
+// ── Step2b: Regenerate Text API（1セクションだけテキスト再生成）
+
+app.post('/api/regenerate', async (req, res) => {
+  const { sessionId, section } = req.body as { sessionId: string; section: string };
+  const session = sessions.get(sessionId);
+  if (!session) { res.status(404).json({ error: 'セッションが見つかりません' }); return; }
+  try {
+    const { extractedData, prompts, month } = session;
+    const analyzer = new MeoAnalyzer(session.apiKey, session.provider, session.commentKey);
     let comment = { current: '', analysis: '' };
 
     if (section === 'keyword') {
-      const imgPath = screenshots.keyword;
-      if (imgPath && fs.existsSync(imgPath)) {
-        const data = await analyzer.extractKeywordData(imgPath);
-        comment = await analyzer.generateKeywordComment(data, month, prompts.keyword_current, prompts.keyword_analysis);
-      }
-    } else if (section === 'views' && screenshots.views && fs.existsSync(screenshots.views)) {
-      const data = await analyzer.extractViewsData(screenshots.views);
-      comment = await analyzer.generateViewsComment(data, month, prompts.views_current, prompts.views_analysis);
-    } else if (section === 'interactions' && screenshots.interactions && fs.existsSync(screenshots.interactions)) {
-      const data = await analyzer.extractInteractionData(screenshots.interactions);
-      comment = await analyzer.generateInteractionComment(data, month, prompts.interactions_current, prompts.interactions_analysis);
-    } else if (section === 'userActions' && screenshots.userActions && fs.existsSync(screenshots.userActions)) {
-      const data = await analyzer.extractUserActionData(screenshots.userActions);
-      comment = await analyzer.generateUserActionComment(data, month, prompts.userActions_current, prompts.userActions_analysis);
+      const data = extractedData.keyword ?? { keywords: [], summary: '' };
+      comment = await analyzer.generateKeywordComment(data, month, prompts.keyword_current, prompts.keyword_analysis);
+    } else if (section === 'views' && extractedData.views) {
+      comment = await analyzer.generateViewsComment(extractedData.views, month, prompts.views_current, prompts.views_analysis);
+    } else if (section === 'interactions' && extractedData.interactions) {
+      comment = await analyzer.generateInteractionComment(extractedData.interactions, month, prompts.interactions_current, prompts.interactions_analysis);
+    } else if (section === 'userActions' && extractedData.userActions) {
+      comment = await analyzer.generateUserActionComment(extractedData.userActions, month, prompts.userActions_current, prompts.userActions_analysis);
     }
     res.json(comment);
   } catch (err) {
-    console.error('regenerateエラー:', err);
     res.status(500).json({ error: err instanceof Error ? err.message : '不明なエラー' });
   }
 });
