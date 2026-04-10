@@ -1020,7 +1020,8 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
     document.getElementById('breadcrumb').classList.remove('visible');
-    if (id === 'stores') loadStores();
+    if (id === 'stores')   loadStores();
+    if (id === 'settings') openSettingsPage();
   }
 
   function openStore(id, name) {
