@@ -1,15 +1,14 @@
 """
 未入金チェックシステム — Webアプリ メイン
-請求書APIのみで動作（会計API不要）
 
-起動: python app.py  または  start.bat
+起動: python app.py
 アクセス: http://localhost:5000
 """
 
 import os
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, date
 from flask import (
     Flask, render_template, redirect, request,
     jsonify, send_file, url_for, flash
@@ -26,10 +25,67 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "mf-unpaid-check-secret-2026")
 
-DATA_DIR    = os.path.join(os.path.dirname(__file__), "data")
-RESULT_FILE = os.path.join(DATA_DIR, "last_result.json")
+DATA_DIR     = os.path.join(os.path.dirname(__file__), "data")
+RESULT_FILE  = os.path.join(DATA_DIR, "last_result.json")
+SETTINGS_FILE= os.path.join(DATA_DIR, "settings.json")
+META_FILE    = os.path.join(DATA_DIR, "invoice_meta.json")
 
 os.makedirs(DATA_DIR, exist_ok=True)
+
+# ========================================
+# 設定管理
+# ========================================
+
+DEFAULT_SETTINGS = {
+    "fiscal_year_start_month": 4,   # 4月始まり
+    "company_name": "",
+}
+
+def load_settings() -> dict:
+    if not os.path.exists(SETTINGS_FILE):
+        return dict(DEFAULT_SETTINGS)
+    with open(SETTINGS_FILE, encoding="utf-8") as f:
+        s = json.load(f)
+    return {**DEFAULT_SETTINGS, **s}
+
+def save_settings(settings: dict):
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(settings, f, ensure_ascii=False, indent=2)
+
+# ========================================
+# 請求書メタデータ管理（担当者・メモ・手動着金）
+# ========================================
+
+def load_meta() -> dict:
+    if not os.path.exists(META_FILE):
+        return {}
+    with open(META_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+def save_meta(meta: dict):
+    with open(META_FILE, "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+
+# ========================================
+# 年度ユーティリティ
+# ========================================
+
+def get_fiscal_year_range(year: int, start_month: int) -> tuple[str, str]:
+    """年度の開始日・終了日を返す (YYYY-MM-DD)"""
+    from_date = f"{year}-{start_month:02d}-01"
+    end_year  = year + 1 if start_month > 1 else year
+    end_month = start_month - 1 if start_month > 1 else 12
+    import calendar
+    last_day = calendar.monthrange(end_year, end_month)[1]
+    to_date = f"{end_year}-{end_month:02d}-{last_day:02d}"
+    return from_date, to_date
+
+def get_current_fiscal_year(start_month: int) -> int:
+    """今日の日付から現在の事業年度（開始年）を返す"""
+    today = date.today()
+    if today.month >= start_month:
+        return today.year
+    return today.year - 1
 
 # ========================================
 # 実行状態管理
@@ -44,17 +100,14 @@ _status = {
 }
 _status_lock = threading.Lock()
 
-
 def _update_status(**kwargs):
     with _status_lock:
         _status.update(kwargs)
-
 
 def _run_check(from_date=None, to_date=None):
     """バックグラウンドで照合処理を実行"""
     try:
         _update_status(running=True, error=None, progress=10, message="請求書データを取得中...")
-        # トークンを事前に取得・リフレッシュしてからスレッドで使えるようにする
         try:
             auth.get_access_token("invoice")
         except Exception as e:
@@ -67,19 +120,26 @@ def _run_check(from_date=None, to_date=None):
         _update_status(progress=60, message="請求書を分類中...")
 
         today_str = datetime.now().strftime("%Y-%m-%d")
+        meta = load_meta()
 
-        # 未入金
+        # メタデータをマージ
+        for b in all_billings:
+            bid = b.get("請求書ID", "")
+            m = meta.get(bid, {})
+            b["担当者"]     = m.get("担当者", "")
+            b["メモ_手動"]  = m.get("メモ", "")
+            b["着金日_手動"]    = m.get("着金日_手動", "")
+            b["着金金額_手動"]  = m.get("着金金額_手動", 0)
+
         unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
         overdue  = sorted(
-            [b for b in unpaid if b.get("支払期限", "") < today_str],
+            [b for b in unpaid if b.get("支払期限", "") < today_str and b.get("支払期限","")],
             key=lambda x: x.get("支払期限", "")
         )
         upcoming = sorted(
             [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")],
             key=lambda x: x.get("支払期限", "")
         )
-
-        # 入金済み
         paid = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
 
         result = {
@@ -87,23 +147,21 @@ def _run_check(from_date=None, to_date=None):
             "overdue":         overdue,
             "upcoming":        upcoming,
             "paid":            paid,
-            "diff":            [],          # 会計API連携時のみ
-            "unmatched_deals": [],          # 会計API連携時のみ
+            "diff":            [],
+            "unmatched_deals": [],
             "total":           len(all_billings),
+            "from_date":       from_date or "",
+            "to_date":         to_date or "",
         }
 
         _update_status(progress=85, message="Excelレポートを生成中...")
         output_path = generate_report(result)
-
         _save_result(result, output_path)
 
         _update_status(
-            running=False,
-            progress=100,
-            message="完了",
+            running=False, progress=100, message="完了",
             last_run=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            last_file=output_path,
-            error=None,
+            last_file=output_path, error=None,
         )
 
     except Exception as e:
@@ -115,7 +173,6 @@ def _run_check(from_date=None, to_date=None):
 def _save_result(result: dict, output_path: str):
     def _clean(items):
         return [{k: v for k, v in item.items() if k != "_raw"} for item in items]
-
     data = {
         "saved_at":        datetime.now().isoformat(),
         "output_path":     output_path,
@@ -126,6 +183,8 @@ def _save_result(result: dict, output_path: str):
         "diff":            _clean(result["diff"]),
         "unmatched_deals": _clean(result["unmatched_deals"]),
         "total":           result["total"],
+        "from_date":       result.get("from_date", ""),
+        "to_date":         result.get("to_date", ""),
     }
     with open(RESULT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -134,23 +193,64 @@ def _save_result(result: dict, output_path: str):
 def _load_result() -> dict | None:
     if not os.path.exists(RESULT_FILE):
         return None
-    with open(RESULT_FILE, "r", encoding="utf-8") as f:
+    with open(RESULT_FILE, encoding="utf-8") as f:
         return json.load(f)
 
-
 # ========================================
-# ルーティング
+# ルーティング — ダッシュボード
 # ========================================
 
 @app.route("/")
 def dashboard():
+    settings        = load_settings()
     auth_invoice    = auth.is_authenticated("invoice")
     auth_accounting = auth.is_authenticated("accounting")
     result          = _load_result()
+    meta            = load_meta()
     today_str       = datetime.now().strftime("%Y-%m-%d")
 
-    overdue  = result.get("overdue",  []) if result else []
-    upcoming = result.get("upcoming", []) if result else []
+    start_month = settings["fiscal_year_start_month"]
+    # URL パラメータで年度切替
+    fiscal_year = request.args.get("year", type=int)
+    if fiscal_year is None:
+        fiscal_year = get_current_fiscal_year(start_month)
+
+    prev_year = fiscal_year - 1
+    next_year = fiscal_year + 1
+    fy_from, fy_to = get_fiscal_year_range(fiscal_year, start_month)
+
+    # 年度フィルタをかけた一覧
+    def in_fy(b):
+        d = b.get("請求日") or b.get("支払期限") or ""
+        return fy_from <= d <= fy_to
+
+    if result:
+        # メタデータを最新にマージ
+        for lst in [result.get("unpaid",[]), result.get("overdue",[]),
+                    result.get("upcoming",[]), result.get("paid",[])]:
+            for b in lst:
+                bid = b.get("請求書ID","")
+                m = meta.get(bid, {})
+                b["担当者"]        = m.get("担当者", b.get("担当者",""))
+                b["メモ_手動"]     = m.get("メモ", b.get("メモ_手動",""))
+                b["着金日_手動"]   = m.get("着金日_手動", b.get("着金日_手動",""))
+                b["着金金額_手動"] = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+
+        all_data  = result.get("unpaid",[]) + result.get("paid",[])
+        overdue   = [b for b in result.get("overdue",[])  if in_fy(b)]
+        upcoming  = [b for b in result.get("upcoming",[]) if in_fy(b)]
+        paid_fy   = [b for b in result.get("paid",[])     if in_fy(b)]
+        diff_fy   = [b for b in result.get("diff",[])     if in_fy(b)]
+
+        # 着金月ごとにグループ化
+        monthly = {}
+        for b in paid_fy:
+            ym = (b.get("支払期限") or b.get("請求日") or "")[:7]  # YYYY-MM
+            monthly.setdefault(ym, []).append(b)
+        monthly_sorted = sorted(monthly.items())
+    else:
+        overdue = upcoming = paid_fy = diff_fy = []
+        monthly_sorted = []
 
     return render_template(
         "dashboard.html",
@@ -159,14 +259,145 @@ def dashboard():
         result=result,
         overdue=overdue,
         upcoming=upcoming,
+        paid_fy=paid_fy,
+        diff_fy=diff_fy,
+        monthly_sorted=monthly_sorted,
         status=dict(_status),
         today=today_str,
+        settings=settings,
+        fiscal_year=fiscal_year,
+        prev_year=prev_year,
+        next_year=next_year,
+        fy_from=fy_from,
+        fy_to=fy_to,
     )
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    with _status_lock:
+        if _status["running"]:
+            return jsonify({"error": "実行中です"}), 409
+
+    settings    = load_settings()
+    start_month = settings["fiscal_year_start_month"]
+    fiscal_year = request.form.get("fiscal_year", type=int)
+    if fiscal_year is None:
+        fiscal_year = get_current_fiscal_year(start_month)
+
+    from_date = request.form.get("from_date") or None
+    to_date   = request.form.get("to_date")   or None
+
+    # 日付未指定なら年度から自動設定
+    if not from_date and not to_date:
+        from_date, to_date = get_fiscal_year_range(fiscal_year, start_month)
+
+    thread = threading.Thread(
+        target=_run_check, args=(from_date, to_date), daemon=True
+    )
+    thread.start()
+    return redirect(url_for("dashboard", year=fiscal_year))
+
+
+@app.route("/api/status")
+def api_status():
+    with _status_lock:
+        return jsonify(dict(_status))
+
+
+@app.route("/download")
+def download():
+    with _status_lock:
+        path = _status.get("last_file")
+    if not path:
+        result = _load_result()
+        path = result.get("output_path") if result else None
+    if not path or not os.path.exists(path):
+        flash("ダウンロードできるファイルがありません。先に実行してください。")
+        return redirect(url_for("dashboard"))
+    return send_file(path, as_attachment=True)
+
+# ========================================
+# ルーティング — 設定
+# ========================================
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings_page():
+    settings = load_settings()
+    if request.method == "POST":
+        settings["fiscal_year_start_month"] = int(request.form.get("fiscal_year_start_month", 4))
+        settings["company_name"] = request.form.get("company_name", "").strip()
+        save_settings(settings)
+        flash("設定を保存しました", "success")
+        return redirect(url_for("settings_page"))
+    return render_template("settings.html", settings=settings,
+                           auth_invoice=auth.is_authenticated("invoice"),
+                           auth_accounting=auth.is_authenticated("accounting"))
+
+# ========================================
+# ルーティング — 請求書メタデータ編集
+# ========================================
+
+@app.route("/api/invoice/<invoice_id>/meta", methods=["GET", "POST"])
+def invoice_meta(invoice_id):
+    meta = load_meta()
+    if request.method == "POST":
+        data = request.get_json() or {}
+        meta.setdefault(invoice_id, {})
+        for key in ["担当者", "メモ", "着金日_手動", "着金金額_手動"]:
+            if key in data:
+                meta[invoice_id][key] = data[key]
+        save_meta(meta)
+        return jsonify({"ok": True})
+    return jsonify(meta.get(invoice_id, {}))
+
+# ========================================
+# ルーティング — API接続テスト
+# ========================================
+
+@app.route("/api/test-connection")
+def test_connection():
+    results = {}
+
+    # 請求書API
+    try:
+        token = auth.get_access_token("invoice")
+        import requests as req
+        r = req.get(
+            "https://invoice.moneyforward.com/api/v3/billings",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            params={"per_page": 1, "page": 1},
+            timeout=10,
+        )
+        if r.ok:
+            total = r.json().get("pagination", {}).get("total_count", "?")
+            results["invoice"] = {"ok": True, "message": f"✅ 接続OK（総件数: {total}件）"}
+        else:
+            results["invoice"] = {"ok": False, "message": f"❌ HTTPエラー {r.status_code}"}
+    except Exception as e:
+        results["invoice"] = {"ok": False, "message": f"❌ {e}"}
+
+    # 会計API
+    try:
+        token = auth.get_access_token("accounting")
+        import requests as req
+        r = req.get(
+            "https://api-accounting.moneyforward.com/api/v3/offices",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            timeout=10,
+        )
+        if r.ok:
+            results["accounting"] = {"ok": True, "message": "✅ 接続OK"}
+        else:
+            results["accounting"] = {"ok": False, "message": f"❌ HTTPエラー {r.status_code}"}
+    except Exception as e:
+        results["accounting"] = {"ok": False, "message": f"❌ {e}"}
+
+    return jsonify(results)
 
 
 @app.route("/api/debug-check")
 def debug_check():
-    """デバッグ用: 請求書取得を同期実行してそのまま返す"""
     try:
         token = auth.get_access_token("invoice")
         billings = get_all_billings()
@@ -181,45 +412,6 @@ def debug_check():
     except Exception as e:
         import traceback
         return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
-
-
-@app.route("/run", methods=["POST"])
-def run():
-    with _status_lock:
-        if _status["running"]:
-            return jsonify({"error": "実行中です"}), 409
-
-    from_date = request.form.get("from_date") or None
-    to_date   = request.form.get("to_date")   or None
-
-    thread = threading.Thread(
-        target=_run_check, args=(from_date, to_date), daemon=True
-    )
-    thread.start()
-    return redirect(url_for("dashboard"))
-
-
-@app.route("/api/status")
-def api_status():
-    with _status_lock:
-        return jsonify(dict(_status))
-
-
-@app.route("/download")
-def download():
-    with _status_lock:
-        path = _status.get("last_file")
-
-    if not path:
-        result = _load_result()
-        path = result.get("output_path") if result else None
-
-    if not path or not os.path.exists(path):
-        flash("ダウンロードできるファイルがありません。先に実行してください。")
-        return redirect(url_for("dashboard"))
-
-    return send_file(path, as_attachment=True)
-
 
 # ========================================
 # OAuth認証
@@ -236,19 +428,15 @@ def oauth_start(service_name):
 def oauth_callback(service_name):
     if service_name not in ("invoice", "accounting"):
         return "不正なサービス名", 400
-
     code  = request.args.get("code")
     state = request.args.get("state", "")
     error = request.args.get("error")
-
     if error:
         flash(f"認証がキャンセルされました: {error}")
         return redirect(url_for("dashboard"))
-
     if not code:
         flash("認可コードが取得できませんでした")
         return redirect(url_for("dashboard"))
-
     try:
         ok = auth.handle_callback(service_name, code, state)
         if ok:
@@ -258,7 +446,6 @@ def oauth_callback(service_name):
             flash("認証に失敗しました（stateが一致しません）", "error")
     except Exception as e:
         flash(f"認証エラー: {e}", "error")
-
     return redirect(url_for("dashboard"))
 
 
@@ -271,7 +458,6 @@ def oauth_revoke(service_name):
     flash(f"MF{label}の認証を解除しました")
     return redirect(url_for("dashboard"))
 
-
 # ========================================
 # 起動
 # ========================================
@@ -279,15 +465,11 @@ def oauth_revoke(service_name):
 if __name__ == "__main__":
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
-
     init_scheduler(run_func=_run_check)
-
-    import webbrowser, threading
-    threading.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{port}")).start()
-
+    import webbrowser, threading as _th
+    _th.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     print(f"\n{'='*50}")
     print(f"  未入金チェックシステム 起動中")
     print(f"  http://localhost:{port}")
     print(f"{'='*50}\n")
-
     app.run(host="0.0.0.0", port=port, debug=debug, use_reloader=False)
