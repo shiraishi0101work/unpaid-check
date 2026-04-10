@@ -1613,6 +1613,7 @@
 
   /* ── Default prompts page ── */
   async function openSettingsPage() {
+    loadCommentAISettings();
     await ensureDefaultPrompts();
     const container = document.getElementById('defaultPromptSections');
     container.innerHTML = PROMPT_SECTIONS.map(({ key, page, title }) => `
