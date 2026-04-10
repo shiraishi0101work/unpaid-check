@@ -1601,7 +1601,7 @@
 
     try {
       setProgress(25);
-      const res = await fetch('/api/generate', { method:'POST', body:fd });
+      const res = await fetch('/api/analyze', { method:'POST', body:fd });
       setProgress(82);
 
       if (!res.ok) {
@@ -1609,22 +1609,26 @@
         throw new Error(e.error || 'サーバーエラー');
       }
 
-      if (res.headers.get('X-Comment-Fallback') === '1') {
+      const data = await res.json();
+      setProgress(100);
+
+      if (data.commentFallback) {
         appendLog(`⚠️ ${AI_LABELS[commentAI] ?? commentAI} の制限に達したため Claude で文章を生成しました`, 'log-info');
       }
 
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const fn   = `MEO対策レポート_${currentStoreName}様_${year}年${month}月.pptx`;
-      const a    = document.createElement('a');
-      a.href = url; a.download = fn; a.click();
-      URL.revokeObjectURL(url);
+      // 文章が1つでも空ならワーニング表示
+      const hasMissing = ['keyword','views','interactions','userActions'].some(k => {
+        const s = data.sections[k];
+        return s && (!s.current || !s.analysis);
+      });
+      if (hasMissing) {
+        appendLog('⚠️ 一部のコメントが生成されませんでした。モーダルで確認・編集してください', 'log-info');
+      } else {
+        appendLog('AI解析が完了しました。コメントを確認してください', 'log-ok');
+      }
 
-      setProgress(100);
-      appendLog('レポートの生成が完了しました', 'log-ok');
-      appendLog('ダウンロードが開始されました', 'log-ok');
-
-      setTimeout(() => loadReports(currentStoreId), 600);
+      // レビューモーダルを開く
+      showReviewModal(data.sessionId, data.storeId, data.sections);
 
     } catch (err) {
       appendLog('Error: ' + err.message, 'log-err');
@@ -1632,6 +1636,118 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'レポートを生成する';
+    }
+  }
+
+  /* ── Review Modal ── */
+  let _reviewSessionId = '';
+  let _reviewStoreId   = '';
+
+  const REVIEW_SECTIONS = [
+    { key: 'keyword',      label: 'キーワード順位（2ページ目）' },
+    { key: 'views',        label: '閲覧ユーザー数（3ページ目）' },
+    { key: 'interactions', label: 'インタラクション数（4ページ目）' },
+    { key: 'userActions',  label: 'ユーザー行動データ（5ページ目）' },
+  ];
+
+  function showReviewModal(sessionId, storeId, sections) {
+    _reviewSessionId = sessionId;
+    _reviewStoreId   = storeId;
+
+    const body = document.getElementById('reviewBody');
+    body.innerHTML = REVIEW_SECTIONS.map(({ key, label }) => {
+      const s = sections[key];
+      if (!s) return '';
+      const missing = !s.current && !s.analysis;
+      const hasImg  = s.hasImage;
+      return `
+      <div class="rv-section" id="rv-${key}">
+        <div class="rv-section-header">
+          <span class="rv-label">${label}</span>
+          ${missing ? '<span class="rv-badge rv-badge-warn">要編集</span>' : ''}
+          ${!hasImg ? '<span class="rv-badge rv-badge-gray">画像なし</span>' : ''}
+        </div>
+        <div class="rv-field">
+          <label class="field-label">【現状】</label>
+          <textarea class="prompt-textarea rv-textarea" id="rv-cur-${key}" rows="3">${esc(s.current)}</textarea>
+        </div>
+        <div class="rv-field" style="margin-top:8px">
+          <label class="field-label">【分析】</label>
+          <textarea class="prompt-textarea rv-textarea" id="rv-ana-${key}" rows="4">${esc(s.analysis)}</textarea>
+        </div>
+        ${hasImg ? `<button class="btn btn-secondary rv-regen-btn" onclick="regenerateSection('${key}')">AI再生成</button>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('reviewOverlay').classList.add('show');
+  }
+
+  function closeReviewModal() {
+    document.getElementById('reviewOverlay').classList.remove('show');
+  }
+
+  async function regenerateSection(key) {
+    const btn = document.querySelector(`#rv-${key} .rv-regen-btn`);
+    if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
+    try {
+      const res = await fetch('/api/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: _reviewSessionId, section: key }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const { current, analysis } = await res.json();
+      document.getElementById(`rv-cur-${key}`).value = current;
+      document.getElementById(`rv-ana-${key}`).value = analysis;
+      // 要編集バッジを消す
+      if (current || analysis) {
+        const badge = document.querySelector(`#rv-${key} .rv-badge-warn`);
+        if (badge) badge.remove();
+      }
+    } catch (err) {
+      alert('再生成エラー: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'AI再生成'; }
+    }
+  }
+
+  async function finalizeReport() {
+    const finBtn = document.getElementById('finalizeBtn');
+    finBtn.disabled = true;
+    finBtn.textContent = 'PPTXを生成中...';
+    try {
+      const sections = {};
+      for (const { key } of REVIEW_SECTIONS) {
+        const cur = document.getElementById(`rv-cur-${key}`);
+        const ana = document.getElementById(`rv-ana-${key}`);
+        if (cur) {
+          sections[key] = { current: cur.value, analysis: ana ? ana.value : '' };
+        }
+      }
+      const res = await fetch('/api/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: _reviewSessionId, sections }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const fn   = res.headers.get('Content-Disposition')?.match(/filename\*=UTF-8''(.+)/)?.[1];
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = fn ? decodeURIComponent(fn) : 'レポート.pptx';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      closeReviewModal();
+      appendLog('PPTXのダウンロードが開始されました', 'log-ok');
+      setTimeout(() => loadReports(_reviewStoreId), 800);
+    } catch (err) {
+      alert('PPTX生成エラー: ' + err.message);
+    } finally {
+      finBtn.disabled = false;
+      finBtn.textContent = 'PPTXを生成・ダウンロード';
     }
   }
 
