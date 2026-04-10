@@ -1239,8 +1239,9 @@
     btn.disabled = true; btn.textContent = 'テスト中...';
     try {
       const apiKey = document.getElementById('apiKey').value.trim();
-      const commentAI = document.getElementById('commentAI')?.value ?? 'claude';
-      const commentApiKey = document.getElementById('commentApiKeyInput')?.value?.trim() ?? '';
+      // ラジオボタンから正しく取得
+      const commentAI = document.querySelector('input[name=commentAI]:checked')?.value ?? 'claude';
+      const commentApiKey = document.getElementById('commentApiKey')?.value?.trim() ?? '';
       const res = await fetch('/api/test-connection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey, commentAI, commentApiKey }),
