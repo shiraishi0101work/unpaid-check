@@ -36,11 +36,13 @@ const uploadFields = upload.fields([
 
 // ── Session storage ───────────────────────────────────────
 
-interface SectionResult {
-  title: string;
-  current: string;
-  analysis: string;
-  hasImage: boolean;
+import type { KeywordData, ViewsData, InteractionData, UserActionData } from './types.js';
+
+interface ExtractedData {
+  keyword?: KeywordData;
+  views?: ViewsData;
+  interactions?: InteractionData;
+  userActions?: UserActionData;
 }
 interface AnalysisSession {
   storeId: string;
@@ -53,12 +55,7 @@ interface AnalysisSession {
   prompts: db.PromptSet;
   tmpFiles: string[];
   screenshots: ReportInput['screenshots'];
-  sections: {
-    keyword: SectionResult;
-    views?: SectionResult;
-    interactions?: SectionResult;
-    userActions?: SectionResult;
-  };
+  extractedData: ExtractedData;  // Step1: 画像から抽出した数値データ
   createdAt: number;
 }
 const sessions = new Map<string, AnalysisSession>();
