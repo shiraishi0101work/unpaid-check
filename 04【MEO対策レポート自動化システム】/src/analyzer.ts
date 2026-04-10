@@ -39,7 +39,7 @@ export class MeoAnalyzer {
     return { base64, mediaType };
   }
 
-  // Gemini Vision で画像解析
+  // Gemini Vision で画像解析（JSON強制モード）
   private async extractWithGemini(imagePath: string, prompt: string): Promise<string> {
     const image = this.loadImage(imagePath);
     const res = await fetch(
@@ -52,15 +52,20 @@ export class MeoAnalyzer {
             { inline_data: { mime_type: image.mediaType, data: image.base64 } },
             { text: prompt },
           ]}],
+          generationConfig: { responseMimeType: 'application/json' },
         }),
       }
     );
     if (!res.ok) {
-      console.warn(`[Gemini Vision] エラー ${res.status}`);
+      const body = await res.text().catch(() => '');
+      const reason = res.status === 429 ? '無料枠超過 (429)' : `エラー ${res.status}: ${body.slice(0, 200)}`;
+      this.recordError(new Error(reason), 'Gemini Vision');
       return '{}';
     }
     const data = await res.json() as { candidates: Array<{ content: { parts: Array<{ text: string }> } }> };
-    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+    console.log('[Gemini Vision] response:', text.slice(0, 300));
+    return text;
   }
 
   // Claude Vision で画像解析
