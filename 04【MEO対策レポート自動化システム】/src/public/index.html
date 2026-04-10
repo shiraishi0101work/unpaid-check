@@ -900,6 +900,39 @@
 </div>
 
 
+<!-- Page: Settings -->
+<div class="page" id="page-settings">
+  <div class="detail-nav" style="margin-bottom:28px">
+    <button class="btn btn-ghost" style="padding:7px 10px" onclick="showPage('stores')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2>プロンプト設定（デフォルト）</h2>
+  </div>
+
+  <div class="card prompt-card">
+    <div class="card-header">
+      <span class="card-title">文章生成プロンプト</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.7">
+        各セクションの文章を生成する際の指示文を設定します。<code style="background:var(--gray-100);padding:1px 5px;border-radius:3px;font-size:12px">{month}</code> と書くと月が自動で入ります。<br>
+        データ（数値）と出力形式（JSON）は自動で付加されるため、記載不要です。
+      </p>
+
+      <div id="defaultPromptSections">
+        <!-- JS で生成 -->
+      </div>
+
+      <div class="settings-footer">
+        <span id="defaultSaveMsg" style="font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s">保存しました</span>
+        <button class="btn btn-secondary" onclick="resetDefaultPrompts()">デフォルトに戻す</button>
+        <button class="btn btn-primary" onclick="saveDefaultPrompts()">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Modal: Add Store -->
 <div class="overlay" id="addModal">
   <div class="modal">
