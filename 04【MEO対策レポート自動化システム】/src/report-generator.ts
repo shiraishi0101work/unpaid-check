@@ -145,6 +145,7 @@ export class ReportGenerator {
   async generateReport(
     input: ReportInput,
     slides: {
+      keywords?: SlideData[];
       keyword?: SlideData;
       views?: SlideData;
       interactions?: SlideData;
@@ -155,9 +156,11 @@ export class ReportGenerator {
     // Slide 1: Cover
     this.addCoverSlide(input.storeName, input.month, input.year);
 
-    // Slide 2: Keyword ranking
-    if (slides.keyword) {
-      this.addContentSlide(slides.keyword, input.month);
+    // Keyword slides (複数枚対応)
+    const keywordSlides = slides.keywords ?? (slides.keyword ? [slides.keyword] : []);
+    for (let i = 0; i < keywordSlides.length; i++) {
+      // 最初のスライドにのみコメントを表示
+      this.addContentSlide(keywordSlides[i]!, input.month, i === 0);
     }
 
     // Slide 3: Views
