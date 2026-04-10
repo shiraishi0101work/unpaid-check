@@ -962,11 +962,20 @@
   }
 
   /* ── Generate ── */
+  function setFile(type, file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    droppedFiles[type] = file;
+    document.getElementById('zone-' + type).classList.add('done');
+    document.getElementById('fn-' + type).textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = e => { document.getElementById('preview-' + type).src = e.target.result; };
+    reader.readAsDataURL(file);
+  }
+
   function onFile(input, type) {
     const f = input.files[0];
     if (!f) return;
-    document.getElementById('zone-' + type).classList.add('done');
-    document.getElementById('fn-' + type).textContent = f.name;
+    setFile(type, f);
   }
 
   function resetForm() {
