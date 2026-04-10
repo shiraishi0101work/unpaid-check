@@ -1586,13 +1586,20 @@
     const field = document.getElementById('commentApiKeyField');
     const label = document.getElementById('commentApiKeyLabel');
     const input = document.getElementById('commentApiKey');
+    const apiKeyLabel = document.getElementById('apiKeyLabel');
     if (!field) return;
     if (provider === 'claude') {
       field.style.display = 'none';
+      if (apiKeyLabel) apiKeyLabel.textContent = 'Claude Key（画像解析用・必須）';
     } else {
       field.style.display = 'block';
       label.textContent = provider === 'openai' ? 'OpenAI APIキー (sk-...)' : 'Google AI APIキー (AIza...)';
       input.placeholder = provider === 'openai' ? 'sk-proj-...' : 'AIza...';
+      if (apiKeyLabel) {
+        apiKeyLabel.textContent = provider === 'gemini'
+          ? 'Claude Key（Gemini使用時は不要）'
+          : 'Claude Key（画像解析用・必須）';
+      }
     }
   }
 
