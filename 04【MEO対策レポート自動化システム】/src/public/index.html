@@ -537,6 +537,20 @@
     .upload-zone.done .preview-img { display: block; }
     .upload-zone.done .upload-zone-icon { display: none; }
 
+    .upload-zone .multi-badge {
+      display: none;
+      position: absolute;
+      top: 6px; right: 6px;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+    .upload-zone.done .multi-badge { display: inline-block; }
+    .upload-zone.done .multi-badge[data-count="1"] { display: none; }
+
     .upload-zone.processing {
       border-color: var(--blue);
       background: var(--blue-light);
