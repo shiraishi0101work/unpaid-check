@@ -12,10 +12,15 @@
 
 <!-- ナビゲーションバー -->
 <nav class="navbar navbar-dark bg-dark px-4 py-2 flex-shrink-0">
-  <span class="navbar-brand fw-bold">
+  <a class="navbar-brand fw-bold text-decoration-none" href="/">
     <i class="bi bi-currency-yen me-2"></i>未入金チェックシステム
-  </span>
-  <span class="text-white-50 small" id="nav-clock"></span>
+  </a>
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-white-50 small" id="nav-clock"></span>
+    <a href="/settings" class="btn btn-outline-light btn-sm py-0">
+      <i class="bi bi-gear me-1"></i>設定
+    </a>
+  </div>
 </nav>
 
 <!-- メインレイアウト: サイドバー + コンテンツ -->
