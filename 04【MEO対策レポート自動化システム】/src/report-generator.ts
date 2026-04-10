@@ -143,6 +143,79 @@ export class ReportGenerator {
     });
   }
 
+  // 複数キーワード画像を1スライドに横並び配置
+  private async addKeywordsSlide(keywordSlides: SlideData[], month: number): Promise<void> {
+    const slide = this.pptx.addSlide();
+    slide.background = { color: 'F2F2F2' };
+
+    // Header
+    slide.addShape(this.pptx.ShapeType.rect, {
+      x: 0, y: 0, w: SLIDE_W, h: 0.65,
+      fill: { color: COLORS.headerBg },
+      line: { color: COLORS.headerBg },
+    });
+    slide.addText(keywordSlides[0]!.title, {
+      x: 0.2, y: 0.05, w: SLIDE_W - 0.4, h: 0.55,
+      fontSize: 18, bold: true, color: COLORS.headerText,
+      align: 'left', fontFace: 'メイリオ',
+    });
+
+    const imageAreaY = 0.75;
+    const n = keywordSlides.length;
+    const gap = 0.05;
+    const totalW = SLIDE_W - 0.3;
+    const perW = (totalW - gap * (n - 1)) / n;
+
+    for (let i = 0; i < n; i++) {
+      const sd = keywordSlides[i]!;
+      if (!sd.imagePath || !fs.existsSync(sd.imagePath)) continue;
+
+      // 元のアスペクト比を維持した高さを計算
+      let displayH = perW * 1.8; // デフォルト比率
+      try {
+        const meta = await sharp(sd.imagePath).metadata();
+        if (meta.width && meta.height) {
+          displayH = perW * (meta.height / meta.width);
+        }
+      } catch { /* ignore */ }
+
+      const x = 0.15 + i * (perW + gap);
+      slide.addShape(this.pptx.ShapeType.rect, {
+        x, y: imageAreaY, w: perW, h: displayH,
+        fill: { color: 'FFFFFF' },
+        line: { color: 'DDDDDD', width: 1 },
+      });
+      slide.addImage({
+        path: sd.imagePath,
+        x, y: imageAreaY,
+        w: perW, h: displayH,
+      });
+    }
+
+    // コメントボックス（スライド下部固定。画像と重なってもOK）
+    const first = keywordSlides[0]!;
+    if (first.currentStatus || first.analysis) {
+      const boxY = SLIDE_H - 5.2;
+      const boxH = 5.0;
+      slide.addShape(this.pptx.ShapeType.roundRect, {
+        x: 0.15, y: boxY, w: SLIDE_W - 0.3, h: boxH,
+        fill: { color: 'FFFFFF' },
+        line: { color: 'CCCCCC', width: 1 },
+        rectRadius: 0.08,
+      });
+      const commentText = [
+        { text: '【現状】\n', options: { bold: true, color: '1A5276', fontSize: 11 } },
+        { text: first.currentStatus + '\n\n', options: { bold: false, color: '333333', fontSize: 11 } },
+        { text: '【分析】\n', options: { bold: true, color: '1A5276', fontSize: 11 } },
+        { text: first.analysis, options: { bold: false, color: '333333', fontSize: 11 } },
+      ];
+      slide.addText(commentText, {
+        x: 0.3, y: boxY + 0.12, w: SLIDE_W - 0.6, h: boxH - 0.25,
+        fontFace: 'メイリオ', valign: 'top', wrap: true,
+      });
+    }
+  }
+
   async generateReport(
     input: ReportInput,
     slides: {
@@ -157,11 +230,12 @@ export class ReportGenerator {
     // Slide 1: Cover
     this.addCoverSlide(input.storeName, input.month, input.year);
 
-    // Keyword slides (複数枚対応)
+    // Keyword slides（複数枚→1スライドに横並び、1枚→通常スライド）
     const keywordSlides = slides.keywords ?? (slides.keyword ? [slides.keyword] : []);
-    for (let i = 0; i < keywordSlides.length; i++) {
-      // 最初のスライドにのみコメントを表示
-      this.addContentSlide(keywordSlides[i]!, input.month, i === 0);
+    if (keywordSlides.length > 1) {
+      await this.addKeywordsSlide(keywordSlides, input.month);
+    } else if (keywordSlides.length === 1) {
+      this.addContentSlide(keywordSlides[0]!, input.month, true);
     }
 
     // Slide 3: Views
