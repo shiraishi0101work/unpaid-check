@@ -28,7 +28,7 @@ const upload = multer({
 });
 
 const uploadFields = upload.fields([
-  { name: 'keyword', maxCount: 10 },
+  { name: 'keyword', maxCount: 1 },
   { name: 'views', maxCount: 1 },
   { name: 'interactions', maxCount: 1 },
   { name: 'userActions', maxCount: 1 },
