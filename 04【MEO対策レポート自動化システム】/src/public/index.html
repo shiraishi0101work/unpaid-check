@@ -1071,11 +1071,14 @@
   /* ── Drag & Drop ── */
   document.querySelectorAll('.upload-zone').forEach(zone => {
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('dragleave', e => {
+      if (!zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
+    });
     zone.addEventListener('drop', e => {
       e.preventDefault(); zone.classList.remove('dragover');
-      const inp = zone.querySelector('input[type=file]');
-      if (e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event('change')); }
+      const type = zone.id.replace('zone-', '');
+      const f = e.dataTransfer.files[0];
+      if (f) setFile(type, f);
     });
   });
 
