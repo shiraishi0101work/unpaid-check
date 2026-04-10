@@ -1924,12 +1924,19 @@
   }
 
   /* ── Step2: テキスト確認・編集モーダル ── */
-  function showTextStep(sections) {
+  function showTextStep(sections, isTemplate) {
     document.getElementById('rv-step1').style.display = 'none';
     document.getElementById('rv-step2').style.display = 'flex';
 
     const body = document.getElementById('rv-text-body');
-    body.innerHTML = RV_SECTIONS.map(({ key, label, page }) => {
+    const templateBanner = isTemplate
+      ? `<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 14px;font-size:12px;color:#795548;margin-bottom:12px">
+          ⚠️ AIがテキストを生成できなかったため、入力数値から<b>テンプレート文章</b>を自動作成しました。<br>
+          内容を確認・編集してからレポートを作成してください。「AI再生成」ボタンでAI生成を再試行できます。
+        </div>`
+      : '';
+
+    body.innerHTML = templateBanner + RV_SECTIONS.map(({ key, label, page }) => {
       const s = sections[key];
       if (!s) return '';
       const missing = !s.current && !s.analysis;
@@ -1939,7 +1946,7 @@
           <span class="rv-label">${label}</span>
           <span class="rv-badge rv-badge-gray">${page}</span>
           ${missing ? '<span class="rv-badge rv-badge-warn">要編集</span>' : ''}
-          ${s.hasImage ? `<button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="regenerateText('${key}')">AI再生成</button>` : ''}
+          <button class="btn btn-secondary rv-regen-btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="regenerateText('${key}')">AI再生成</button>
         </div>
         <div class="rv-field">
           <label class="field-label">【現状】</label>
