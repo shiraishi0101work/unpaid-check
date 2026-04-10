@@ -118,7 +118,7 @@ app.post('/api/generate', uploadFields, async (req, res) => {
   const tmpFiles: string[] = [];
 
   try {
-    const { storeName, month, year, apiKey, storeId: existingStoreId } = req.body as Record<string, string>;
+    const { storeName, month, year, apiKey, storeId: existingStoreId, commentAI, commentApiKey } = req.body as Record<string, string>;
 
     if (!storeName || !month || !year || !apiKey) {
       res.status(400).json({ error: '必須パラメータが不足しています' });
