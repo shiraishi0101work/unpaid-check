@@ -979,9 +979,11 @@
   }
 
   function resetForm() {
+    droppedFiles = {};
     ['keyword','views','interactions','userActions'].forEach(t => {
       document.getElementById('zone-' + t).classList.remove('done');
       document.getElementById('fn-' + t).textContent = '';
+      document.getElementById('preview-' + t).src = '';
       document.querySelector(`#zone-${t} input`).value = '';
     });
     document.getElementById('statusArea').classList.remove('visible');
