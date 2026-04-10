@@ -188,38 +188,60 @@ app.post('/api/generate', uploadFields, async (req, res) => {
       userActions?: SlideData;
     } = {};
 
-    if (keywordFiles.length > 0) {
-      console.log(`🔍 キーワード順位を解析中... (${keywordFiles.length}枚)`);
-      // 最初の1枚でAI分析・コメント生成
-      const data = await analyzer.extractKeywordData(keywordFiles[0]!.path);
-      const comment = await analyzer.generateKeywordComment(data, monthNum, prompts.keyword_current, prompts.keyword_analysis);
-      // 各ファイルをスライドに割り当て（最初のスライドのみコメント付き）
-      slides.keywords = keywordFiles.map((f, i) => ({
+    // Helper: use manual text if provided, otherwise call AI
+    const resolveComment = async (
+      manualCur: string | undefined, manualAna: string | undefined,
+      aiGen: () => Promise<{ current: string; analysis: string }>
+    ): Promise<{ current: string; analysis: string }> => {
+      const cur = manualCur?.trim() ?? '';
+      const ana = manualAna?.trim() ?? '';
+      if (cur || ana) return { current: cur, analysis: ana };
+      return aiGen();
+    };
+
+    if (keywordFiles.length > 0 || current_keyword || analysis_keyword) {
+      console.log('🔍 キーワード順位を処理中...');
+      const imagePath = keywordFiles[0]?.path;
+      const comment = await resolveComment(current_keyword, analysis_keyword, async () => {
+        if (!imagePath) return { current: '', analysis: '' };
+        const data = await analyzer.extractKeywordData(imagePath);
+        return analyzer.generateKeywordComment(data, monthNum, prompts.keyword_current, prompts.keyword_analysis);
+      });
+      slides.keywords = [{
         title: `${monthNum}月対策キーワード順位ご報告`,
-        imagePath: f.path,
-        currentStatus: i === 0 ? comment.current : '',
-        analysis: i === 0 ? comment.analysis : '',
-      }));
+        imagePath,
+        currentStatus: comment.current,
+        analysis: comment.analysis,
+      }];
     }
 
-    if (screenshots.views) {
-      console.log('👁️  閲覧ユーザー数を解析中...');
-      const data = await analyzer.extractViewsData(screenshots.views);
-      const comment = await analyzer.generateViewsComment(data, monthNum, prompts.views_current, prompts.views_analysis);
+    if (screenshots.views || current_views || analysis_views) {
+      console.log('👁️  閲覧ユーザー数を処理中...');
+      const comment = await resolveComment(current_views, analysis_views, async () => {
+        if (!screenshots.views) return { current: '', analysis: '' };
+        const data = await analyzer.extractViewsData(screenshots.views);
+        return analyzer.generateViewsComment(data, monthNum, prompts.views_current, prompts.views_analysis);
+      });
       slides.views = { title: '閲覧したユーザー数', imagePath: screenshots.views, currentStatus: comment.current, analysis: comment.analysis };
     }
 
-    if (screenshots.interactions) {
-      console.log('🔄 インタラクション数を解析中...');
-      const data = await analyzer.extractInteractionData(screenshots.interactions);
-      const comment = await analyzer.generateInteractionComment(data, monthNum, prompts.interactions_current, prompts.interactions_analysis);
+    if (screenshots.interactions || current_interactions || analysis_interactions) {
+      console.log('🔄 インタラクション数を処理中...');
+      const comment = await resolveComment(current_interactions, analysis_interactions, async () => {
+        if (!screenshots.interactions) return { current: '', analysis: '' };
+        const data = await analyzer.extractInteractionData(screenshots.interactions);
+        return analyzer.generateInteractionComment(data, monthNum, prompts.interactions_current, prompts.interactions_analysis);
+      });
       slides.interactions = { title: 'インタラクション数', imagePath: screenshots.interactions, currentStatus: comment.current, analysis: comment.analysis };
     }
 
-    if (screenshots.userActions) {
-      console.log('📍 ユーザー行動データを解析中...');
-      const data = await analyzer.extractUserActionData(screenshots.userActions);
-      const comment = await analyzer.generateUserActionComment(data, monthNum, prompts.userActions_current, prompts.userActions_analysis);
+    if (screenshots.userActions || current_userActions || analysis_userActions) {
+      console.log('📍 ユーザー行動データを処理中...');
+      const comment = await resolveComment(current_userActions, analysis_userActions, async () => {
+        if (!screenshots.userActions) return { current: '', analysis: '' };
+        const data = await analyzer.extractUserActionData(screenshots.userActions);
+        return analyzer.generateUserActionComment(data, monthNum, prompts.userActions_current, prompts.userActions_analysis);
+      });
       slides.userActions = { title: 'ユーザー行動データ（来店・売上に直結）', imagePath: screenshots.userActions, currentStatus: comment.current, analysis: comment.analysis };
     }
 
