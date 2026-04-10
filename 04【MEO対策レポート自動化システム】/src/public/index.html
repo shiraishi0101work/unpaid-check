@@ -2004,5 +2004,21 @@
   /* ── Initial load ── */
   loadStores();
 </script>
+
+<!-- ── Review Modal ── -->
+<div class="overlay" id="reviewOverlay">
+  <div class="modal" style="width:640px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div style="padding:22px 28px 16px;border-bottom:1px solid var(--gray-200);flex-shrink:0">
+      <div style="font-size:17px;font-weight:700;color:var(--gray-900);margin-bottom:4px">AIコメントの確認・編集</div>
+      <div style="font-size:13px;color:var(--gray-500)">内容を確認して「PPTXを生成・ダウンロード」してください。編集やAI再生成も可能です。</div>
+    </div>
+    <div id="reviewBody" style="overflow-y:auto;padding:20px 28px;flex:1;display:flex;flex-direction:column;gap:18px"></div>
+    <div style="padding:16px 28px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0">
+      <button class="btn btn-secondary" onclick="closeReviewModal()">キャンセル</button>
+      <button class="btn btn-primary" id="finalizeBtn" onclick="finalizeReport()">PPTXを生成・ダウンロード</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
