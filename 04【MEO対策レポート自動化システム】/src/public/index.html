@@ -1492,6 +1492,10 @@
         throw new Error(e.error || 'サーバーエラー');
       }
 
+      if (res.headers.get('X-Comment-Fallback') === '1') {
+        appendLog(`⚠️ ${AI_LABELS[commentAI] ?? commentAI} の制限に達したため Claude で文章を生成しました`, 'log-info');
+      }
+
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const fn   = `MEO対策レポート_${currentStoreName}_${year}年${month}月.pptx`;
