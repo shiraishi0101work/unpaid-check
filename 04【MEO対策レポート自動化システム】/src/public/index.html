@@ -1666,9 +1666,16 @@
   function formatExtracted(key, data) {
     if (!data) return '<span style="color:var(--gray-400)">画像なし（テキスト生成時は空データで処理）</span>';
     if (key === 'keyword') {
-      const rows = (data.keywords ?? []).map(k =>
-        `<tr><td style="padding:3px 10px 3px 0">${esc(String(k.keyword))}</td><td><b>${esc(String(k.rank))}</b>位</td></tr>`
-      ).join('');
+      const kws = data.keywords ?? [];
+      if (kws.length === 0) {
+        return '<span style="color:var(--gray-400)">キーワードデータを抽出できませんでした。再解析を試してください。</span>' +
+          (data.summary ? `<div style="margin-top:6px;font-size:12px;color:var(--gray-500)">${esc(data.summary)}</div>` : '');
+      }
+      const rows = kws.map(k => {
+        const rank = String(k.rank);
+        const rankDisplay = rank === '圏外' ? '<span style="color:#e57373">圏外</span>' : `<b>${esc(rank)}</b>位`;
+        return `<tr><td style="padding:3px 14px 3px 0">${esc(String(k.keyword))}</td><td>${rankDisplay}</td></tr>`;
+      }).join('');
       return `<table style="border-collapse:collapse;font-size:13px">${rows}</table>` +
         (data.summary ? `<div style="margin-top:6px;font-size:12px;color:var(--gray-500)">${esc(data.summary)}</div>` : '');
     }
