@@ -1099,11 +1099,28 @@
   }
 
   /* ── Stores ── */
+  let cachedStores = [];
+
   async function loadStores() {
-    const data = await fetch('/api/stores').then(r => r.json());
+    cachedStores = await fetch('/api/stores').then(r => r.json());
+    const q = document.getElementById('storeSearch')?.value.trim() ?? '';
+    renderStoreGrid(q ? cachedStores.filter(s => s.name.includes(q)) : cachedStores);
+  }
+
+  function onStoreSearch() {
+    const q = document.getElementById('storeSearch')?.value.trim() ?? '';
+    const filtered = q ? cachedStores.filter(s => s.name.toLowerCase().includes(q.toLowerCase())) : cachedStores;
+    renderStoreGrid(filtered, q !== '');
+  }
+
+  function renderStoreGrid(stores, isFiltered = false) {
+    const total = cachedStores.length;
+    const label = document.getElementById('storeCountLabel');
+    label.textContent = isFiltered ? `${stores.length} / ${total}店舗` : `登録 ${total}店舗`;
+
     const grid = document.getElementById('storeGrid');
 
-    if (data.length === 0) {
+    if (total === 0) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1">
           <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1115,7 +1132,19 @@
       return;
     }
 
-    grid.innerHTML = data.map(s => `
+    if (stores.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <h3>検索結果がありません</h3>
+          <p>別のキーワードで試してください</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = stores.map(s => `
       <div class="store-card" onclick="openStore('${s.id}','${esc(s.name)}')">
         <div class="store-card-top">
           <div class="store-initial">${Array.from(s.name)[0]}</div>
@@ -1129,7 +1158,10 @@
           ${s.latestReport ? `<span>最終：${s.latestReport.year}年${s.latestReport.month}月</span>` : ''}
         </div>
         <div class="store-card-footer">
-          <span class="badge badge-blue">レポート ${s.reportCount}件</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="badge badge-blue">レポート ${s.reportCount}件</span>
+            ${s.hasCustomPrompts ? `<span class="badge-custom"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>個別設定</span>` : ''}
+          </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
