@@ -172,17 +172,24 @@ app.post('/api/generate', uploadFields, async (req, res) => {
     const analyzer = new MeoAnalyzer(apiKey, provider, commentKey);
     const monthNum = parseInt(month, 10);
     const slides: {
-      keyword?: SlideData;
+      keywords?: SlideData[];
       views?: SlideData;
       interactions?: SlideData;
       userActions?: SlideData;
     } = {};
 
-    if (screenshots.keyword) {
-      console.log('🔍 キーワード順位を解析中...');
-      const data = await analyzer.extractKeywordData(screenshots.keyword);
+    if (keywordFiles.length > 0) {
+      console.log(`🔍 キーワード順位を解析中... (${keywordFiles.length}枚)`);
+      // 最初の1枚でAI分析・コメント生成
+      const data = await analyzer.extractKeywordData(keywordFiles[0]!.path);
       const comment = await analyzer.generateKeywordComment(data, monthNum, prompts.keyword_current, prompts.keyword_analysis);
-      slides.keyword = { title: `${monthNum}月対策キーワード順位ご報告`, imagePath: screenshots.keyword, currentStatus: comment.current, analysis: comment.analysis };
+      // 各ファイルをスライドに割り当て（最初のスライドのみコメント付き）
+      slides.keywords = keywordFiles.map((f, i) => ({
+        title: `${monthNum}月対策キーワード順位ご報告`,
+        imagePath: f.path,
+        currentStatus: i === 0 ? comment.current : '',
+        analysis: i === 0 ? comment.analysis : '',
+      }));
     }
 
     if (screenshots.views) {
