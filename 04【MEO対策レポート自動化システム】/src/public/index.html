@@ -1380,61 +1380,64 @@
   }
 
   /* ── Prompt Settings ── */
-  const PROMPT_LABELS = {
-    keyword:      { label: 'キーワード順位', icon: '🔍' },
-    views:        { label: '閲覧ユーザー数', icon: '👁️' },
-    interactions: { label: 'インタラクション数', icon: '🔄' },
-    userActions:  { label: 'ユーザー行動データ', icon: '📍' },
-  };
-  const PROMPT_KEYS = ['keyword', 'views', 'interactions', 'userActions'];
+  const PROMPT_SECTIONS = [
+    { key: 'keyword',      page: '2ページ目', title: '〇月対策キーワード順位ご報告' },
+    { key: 'views',        page: '3ページ目', title: '閲覧したユーザー数' },
+    { key: 'interactions', page: '4ページ目', title: 'インタラクション数' },
+    { key: 'userActions',  page: '5ページ目', title: 'ユーザー行動データ（来店・売上に直結）' },
+  ];
 
-  let defaultPromptsCache = {};
-  let pendingDefaultSave = null; // { prompts, changedKeys }
+  let defaultPromptsCache = null;
+  let storePromptsCache   = {};
+  let pendingDefaultSave  = null;
 
-  async function loadDefaultPrompts() {
-    defaultPromptsCache = await fetch('/api/prompts/default').then(r => r.json());
-    renderDefaultPromptSections();
+  async function ensureDefaultPrompts() {
+    if (!defaultPromptsCache) {
+      defaultPromptsCache = await fetch('/api/prompts/default').then(r => r.json());
+    }
   }
 
-  function renderDefaultPromptSections() {
+  /* ── Default prompts page ── */
+  async function openSettingsPage() {
+    await ensureDefaultPrompts();
     const container = document.getElementById('defaultPromptSections');
-    container.innerHTML = PROMPT_KEYS.map(key => {
-      const { label, icon } = PROMPT_LABELS[key];
-      return `
-        <div class="prompt-section">
-          <div class="prompt-section-header">
-            <span class="prompt-section-label">${icon} ${label}</span>
-          </div>
-          <textarea class="prompt-textarea" id="dp-${key}" rows="4">${esc(defaultPromptsCache[key] ?? '')}</textarea>
-          <p class="prompt-hint">{month} と書くと対象月が入ります</p>
-        </div>`;
-    }).join('');
+    container.innerHTML = PROMPT_SECTIONS.map(({ key, page, title }) => `
+      <div class="prompt-section">
+        <div class="prompt-section-title">
+          <span class="prompt-page-num">${page}</span>
+          <span class="prompt-page-name">${title}</span>
+        </div>
+        <div class="prompt-field" style="margin-bottom:10px">
+          <label class="field-label" style="margin-bottom:5px">【現状】に入れる文章の指示</label>
+          <textarea class="prompt-textarea" id="dp-${key}_current" rows="3">${esc(defaultPromptsCache[key + '_current'] ?? '')}</textarea>
+        </div>
+        <div class="prompt-field">
+          <label class="field-label" style="margin-bottom:5px">【分析】に入れる文章の指示</label>
+          <textarea class="prompt-textarea" id="dp-${key}_analysis" rows="4">${esc(defaultPromptsCache[key + '_analysis'] ?? '')}</textarea>
+        </div>
+      </div>`).join('');
   }
 
   function saveDefaultPrompts() {
-    const changed = {};
-    const changedKeys = [];
-    for (const key of PROMPT_KEYS) {
-      const val = document.getElementById(`dp-${key}`).value;
-      if (val !== defaultPromptsCache[key]) { changed[key] = val; changedKeys.push(key); }
+    const allPrompts = {};
+    let hasChange = false;
+    for (const { key } of PROMPT_SECTIONS) {
+      for (const field of ['current', 'analysis']) {
+        const fk  = `${key}_${field}`;
+        const val = document.getElementById(`dp-${fk}`)?.value ?? '';
+        allPrompts[fk] = val;
+        if (val !== (defaultPromptsCache?.[fk] ?? '')) hasChange = true;
+      }
     }
-    if (changedKeys.length === 0) {
-      // Nothing changed — just show saved
-      showMsg('defaultSaveMsg');
-      return;
-    }
-    pendingDefaultSave = { prompts: {}, changedKeys };
-    // Collect ALL current values (not just changed)
-    for (const key of PROMPT_KEYS) {
-      pendingDefaultSave.prompts[key] = document.getElementById(`dp-${key}`).value;
-    }
+    if (!hasChange) { showMsg('defaultSaveMsg'); return; }
+    pendingDefaultSave = allPrompts;
     document.getElementById('applyAllModal').classList.add('show');
   }
 
   async function confirmApplyAll(applyToAll) {
     document.getElementById('applyAllModal').classList.remove('show');
     if (!pendingDefaultSave) return;
-    const { prompts, changedKeys } = pendingDefaultSave;
+    const prompts = pendingDefaultSave;
     pendingDefaultSave = null;
     await fetch('/api/prompts/default', {
       method: 'PUT',
@@ -1443,75 +1446,79 @@
     });
     defaultPromptsCache = { ...defaultPromptsCache, ...prompts };
     showMsg('defaultSaveMsg');
-    // If current store has prompts open, refresh
-    if (currentStoreId) loadStorePrompts(currentStoreId);
+    if (currentStoreId) await loadStorePrompts(currentStoreId);
   }
 
   async function resetDefaultPrompts() {
-    if (!confirm('デフォルトプロンプトを初期値に戻しますか？')) return;
-    const defaults = await fetch('/api/prompts/default').then(r => r.json());
-    // Reset to system defaults by clearing DB (send empty object is not enough, need server-side reset)
-    // We send a special request with original defaults
+    if (!confirm('デフォルトプロンプトを初期値（システム設定）に戻しますか？')) return;
     await fetch('/api/prompts/default', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts: {}, applyToAll: false }),
+      body: JSON.stringify({ prompts: {}, applyToAll: false, resetToDefault: true }),
     });
-    await loadDefaultPrompts();
+    defaultPromptsCache = null;
+    await openSettingsPage();
     showMsg('defaultSaveMsg');
   }
 
-  // Store prompts
-  let storePromptsCache = {};
-
+  /* ── Store prompts ── */
   async function loadStorePrompts(storeId) {
+    await ensureDefaultPrompts();
     storePromptsCache = await fetch(`/api/stores/${storeId}/prompts`).then(r => r.json());
     renderStorePromptSections();
   }
 
   function renderStorePromptSections() {
     const container = document.getElementById('storePromptSections');
-    container.innerHTML = PROMPT_KEYS.map(key => {
-      const { label, icon } = PROMPT_LABELS[key];
-      const hasCustom = !!storePromptsCache[key];
-      const promptVal = storePromptsCache[key] ?? defaultPromptsCache[key] ?? '';
+    container.innerHTML = PROMPT_SECTIONS.map(({ key, page, title }) => {
+      const hasCur = !!storePromptsCache[`${key}_current`];
+      const hasAna = !!storePromptsCache[`${key}_analysis`];
+      const isCustom = hasCur || hasAna;
+      const curVal = storePromptsCache[`${key}_current`]  ?? defaultPromptsCache?.[`${key}_current`]  ?? '';
+      const anaVal = storePromptsCache[`${key}_analysis`] ?? defaultPromptsCache?.[`${key}_analysis`] ?? '';
       return `
         <div class="prompt-section">
           <div class="prompt-section-header">
-            <span class="prompt-section-label">
-              ${icon} ${label}
-              <span class="prompt-badge${hasCustom ? ' custom' : ''}" id="sp-badge-${key}">${hasCustom ? 'カスタム' : 'デフォルト'}</span>
-            </span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="prompt-page-num">${page}</span>
+              <span class="prompt-page-name" style="font-size:13px">${title}</span>
+            </div>
             <label class="prompt-toggle">
-              <input type="checkbox" id="sp-use-default-${key}" ${hasCustom ? '' : 'checked'}
-                onchange="toggleStorePromptDefault('${key}')">
+              <input type="checkbox" id="sp-use-default-${key}" ${isCustom ? '' : 'checked'}
+                onchange="onStorePromptToggle('${key}')">
               デフォルトを使用
             </label>
           </div>
-          <textarea class="prompt-textarea" id="sp-${key}" rows="4"
-            ${hasCustom ? '' : 'disabled'}>${esc(promptVal)}</textarea>
+          <div style="margin-top:12px">
+            <div class="prompt-field" style="margin-bottom:10px">
+              <label class="field-label" style="margin-bottom:5px">【現状】に入れる文章の指示</label>
+              <textarea class="prompt-textarea" id="sp-${key}_current" rows="3" ${isCustom ? '' : 'disabled'}>${esc(curVal)}</textarea>
+            </div>
+            <div class="prompt-field">
+              <label class="field-label" style="margin-bottom:5px">【分析】に入れる文章の指示</label>
+              <textarea class="prompt-textarea" id="sp-${key}_analysis" rows="4" ${isCustom ? '' : 'disabled'}>${esc(anaVal)}</textarea>
+            </div>
+          </div>
         </div>`;
     }).join('');
   }
 
-  function toggleStorePromptDefault(key) {
+  function onStorePromptToggle(key) {
     const useDefault = document.getElementById(`sp-use-default-${key}`).checked;
-    const textarea = document.getElementById(`sp-${key}`);
-    const badge = document.getElementById(`sp-badge-${key}`);
-    textarea.disabled = useDefault;
-    badge.textContent = useDefault ? 'デフォルト' : 'カスタム';
-    badge.className = 'prompt-badge' + (useDefault ? '' : ' custom');
-    if (useDefault) {
-      textarea.value = defaultPromptsCache[key] ?? '';
+    for (const field of ['current', 'analysis']) {
+      const ta = document.getElementById(`sp-${key}_${field}`);
+      ta.disabled = useDefault;
+      if (useDefault) ta.value = defaultPromptsCache?.[`${key}_${field}`] ?? '';
     }
   }
 
   async function saveStorePrompts() {
     const prompts = {};
-    for (const key of PROMPT_KEYS) {
+    for (const { key } of PROMPT_SECTIONS) {
       const useDefault = document.getElementById(`sp-use-default-${key}`)?.checked;
       if (!useDefault) {
-        prompts[key] = document.getElementById(`sp-${key}`).value;
+        prompts[`${key}_current`]  = document.getElementById(`sp-${key}_current`)?.value  ?? '';
+        prompts[`${key}_analysis`] = document.getElementById(`sp-${key}_analysis`)?.value ?? '';
       }
     }
     await fetch(`/api/stores/${currentStoreId}/prompts`, {
@@ -1525,11 +1532,11 @@
   }
 
   function toggleStorePrompts() {
-    const body = document.getElementById('storePromptBody');
+    const body    = document.getElementById('storePromptBody');
     const chevron = document.getElementById('storePromptChevron');
-    const open = body.style.display === 'none';
-    body.style.display = open ? 'block' : 'none';
-    chevron.style.transform = open ? 'rotate(180deg)' : '';
+    const open    = body.style.display === 'none';
+    body.style.display       = open ? 'block' : 'none';
+    chevron.style.transform  = open ? 'rotate(180deg)' : '';
   }
 
   function showMsg(id) {
@@ -1537,19 +1544,6 @@
     el.style.opacity = '1';
     setTimeout(() => { el.style.opacity = '0'; }, 2000);
   }
-
-  /* ── Navigation (update to load prompts) ── */
-  const _origOpenStore = openStore;
-  openStore = function(id, name) {
-    _origOpenStore(id, name);
-    loadDefaultPrompts().then(() => loadStorePrompts(id));
-  };
-
-  const _origShowPage = showPage;
-  showPage = function(id) {
-    _origShowPage(id);
-    if (id === 'settings') loadDefaultPrompts();
-  };
 
   /* ── Initial load ── */
   loadStores();
