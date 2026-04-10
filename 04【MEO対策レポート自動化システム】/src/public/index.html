@@ -1014,6 +1014,34 @@
 
       </div>
 
+      <!-- 手動コメント入力 -->
+      <details id="manualCommentDetails" style="margin-bottom:16px;border:1.5px solid var(--gray-200);border-radius:8px;overflow:hidden">
+        <summary style="padding:12px 16px;font-size:13px;font-weight:700;color:var(--gray-700);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;background:var(--gray-50)">
+          <span>コメントを手入力する（AIが空の場合はこちらを使用）</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
+          <p style="font-size:12px;color:var(--gray-500);line-height:1.7">入力したコメントはAI生成より優先されます。空欄の場合はAI生成を使用します。</p>
+          ${[
+            ['keyword', 'キーワード順位'],
+            ['views', '閲覧ユーザー数'],
+            ['interactions', 'インタラクション数'],
+            ['userActions', 'ユーザー行動データ'],
+          ].map(([k,label]) => `
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">${label}</div>
+            <div style="margin-bottom:6px">
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【現状】</label>
+              <textarea id="manual_current_${k}" class="prompt-textarea" rows="2" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+            <div>
+              <label class="field-label" style="font-size:11px;margin-bottom:4px">【分析】</label>
+              <textarea id="manual_analysis_${k}" class="prompt-textarea" rows="3" placeholder="空欄でAI生成を使用"></textarea>
+            </div>
+          </div>`).join('')}
+        </div>
+      </details>
+
       <button class="btn btn-primary btn-full" id="genBtn" onclick="generate()">レポートを生成する</button>
 
       <div class="status-area" id="statusArea">
