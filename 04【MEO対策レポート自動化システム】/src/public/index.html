@@ -1621,14 +1621,14 @@
 
     const btn = document.getElementById('genBtn');
     btn.disabled = true;
-    btn.textContent = '生成中...';
+    btn.textContent = '解析中...';
     document.getElementById('statusArea').classList.add('visible');
     document.getElementById('logPanel').innerHTML = '';
     setProgress(8);
 
     appendLog(`${currentStoreName}  ${year}年${month}月度`, 'log-info');
     const analysisLabel = commentAI === 'gemini' ? 'Gemini' : 'Claude';
-    appendLog(`${analysisLabel} AI がスクリーンショットを解析しています...`);
+    appendLog(`${analysisLabel} AI が画像から数値データを抽出しています...`);
 
     try {
       setProgress(25);
