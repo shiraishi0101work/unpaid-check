@@ -282,11 +282,12 @@ def dashboard():
         paid_fy   = [b for b in result.get("paid",[])     if in_fy(b)]
         diff_fy   = [b for b in result.get("diff",[])     if in_fy(b)]
 
-        # 着金月ごとにグループ化
+        # 着金月ごとにグループ化（着金日 → 支払期限 → 請求日 の優先順で月を決める）
         monthly = {}
         for b in paid_fy:
-            ym = (b.get("支払期限") or b.get("請求日") or "")[:7]  # YYYY-MM
-            monthly.setdefault(ym, []).append(b)
+            ym = (b.get("着金日") or b.get("着金日_手動") or b.get("支払期限") or b.get("請求日") or "")[:7]
+            if ym:
+                monthly.setdefault(ym, []).append(b)
         monthly_sorted = sorted(monthly.items())
     else:
         overdue = upcoming = paid_fy = diff_fy = []
