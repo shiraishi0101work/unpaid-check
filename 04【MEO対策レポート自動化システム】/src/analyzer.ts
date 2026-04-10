@@ -230,7 +230,10 @@ JSONのみ返してください。`);
     const rawJson = codeMatch?.[1] ?? text.match(/\{[\s\S]*\}/)?.[0] ?? '';
     if (!rawJson) {
       console.warn('[callComment] JSON not found in response:', text.slice(0, 300));
-      return { current: '', analysis: '' };
+      // フォールバック: "current" / "analysis" キーをテキストから直接抽出
+      const cur = text.match(/"current"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*,|\s*\})/)?.[1] ?? '';
+      const ana = text.match(/"analysis"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*\})/)?.[1] ?? '';
+      return { current: cur.replace(/\\n/g, '\n'), analysis: ana.replace(/\\n/g, '\n') };
     }
     try {
       const parsed = JSON.parse(rawJson) as { current?: string; analysis?: string };
@@ -238,14 +241,25 @@ JSONのみ返してください。`);
       console.log('[callComment] parsed OK:', JSON.stringify(result).slice(0, 200));
       return result;
     } catch {
-      // JSON.parseが失敗した場合、制御文字や改行を除去して再試行
+      // 制御文字・改行をエスケープして再試行
       try {
-        const cleaned = rawJson.replace(/[\x00-\x1F\x7F]/g, c => c === '\n' ? '\\n' : c === '\t' ? '\\t' : '');
+        const cleaned = rawJson.replace(/[\x00-\x1F\x7F]/g, c => {
+          if (c === '\n') return '\\n';
+          if (c === '\r') return '\\r';
+          if (c === '\t') return '\\t';
+          return '';
+        });
         const parsed = JSON.parse(cleaned) as { current?: string; analysis?: string };
         return { current: parsed.current ?? '', analysis: parsed.analysis ?? '' };
       } catch {
+        // 最終フォールバック: 正規表現でキー値を直接取り出す
         console.warn('[callComment] JSON parse error after cleanup:', rawJson.slice(0, 300));
-        return { current: '', analysis: '' };
+        const cur = rawJson.match(/"current"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*,|\s*\})/)?.[1] ?? '';
+        const ana = rawJson.match(/"analysis"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*\})/)?.[1] ?? '';
+        return {
+          current: cur.replace(/\\n/g, '\n'),
+          analysis: ana.replace(/\\n/g, '\n'),
+        };
       }
     }
   }
