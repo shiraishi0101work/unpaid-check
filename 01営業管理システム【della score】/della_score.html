@@ -1582,12 +1582,7 @@ function renderMfInvoicesPage(){
   let pending = (D.mfInvoices||[]).filter(m=>{
     if(imported.has(m.id)) return false;
     if(m.billing_number && importedBillingNums.has(m.billing_number)) return false;
-    const sameContent = D.invoices.some(i=>
-      (i.client||'').toLowerCase()===(m.partner||'').toLowerCase() &&
-      parseFloat(i.amount||0)===parseFloat(m.total_price||0) &&
-      (i.issued||'')===(m.billing_date||'')
-    );
-    if(sameContent) return false;
+    if(mfDupCheck(m, D.invoices, 'inv').length > 0) return false; // 重複はテーブルに出さない（要確認セクションへ）
     return !q || (m.partner+m.title).toLowerCase().includes(q);
   });
   if(_mfInvDupFilter) pending = pending.filter(m=>mfDupCheck(m,D.invoices,'inv').length>0);
