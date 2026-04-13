@@ -306,6 +306,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <span class="sec-title" style="color:var(--teal)">MF クラウド請求書 — 未取込み</span>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <input id="search-mf-inv" placeholder="🔍 検索..." oninput="renderMfInvoicesPage()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
+        <button id="mf-inv-dup-filter" class="btn btn-sm" onclick="toggleMfInvDupFilter()" style="color:var(--text2);border-color:var(--border2)">⚠ 要確認のみ</button>
         <span id="mf-inv-page-count" style="font-size:12px;color:var(--text3)"></span>
         <button class="btn btn-sm btn-danger" onclick="deleteMfInvSelected()">選択削除</button>
         <button class="btn btn-sm" style="color:var(--teal);border-color:var(--teal)" onclick="selectedImportMfInvoices()">↓ 選択取込み</button>
