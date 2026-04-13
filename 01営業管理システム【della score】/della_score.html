@@ -1502,7 +1502,7 @@ function buildOwnerMap() {
 
 // ── MF一括取込み ────────────────────────────────────
 function bulkImportMfInvoices(){
-  const imported = new Set(D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id));
+  const imported = new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
   const targets = (D.mfInvoices||[]).filter(m=>{
     if(imported.has(m.id)) return false;
     const dups = mfDupCheck(m.partner, m.total_price, m.billing_date, D.invoices, 'issued');
@@ -1515,8 +1515,9 @@ function bulkImportMfInvoices(){
   const msg = `${targets.length}件を一括取込みします。\n✅ 担当者自動設定：${mapped.length}件\n⚠ 担当者未設定：${unmapped.length}件\n\nよろしいですか？`;
   if(!confirm(msg)) return;
   targets.forEach(m=>{
+    D.importedMfInvIds.push(m.id);
     D.invoices.unshift({
-      id: uid(), mf_id: m.id, billing_number: m.billing_number||'',
+      id: uid(), billing_number: m.billing_number||'',
       client: m.partner||'', name: m.title||'',
       amount: m.total_price||0, tax: m.tax||0,
       issued: m.billing_date||'', due: m.due_date||'',
