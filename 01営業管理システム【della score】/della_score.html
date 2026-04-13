@@ -2280,6 +2280,7 @@ function renderOrders(){
       <button class="btn btn-sm btn-danger" onclick="delItem('orders','${o.id}')">削除</button>
     </td>
   </tr>`).join('');
+  updateOrdBulkBar();
 }
 
 function editOrder(id){
