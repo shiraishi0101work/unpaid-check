@@ -1846,13 +1846,17 @@ function renderInvoices(){
   if(mf) list=list.filter(i=>(i.issued||'').slice(0,7)===mf);
   if(q) list=list.filter(i=>(i.client+i.name+(i.owner||'')+(i.items||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(i=>(i.owner||'')===ow);
-  if(!list.length){tb.innerHTML='';em.style.display='';return;}
+  if(!list.length){tb.innerHTML='';em.style.display='';
+    document.getElementById('i-footer').style.display='none'; return;}
   em.style.display='none';
+  const totalAmt=list.reduce((s,i)=>s+(i.amount||0),0);
+  const totalTax=list.reduce((s,i)=>s+calcTax(i.amount,i.tax),0);
+  const noDateCount=list.filter(i=>!i.issued&&!i.due).length;
   tb.innerHTML=list.map(i=>`<tr>
     <td title="${i.client}" style="font-weight:600">${i.client}</td>
     <td title="${i.name||''}">${i.name||'-'}</td>
     <td class="amount">${fmtTax(i.amount,i.tax)}</td>
-    <td>${fmtD(i.issued)}</td>
+    <td>${i.issued?fmtD(i.issued):'<span style="color:var(--red);font-size:11px">日付なし</span>'}</td>
     <td>${fmtD(i.due)}</td>
     <td>${i.owner?`<span class="pill">${i.owner}</span>`:'-'}</td>
     <td>${i.mf_id?'<span class="badge bo" style="font-size:10px;margin-right:3px">MF</span>':''}<span class="badge biv">発行済み</span></td>
@@ -1861,6 +1865,15 @@ function renderInvoices(){
       <button class="btn btn-sm btn-danger" onclick="delItem('invoices','${i.id}')">削除</button>
     </td>
   </tr>`).join('');
+  const footer=document.getElementById('i-footer');
+  footer.style.display='';
+  footer.innerHTML=`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <span style="font-size:13px;color:var(--text2)">${list.length}件</span>
+    <span style="font-weight:700">税抜 合計：${fmt(totalAmt)}</span>
+    <span style="font-weight:700;color:var(--teal)">税込 合計：${fmt(totalAmt+totalTax)}</span>
+    <span style="font-size:12px;color:var(--text3)">消費税：${fmt(totalTax)}</span>
+    ${noDateCount?`<span style="color:var(--red);font-size:12px">⚠ 発行日なし ${noDateCount}件（月次管理に反映されません）</span>`:''}
+  </div>`;
 }
 
 function renderPurchases(){
