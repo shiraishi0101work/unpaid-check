@@ -2266,6 +2266,7 @@ function renderOrders(){
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
   tb.innerHTML=list.map(o=>`<tr>
+    <td><input type="checkbox" class="ord-row-chk" value="${o.id}" onchange="updateOrdBulkBar()" style="cursor:pointer"></td>
     <td style="font-weight:600">${o.client}</td>
     <td>${o.name||'-'}</td>
     <td class="amount">${fmtTax(o.amount,o.tax)}</td>
