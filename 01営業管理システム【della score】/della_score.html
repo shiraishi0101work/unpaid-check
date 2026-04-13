@@ -2177,6 +2177,7 @@ function renderPurchases(){
   if(mpf) list=list.filter(p=>(p.issued||'').slice(0,7)===mpf);
   if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')===ow);
+  if(document.getElementById('filter-no-owner-purchases')?.checked) list=list.filter(p=>!(p.owner||'').trim());
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
   tb.innerHTML=list.map(p=>`<tr>
