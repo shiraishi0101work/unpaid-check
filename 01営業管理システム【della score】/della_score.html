@@ -2068,6 +2068,29 @@ function renderClients(){
   </tr>`).join('');
 }
 
+function errCheckBulkImportMfInv(){
+  const imported=new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
+  const importedBilNums=new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
+  const targets=(D.mfInvoices||[]).filter(m=>{
+    if(imported.has(m.id)) return false;
+    if(m.billing_number && importedBilNums.has(m.billing_number)) return false;
+    return mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length===0;
+  });
+  if(!targets.length){alert('取込みできる請求書がありません');return;}
+  if(!confirm(`${targets.length}件を請求書（売上）に取込みますか？`))return;
+  const ownerMap=buildOwnerMap();
+  targets.forEach(m=>{
+    D.importedMfInvIds.push(m.id);
+    D.invoices.unshift({
+      id:uid(), billing_number:m.billing_number||'',
+      client:m.partner||'', name:m.title||'',
+      amount:m.total_price||0, tax:m.tax||0,
+      issued:m.billing_date||'', due:m.due_date||'',
+      bank:'', items:'', owner:ownerMap[m.partner]||'', prospectId:''
+    });
+  });
+  save(); render();
+}
 function deleteProspectById(id){
   if(!confirm('この見込みを削除しますか？'))return;
   D.prospects=D.prospects.filter(p=>p.id!==id);
