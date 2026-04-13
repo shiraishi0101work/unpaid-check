@@ -2581,7 +2581,18 @@ function renderMonthly(){
   setTbl('m-i-tbody','m-i-empty', isPF
     ? pageInvs.map(o=>`<tr><td>${o.client}</td><td>${o.name||'-'}</td><td class="amount">${fmt(o.amount)}</td><td class="amount" style="color:var(--text2)">${o.tax!=null?fmt((o.amount||0)+(o.tax||0)):'-'}</td></tr>`).join('')
     : pageInvs.map(i=>`<tr><td>${i.client}</td><td>${i.name||'-'}</td><td class="amount">${fmt(i.amount)}</td><td class="amount" style="color:var(--text2)">${i.tax!=null?fmt((i.amount||0)+(i.tax||0)):'-'}</td></tr>`).join(''));
-  setTbl('m-pu-tbody','m-pu-empty',mPu.map(p=>`<tr><td>${p.supplier}</td><td>${p.desc||'-'}</td><td class="amount">${fmt(p.amount)}</td><td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td><td>${p.status==='paid'?'<span class="badge bpd">支払済み</span>':'<span class="badge bpu">未払い</span>'}</td></tr>`).join(''));
+  // 仕入れテーブル（ページネーション20件）
+  const totalPuPages=Math.max(1,Math.ceil(mPu.length/INV_PAGE));
+  _monthlyPuPage=Math.min(_monthlyPuPage,totalPuPages-1);
+  const pagePu=mPu.slice(_monthlyPuPage*INV_PAGE,(_monthlyPuPage+1)*INV_PAGE);
+  const puPager=document.getElementById('m-pu-pager');
+  if(puPager){
+    puPager.style.display=totalPuPages>1?'flex':'none';
+    document.getElementById('m-pu-page-lbl').textContent=`${_monthlyPuPage+1} / ${totalPuPages} ページ`;
+    document.getElementById('m-pu-prev').disabled=_monthlyPuPage===0;
+    document.getElementById('m-pu-next').disabled=_monthlyPuPage>=totalPuPages-1;
+  }
+  setTbl('m-pu-tbody','m-pu-empty',pagePu.map(p=>`<tr><td>${p.supplier}</td><td>${p.desc||'-'}</td><td class="amount">${fmt(p.amount)}</td><td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td><td>${p.status==='paid'?'<span class="badge bpd">支払済み</span>':'<span class="badge bpu">未払い</span>'}</td></tr>`).join(''));
 }
 
 // ── グラフ ────────────────────────────────────────
