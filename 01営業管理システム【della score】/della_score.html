@@ -1410,19 +1410,31 @@ function renderProspects(){
 }
 
 // ── MF重複チェック ─────────────────────────────────────
-// 重複判定：同じ取引先＋金額（±1000円）＋日付（±3日）で既存データと照合
-function mfDupCheck(partner, amount, dateStr, list, dateField) {
-  const amt = parseFloat(amount)||0;
-  const d0 = dateStr ? new Date(dateStr).getTime() : 0;
-  return list.filter(x => {
-    if (!x.client && !x.partner) return false;
-    const name = (x.client||x.partner||'').toLowerCase();
-    if (!partner || !name.includes(partner.toLowerCase().slice(0,4))) return false;
-    const xAmt = parseFloat(x.amount||x.total_price)||0;
-    if (Math.abs(xAmt - amt) > 1000) return false;
-    const xD = x[dateField] ? new Date(x[dateField]).getTime() : 0;
-    if (d0 && xD && Math.abs(xD - d0) > 3*86400000) return false;
-    return true;
+// 重複判定ルール：①請求書番号一致 ②会社名+案件名一致 ③会社名+金額一致
+function normCompany(name){
+  return (name||'').replace(/株式会社|有限会社|合同会社|合資会社|一般社団法人|一般財団法人|公益社団法人|公益財団法人/g,'').trim().toLowerCase();
+}
+// mfItem: MFクラウドのデータ（partner/title/total_price/billing_number/quote_number）
+// existList: DellaScoreの既存リスト（invoices or prospects）
+// type: 'inv' | 'quo'
+function mfDupCheck(mfItem, existList, type) {
+  const numKey   = type==='inv' ? 'billing_number' : 'quote_number';
+  const mfNum    = (mfItem[numKey]||'').trim();
+  const mfName   = normCompany(mfItem.partner);
+  const mfAmount = Math.round(parseFloat(mfItem.total_price)||0);
+  const mfTitle  = (mfItem.title||'').trim().toLowerCase();
+  return existList.filter(ex=>{
+    const exNum   = (ex[numKey]||ex.billing_number||ex.quote_number||'').trim();
+    const exName  = normCompany(ex.client);
+    const exAmt   = Math.round(parseFloat(ex.amount)||0);
+    const exTitle = (ex.name||'').trim().toLowerCase();
+    // ① 請求書番号一致
+    if(mfNum && exNum && mfNum===exNum) return true;
+    // ② 会社名 + 案件名 一致
+    if(mfName && exName && mfName===exName && mfTitle && exTitle && mfTitle===exTitle) return true;
+    // ③ 会社名 + 金額 一致
+    if(mfName && exName && mfName===exName && mfAmount && exAmt && mfAmount===exAmt) return true;
+    return false;
   });
 }
 
