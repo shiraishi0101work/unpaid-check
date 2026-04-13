@@ -1537,7 +1537,7 @@ function renderMfDupCards(type){
     if(imported.has(m.id)) return false;
     const numKey = isInv?'billing_number':'quote_number';
     if(m[numKey] && importedNums.has(m[numKey])) return false;
-    if((skipCounts[m.id]||0) >= 3) return false; // 3回スキップ済みは表示しない
+    if((skipCounts[m.id]||0) >= 1) return false; // 1回スキップ済みは以降表示しない
     const existing  = isInv ? D.invoices : D.prospects;
     return mfDupCheck(m, existing, type).length > 0;
   });
