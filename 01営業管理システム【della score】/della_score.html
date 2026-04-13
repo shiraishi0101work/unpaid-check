@@ -1805,7 +1805,7 @@ function bulkImportMfInvoices(){
   const imported = new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
   const targets = (D.mfInvoices||[]).filter(m=>{
     if(imported.has(m.id)) return false;
-    const dups = mfDupCheck(m.partner, m.total_price, m.billing_date, D.invoices, 'issued');
+    const dups = mfDupCheck(m, D.invoices, 'inv');
     return dups.length === 0;
   });
   if(!targets.length){ alert('一括取込みできる請求書がありません（すべて取込み済みまたは要確認）'); return; }
