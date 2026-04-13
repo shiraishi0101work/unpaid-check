@@ -2059,7 +2059,7 @@ function openMfImport(mfId){
   document.getElementById('mf-import-preview').innerHTML =
     `<b>${m.partner||''}</b>　${m.title||''}<br>金額：¥${m.total_price!=null?Math.round(m.total_price).toLocaleString('ja-JP'):'-'}　請求日：${m.billing_date||'-'}　支払期限：${m.due_date||'-'}`;
   // 重複警告
-  const dups = mfDupCheck(m.partner, m.total_price, m.billing_date, D.invoices, 'issued');
+  const dups = mfDupCheck(m, D.invoices, 'inv');
   const warn = document.getElementById('mf-import-dup-warning');
   if(dups.length){
     warn.style.display='';
