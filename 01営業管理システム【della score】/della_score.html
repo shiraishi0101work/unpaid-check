@@ -702,6 +702,79 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <span id="settings-saved" style="margin-left:12px;color:var(--green);font-size:13px;display:none">✓ 保存しました</span>
     </div>
   </div>
+
+  <!-- MF連携ルール一覧 -->
+  <div class="section" style="max-width:780px;margin-top:16px">
+    <div class="sec-hdr"><span class="sec-title">MFクラウド連携 重複チェックルール</span></div>
+    <div style="padding:16px">
+      <table style="table-layout:auto">
+        <colgroup><col style="width:40px"><col style="width:180px"><col><col style="width:100px"></colgroup>
+        <thead><tr>
+          <th>#</th><th>ルール名</th><th>判定条件</th><th>設定値</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text3);font-size:12px">①</td>
+            <td style="font-weight:600">請求書番号一致</td>
+            <td>MFの請求書番号 ＝ DellaScoreの請求書番号</td>
+            <td><span class="badge bo">有効</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text3);font-size:12px">②</td>
+            <td style="font-weight:600">取引先名 ＋ 件名一致</td>
+            <td>法人格を除いた取引先名 AND スペース統一後の件名が両方一致</td>
+            <td><span class="badge bo">有効</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text3);font-size:12px">③</td>
+            <td style="font-weight:600">取引先名 ＋ 金額一致</td>
+            <td>法人格を除いた取引先名 AND 税抜金額（円単位）が両方一致</td>
+            <td><span class="badge bo">有効</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:20px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;text-transform:uppercase">正規化ルール</div>
+      <table style="table-layout:auto">
+        <colgroup><col style="width:160px"><col></colgroup>
+        <thead><tr><th>対象</th><th>処理内容</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600">取引先名</td>
+            <td>株式会社 / 有限会社 / 合同会社 / 合資会社 / 一般社団法人 / 一般財団法人 / 公益社団法人 / 公益財団法人 を除去して比較</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">件名</td>
+            <td>半角・全角スペースの連続をスペース1つに統一して比較（スペースの入り方の違いは同一とみなす）</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">日付</td>
+            <td>「/」区切りと「-」区切りを統一して比較</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:20px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;text-transform:uppercase">スキップルール</div>
+      <table style="table-layout:auto">
+        <colgroup><col style="width:200px"><col></colgroup>
+        <thead><tr><th>ルール</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600">個別スキップ</td>
+            <td>「スキップ」ボタンを押した請求書は、MF再同期後も二度と要確認に表示されない</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">完全一致スキップ</td>
+            <td>取引先・金額・請求日・支払期限・件名 すべてが一致する場合のみ対象。「完全一致を全件スキップ」ボタンで一括処理</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">取込み済み除外</td>
+            <td>DellaScoreに取込み済みの請求書（mf_idまたは請求書番号が一致）はMFリストに表示されない</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- 固定請求・支払い -->
