@@ -2143,6 +2143,24 @@ function runErrCheck(){
     headers:['取引先','件名','金額','請求日']
   });
 
+  // ── 6. 旧形式MF取込み済み見積書（mf_quote_idが残存） ───────
+  const oldMfQuo=D.prospects.filter(p=>p.mf_quote_id);
+  sections.push({
+    title:'⑥ 旧形式MF取込み済み見積書（「→ 見込みに移す」が必要なもの）',
+    ok: oldMfQuo.length===0,
+    summary: oldMfQuo.length===0
+      ? 'なし（全件OK）'
+      : `${oldMfQuo.length}件が旧形式で残っています。削除するか「見込みに移す」で整理できます`,
+    rows: oldMfQuo.map(p=>[
+      p.client, p.name||'-', fmt(p.amount), p.issued||'-',
+      `<button class="btn btn-sm btn-danger" style="font-size:11px;padding:2px 8px" onclick="deleteProspectById('${p.id}')">削除</button>
+       <button class="btn btn-sm" style="font-size:11px;padding:2px 8px;color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteToProspect('${p.id}');runErrCheck()">見込みに移す</button>`
+    ]),
+    headers:['取引先','件名','金額','見積日','操作'],
+    action: oldMfQuo.length ? `<button class="btn btn-sm btn-danger" onclick="deleteAllMfQuoDone();runErrCheck()">全て削除</button>
+      <button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteAllOldMfQuotes();runErrCheck()">全て見込みに移す</button>` : ''
+  });
+
   // ── 描画 ────────────────────────────────────────────
   const okCount=sections.filter(s=>s.ok).length;
   const ngCount=sections.length-okCount;
