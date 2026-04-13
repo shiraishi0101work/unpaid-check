@@ -1084,7 +1084,8 @@ function save(){
       recurringInv: D.recurringInv, recurringPur: D.recurringPur,
       clients: D.clients,
       mf_invoices: D.mfInvoices, mf_quotes: D.mfQuotes,
-      importedMfInvIds: D.importedMfInvIds
+      importedMfInvIds: D.importedMfInvIds,
+      settings: D.settings
     })
   }).catch(e => console.error('保存失敗:', e));
 }
