@@ -294,6 +294,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         <input id="search-prospects" placeholder="🔍 検索..." oninput="_prospectPage=0;renderProspects()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
         <select id="owner-prospects" onchange="_prospectPage=0;renderProspects()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
         <select id="prospect-month-filter" onchange="_prospectPage=0;renderProspects()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-prospects" onchange="_prospectPage=0;renderProspects()"> 担当者未入力のみ</label>
         <select id="csv-prospect-month" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月でCSV出力</option></select>
         <button class="btn btn-sm" onclick="exportProspectCSV()">↓ CSV</button>
         <div class="chip-row">
