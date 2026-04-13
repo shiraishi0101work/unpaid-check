@@ -1879,7 +1879,7 @@ function renderMfQuotesPage(){
       em.style.display='none';
       const ownerMapQ=buildOwnerMap();
       tb.innerHTML=pending.map(m=>{
-        const dups=mfDupCheck(m.partner,m.total_price,m.quote_date,D.prospects,'issued');
+        const dups=mfDupCheck(m,D.prospects,'quo');
         const dupBadge=dups.length?`<span class="badge biv" title="「${dups[0].client}」と重複の可能性">⚠ 要確認</span> `:'';
         const owner=ownerMapQ[m.partner]||'';
         return `<tr>
