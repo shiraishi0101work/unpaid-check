@@ -2439,7 +2439,7 @@ function filterOwnerDetail(name, chipEl){
   // omを再取得（D.currentMonthから）
   const m=D.currentMonth;
   const isPF=D.monthlyMode==='PF';
-  const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
+  const mP=isPF?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
   const mI=isPF?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const om={};
