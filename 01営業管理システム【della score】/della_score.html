@@ -1673,8 +1673,8 @@ function skipAllPerfectMatch(type){
   }
   const ids = new Set(perfectIds);
   if(!confirm(`取引先・金額・${isInv?'請求日・支払期限':'見積日・有効期限'}・件名がすべて一致する${perfectIds.length}件をスキップします。\nよろしいですか？`)) return;
-  if(isInv) D.mfInvoices=(D.mfInvoices||[]).filter(m=>!ids.has(m.id));
-  else      D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>!ids.has(m.id));
+  if(!D.mfSkipCounts) D.mfSkipCounts = {};
+  ids.forEach(id=>{ D.mfSkipCounts[id] = (D.mfSkipCounts[id]||0) + 1; });
   save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
 }
 
