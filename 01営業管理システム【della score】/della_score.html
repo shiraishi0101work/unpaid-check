@@ -1573,6 +1573,48 @@ function skipMfDup(type, mfId){
   else             D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>m.id!==mfId);
   save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
 }
+function forceImportMfDup(type, mfId){
+  const ownerMap=buildOwnerMap();
+  if(type==='inv'){
+    const m=(D.mfInvoices||[]).find(x=>x.id===mfId); if(!m) return;
+    if(!confirm(`「${m.partner}」を別件として売上に取込みます。\n既存データとは異なる請求書として登録されます。`)) return;
+    D.importedMfInvIds.push(m.id);
+    D.invoices.unshift({id:uid(),billing_number:m.billing_number||'',client:m.partner||'',name:m.title||'',
+      amount:m.total_price||0,tax:m.tax||0,issued:m.billing_date||'',due:m.due_date||'',
+      bank:'',items:'',owner:ownerMap[m.partner]||'',prospectId:''});
+  } else {
+    const m=(D.mfQuotes||[]).find(x=>x.id===mfId); if(!m) return;
+    if(!confirm(`「${m.partner}」を別件として見込みに取込みます。\n既存データとは異なる見積書として登録されます。`)) return;
+    D.importedMfQuoIds.push(m.id);
+    D.prospects.unshift({id:uid(),quote_number:m.quote_number||'',client:m.partner||'',name:m.title||'',
+      amount:m.total_price||0,cost:0,issued:m.quote_date||'',deadline:m.expired_date||'',
+      owner:ownerMap[m.partner]||'',status:'prospect',memo:'',items:''});
+  }
+  save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
+}
+// 完全一致（取引先・金額・請求日・支払期限・件名）の全件スキップ
+function skipAllPerfectMatch(type){
+  const isInv = type==='inv';
+  const mfList   = isInv ? (D.mfInvoices||[]) : (D.mfQuotes||[]);
+  const existing = isInv ? D.invoices : D.prospects;
+  const perfectIds = mfList.filter(m=>{
+    const matches = mfDupCheck(m, existing, type);
+    return matches.some(ex=>{
+      const nameOk   = normCompany(m.partner) === normCompany(ex.client);
+      const amtOk    = Math.round(parseFloat(m.total_price)||0) === Math.round(parseFloat(ex.amount)||0);
+      const dateOk   = isInv ? (m.billing_date||'') === (ex.issued||'') : (m.quote_date||'') === (ex.issued||'');
+      const dueOk    = isInv ? (m.due_date||'') === (ex.due||'') : (m.expired_date||'') === (ex.deadline||'');
+      const titleOk  = (m.title||'').trim().toLowerCase() === (ex.name||'').trim().toLowerCase();
+      return nameOk && amtOk && dateOk && dueOk && titleOk;
+    });
+  }).map(m=>m.id);
+  if(!perfectIds.length){ alert('完全一致の件がありません。'); return; }
+  const ids = new Set(perfectIds);
+  if(!confirm(`取引先・金額・${isInv?'請求日・支払期限':'見積日・有効期限'}・件名がすべて一致する${perfectIds.length}件をスキップします。\nよろしいですか？`)) return;
+  if(isInv) D.mfInvoices=(D.mfInvoices||[]).filter(m=>!ids.has(m.id));
+  else      D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>!ids.has(m.id));
+  save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
+}
 
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
