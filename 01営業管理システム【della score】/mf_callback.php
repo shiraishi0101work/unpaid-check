@@ -78,15 +78,16 @@ while (true) {
         if ($created === '') continue; // created_atなしはスキップ
         if ($created < $DATE_FROM || $created > $DATE_TO) continue;
         $mfInvoices[] = [
-            'id'           => $b['id'] ?? '',
-            'title'        => $b['title'] ?? '',
-            'billing_date' => str_replace('/', '-', $b['billing_date'] ?? ''),
-            'due_date'     => str_replace('/', '-', $b['due_date'] ?? ''),
-            'total_price'  => (float)($b['subtotal_price'] ?? $b['total_price'] ?? 0),
-            'tax'          => (float)($b['tax_price'] ?? 0),
-            'status'       => $b['payment_status'] ?? '',
-            'partner'      => $b['partner_name'] ?? '',
-            'created_at'   => $created,
+            'id'             => $b['id'] ?? '',
+            'billing_number' => $b['billing_number'] ?? '',
+            'title'          => $b['title'] ?? '',
+            'billing_date'   => str_replace('/', '-', $b['billing_date'] ?? ''),
+            'due_date'       => str_replace('/', '-', $b['due_date'] ?? ''),
+            'total_price'    => (float)($b['subtotal_price'] ?? $b['total_price'] ?? 0),
+            'tax'            => (float)($b['tax_price'] ?? 0),
+            'status'         => $b['payment_status'] ?? '',
+            'partner'        => $b['partner_name'] ?? '',
+            'created_at'     => $created,
         ];
     }
     $paging = $res['pagination'] ?? $res['meta'] ?? [];
