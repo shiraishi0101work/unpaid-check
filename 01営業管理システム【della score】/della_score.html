@@ -1590,7 +1590,7 @@ function renderMfInvoicesPage(){
     if(sameContent) return false;
     return !q || (m.partner+m.title).toLowerCase().includes(q);
   });
-  if(_mfInvDupFilter) pending = pending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0);
+  if(_mfInvDupFilter) pending = pending.filter(m=>mfDupCheck(m,D.invoices,'inv').length>0);
   const done = D.invoices.filter(i=>i.mf_id&&(!q||(i.client+i.name).toLowerCase().includes(q)));
 
   const cnt=document.getElementById('mf-inv-page-count');
