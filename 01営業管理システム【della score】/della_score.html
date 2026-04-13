@@ -1834,7 +1834,7 @@ function bulkImportMfQuotes(){
   const targets = (D.mfQuotes||[]).filter(q=>{
     if(imported.has(q.id)) return false;
     if(q.quote_number && importedQuoNums.has(q.quote_number)) return false;
-    const dups = mfDupCheck(q.partner, q.total_price, q.quote_date, D.prospects, 'issued');
+    const dups = mfDupCheck(q, D.prospects, 'quo');
     return dups.length === 0;
   });
   if(!targets.length){ alert('一括取込みできる見積書がありません（すべて取込み済みまたは要確認）'); return; }
