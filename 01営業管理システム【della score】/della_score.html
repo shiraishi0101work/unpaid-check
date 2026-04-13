@@ -2472,21 +2472,22 @@ function renderOwnerDetail(om, filterName){
 }
 
 let _monthlyInvPage=0;
-function chMonthlyInvPage(d){
-  _monthlyInvPage+=d;
-  renderMonthly();
-}
+let _monthlyPuPage=0;
+let _ownerInvPages={};
+function chMonthlyInvPage(d){ _monthlyInvPage+=d; renderMonthly(); }
+function chMonthlyPuPage(d){ _monthlyPuPage+=d; renderMonthly(); }
+function setOwnerInvPage(name,page){ _ownerInvPages[name]=page; filterOwnerDetail(name,null); }
 function chMonth(d){
   const[y,m]=D.currentMonth.split('-').map(Number);
   const dt=new Date(y,m-1+d,1);
   D.currentMonth=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
-  _monthlyInvPage=0;
+  _monthlyInvPage=0; _monthlyPuPage=0; _ownerInvPages={};
   renderMonthly();
 }
 
 function setMonthlyMode(mode){
   D.monthlyMode=mode;
-  _monthlyInvPage=0;
+  _monthlyInvPage=0; _monthlyPuPage=0; _ownerInvPages={};
   ['pf-btn','chart-pf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='PF'?' btn-primary':'');});
   ['cf-btn','chart-cf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='CF'?' btn-primary':'');});
   renderMonthly();
