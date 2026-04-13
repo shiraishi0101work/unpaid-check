@@ -178,7 +178,17 @@ if ($action === 'add_order') {
         ':status' => $body['status'] ?? '未発注',
         ':memo'   => $body['memo']   ?? '',
     ]);
-    echo json_encode(['ok'=>true, 'id'=>(int)$db->lastInsertId()]);
+    $newId = (int)$db->lastInsertId();
+    // DellaScore仕入れに同期
+    dsSyncAdd([
+        'id'    => $newId,
+        'date'  => $body['date']   ?? date('Y-m-d'),
+        'name'  => $body['name']   ?? '',
+        'shop'  => $body['shop']   ?? '',
+        'price' => (int)($body['price'] ?? 0),
+        'qty'   => (int)($body['qty']   ?? 1),
+    ]);
+    echo json_encode(['ok'=>true, 'id'=>$newId]);
     exit;
 }
 
@@ -186,8 +196,11 @@ if ($action === 'add_order') {
 if ($action === 'del_order') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
     $db = getDb();
+    $id = (int)$body['id'];
     $s = $db->prepare('DELETE FROM orders WHERE id=?');
-    $s->execute([(int)$body['id']]);
+    $s->execute([$id]);
+    // DellaScore仕入れからも削除
+    dsSyncDel($id);
     echo json_encode(['ok'=>true]);
     exit;
 }
