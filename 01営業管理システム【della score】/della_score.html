@@ -2443,18 +2443,30 @@ function renderOwnerDetail(om, filterName){
         <span class="sec-title" style="font-size:13px">${name}</span>
         <span style="font-size:12px;color:var(--text3)">売上 ${fmt(v.sales)} / 税込 ${fmt(v.sales+v.salesTax)} / 仕入 ${fmt(v.purchase)}</span>
       </div>
-      ${v.invItems.length?`<div style="padding:6px 12px 0;font-size:10px;font-weight:600;color:var(--text3)">請求書（${v.invItems.length}件）</div>
-      <table style="width:100%;border-collapse:collapse"><thead><tr>
-        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">請求先</th>
-        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">案件名</th>
-        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">金額</th>
-        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">支払期限</th>
-      </tr></thead><tbody>${v.invItems.map(i=>`<tr style="font-size:12px">
-        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${i.client}</td>
-        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${i.name||'-'}</td>
-        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${fmtTax(i.amount,i.tax)}</td>
-        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border);color:var(--text2)">${fmtD(i.due)}</td>
-      </tr>`).join('')}</tbody></table>`:''}
+      ${v.invItems.length?(()=>{
+        const PG=20;
+        const pg=_ownerInvPages[name]||0;
+        const tp=Math.max(1,Math.ceil(v.invItems.length/PG));
+        const safePg=Math.min(pg,tp-1);
+        const pageItems=v.invItems.slice(safePg*PG,(safePg+1)*PG);
+        const pagerHtml=tp>1?`<span style="font-size:10px;color:var(--text3)">${safePg+1}/${tp}ページ</span>
+          <button class="btn btn-sm" style="padding:1px 6px;font-size:10px" ${safePg===0?'disabled':''} onclick="setOwnerInvPage('${name}',${safePg-1})">‹</button>
+          <button class="btn btn-sm" style="padding:1px 6px;font-size:10px" ${safePg>=tp-1?'disabled':''} onclick="setOwnerInvPage('${name}',${safePg+1})">›</button>`:'';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:6px 12px 0">
+          <span style="font-size:10px;font-weight:600;color:var(--text3)">請求書（${v.invItems.length}件）</span>${pagerHtml}
+        </div>
+        <table style="width:100%;border-collapse:collapse"><thead><tr>
+          <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">請求先</th>
+          <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">案件名</th>
+          <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">金額</th>
+          <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">支払期限</th>
+        </tr></thead><tbody>${pageItems.map(i=>`<tr style="font-size:12px">
+          <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${i.client}</td>
+          <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${i.name||'-'}</td>
+          <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${fmtTax(i.amount,i.tax)}</td>
+          <td style="padding:4px 8px;border-bottom:0.5px solid var(--border);color:var(--text2)">${fmtD(i.due)}</td>
+        </tr>`).join('')}</tbody></table>`;
+      })():''}
       ${v.proItems.length?`<div style="padding:6px 12px 0;font-size:10px;font-weight:600;color:var(--text3)">見込み（${v.proItems.length}件）</div>
       <table style="width:100%;border-collapse:collapse"><thead><tr>
         <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">取引先</th>
