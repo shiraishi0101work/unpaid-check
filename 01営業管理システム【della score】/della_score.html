@@ -548,8 +548,17 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         <button class="btn btn-primary btn-sm" onclick="openInvoiceModal()">＋ 登録</button>
       </div>
     </div>
-    <table><colgroup><col style="width:13%"><col style="width:16%"><col style="width:14%"><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:9%"></colgroup>
-      <thead><tr><th>請求先</th><th>案件名</th><th>金額（税抜/税込）</th><th>発行日</th><th>支払期限</th><th>担当者</th><th>ステータス</th><th></th></tr></thead>
+    <div id="inv-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin-bottom:8px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="inv-bulk-sel-count" style="font-size:13px;font-weight:600;color:#1D4ED8"></span>
+      <input id="inv-bulk-owner-input" list="owners-dl" placeholder="担当者名を入力..." style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:160px">
+      <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerInvoices()">選択した請求書に担当者を設定</button>
+      <button class="btn btn-sm btn-ghost" onclick="clearInvSelection()">選択解除</button>
+    </div>
+    <table><colgroup><col style="width:28px"><col style="width:12%"><col style="width:15%"><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"></colgroup>
+      <thead><tr>
+        <th><input type="checkbox" id="inv-chk-all" onchange="document.querySelectorAll('.inv-row-chk').forEach(c=>c.checked=this.checked);updateInvBulkBar()" style="cursor:pointer"></th>
+        <th>請求先</th><th>案件名</th><th>金額（税抜/税込）</th><th>発行日</th><th>支払期限</th><th>担当者</th><th>ステータス</th><th></th>
+      </tr></thead>
       <tbody id="i-tbody"></tbody>
     </table>
     <div class="empty" id="i-empty">請求書がありません。</div>
