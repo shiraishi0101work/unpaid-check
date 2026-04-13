@@ -1603,7 +1603,7 @@ function renderMfInvoicesPage(){
       em.style.display='none';
       const ownerMap=buildOwnerMap();
       tb.innerHTML=pending.map(m=>{
-        const dups=mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued');
+        const dups=mfDupCheck(m,D.invoices,'inv');
         const dupBadge=dups.length?`<span class="badge biv" title="「${dups[0].client}」と重複の可能性">⚠ 要確認</span> `:'';
         const owner=ownerMap[m.partner]||'';
         return `<tr>
