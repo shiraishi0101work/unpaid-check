@@ -2195,7 +2195,7 @@ function runErrCheck(){
   });
 
   // ── 2. 月別：月次管理 vs 請求書ページの突合 ─────────────
-  const allMonths=[...new Set(D.invoices.map(i=>(i.issued||i.due||'').slice(0,7)).filter(Boolean))].sort();
+  const allMonths=[...new Set(D.invoices.map(i=>(i.due||i.issued||'').slice(0,7)).filter(Boolean))].sort();
   const monthRows=[];
   let monthMismatch=false;
   allMonths.forEach(m=>{
