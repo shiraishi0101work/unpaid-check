@@ -2095,8 +2095,8 @@ function runErrCheck(){
     summary: noDate.length===0
       ? 'なし（全件OK）'
       : `${noDate.length}件が発行日未設定のため月次管理のどの月にも入りません`,
-    rows: noDate.map(i=>[i.client, i.name||'-', fmt(i.amount), i.owner||'（未設定）']),
-    headers:['請求先','案件名','金額（税抜）','担当者'],
+    rows: noDate.map(i=>[i.billing_number||'-', i.client, i.name||'-', fmt(i.amount), i.owner||'（未設定）']),
+    headers:['請求書番号','請求先','案件名','金額（税抜）','担当者'],
     action: noDate.length ? `<button class="btn btn-sm btn-ghost" onclick="nav('invoices',document.querySelectorAll('.nav-item')[4])">請求書ページで確認</button>` : ''
   });
 
