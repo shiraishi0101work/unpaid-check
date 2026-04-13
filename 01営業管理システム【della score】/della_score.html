@@ -1494,8 +1494,7 @@ function renderMfDupCards(type){
     const numKey  = isInv?'billing_number':'quote_number';
     const dateField = isInv?m.billing_date:m.quote_date;
     const existing  = isInv ? D.invoices : D.prospects;
-    const existDateF= 'issued';
-    const matches   = mfDupCheck(m.partner, m.total_price, dateField, existing, existDateF);
+    const matches   = mfDupCheck(m, existing, type);
     const ex        = matches[0];
     const exNum     = isInv?(ex.billing_number||'-'):(ex.quote_number||'-');
     const exDate    = ex.issued||ex.due||'-';
