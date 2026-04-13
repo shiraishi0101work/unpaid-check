@@ -1026,8 +1026,9 @@ async function loadFromServer(){
     if('recurringInv' in d) D.recurringInv = d.recurringInv || [];
     if('recurringPur' in d) D.recurringPur = d.recurringPur || [];
     if('clients'      in d) D.clients      = d.clients      || [];
-    if('mf_invoices'  in d) D.mfInvoices   = d.mf_invoices  || [];
-    if('mf_quotes'    in d) D.mfQuotes     = d.mf_quotes    || [];
+    if('mf_invoices'       in d) D.mfInvoices       = d.mf_invoices        || [];
+    if('mf_quotes'         in d) D.mfQuotes         = d.mf_quotes          || [];
+    if('importedMfInvIds'  in d) D.importedMfInvIds = d.importedMfInvIds   || [];
   } catch(e){ console.warn('サーバー接続失敗、初期データを使用:', e); }
 }
 function save(){
