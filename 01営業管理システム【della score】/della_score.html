@@ -1276,10 +1276,22 @@ function mfDupCheck(partner, amount, dateStr, list, dateField) {
 }
 
 // ── MF請求書専用ページ ────────────────────────────────
+let _mfInvDupFilter = false;
+function toggleMfInvDupFilter(){
+  _mfInvDupFilter = !_mfInvDupFilter;
+  const btn = document.getElementById('mf-inv-dup-filter');
+  if(btn){
+    btn.style.color = _mfInvDupFilter ? '#b45309' : 'var(--text2)';
+    btn.style.borderColor = _mfInvDupFilter ? '#b45309' : 'var(--border2)';
+    btn.style.background = _mfInvDupFilter ? '#fff7ed' : '';
+  }
+  renderMfInvoicesPage();
+}
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
   const imported = new Set(D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id));
-  const pending = (D.mfInvoices||[]).filter(m=>!imported.has(m.id)&&(!q||(m.partner+m.title).toLowerCase().includes(q)));
+  let pending = (D.mfInvoices||[]).filter(m=>!imported.has(m.id)&&(!q||(m.partner+m.title).toLowerCase().includes(q)));
+  if(_mfInvDupFilter) pending = pending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0);
   const done = D.invoices.filter(i=>i.mf_id&&(!q||(i.client+i.name).toLowerCase().includes(q)));
 
   const cnt=document.getElementById('mf-inv-page-count');
