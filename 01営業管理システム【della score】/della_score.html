@@ -577,6 +577,41 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
   </div>
 </div>
 
+<!-- 設定 -->
+<div class="page" id="page-settings">
+  <div class="section" style="max-width:480px">
+    <div class="sec-hdr"><span class="sec-title">基本設定</span></div>
+    <div class="form-grid" style="margin-top:16px">
+      <div class="form-group fg-full">
+        <label>事業者名</label>
+        <input id="set-biz-name" placeholder="例：株式会社〇〇" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>事業年度 開始月</label>
+        <select id="set-fiscal-start" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text)">
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>事業年度 締め月</label>
+        <select id="set-fiscal-end" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text)">
+          <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <button class="btn btn-primary" onclick="saveSettings()">保存する</button>
+      <span id="settings-saved" style="margin-left:12px;color:var(--green);font-size:13px;display:none">✓ 保存しました</span>
+    </div>
+  </div>
+</div>
+
 <!-- 固定請求・支払い -->
 <div class="page" id="page-recurring">
   <div class="two-col">
