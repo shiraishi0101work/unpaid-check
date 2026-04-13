@@ -1,6 +1,6 @@
 <?php
 session_start();
-set_time_limit(300); // 最大5分
+set_time_limit(300);
 
 define('MF_CLIENT_ID',     '236289199630974');
 define('MF_CLIENT_SECRET', 'zocDfXdqbj-iVtFADIxhLUHSepDCKVqzdP0Z_FdKTa7yAcs03StPylEyIxyxm17_N8fKSenIN8w3JlEQMRrOhw');
@@ -46,40 +46,56 @@ if ($DEBUG) {
     exit;
 }
 
-// ── DB接続・既存データ読み込み ──
+// ── DB接続 ──
 $db = new PDO('sqlite:' . __DIR__ . '/della_score.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE IF NOT EXISTS store (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
 
-// 既存のmf_invoices・mf_quotesを読み込み（重複スキップ用）
-function loadExisting($db, $key) {
+// 既存データをフル読み込み
+function loadFull($db, $key) {
     $s = $db->prepare('SELECT value FROM store WHERE key=?');
     $s->execute([$key]);
     $r = $s->fetch(PDO::FETCH_ASSOC);
-    if (!$r) return [];
-    $arr = json_decode($r['value'], true) ?: [];
-    $ids = [];
-    foreach ($arr as $item) { if (!empty($item['id'])) $ids[$item['id']] = true; }
-    return $ids;
+    return $r ? (json_decode($r['value'], true) ?: []) : [];
 }
 
-$existingInvIds = loadExisting($db, 'mf_invoices');
-$existingQuoIds = loadExisting($db, 'mf_quotes');
+$existingInvoices = loadFull($db, 'mf_invoices');
+$existingQuotes   = loadFull($db, 'mf_quotes');
 
-// ── 請求書取得（全ページスキャン・選択期間で完全上書き） ──
-$mfInvoices = [];
+// 既存データをキー別マップに変換（id / billing_number / quote_number）
+function buildMaps($arr, $numKey) {
+    $byId = []; $byNum = [];
+    foreach ($arr as $item) {
+        if (!empty($item['id']))     $byId[$item['id']]   = $item;
+        if (!empty($item[$numKey]))  $byNum[$item[$numKey]] = $item;
+    }
+    return [$byId, $byNum];
+}
+
+[$existingInvById, $existingInvByNum] = buildMaps($existingInvoices, 'billing_number');
+[$existingQuoById, $existingQuoByNum] = buildMaps($existingQuotes,   'quote_number');
+
+// ── 請求書取得・マージ ──
+$newInvIds  = [];  // 今回の同期で取得したid
+$newInvNums = [];  // 今回の同期で取得したbilling_number
+$mergedInvoices = $existingInvoices; // まず既存を全部入れる
 $page = 1;
+$addedInv = 0; $updatedInv = 0;
+
 while (true) {
     $params = http_build_query(['page' => $page, 'per_page' => 100]);
     $res = mf_get(MF_API_BASE . '/billings?' . $params, $token);
     if (empty($res['data'])) break;
     foreach ($res['data'] as $b) {
         $created = substr($b['created_at'] ?? '', 0, 10);
-        if ($created === '') continue; // created_atなしはスキップ
+        if ($created === '') continue;
         if ($created < $DATE_FROM || $created > $DATE_TO) continue;
-        $mfInvoices[] = [
-            'id'             => $b['id'] ?? '',
-            'billing_number' => $b['billing_number'] ?? '',
+
+        $id     = $b['id'] ?? '';
+        $bilNum = $b['billing_number'] ?? '';
+        $item   = [
+            'id'             => $id,
+            'billing_number' => $bilNum,
             'title'          => $b['title'] ?? '',
             'billing_date'   => str_replace('/', '-', $b['billing_date'] ?? ''),
             'due_date'       => str_replace('/', '-', $b['due_date'] ?? ''),
@@ -89,6 +105,29 @@ while (true) {
             'partner'        => $b['partner_name'] ?? '',
             'created_at'     => $created,
         ];
+
+        if ($id) $newInvIds[$id] = true;
+        if ($bilNum) $newInvNums[$bilNum] = true;
+
+        // 既存に同じidがある → 更新
+        if ($id && isset($existingInvById[$id])) {
+            foreach ($mergedInvoices as &$m) {
+                if ($m['id'] === $id) { $m = array_merge($m, $item); $updatedInv++; break; }
+            }
+            unset($m);
+        }
+        // 既存に同じbilling_numberがある（idは別） → 更新
+        elseif ($bilNum && isset($existingInvByNum[$bilNum])) {
+            foreach ($mergedInvoices as &$m) {
+                if (($m['billing_number'] ?? '') === $bilNum) { $m = array_merge($m, $item); $updatedInv++; break; }
+            }
+            unset($m);
+        }
+        // 新規
+        else {
+            $mergedInvoices[] = $item;
+            $addedInv++;
+        }
     }
     $paging = $res['pagination'] ?? $res['meta'] ?? [];
     if (empty($paging) || ($paging['current_page'] ?? 1) >= ($paging['total_pages'] ?? 1)) break;
@@ -96,9 +135,13 @@ while (true) {
 }
 $invPageCount = $page;
 
-// ── 見積書取得（全ページスキャン・選択期間で完全上書き） ──
-$mfQuotes = [];
+// ── 見積書取得・マージ ──
+$newQuoIds  = [];
+$newQuoNums = [];
+$mergedQuotes = $existingQuotes;
 $page = 1;
+$addedQuo = 0; $updatedQuo = 0;
+
 while (true) {
     $params = http_build_query(['page' => $page, 'per_page' => 100]);
     $res = mf_get(MF_API_BASE . '/quotes?' . $params, $token);
@@ -107,8 +150,12 @@ while (true) {
         $created = substr($q['created_at'] ?? '', 0, 10);
         if ($created === '') continue;
         if ($created < $DATE_FROM || $created > $DATE_TO) continue;
-        $mfQuotes[] = [
-            'id'           => $q['id'] ?? '',
+
+        $id     = $q['id'] ?? '';
+        $quoNum = $q['quote_number'] ?? '';
+        $item   = [
+            'id'           => $id,
+            'quote_number' => $quoNum,
             'title'        => $q['title'] ?? '',
             'quote_date'   => str_replace('/', '-', $q['quote_date'] ?? ''),
             'expired_date' => str_replace('/', '-', $q['expired_date'] ?? ''),
@@ -117,6 +164,24 @@ while (true) {
             'partner'      => $q['partner_name'] ?? '',
             'created_at'   => $created,
         ];
+
+        if ($id) $newQuoIds[$id] = true;
+        if ($quoNum) $newQuoNums[$quoNum] = true;
+
+        if ($id && isset($existingQuoById[$id])) {
+            foreach ($mergedQuotes as &$m) {
+                if ($m['id'] === $id) { $m = array_merge($m, $item); $updatedQuo++; break; }
+            }
+            unset($m);
+        } elseif ($quoNum && isset($existingQuoByNum[$quoNum])) {
+            foreach ($mergedQuotes as &$m) {
+                if (($m['quote_number'] ?? '') === $quoNum) { $m = array_merge($m, $item); $updatedQuo++; break; }
+            }
+            unset($m);
+        } else {
+            $mergedQuotes[] = $item;
+            $addedQuo++;
+        }
     }
     $paging = $res['pagination'] ?? $res['meta'] ?? [];
     if (empty($paging) || ($paging['current_page'] ?? 1) >= ($paging['total_pages'] ?? 1)) break;
@@ -124,22 +189,22 @@ while (true) {
 }
 $quoPageCount = $page;
 
-// ── DBに保存 ──
+// ── DBに保存（マージ結果） ──
 $stmt = $db->prepare('INSERT OR REPLACE INTO store (key, value) VALUES (?, ?)');
-$stmt->execute(['mf_invoices', json_encode($mfInvoices, JSON_UNESCAPED_UNICODE)]);
-$stmt->execute(['mf_quotes',   json_encode($mfQuotes,   JSON_UNESCAPED_UNICODE)]);
+$stmt->execute(['mf_invoices', json_encode(array_values($mergedInvoices), JSON_UNESCAPED_UNICODE)]);
+$stmt->execute(['mf_quotes',   json_encode(array_values($mergedQuotes),   JSON_UNESCAPED_UNICODE)]);
 
 // ── 完了画面 ──
 echo "<!DOCTYPE html><html lang='ja'><head><meta charset='UTF-8'><title>MF連携完了</title>
 <style>body{font-family:sans-serif;padding:40px;background:#F4F6FB;color:#1B2340}
-.box{background:#fff;border-radius:10px;padding:30px;max-width:440px;margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-h2{margin-bottom:16px}p{margin:6px 0;color:#4A5578}.new{color:#1A6644;font-weight:700}
+.box{background:#fff;border-radius:10px;padding:30px;max-width:480px;margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+h2{margin-bottom:16px}p{margin:6px 0;color:#4A5578}.new{color:#1A6644;font-weight:700}.upd{color:#1A4A8A;font-weight:700}
 a{display:inline-block;margin-top:20px;padding:9px 20px;background:#1B2B4B;color:#fff;border-radius:8px;text-decoration:none}</style>
 </head><body><div class='box'>
 <h2>マネーフォワード同期完了</h2>
 <p>期間：{$DATE_FROM} ～ {$DATE_TO}</p>
-<p>請求書：<span class='new'>" . count($mfInvoices) . " 件</span>（{$invPageCount}ページ取得）</p>
-<p>見積書：<span class='new'>" . count($mfQuotes) . " 件</span>（{$quoPageCount}ページ取得）</p>
+<p>請求書：<span class='new'>新規 {$addedInv}件</span> / <span class='upd'>更新 {$updatedInv}件</span>（合計 " . count($mergedInvoices) . "件保持）</p>
+<p>見積書：<span class='new'>新規 {$addedQuo}件</span> / <span class='upd'>更新 {$updatedQuo}件</span>（合計 " . count($mergedQuotes) . "件保持）</p>
 <a href='/della_score.html'>Della Scoreに戻る</a>
 </div></body></html>";
 
