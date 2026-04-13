@@ -2179,7 +2179,7 @@ function renderMonthly(){
   const stEl=document.getElementById('m-sales-sec-title');
   if(stEl) stEl.textContent=isPF?'受注':'売上請求書';
   const mIt=mSales.reduce((s,i)=>s+(i.amount||0),0);
-  const mTax=mSales.reduce((s,i)=>s+(i.tax||0),0);
+  const mTax=mSales.reduce((s,i)=>s+calcTax(i.amount,i.tax),0);
   const mTaxIn=mIt+mTax;
   const mPut=mPu.reduce((s,p)=>s+(p.amount||0),0);
   const mProfit=mIt-mPut;
