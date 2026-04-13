@@ -596,6 +596,14 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         </select>
       </div>
       <div class="form-group">
+        <label>消費税率（%）</label>
+        <select id="set-tax-rate" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text)">
+          <option value="0">0%（非課税）</option>
+          <option value="8">8%（軽減税率）</option>
+          <option value="10" selected>10%</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>事業年度 締め月</label>
         <select id="set-fiscal-end" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text)">
           <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
