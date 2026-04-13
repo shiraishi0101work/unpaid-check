@@ -1438,6 +1438,134 @@ function toggleMfInvDupFilter(){
   }
   renderMfInvoicesPage();
 }
+// ── MF要確認比較カード ────────────────────────────────
+function dupCardCell(mfVal, existVal, isAmount){
+  const mfStr  = isAmount ? (mfVal!=null?'¥'+Math.round(mfVal).toLocaleString('ja-JP'):'-') : (mfVal||'-');
+  const exStr  = isAmount ? (existVal!=null?'¥'+Math.round(existVal).toLocaleString('ja-JP'):'-') : (existVal||'-');
+  const diff   = isAmount ? Math.abs((parseFloat(mfVal)||0)-(parseFloat(existVal)||0)) > 1000
+                           : mfStr !== exStr && mfStr !== '-' && exStr !== '-';
+  const exStyle = diff ? 'color:var(--red);font-weight:600' : 'color:var(--green)';
+  const icon    = diff ? '⚠' : '✓';
+  return `<td style="padding:7px 12px;font-size:13px">${mfStr}</td>
+          <td style="padding:7px 12px;font-size:13px;${exStyle}">${icon} ${exStr}</td>`;
+}
+function renderMfDupCards(type){
+  // type: 'inv' | 'quo'
+  const isInv = type==='inv';
+  const secEl  = document.getElementById(isInv?'mf-inv-dup-section':'mf-quo-dup-section');
+  const cardsEl= document.getElementById(isInv?'mf-inv-dup-cards':'mf-quo-dup-cards');
+  if(!secEl||!cardsEl) return;
+
+  const imported = isInv
+    ? new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])])
+    : new Set([...D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id),...(D.importedMfQuoIds||[])]);
+  const importedNums = isInv
+    ? new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number))
+    : new Set(D.prospects.filter(p=>p.quote_number).map(p=>p.quote_number));
+
+  const mfList = isInv ? (D.mfInvoices||[]) : (D.mfQuotes||[]);
+  const dupItems = mfList.filter(m=>{
+    if(imported.has(m.id)) return false;
+    const numKey = isInv?'billing_number':'quote_number';
+    if(m[numKey] && importedNums.has(m[numKey])) return false;
+    const dateField = isInv?m.billing_date:m.quote_date;
+    const existing  = isInv ? D.invoices : D.prospects;
+    const existDateF= isInv ? 'issued' : 'issued';
+    return mfDupCheck(m.partner, m.total_price, dateField, existing, existDateF).length > 0;
+  });
+
+  if(!dupItems.length){ secEl.style.display='none'; return; }
+  secEl.style.display='';
+
+  const thS='padding:6px 12px;font-size:11px;font-weight:600;color:var(--text3);background:var(--bg2);text-align:left';
+  const labelS='padding:7px 12px;font-size:11px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)';
+
+  cardsEl.innerHTML = dupItems.map(m=>{
+    const numKey  = isInv?'billing_number':'quote_number';
+    const dateField = isInv?m.billing_date:m.quote_date;
+    const existing  = isInv ? D.invoices : D.prospects;
+    const existDateF= 'issued';
+    const matches   = mfDupCheck(m.partner, m.total_price, dateField, existing, existDateF);
+    const ex        = matches[0];
+    const exNum     = isInv?(ex.billing_number||'-'):(ex.quote_number||'-');
+    const exDate    = ex.issued||ex.due||'-';
+    const mfNum     = m[numKey]||'-';
+    const mfDate    = dateField||'-';
+    const mfDue     = isInv?(m.due_date||'-'):(m.expired_date||'-');
+    const exDue     = ex.due||ex.deadline||'-';
+
+    return `<div style="border:1.5px solid #f59e0b;border-radius:var(--r);overflow:hidden;background:#fff">
+      <div style="background:#fff7ed;padding:8px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f59e0b">
+        <span style="font-weight:700;color:#b45309">⚠ 要確認</span>
+        <span style="font-weight:600">${m.partner||'-'}</span>
+        ${matches.length>1?`<span style="font-size:11px;color:var(--text3)">${matches.length}件の既存データと一致の可能性</span>`:''}
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="${thS};width:18%"></th>
+          <th style="${thS}">MFクラウド（取込み候補）</th>
+          <th style="${thS}">DellaScore（既存データ）</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            <td style="${labelS}">${isInv?'請求書番号':'見積書番号'}</td>
+            ${dupCardCell(mfNum, exNum, false)}
+          </tr>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            <td style="${labelS}">取引先</td>
+            ${dupCardCell(m.partner, ex.client, false)}
+          </tr>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            <td style="${labelS}">金額（税抜）</td>
+            ${dupCardCell(m.total_price, ex.amount, true)}
+          </tr>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            <td style="${labelS}">${isInv?'請求日':'見積日'}</td>
+            ${dupCardCell(mfDate, exDate, false)}
+          </tr>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            <td style="${labelS}">${isInv?'支払期限':'有効期限'}</td>
+            ${dupCardCell(mfDue, exDue, false)}
+          </tr>
+          <tr>
+            <td style="${labelS}">件名</td>
+            ${dupCardCell(m.title, ex.name, false)}
+          </tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 14px;display:flex;gap:8px;background:var(--bg2)">
+        <button class="btn btn-sm btn-danger" onclick="skipMfDup('${type}','${m.id}')">✕ スキップ（同じ${isInv?'請求書':'見積書'}なので取込まない）</button>
+        <button class="btn btn-sm btn-primary" onclick="forceImportMfDup('${type}','${m.id}')">↓ 別件として取込む</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function skipMfDup(type, mfId){
+  if(!confirm('この項目をスキップします。MFリストから削除されます（売上データは変わりません）。')) return;
+  if(type==='inv') D.mfInvoices=(D.mfInvoices||[]).filter(m=>m.id!==mfId);
+  else             D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>m.id!==mfId);
+  save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
+}
+function forceImportMfDup(type, mfId){
+  const ownerMap=buildOwnerMap();
+  if(type==='inv'){
+    const m=(D.mfInvoices||[]).find(x=>x.id===mfId); if(!m) return;
+    if(!confirm(`「${m.partner}」を別件として売上に取込みます。`)) return;
+    D.importedMfInvIds.push(m.id);
+    D.invoices.unshift({id:uid(),billing_number:m.billing_number||'',client:m.partner||'',name:m.title||'',
+      amount:m.total_price||0,tax:m.tax||0,issued:m.billing_date||'',due:m.due_date||'',
+      bank:'',items:'',owner:ownerMap[m.partner]||'',prospectId:''});
+  } else {
+    const m=(D.mfQuotes||[]).find(x=>x.id===mfId); if(!m) return;
+    if(!confirm(`「${m.partner}」を別件として見込みに取込みます。`)) return;
+    D.importedMfQuoIds.push(m.id);
+    D.prospects.unshift({id:uid(),quote_number:m.quote_number||'',client:m.partner||'',name:m.title||'',
+      amount:m.total_price||0,cost:0,issued:m.quote_date||'',deadline:m.expired_date||'',
+      owner:ownerMap[m.partner]||'',status:'prospect',memo:'',items:''});
+  }
+  save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
+}
+
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
   const imported = new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id), ...(D.importedMfInvIds||[])]);
