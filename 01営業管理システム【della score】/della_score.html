@@ -3295,13 +3295,14 @@ function saveInvoice(){
   const client=g('if-client').trim();
   if(!client){alert('請求先を入力してください');return;}
   const owner=g('if-owner').trim(); const issued=g('if-issued'); const due=g('if-due');
+  const ownerItems=getOwnerItems('inv');
   if(D.editId){
     const inv=D.invoices.find(x=>x.id===D.editId);
-    if(inv){inv.client=client;inv.name=g('if-name');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');}
+    if(inv){inv.client=client;inv.name=g('if-name');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');inv.ownerItems=ownerItems;}
     D.editId=null;
   } else {
     const prospectId=g('if-prospect');
-    D.invoices.unshift({id:uid(),client,name:g('if-name'),amount:parseFloat(g('if-amount'))||null,tax:parseFloat(g('if-tax'))||null,owner,issued,due,bank:g('if-bank'),items:g('if-items'),prospectId});
+    D.invoices.unshift({id:uid(),client,name:g('if-name'),amount:parseFloat(g('if-amount'))||null,tax:parseFloat(g('if-tax'))||null,owner,issued,due,bank:g('if-bank'),items:g('if-items'),ownerItems,prospectId});
     if(prospectId){const p=D.prospects.find(x=>x.id===prospectId);if(p)p.status='invoiced';}
     upsertClient({name:client,owner,date:issued});
   }
