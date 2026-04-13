@@ -2289,7 +2289,7 @@ function errCheckDeleteMatchedMfInv(){
     if(m.billing_number && importedBilNums.has(m.billing_number)) return false;
     return true;
   });
-  const matched=pending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0);
+  const matched=pending.filter(m=>mfDupCheck(m,D.invoices,'inv').length>0);
   if(!matched.length){alert('削除対象がありません');return;}
   if(!confirm(`既存の請求書と内容が一致している${matched.length}件をMFリストから削除しますか？\n（売上データは削除されません）`))return;
   const delIds=new Set(matched.map(m=>m.id));
