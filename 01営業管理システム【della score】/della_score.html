@@ -1801,9 +1801,19 @@ function renderPurchases(){
   const tb=document.getElementById('pu-tbody');
   const em=document.getElementById('pu-empty');
   const q=(document.getElementById('search-purchases')?.value||'').toLowerCase();
+  // 発行月セレクト更新
+  const mpsel=document.getElementById('month-purchases');
+  if(mpsel){
+    const months=[...new Set(D.purchases.map(p=>(p.issued||'').slice(0,7)).filter(Boolean))].sort().reverse();
+    const mcur=mpsel.value;
+    mpsel.innerHTML='<option value="">発行月：全期間</option>'+months.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
+    if(mcur) mpsel.value=mcur;
+  }
   syncOwnerSelect('owner-purchases', D.purchases);
   const ow=getOwnerFilter('owner-purchases');
+  const mpf=mpsel?.value||'';
   let list=D.purchases;
+  if(mpf) list=list.filter(p=>(p.issued||'').slice(0,7)===mpf);
   if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')===ow);
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
