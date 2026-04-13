@@ -336,10 +336,10 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
   <div id="mf-inv-dup-section" style="display:none;margin-top:0">
     <div class="section">
       <div class="sec-hdr">
-        <span class="sec-title" style="color:#b45309">⚠ 要確認（重複の可能性） — 取込み対象外</span>
+        <span class="sec-title" style="color:#b45309">⚠ 要確認 — 既存データとの比較</span>
         <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:12px;color:var(--text3)">既存の売上と一致しているため取込みできません。確認してスキップしてください。</span>
-          <button id="mf-inv-dup-bulk-skip" class="btn btn-sm btn-danger">✕ 全件スキップ</button>
+          <span style="font-size:12px;color:var(--text3)">内容を確認して「スキップ」か「別件として取込む」を選んでください</span>
+          <button class="btn btn-sm btn-danger" onclick="skipAllPerfectMatch('inv')">✕ 完全一致を全件スキップ</button>
         </div>
       </div>
       <div id="mf-inv-dup-cards" style="display:flex;flex-direction:column;gap:12px;padding:4px 0"></div>
