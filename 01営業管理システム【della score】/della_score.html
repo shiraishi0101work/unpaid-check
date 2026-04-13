@@ -1290,7 +1290,18 @@ function toggleMfInvDupFilter(){
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
   const imported = new Set(D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id));
-  let pending = (D.mfInvoices||[]).filter(m=>!imported.has(m.id)&&(!q||(m.partner+m.title).toLowerCase().includes(q)));
+  const importedBillingNums = new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
+  let pending = (D.mfInvoices||[]).filter(m=>{
+    if(imported.has(m.id)) return false;
+    if(m.billing_number && importedBillingNums.has(m.billing_number)) return false;
+    const sameContent = D.invoices.some(i=>
+      (i.client||'').toLowerCase()===(m.partner||'').toLowerCase() &&
+      parseFloat(i.amount||0)===parseFloat(m.total_price||0) &&
+      (i.issued||'')===(m.billing_date||'')
+    );
+    if(sameContent) return false;
+    return !q || (m.partner+m.title).toLowerCase().includes(q);
+  });
   if(_mfInvDupFilter) pending = pending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0);
   const done = D.invoices.filter(i=>i.mf_id&&(!q||(i.client+i.name).toLowerCase().includes(q)));
 
