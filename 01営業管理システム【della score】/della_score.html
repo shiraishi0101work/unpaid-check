@@ -2661,6 +2661,7 @@ function renderChartTable(data){
 const staffSt={
   mode:'month', // 'month' | 'all'
   month:(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})(),
+  invPage:{}, // owner名 → 現在のページ番号(0始まり)
   activeOwner:null
 };
 
