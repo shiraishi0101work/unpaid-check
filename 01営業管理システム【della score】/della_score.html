@@ -3342,6 +3342,94 @@ function bulkSetOwnerInvoices(){
   alert(`${ids.size}件の担当者を「${owner}」に設定しました。`);
 }
 
+// ── 見込み一括担当者 ──────────────────────────────────
+function updateProBulkBar(){
+  const checked=[...document.querySelectorAll('.pro-row-chk:checked')];
+  const bar=document.getElementById('pro-bulk-owner-bar');
+  const cnt=document.getElementById('pro-bulk-sel-count');
+  if(!bar) return;
+  if(checked.length){
+    bar.style.display='flex';
+    cnt.textContent=`${checked.length}件選択中`;
+  } else {
+    bar.style.display='none';
+  }
+}
+function clearProSelection(){
+  document.querySelectorAll('.pro-row-chk').forEach(c=>c.checked=false);
+  const all=document.getElementById('pro-chk-all');
+  if(all) all.checked=false;
+  updateProBulkBar();
+}
+function bulkSetOwnerProspects(){
+  const owner=(document.getElementById('pro-bulk-owner-input')?.value||'').trim();
+  if(!owner){alert('担当者名を入力してください');return;}
+  const ids=new Set([...document.querySelectorAll('.pro-row-chk:checked')].map(c=>c.value));
+  if(!ids.size){alert('見込みを選択してください');return;}
+  D.prospects.forEach(p=>{if(ids.has(p.id)) p.owner=owner;});
+  save(); renderProspects();
+  document.getElementById('pro-bulk-owner-input').value='';
+  alert(`${ids.size}件の担当者を「${owner}」に設定しました。`);
+}
+// ── 仕入れ請求書一括担当者 ──────────────────────────────────
+function updatePurBulkBar(){
+  const checked=[...document.querySelectorAll('.pur-row-chk:checked')];
+  const bar=document.getElementById('pur-bulk-owner-bar');
+  const cnt=document.getElementById('pur-bulk-sel-count');
+  if(!bar) return;
+  if(checked.length){
+    bar.style.display='flex';
+    cnt.textContent=`${checked.length}件選択中`;
+  } else {
+    bar.style.display='none';
+  }
+}
+function clearPurSelection(){
+  document.querySelectorAll('.pur-row-chk').forEach(c=>c.checked=false);
+  const all=document.getElementById('pur-chk-all');
+  if(all) all.checked=false;
+  updatePurBulkBar();
+}
+function bulkSetOwnerPurchases(){
+  const owner=(document.getElementById('pur-bulk-owner-input')?.value||'').trim();
+  if(!owner){alert('担当者名を入力してください');return;}
+  const ids=new Set([...document.querySelectorAll('.pur-row-chk:checked')].map(c=>c.value));
+  if(!ids.size){alert('仕入れ請求書を選択してください');return;}
+  D.purchases.forEach(p=>{if(ids.has(p.id)) p.owner=owner;});
+  save(); renderPurchases();
+  document.getElementById('pur-bulk-owner-input').value='';
+  alert(`${ids.size}件の担当者を「${owner}」に設定しました。`);
+}
+// ── 受注一括担当者 ──────────────────────────────────
+function updateOrdBulkBar(){
+  const checked=[...document.querySelectorAll('.ord-row-chk:checked')];
+  const bar=document.getElementById('ord-bulk-owner-bar');
+  const cnt=document.getElementById('ord-bulk-sel-count');
+  if(!bar) return;
+  if(checked.length){
+    bar.style.display='flex';
+    cnt.textContent=`${checked.length}件選択中`;
+  } else {
+    bar.style.display='none';
+  }
+}
+function clearOrdSelection(){
+  document.querySelectorAll('.ord-row-chk').forEach(c=>c.checked=false);
+  const all=document.getElementById('ord-chk-all');
+  if(all) all.checked=false;
+  updateOrdBulkBar();
+}
+function bulkSetOwnerOrders(){
+  const owner=(document.getElementById('ord-bulk-owner-input')?.value||'').trim();
+  if(!owner){alert('担当者名を入力してください');return;}
+  const ids=new Set([...document.querySelectorAll('.ord-row-chk:checked')].map(c=>c.value));
+  if(!ids.size){alert('受注を選択してください');return;}
+  D.orders.forEach(o=>{if(ids.has(o.id)) o.owner=owner;});
+  save(); renderOrders();
+  document.getElementById('ord-bulk-owner-input').value='';
+  alert(`${ids.size}件の担当者を「${owner}」に設定しました。`);
+}
+
 // ── 品目別担当者 ──────────────────────────────────
 function addOwnerItemRow(type, item){
   const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
