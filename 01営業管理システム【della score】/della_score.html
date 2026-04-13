@@ -356,9 +356,15 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     <div class="empty" id="mf-quo-page-empty">MFから同期してください。</div>
   </div>
   <div class="section" style="margin-top:0">
-    <div class="sec-hdr"><span class="sec-title">取込み済み（MF→見込み）</span></div>
-    <table><colgroup><col style="width:17%"><col style="width:22%"><col style="width:13%"><col style="width:11%"><col style="width:11%"><col style="width:13%"><col style="width:13%"></colgroup>
-      <thead><tr><th>取引先</th><th>件名</th><th>金額</th><th>見積日</th><th>担当者</th><th>ステータス</th><th></th></tr></thead>
+    <div class="sec-hdr">
+      <span class="sec-title">取込み済み（MF→見込み）<span style="font-size:11px;color:var(--text3);margin-left:6px">※新形式では発生しません</span></span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-danger" onclick="deleteMfQuoDoneSelected()">選択削除</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAllMfQuoDone()">全て削除</button>
+      </div>
+    </div>
+    <table><colgroup><col style="width:28px"><col style="width:16%"><col style="width:21%"><col style="width:12%"><col style="width:10%"><col style="width:11%"><col style="width:12%"><col style="width:12%"></colgroup>
+      <thead><tr><th><input type="checkbox" id="mf-quo-done-chk-all" onchange="document.querySelectorAll('.mf-quo-done-chk').forEach(c=>c.checked=this.checked)" style="cursor:pointer"></th><th>取引先</th><th>件名</th><th>金額</th><th>見積日</th><th>担当者</th><th>ステータス</th><th></th></tr></thead>
       <tbody id="mf-quo-done-tbody"></tbody>
     </table>
     <div class="empty" id="mf-quo-done-empty">まだ取込んでいません。</div>
