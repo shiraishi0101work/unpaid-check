@@ -2137,8 +2137,8 @@ function runErrCheck(){
     title:'④ 金額ゼロの請求書',
     ok: zeroAmt.length===0,
     summary: zeroAmt.length===0 ? 'なし（全件OK）' : `${zeroAmt.length}件の請求書が金額0です`,
-    rows: zeroAmt.map(i=>[i.client, i.name||'-', fmtD(i.issued), i.owner||'（未設定）']),
-    headers:['請求先','案件名','発行日','担当者']
+    rows: zeroAmt.map(i=>[i.billing_number||'-', i.client, i.name||'-', fmtD(i.issued), i.owner||'（未設定）']),
+    headers:['請求書番号','請求先','案件名','発行日','担当者']
   });
 
   // ── 5. MF取込み済みIDの確認 ──────────────────────────
