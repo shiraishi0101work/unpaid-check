@@ -2221,6 +2221,7 @@ function renderPurchases(){
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
   tb.innerHTML=list.map(p=>`<tr>
+    <td><input type="checkbox" class="pur-row-chk" value="${p.id}" onchange="updatePurBulkBar()" style="cursor:pointer"></td>
     <td title="${p.supplier}" style="font-weight:600">${p.supplier}</td>
     <td title="${p.desc||''}">${p.desc||'-'}</td>
     <td class="amount">${fmtTax(p.amount,p.tax)}</td>
