@@ -1653,8 +1653,8 @@ function skipAllPerfectMatch(type){
       const exDate = normDate(ex.issued);
       const mDue   = normDate(isInv ? m.due_date : m.expired_date);
       const exDue  = normDate(isInv ? ex.due : ex.deadline);
-      const mTitle = (m.title||'').trim().toLowerCase();
-      const exTitle= (ex.name||'').trim().toLowerCase();
+      const mTitle = normTitle(m.title);
+      const exTitle= normTitle(ex.name);
       // 各項目が空でなく、かつすべて一致する場合のみ完全一致とする
       // ※支払期限は両方空の場合も「一致」とみなす
       const nameOk  = mName  && exName  && mName===exName;
