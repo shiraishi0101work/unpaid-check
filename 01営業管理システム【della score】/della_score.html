@@ -3414,11 +3414,13 @@ function editPurchase(id){
   document.getElementById('pur-fn').style.display='none';
   document.getElementById('pur-status').style.display='none';
   clearBulk('purchase');
+  clearOwnerItems('pur');
   switchPurTab('single');
   refreshOwners();
   D.editId=id;
   document.getElementById('pur-modal-title').textContent='仕入れ請求書を編集';
   sv('pf-supplier',p.supplier);sv('pf-desc',p.desc||'');sv('pf-amount',p.amount||'');sv('pf-tax',p.tax||'');sv('pf-bank',p.bank||'');sv('pf-owner',p.owner||'');sv('pf-issued',p.issued||'');sv('pf-due',p.due||'');sv('pf-status',p.status||'unpaid');
+  (p.ownerItems||[]).forEach(item=>addOwnerItemRow('pur',item));
   document.getElementById('pur-actions').innerHTML=`<button class="btn btn-danger btn-sm" onclick="delItem('purchases','${id}');closeModal('purchase-modal')">削除</button><span style="flex:1"></span><button class="btn" onclick="closeModal('purchase-modal')">キャンセル</button><button class="btn btn-primary" onclick="savePurchase()">更新する</button>`;
   openModal('purchase-modal');
 }
