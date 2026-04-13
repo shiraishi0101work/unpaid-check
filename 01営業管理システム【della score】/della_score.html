@@ -1480,10 +1480,8 @@ function renderMfDupCards(type){
     if(imported.has(m.id)) return false;
     const numKey = isInv?'billing_number':'quote_number';
     if(m[numKey] && importedNums.has(m[numKey])) return false;
-    const dateField = isInv?m.billing_date:m.quote_date;
     const existing  = isInv ? D.invoices : D.prospects;
-    const existDateF= isInv ? 'issued' : 'issued';
-    return mfDupCheck(m.partner, m.total_price, dateField, existing, existDateF).length > 0;
+    return mfDupCheck(m, existing, type).length > 0;
   });
 
   if(!dupItems.length){ secEl.style.display='none'; return; }
