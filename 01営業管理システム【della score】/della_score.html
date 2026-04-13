@@ -1573,25 +1573,6 @@ function skipMfDup(type, mfId){
   else             D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>m.id!==mfId);
   save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
 }
-function forceImportMfDup(type, mfId){
-  const ownerMap=buildOwnerMap();
-  if(type==='inv'){
-    const m=(D.mfInvoices||[]).find(x=>x.id===mfId); if(!m) return;
-    if(!confirm(`「${m.partner}」を別件として売上に取込みます。`)) return;
-    D.importedMfInvIds.push(m.id);
-    D.invoices.unshift({id:uid(),billing_number:m.billing_number||'',client:m.partner||'',name:m.title||'',
-      amount:m.total_price||0,tax:m.tax||0,issued:m.billing_date||'',due:m.due_date||'',
-      bank:'',items:'',owner:ownerMap[m.partner]||'',prospectId:''});
-  } else {
-    const m=(D.mfQuotes||[]).find(x=>x.id===mfId); if(!m) return;
-    if(!confirm(`「${m.partner}」を別件として見込みに取込みます。`)) return;
-    D.importedMfQuoIds.push(m.id);
-    D.prospects.unshift({id:uid(),quote_number:m.quote_number||'',client:m.partner||'',name:m.title||'',
-      amount:m.total_price||0,cost:0,issued:m.quote_date||'',deadline:m.expired_date||'',
-      owner:ownerMap[m.partner]||'',status:'prospect',memo:'',items:''});
-  }
-  save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
-}
 
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
