@@ -1861,8 +1861,6 @@ function renderMfQuotesPage(){
     if(mfDupCheck(m, D.prospects, 'quo').length > 0) return false; // 重複はテーブルに出さない（要確認セクションへ）
     return !q||(m.partner+m.title).toLowerCase().includes(q);
   });
-  const done=D.prospects.filter(p=>p.mf_quote_id&&(!q||(p.client+p.name).toLowerCase().includes(q)));
-
   const cnt=document.getElementById('mf-quo-page-count');
   if(cnt) cnt.textContent=pending.length+'件 未取込み';
 
