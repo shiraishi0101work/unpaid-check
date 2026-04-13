@@ -1470,6 +1470,10 @@ function renderProspects(){
 function normCompany(name){
   return (name||'').replace(/株式会社|有限会社|合同会社|合資会社|一般社団法人|一般財団法人|公益社団法人|公益財団法人/g,'').trim().toLowerCase();
 }
+// 件名のスペース（全角・半角・連続）を統一して比較
+function normTitle(s){
+  return (s||'').replace(/[\u3000\s]+/g,' ').trim().toLowerCase();
+}
 // mfItem: MFクラウドのデータ（partner/title/total_price/billing_number/quote_number）
 // existList: DellaScoreの既存リスト（invoices or prospects）
 // type: 'inv' | 'quo'
