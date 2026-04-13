@@ -2817,16 +2817,7 @@ function renderStaffOwnerContent(od){
   </div>`;
 
   if(od.invs.length){
-    const PAGE_SIZE=20;
-    const curPage=staffSt.invPage[od.name]||0;
-    const totalPages=Math.ceil(od.invs.length/PAGE_SIZE);
-    const pageInvs=od.invs.slice(curPage*PAGE_SIZE,(curPage+1)*PAGE_SIZE);
-    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:11px;font-weight:600;color:var(--text3)">請求書（${od.invs.length}件）</span>
-      ${totalPages>1?`<span style="font-size:11px;color:var(--text3)">${curPage+1} / ${totalPages} ページ</span>
-        <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" ${curPage===0?'disabled':''} onclick="setStaffInvPage('${od.name}',${curPage-1})">‹ 前へ</button>
-        <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" ${curPage>=totalPages-1?'disabled':''} onclick="setStaffInvPage('${od.name}',${curPage+1})">次へ ›</button>`:''}
-    </div>`;
+    html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px">請求書（${od.invs.length}件）</div>`;
     html+=mkTable(`<thead><tr>
       <th style="${thStyle};width:20%">請求先</th>
       <th style="${thStyle};width:22%">案件名</th>
@@ -2834,7 +2825,7 @@ function renderStaffOwnerContent(od){
       <th style="${thStyle};width:10%">発行日</th>
       <th style="${thStyle};width:10%">支払期限</th>
       <th style="${thStyle};width:22%">品目・摘要</th>
-    </tr></thead><tbody>${pageInvs.map(i=>`<tr>
+    </tr></thead><tbody>${od.invs.map(i=>`<tr>
       <td style="${tdStyle};font-weight:600">${i.client}</td>
       <td style="${tdStyle}">${i.name||'—'}</td>
       <td style="${tdStyle}">${fmtTax(i.amount,i.tax)}</td>
