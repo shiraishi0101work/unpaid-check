@@ -1554,9 +1554,9 @@ function renderMfDupCards(type){
           </tr>
         </tbody>
       </table>
-      <div style="padding:10px 14px;display:flex;gap:8px;background:var(--bg2)">
-        <button class="btn btn-sm btn-danger" onclick="skipMfDup('${type}','${m.id}')">✕ スキップ（同じ${isInv?'請求書':'見積書'}なので取込まない）</button>
-        <button class="btn btn-sm btn-primary" onclick="forceImportMfDup('${type}','${m.id}')">↓ 別件として取込む</button>
+      <div style="padding:10px 14px;display:flex;gap:8px;background:var(--bg2);align-items:center">
+        <button class="btn btn-sm btn-danger" onclick="skipMfDup('${type}','${m.id}')">✕ 同じ${isInv?'請求書':'見積書'}なのでスキップ</button>
+        <span style="font-size:11px;color:var(--text3)">※ 重複のため取込み不可。誤検知の場合は担当者に確認してください。</span>
       </div>
     </div>`;
   }).join('');
