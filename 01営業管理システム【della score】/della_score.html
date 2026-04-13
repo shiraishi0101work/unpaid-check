@@ -1603,6 +1603,7 @@ function renderMfDupCards(type){
       <div style="padding:10px 14px;display:flex;gap:8px;background:var(--bg2);align-items:center">
         <button class="btn btn-sm btn-danger" onclick="skipMfDup('${type}','${m.id}')">✕ 同じ${isInv?'請求書':'見積書'}なのでスキップ</button>
         <button class="btn btn-sm btn-primary" onclick="forceImportMfDup('${type}','${m.id}')">↓ 別件として取込む</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">残り表示 ${2-(skipCounts[m.id]||0)} 回</span>
       </div>
     </div>`;
   }).join('');
