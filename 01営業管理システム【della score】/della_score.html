@@ -2770,7 +2770,7 @@ function renderStaff(){
   // データを月でフィルタ or 全期間
   const filterByMonth=(arr,key)=>staffSt.mode==='month'?arr.filter(r=>{
     if(key==='deadline') return (r.issued||r.createdAt||r.deadline||'').startsWith(m);
-    if(key==='due') return (r.issued||r.due||'').startsWith(m);
+    if(key==='due') return (r.due||r.issued||'').startsWith(m);
     return (r[key]||'').startsWith(m);
   }):arr;
   const mI=filterByMonth(D.invoices,'due');
