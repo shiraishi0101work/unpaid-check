@@ -579,6 +579,17 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
   </div>
 </div>
 
+<!-- エラーチェック -->
+<div class="page" id="page-errcheck">
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">データ整合性チェック</span>
+      <button class="btn btn-primary" onclick="runErrCheck()">▶ チェック実行</button>
+    </div>
+    <div id="errcheck-result" style="margin-top:16px"></div>
+  </div>
+</div>
+
 <!-- 設定 -->
 <div class="page" id="page-settings">
   <div class="section" style="max-width:480px">
