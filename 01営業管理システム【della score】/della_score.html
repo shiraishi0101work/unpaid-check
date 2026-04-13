@@ -1723,7 +1723,7 @@ function confirmMfImport(){
   const clientName = document.getElementById('mf-import-client').value.trim();
   if(!clientName){ alert('取引先名を入力してください'); return; }
   D.invoices.unshift({
-    id: uid(), mf_id: m.id,
+    id: uid(), mf_id: m.id, billing_number: m.billing_number||'',
     client: clientName, name: m.title||'',
     amount: m.total_price||0, tax: 0,
     issued: m.billing_date||'', due: m.due_date||'',
