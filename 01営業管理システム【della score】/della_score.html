@@ -2240,6 +2240,7 @@ function renderPurchases(){
   const mo=D.purchases.filter(p=>(p.issued||'').startsWith(mn));
   document.getElementById('ps-month').textContent=fmt(mo.reduce((s,p)=>s+(p.amount||0),0));
   document.getElementById('ps-mc').textContent=mo.length+'件';
+  updatePurBulkBar();
 }
 
 function renderOrders(){
