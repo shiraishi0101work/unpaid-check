@@ -1353,9 +1353,21 @@ function renderProspects(){
   if(mf) list=list.filter(p=>(p.issued||'').startsWith(mf));
   if(q) list=list.filter(p=>(p.client+p.name+(p.owner||'')+(p.memo||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')=== ow);
+  // ページネーション
+  const P_SIZE=20;
+  const totalPPages=Math.max(1,Math.ceil(list.length/P_SIZE));
+  _prospectPage=Math.min(_prospectPage,totalPPages-1);
+  const pagePager=document.getElementById('prospect-pager');
+  if(pagePager){
+    pagePager.style.display=totalPPages>1?'flex':'none';
+    document.getElementById('prospect-page-lbl').textContent=`${_prospectPage+1} / ${totalPPages} ページ`;
+    document.getElementById('prospect-prev').disabled=_prospectPage===0;
+    document.getElementById('prospect-next').disabled=_prospectPage>=totalPPages-1;
+  }
+  const pageList=list.slice(_prospectPage*P_SIZE,(_prospectPage+1)*P_SIZE);
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
-  tb.innerHTML=list.map(p=>{
+  tb.innerHTML=pageList.map(p=>{
     const pf=(p.amount!=null&&p.cost!=null)?p.amount-p.cost:null;
     const pc=pf!=null?(pf>0?'var(--green)':pf<0?'var(--red)':'var(--text2)'):'var(--text2)';
     return `<tr>
