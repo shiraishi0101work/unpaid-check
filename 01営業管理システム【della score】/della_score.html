@@ -1532,10 +1532,12 @@ function renderMfDupCards(type){
     : new Set(D.prospects.filter(p=>p.quote_number).map(p=>p.quote_number));
 
   const mfList = isInv ? (D.mfInvoices||[]) : (D.mfQuotes||[]);
+  const skipCounts = D.mfSkipCounts || {};
   const dupItems = mfList.filter(m=>{
     if(imported.has(m.id)) return false;
     const numKey = isInv?'billing_number':'quote_number';
     if(m[numKey] && importedNums.has(m[numKey])) return false;
+    if((skipCounts[m.id]||0) >= 3) return false; // 3回スキップ済みは表示しない
     const existing  = isInv ? D.invoices : D.prospects;
     return mfDupCheck(m, existing, type).length > 0;
   });
