@@ -1441,6 +1441,7 @@ function renderProspects(){
     const pf=(p.amount!=null&&p.cost!=null)?p.amount-p.cost:null;
     const pc=pf!=null?(pf>0?'var(--green)':pf<0?'var(--red)':'var(--text2)'):'var(--text2)';
     return `<tr>
+      <td><input type="checkbox" class="pro-row-chk" value="${p.id}" onchange="updateProBulkBar()" style="cursor:pointer"></td>
       <td title="${p.client}" style="font-weight:600">${p.client}</td>
       <td title="${p.name||''}">${p.name||'-'}</td>
       <td class="amount">${fmt(p.amount)}</td>
