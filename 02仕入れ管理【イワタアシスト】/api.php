@@ -25,6 +25,69 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+// ── DellaScore 仕入れ連携ヘルパー ──────────────────────────────
+define('DS_DB', __DIR__ . '/../01営業管理システム【della score】/della_score.db');
+define('IW_OWNER', '岩田');
+
+function dsLoad($key) {
+    try {
+        $db = new PDO('sqlite:' . DS_DB);
+        $s  = $db->prepare('SELECT value FROM store WHERE key=?');
+        $s->execute([$key]);
+        $r = $s->fetch();
+        return $r ? (json_decode($r['value'], true) ?: []) : [];
+    } catch (Exception $e) { return []; }
+}
+
+function dsSave($key, $data) {
+    try {
+        $db = new PDO('sqlite:' . DS_DB);
+        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $db->exec('CREATE TABLE IF NOT EXISTS store (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+        $s = $db->prepare('INSERT OR REPLACE INTO store (key, value) VALUES (?, ?)');
+        $s->execute([$key, json_encode(array_values($data), JSON_UNESCAPED_UNICODE)]);
+    } catch (Exception $e) { /* DS未起動時は無視 */ }
+}
+
+// IWの発注1件 → DSの仕入れレコードに変換
+function iwToDsPurchase($iw) {
+    return [
+        'id'          => 'iw_' . $iw['id'],
+        'supplier'    => $iw['shop'] ?: '（購入先未記入）',
+        'desc'        => $iw['name'] . ($iw['qty'] > 1 ? '×' . $iw['qty'] : ''),
+        'amount'      => (int)$iw['price'] * (int)($iw['qty'] ?? 1),
+        'tax'         => 0,
+        'issued'      => $iw['date'],
+        'due'         => '',
+        'bank'        => '',
+        'items'       => '',
+        'status'      => 'unpaid',
+        'owner'       => IW_OWNER,
+        'iw_order_id' => (int)$iw['id'],
+    ];
+}
+
+// DS仕入れに追加/更新
+function dsSyncAdd($iwOrder) {
+    $purchases = dsLoad('purchases');
+    $dsId = 'iw_' . $iwOrder['id'];
+    $new  = iwToDsPurchase($iwOrder);
+    $found = false;
+    foreach ($purchases as &$p) {
+        if (($p['id'] ?? '') === $dsId) { $p = array_merge($p, $new); $found = true; break; }
+    }
+    unset($p);
+    if (!$found) $purchases[] = $new;
+    dsSave('purchases', $purchases);
+}
+
+// DS仕入れから削除
+function dsSyncDel($iwId) {
+    $purchases = dsLoad('purchases');
+    $purchases = array_filter($purchases, fn($p) => ($p['id'] ?? '') !== 'iw_' . $iwId);
+    dsSave('purchases', $purchases);
+}
+
 function getDb() {
     $db = new PDO('sqlite:' . __DIR__ . '/iwata_assist.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
