@@ -1719,8 +1719,13 @@ function renderMfQuotes(){
   const em  = document.getElementById('mf-quote-empty');
   const cnt = document.getElementById('mf-quote-count');
   if(!sec) return;
-  const imported = new Set(D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id));
-  const pending = (D.mfQuotes||[]).filter(q=>!imported.has(q.id));
+  const imported = new Set([...D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id),...(D.importedMfQuoIds||[])]);
+  const importedQuoNums = new Set(D.prospects.filter(p=>p.quote_number).map(p=>p.quote_number));
+  const pending = (D.mfQuotes||[]).filter(q=>{
+    if(imported.has(q.id)) return false;
+    if(q.quote_number && importedQuoNums.has(q.quote_number)) return false;
+    return true;
+  });
   if(!D.mfQuotes || D.mfQuotes.length===0){ sec.style.display='none'; return; }
   sec.style.display='';
   cnt.textContent = pending.length+'件 未取込み';
