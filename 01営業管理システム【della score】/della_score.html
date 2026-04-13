@@ -2535,7 +2535,12 @@ function renderMonthly(){
   document.getElementById('month-lbl').textContent=y+'年'+parseInt(mo)+'月';
   const isPF=D.monthlyMode==='PF';
   // PF = 受注の契約日 / CF = 請求書の着金月（支払期限）
-  const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
+  const mP=isPF?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
+  // CF時は見込み非表示
+  const prospectRow=document.getElementById('m-prospect-row');
+  const prospectSec=document.getElementById('m-prospect-sec');
+  if(prospectRow) prospectRow.style.display=isPF?'':'none';
+  if(prospectSec) prospectSec.style.display=isPF?'':'none';
   const mSales=isPF
     ? D.orders.filter(o=>(o.date||'').startsWith(m))
     : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
