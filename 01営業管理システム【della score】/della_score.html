@@ -305,8 +305,17 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         </div>
       </div>
     </div>
-    <table><colgroup><col style="width:12%"><col style="width:15%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:12%"></colgroup>
-      <thead><tr><th>取引先</th><th>案件名</th><th>金額</th><th>原価</th><th>粗利</th><th>発行日</th><th>期限</th><th>担当者</th><th>ステータス</th><th></th></tr></thead>
+    <div id="pro-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin-bottom:8px;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="pro-bulk-sel-count" style="font-size:13px;font-weight:600;color:#1D4ED8"></span>
+      <input id="pro-bulk-owner-input" list="owners-dl" placeholder="担当者名を入力..." style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:160px">
+      <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerProspects()">選択した見込みに担当者を設定</button>
+      <button class="btn btn-sm btn-ghost" onclick="clearProSelection()">選択解除</button>
+    </div>
+    <table><colgroup><col style="width:28px"><col style="width:11%"><col style="width:14%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"></colgroup>
+      <thead><tr>
+        <th><input type="checkbox" id="pro-chk-all" onchange="document.querySelectorAll('.pro-row-chk').forEach(c=>c.checked=this.checked);updateProBulkBar()" style="cursor:pointer"></th>
+        <th>取引先</th><th>案件名</th><th>金額</th><th>原価</th><th>粗利</th><th>発行日</th><th>期限</th><th>担当者</th><th>ステータス</th><th></th>
+      </tr></thead>
       <tbody id="p-tbody"></tbody>
     </table>
     <div class="empty" id="p-empty" style="display:none">案件がありません。</div>
