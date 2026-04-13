@@ -1397,7 +1397,7 @@ function selectedImportMfInvoices(){
   if(!confirm(targets.length+'件を取込みますか？')) return;
   targets.forEach(m=>{
     D.invoices.unshift({
-      id:uid(), mf_id:m.id,
+      id:uid(), mf_id:m.id, billing_number:m.billing_number||'',
       client:m.partner||'', name:m.title||'',
       amount:m.total_price||0, tax:m.tax||0,
       issued:m.billing_date||'', due:m.due_date||'',
