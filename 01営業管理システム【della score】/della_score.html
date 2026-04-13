@@ -3177,6 +3177,7 @@ function openInvoiceModal(){
   document.getElementById('inv-modal-title').textContent='請求書を登録（売上）';
   clr('if-client','if-name','if-amount','if-tax','if-owner','if-due','if-bank','if-items');
   sv('if-issued',today());
+  clearOwnerItems('inv');
   document.getElementById('inv-fn').style.display='none';
   const sel=document.getElementById('if-prospect');
   sel.innerHTML='<option value="">── 見込みから選択 ──</option>';
