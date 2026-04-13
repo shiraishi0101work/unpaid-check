@@ -2199,7 +2199,7 @@ function runErrCheck(){
   const monthRows=[];
   let monthMismatch=false;
   allMonths.forEach(m=>{
-    const invList=D.invoices.filter(i=>(i.issued||i.due||'').slice(0,7)===m);
+    const invList=D.invoices.filter(i=>(i.due||i.issued||'').slice(0,7)===m);
     const monthly=D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
     const invTotal=invList.reduce((s,i)=>s+(i.amount||0),0);
     const monthlyTotal=monthly.reduce((s,i)=>s+(i.amount||0),0);
