@@ -1308,7 +1308,15 @@ function renderProspects(){
   const tb=document.getElementById('p-tbody');
   const em=document.getElementById('p-empty');
   const q=(document.getElementById('search-prospects')?.value||'').toLowerCase();
-  // 発行月セレクト更新
+  // 発行月セレクト更新（フィルター用）
+  const monthSel=document.getElementById('prospect-month-filter');
+  if(monthSel){
+    const months=[...new Set(D.prospects.map(p=>(p.issued||'').slice(0,7)).filter(Boolean))].sort().reverse();
+    const curM=monthSel.value;
+    monthSel.innerHTML='<option value="">発行月：全期間</option>'+months.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
+    if(curM) monthSel.value=curM;
+  }
+  // CSV出力月セレクト更新
   const sel=document.getElementById('csv-prospect-month');
   if(sel){
     const months=[...new Set(D.prospects.map(p=>(p.issued||p.createdAt||'').slice(0,7)).filter(Boolean))].sort().reverse();
@@ -1318,8 +1326,10 @@ function renderProspects(){
   }
   syncOwnerSelect('owner-prospects', D.prospects);
   const ow=getOwnerFilter('owner-prospects');
+  const mf=monthSel?.value||'';
   let list=D.prospects;
   if(D.filterStatus!=='all') list=list.filter(p=>p.status===D.filterStatus);
+  if(mf) list=list.filter(p=>(p.issued||'').startsWith(mf));
   if(q) list=list.filter(p=>(p.client+p.name+(p.owner||'')+(p.memo||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')=== ow);
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
