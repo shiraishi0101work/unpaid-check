@@ -2075,7 +2075,7 @@ function filterOwnerDetail(name, chipEl){
   // omを再取得（D.currentMonthから）
   const m=D.currentMonth;
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
-  const mI=D.invoices.filter(i=>(i.due||'').startsWith(m));
+  const mI=D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const om={};
   const ao=(owner,field,amt,item)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);if(item)om[k][field+'Items'].push(item);};
@@ -2151,7 +2151,7 @@ function renderMonthly(){
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
   const mSales=isPF
     ? D.orders.filter(o=>(o.date||'').startsWith(m))
-    : D.invoices.filter(i=>(i.due||'').startsWith(m));
+    : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   // 説明ラベル・セクションタイトル更新
   const desc=document.getElementById('monthly-mode-desc');
@@ -2244,7 +2244,7 @@ function renderChart(){
   const data=months.map(m=>{
     const salesItems=isPF
       ? D.orders.filter(o=>(o.date||'').startsWith(m))
-      : D.invoices.filter(i=>(i.due||'').startsWith(m));
+      : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
     const pur=D.purchases.filter(p=>(p.due||'').startsWith(m));
     const pro=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
     const sa=salesItems.reduce((s,i)=>s+(i.amount||0),0);
@@ -3548,7 +3548,7 @@ function exportInvoiceCSV(){
 // ── Excel エクスポート ───────────────────────────
 function exportMonthlyExcel(){
   const m=D.currentMonth;const[y,mo]=m.split('-');
-  const mI=D.invoices.filter(i=>(i.due||'').startsWith(m));
+  const mI=D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
   const wb=XLSX.utils.book_new();
