@@ -2479,6 +2479,7 @@ function chMonth(d){
 
 function setMonthlyMode(mode){
   D.monthlyMode=mode;
+  _monthlyInvPage=0;
   ['pf-btn','chart-pf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='PF'?' btn-primary':'');});
   ['cf-btn','chart-cf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='CF'?' btn-primary':'');});
   renderMonthly();
