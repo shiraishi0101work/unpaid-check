@@ -2164,7 +2164,7 @@ function runErrCheck(){
     headers:['請求書番号','請求先','案件名','発行日','担当者']
   });
 
-  // ── 5. MF取込み済みIDの確認 ──────────────────────────
+  // ── 5. MF未取込み請求書の分類 ─────────────────────────
   const mfIds=new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
   const mfInvBilNums=new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
   const mfPending=(D.mfInvoices||[]).filter(m=>{
@@ -2172,22 +2172,44 @@ function runErrCheck(){
     if(m.billing_number && mfInvBilNums.has(m.billing_number)) return false;
     return true;
   });
-  const mfPendingNoDup=mfPending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length===0);
+  // 各件の判定
+  const mfPendingClassified=mfPending.map(m=>{
+    const dups=mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued');
+    let reason='', matchInfo='', kind='new';
+    if(dups.length){
+      kind='dup';
+      const d=dups[0];
+      const matchBilNum=d.billing_number?`【${d.billing_number}】`:'';
+      const matchDate=d.issued||d.due||'日付不明';
+      reason=`既存の請求書と内容一致の可能性`;
+      matchInfo=`${matchBilNum}${d.client} ／ ${fmt(d.amount)} ／ ${fmtD(matchDate)}`;
+    }
+    return {m, kind, reason, matchInfo};
+  });
+  const mfNew   =mfPendingClassified.filter(x=>x.kind==='new');
+  const mfDups  =mfPendingClassified.filter(x=>x.kind==='dup');
+  const summaryParts=[];
+  if(mfNew.length)  summaryParts.push(`<span style="color:var(--green);font-weight:700">新規 ${mfNew.length}件</span>（一括取込み可能）`);
+  if(mfDups.length) summaryParts.push(`<span style="color:var(--red);font-weight:700">既存一致 ${mfDups.length}件</span>（取込み済みの可能性が高い）`);
   sections.push({
-    title:'⑤ MF未取込み請求書',
+    title:'⑤ MFクラウド請求書 — 未取込み一覧',
     ok: mfPending.length===0,
     summary: mfPending.length===0
       ? 'なし（全件取込み済み）'
-      : `${mfPending.length}件が未取込み（うち要確認なし ${mfPendingNoDup.length}件を一括取込み可能）`,
-    rows: mfPending.map(m=>{
-      const isDup=mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0;
-      return [m.billing_number||'-', m.partner||'-', m.title||'-', fmt(m.total_price), m.billing_date||'-',
-        isDup?'<span style="color:var(--red);font-size:11px">⚠ 要確認</span>':''];
+      : summaryParts.join('　／　'),
+    rows: mfPendingClassified.map(({m,kind,reason,matchInfo})=>{
+      const kindBadge = kind==='dup'
+        ? `<span style="color:var(--red);font-size:11px;font-weight:700">⚠ 既存一致</span>`
+        : `<span style="color:var(--green);font-size:11px;font-weight:700">新規</span>`;
+      const matchCell = matchInfo
+        ? `<span style="font-size:10px;color:var(--text2)">${matchInfo}</span>`
+        : '<span style="font-size:11px;color:var(--text3)">—</span>';
+      return [m.billing_number||'-', m.partner||'-', fmt(m.total_price), m.billing_date||'-', kindBadge, matchCell];
     }),
-    headers:['請求書番号','取引先','件名','金額','請求日',''],
-    action: mfPendingNoDup.length
-      ? `<button class="btn btn-sm btn-primary" onclick="errCheckBulkImportMfInv();runErrCheck()">↓ 要確認以外を一括取込み（${mfPendingNoDup.length}件）</button>`
-      : ''
+    headers:['請求書番号（MF）','取引先','金額','請求日','判定','一致している既存請求書'],
+    action: mfNew.length
+      ? `<button class="btn btn-sm btn-primary" onclick="errCheckBulkImportMfInv();runErrCheck()">↓ 新規${mfNew.length}件を一括取込み</button>`
+      : (mfDups.length ? `<button class="btn btn-sm btn-danger" onclick="errCheckDeleteMatchedMfInv();runErrCheck()">既存一致${mfDups.length}件をMFリストから削除</button>` : '')
   });
 
   // ── 6. 旧形式MF取込み済み見積書（mf_quote_idが残存） ───────
