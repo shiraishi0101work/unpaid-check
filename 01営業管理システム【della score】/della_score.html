@@ -1192,6 +1192,7 @@ async function loadFromServer(){
     if('mf_quotes'         in d) D.mfQuotes         = d.mf_quotes          || [];
     if('importedMfInvIds'  in d) D.importedMfInvIds = d.importedMfInvIds   || [];
     if('importedMfQuoIds'  in d) D.importedMfQuoIds = d.importedMfQuoIds   || [];
+    if('mfSkipCounts'      in d) D.mfSkipCounts     = d.mfSkipCounts       || {};
     if('settings'          in d) D.settings         = Object.assign({ bizName:'', fiscalStart:4, fiscalEnd:3, taxRate:10 }, d.settings||{});
   } catch(e){ console.warn('サーバー接続失敗、初期データを使用:', e); }
 }
