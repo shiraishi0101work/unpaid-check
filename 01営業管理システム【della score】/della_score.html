@@ -3195,6 +3195,7 @@ function openPurchaseModal(){
   document.getElementById('pur-modal-title').textContent='仕入れ請求書を登録';
   clr('pf-supplier','pf-desc','pf-amount','pf-tax','pf-bank','pf-owner','pf-due');
   sv('pf-issued',today()); sv('pf-status','unpaid');
+  clearOwnerItems('pur');
   document.getElementById('pur-fn').style.display='none';
   document.getElementById('pur-status').style.display='none';
   const sel=document.getElementById('pf-ref');
