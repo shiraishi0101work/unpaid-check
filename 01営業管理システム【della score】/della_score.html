@@ -2402,7 +2402,7 @@ function runErrCheck(){
   });
   // 各件の判定
   const mfPendingClassified=mfPending.map(m=>{
-    const dups=mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued');
+    const dups=mfDupCheck(m,D.invoices,'inv');
     let reason='', matchInfo='', kind='new';
     if(dups.length){
       kind='dup';
