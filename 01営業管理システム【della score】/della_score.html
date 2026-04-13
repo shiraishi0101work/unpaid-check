@@ -3240,6 +3240,36 @@ function saveClientDetail(){
   save(); closeModal('client-modal'); renderClients();
 }
 
+// ── 品目別担当者 ──────────────────────────────────
+function addOwnerItemRow(type, item){
+  const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
+  if(!listEl) return;
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 110px 130px 28px;gap:4px;margin-bottom:4px;align-items:center';
+  const iStyle='padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:100%;box-sizing:border-box';
+  row.innerHTML=`<input placeholder="品目名" value="${item?.desc||''}" class="oitem-desc" style="${iStyle}">
+    <input type="number" placeholder="金額(税抜)" value="${item?.amount!=null&&item.amount!==''?item.amount:''}" class="oitem-amount" style="${iStyle}">
+    <input placeholder="担当者" list="owners-dl" value="${item?.owner||''}" class="oitem-owner" style="${iStyle}">
+    <button type="button" onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">✕</button>`;
+  listEl.appendChild(row);
+}
+function getOwnerItems(type){
+  const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
+  if(!listEl) return [];
+  const items=[];
+  listEl.querySelectorAll('div').forEach(row=>{
+    const desc  =(row.querySelector('.oitem-desc')?.value||'').trim();
+    const amount=parseFloat(row.querySelector('.oitem-amount')?.value)||0;
+    const owner =(row.querySelector('.oitem-owner')?.value||'').trim();
+    if(desc||amount||owner) items.push({desc,amount,owner});
+  });
+  return items;
+}
+function clearOwnerItems(type){
+  const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
+  if(listEl) listEl.innerHTML='';
+}
+
 // ── 保存 ─────────────────────────────────────────
 function saveProspect(){
   const t=document.getElementById('pt-manual').style.display!=='none'?'manual':'pdf';
