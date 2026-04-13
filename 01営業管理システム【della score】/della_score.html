@@ -1985,15 +1985,18 @@ function renderSettings(){
   const nameEl = document.getElementById('set-biz-name');
   const startEl = document.getElementById('set-fiscal-start');
   const endEl = document.getElementById('set-fiscal-end');
+  const taxEl = document.getElementById('set-tax-rate');
   if(nameEl) nameEl.value = s.bizName || '';
   if(startEl) startEl.value = s.fiscalStart || 4;
   if(endEl) endEl.value = s.fiscalEnd || 3;
+  if(taxEl) taxEl.value = s.taxRate ?? 10;
 }
 function saveSettings(){
   D.settings = {
     bizName: document.getElementById('set-biz-name').value.trim(),
     fiscalStart: parseInt(document.getElementById('set-fiscal-start').value),
-    fiscalEnd: parseInt(document.getElementById('set-fiscal-end').value)
+    fiscalEnd: parseInt(document.getElementById('set-fiscal-end').value),
+    taxRate: parseInt(document.getElementById('set-tax-rate').value)
   };
   save();
   const msg = document.getElementById('settings-saved');
