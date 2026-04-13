@@ -1503,14 +1503,21 @@ function selectedImportMfInvoices(){
 function selectedImportMfQuotes(){
   const ids=new Set([...document.querySelectorAll('.mf-quo-chk:checked')].map(c=>c.value));
   if(!ids.size){alert('取込むデータを選択してください');return;}
-  const imported=new Set(D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id));
-  const targets=(D.mfQuotes||[]).filter(m=>ids.has(m.id)&&!imported.has(m.id));
+  const imported=new Set([...D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id),...(D.importedMfQuoIds||[])]);
+  const importedQuoNums=new Set(D.prospects.filter(p=>p.quote_number).map(p=>p.quote_number));
+  const targets=(D.mfQuotes||[]).filter(m=>{
+    if(!ids.has(m.id)) return false;
+    if(imported.has(m.id)) return false;
+    if(m.quote_number && importedQuoNums.has(m.quote_number)) return false;
+    return true;
+  });
   if(!targets.length){alert('選択した見積書はすでに取込み済みです');return;}
   const ownerMap=buildOwnerMap();
-  if(!confirm(targets.length+'件を取込みますか？')) return;
+  if(!confirm(targets.length+'件を見込みに取込みますか？')) return;
   targets.forEach(q=>{
+    D.importedMfQuoIds.push(q.id);
     D.prospects.unshift({
-      id:uid(), mf_quote_id:q.id,
+      id:uid(), quote_number:q.quote_number||'',
       client:q.partner||'', name:q.title||'',
       amount:q.total_price||0, cost:0,
       issued:q.quote_date||'', deadline:q.expired_date||'',
