@@ -325,7 +325,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     <div class="empty" id="mf-inv-page-empty">MFから同期してください。</div>
   </div>
   <div class="section" style="margin-top:0">
-    <div class="sec-hdr"><span class="sec-title">取込み済み（MF→請求書）</span></div>
+    <div class="sec-hdr"><span class="sec-title">取込み済み（MF→請求書）</span><button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteAllToInvoice()">→ 全件売上に移す</button></div>
     <table><colgroup><col style="width:17%"><col style="width:22%"><col style="width:13%"><col style="width:11%"><col style="width:11%"><col style="width:13%"><col style="width:13%"></colgroup>
       <thead><tr><th>取引先</th><th>件名</th><th>金額</th><th>請求日</th><th>支払期限</th><th>担当者</th><th></th></tr></thead>
       <tbody id="mf-inv-done-tbody"></tbody>
