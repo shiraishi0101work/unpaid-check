@@ -1764,11 +1764,12 @@ function confirmMfQuoteImport(){
   const clientName = document.getElementById('mf-quote-client').value.trim();
   if(!clientName){ alert('取引先名を入力してください'); return; }
   const owner = document.getElementById('mf-quote-owner').value.trim();
+  D.importedMfQuoIds.push(q.id);
   D.prospects.unshift({
-    id: uid(), mf_quote_id: q.id,
+    id: uid(), quote_number: q.quote_number||'',
     client: clientName, name: q.title||'',
     amount: q.total_price||0, cost: 0,
-    issued: q.quote_date||'', due: q.expired_date||'',
+    issued: q.quote_date||'', deadline: q.expired_date||'',
     owner: owner, status: 'prospect',
     memo:'', items:''
   });
