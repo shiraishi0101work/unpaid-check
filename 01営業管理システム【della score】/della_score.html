@@ -419,7 +419,14 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <div class="empty" id="m-p-empty" style="display:none">なし</div>
     </div>
     <div class="section">
-      <div class="sec-hdr"><span class="sec-title" id="m-sales-sec-title">売上請求書</span></div>
+      <div class="sec-hdr">
+        <span class="sec-title" id="m-sales-sec-title">売上請求書</span>
+        <div id="m-i-pager" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="m-i-prev" onclick="chMonthlyInvPage(-1)">‹ 前へ</button>
+          <span id="m-i-page-lbl"></span>
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="m-i-next" onclick="chMonthlyInvPage(1)">次へ ›</button>
+        </div>
+      </div>
       <table><colgroup><col style="width:28%"><col style="width:34%"><col style="width:20%"><col style="width:18%"></colgroup>
         <thead><tr><th>請求先</th><th>案件名</th><th>税抜</th><th>税込</th></tr></thead>
         <tbody id="m-i-tbody"></tbody>
