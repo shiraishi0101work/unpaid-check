@@ -2751,6 +2751,24 @@ function renderStaff(){
   renderStaffOwnerContent(ownerData.find(od=>od.name===staffSt.activeOwner)||ownerData[0]);
 }
 
+function setStaffInvPage(owner,page){
+  staffSt.invPage[owner]=page;
+  renderStaffOwnerContent((() => {
+    const m=staffSt.month;
+    const filterByMonth=(arr,key)=>staffSt.mode==='month'?arr.filter(r=>{
+      if(key==='deadline') return (r.issued||r.createdAt||r.deadline||'').startsWith(m);
+      return (r[key]||'').startsWith(m);
+    }):arr;
+    const invs=filterByMonth(D.invoices,'due').filter(i=>i.owner===owner);
+    const purs=filterByMonth(D.purchases,'due').filter(p=>p.owner===owner);
+    const pros=filterByMonth(D.prospects,'deadline').filter(p=>p.owner===owner);
+    return {name:owner,invs,purs,pros,
+      sa:invs.reduce((s,i)=>s+(i.amount||0),0),
+      st:invs.reduce((s,i)=>s+(i.tax||0),0),
+      pa:purs.reduce((s,p)=>s+(p.amount||0),0),
+      proAmt:pros.reduce((s,p)=>s+(p.amount||0),0)};
+  })());
+}
 function switchStaffOwner(name){
   staffSt.activeOwner=name;
   // タブ更新
