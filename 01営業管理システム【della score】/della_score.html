@@ -2200,7 +2200,7 @@ function runErrCheck(){
   let monthMismatch=false;
   allMonths.forEach(m=>{
     const invList=D.invoices.filter(i=>(i.issued||i.due||'').slice(0,7)===m);
-    const monthly=D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+    const monthly=D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
     const invTotal=invList.reduce((s,i)=>s+(i.amount||0),0);
     const monthlyTotal=monthly.reduce((s,i)=>s+(i.amount||0),0);
     const diff=invTotal-monthlyTotal;
@@ -2440,7 +2440,7 @@ function filterOwnerDetail(name, chipEl){
   const m=D.currentMonth;
   const isPF=D.monthlyMode==='PF';
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
-  const mI=isPF?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+  const mI=isPF?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const om={};
   const ao=(owner,field,amt)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);};
@@ -2538,7 +2538,7 @@ function renderMonthly(){
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
   const mSales=isPF
     ? D.orders.filter(o=>(o.date||'').startsWith(m))
-    : D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+    : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   // 説明ラベル・セクションタイトル更新
   const desc=document.getElementById('monthly-mode-desc');
@@ -2654,7 +2654,7 @@ function renderChart(){
   const data=months.map(m=>{
     const salesItems=isPF
       ? D.orders.filter(o=>(o.date||'').startsWith(m))
-      : D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+      : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
     const pur=D.purchases.filter(p=>(p.due||'').startsWith(m));
     const pro=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
     const sa=salesItems.reduce((s,i)=>s+(i.amount||0),0);
@@ -3979,7 +3979,7 @@ function exportInvoiceCSV(){
 // ── Excel エクスポート ───────────────────────────
 function exportMonthlyExcel(){
   const m=D.currentMonth;const[y,mo]=m.split('-');
-  const mI=D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+  const mI=D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
   const wb=XLSX.utils.book_new();
