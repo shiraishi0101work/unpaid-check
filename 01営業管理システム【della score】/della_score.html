@@ -1610,13 +1610,8 @@ function renderMfDupCards(type){
 }
 function skipMfDup(type, mfId){
   if(!D.mfSkipCounts) D.mfSkipCounts = {};
-  const cur = D.mfSkipCounts[mfId] || 0;
-  const remaining = 2 - cur;
-  const msg = remaining > 0
-    ? `この項目をスキップします。あと${remaining}回表示された後、以降は表示されなくなります。`
-    : 'この項目をスキップします。次回以降は表示されなくなります。';
-  if(!confirm(msg)) return;
-  D.mfSkipCounts[mfId] = cur + 1;
+  if(!confirm('この項目をスキップします。以降、再表示されません。')) return;
+  D.mfSkipCounts[mfId] = 1;
   save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
 }
 function forceImportMfDup(type, mfId){
