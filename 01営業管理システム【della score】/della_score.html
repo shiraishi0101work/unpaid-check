@@ -2144,6 +2144,7 @@ function renderInvoices(){
   const totalTax=list.reduce((s,i)=>s+calcTax(i.amount,i.tax),0);
   const noDateCount=list.filter(i=>!i.issued&&!i.due).length;
   tb.innerHTML=list.map(i=>`<tr>
+    <td><input type="checkbox" class="inv-row-chk" value="${i.id}" onchange="updateInvBulkBar()" style="cursor:pointer"></td>
     <td title="${i.client}" style="font-weight:600">${i.client}</td>
     <td title="${i.name||''}">${i.name||'-'}</td>
     <td class="amount">${fmtTax(i.amount,i.tax)}</td>
@@ -2156,6 +2157,7 @@ function renderInvoices(){
       <button class="btn btn-sm btn-danger" onclick="delItem('invoices','${i.id}')">削除</button>
     </td>
   </tr>`).join('');
+  updateInvBulkBar();
   const footer=document.getElementById('i-footer');
   footer.style.display='';
   footer.innerHTML=`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
