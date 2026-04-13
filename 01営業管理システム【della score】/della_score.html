@@ -1109,11 +1109,18 @@ function thisMonth(){
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function fmt(n){ return (n!=null&&!isNaN(n))? '¥'+Math.round(n).toLocaleString('ja-JP') : '-'; }
-function fmtTax(a,t){ 
+function calcTax(amount, tax){
+  const a = parseFloat(amount)||0;
+  if(tax != null && !isNaN(tax) && parseFloat(tax) > 0) return Math.round(parseFloat(tax));
+  const rate = (D.settings?.taxRate ?? 10) / 100;
+  return Math.round(a * rate);
+}
+function fmtTax(a,t){
   if(a==null||isNaN(a)) return '-';
   const ex=fmt(a);
-  const inc=(t!=null&&!isNaN(t))?Math.round(a)+Math.round(t):null;
-  return inc? ex+'<span style="color:var(--text3);font-size:11px;margin-left:4px">(税込'+fmt(inc)+')</span>' : ex;
+  const taxAmt = calcTax(a, t);
+  const inc = Math.round(parseFloat(a)||0) + taxAmt;
+  return ex+'<span style="color:var(--text3);font-size:11px;margin-left:4px">(税込'+fmt(inc)+')</span>';
 }
 function fmtD(s){
   if(!s) return '-';
