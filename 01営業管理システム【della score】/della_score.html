@@ -2406,7 +2406,8 @@ function applyRecurring(kind){
 
 // ── 月次 ──────────────────────────────────────────
 function filterOwnerDetail(name, chipEl){
-  if(chipEl){
+  if(chipEl){ // チップクリック時はページリセット
+    _ownerInvPages={};
     document.querySelectorAll('#owner-filter-row .chip').forEach(c=>c.classList.remove('active'));
     chipEl.classList.add('active');
   } else {
