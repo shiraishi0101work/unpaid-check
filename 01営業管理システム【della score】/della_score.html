@@ -2039,7 +2039,7 @@ function renderMfInvoices(){
   if(!pending.length){ tb.innerHTML=''; em.style.display=''; return; }
   em.style.display='none';
   tb.innerHTML = pending.map(m=>{
-    const dups = mfDupCheck(m.partner, m.total_price, m.billing_date, D.invoices, 'issued');
+    const dups = mfDupCheck(m, D.invoices, 'inv');
     const dupBadge = dups.length ? `<span class="badge biv" title="手入力の「${dups[0].client}」と重複の可能性">要確認</span> ` : '';
     return `<tr>
     <td style="font-weight:600">${dupBadge}${m.partner||'-'}</td>
