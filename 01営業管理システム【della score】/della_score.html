@@ -2418,14 +2418,15 @@ function filterOwnerDetail(name, chipEl){
   }
   // omを再取得（D.currentMonthから）
   const m=D.currentMonth;
+  const isPF=D.monthlyMode==='PF';
   const mP=D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m));
-  const mI=D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
+  const mI=isPF?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.issued||i.due||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const om={};
-  const ao=(owner,field,amt,item)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);if(item)om[k][field+'Items'].push(item);};
-  mP.forEach(p=>{ao(p.owner,'prospect',p.amount,p);});
-  mI.forEach(i=>{ao(i.owner,'sales',i.amount,i);ao(i.owner,'salesTax',calcTax(i.amount,i.tax),null);});
-  mPu.forEach(p=>{ao(p.owner,'purchase',p.amount,p);});
+  const ao=(owner,field,amt)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);};
+  mP.forEach(p=>{ao(p.owner,'prospect',p.amount);const k=p.owner||'（未設定）';om[k].proItems.push(p);});
+  mI.forEach(i=>{ao(i.owner,'sales',i.amount);ao(i.owner,'salesTax',calcTax(i.amount,i.tax));const k=i.owner||'（未設定）';om[k].invItems.push(i);});
+  mPu.forEach(p=>{ao(p.owner,'purchase',p.amount);const k=p.owner||'（未設定）';om[k].purItems.push(p);});
   renderOwnerDetail(om, name);
 }
 
