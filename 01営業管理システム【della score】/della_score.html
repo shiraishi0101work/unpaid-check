@@ -1493,18 +1493,6 @@ function renderMfDupCards(type){
   if(!dupItems.length){ secEl.style.display='none'; return; }
   secEl.style.display='';
 
-  // 一括スキップボタン
-  const bulkSkipEl = document.getElementById(isInv?'mf-inv-dup-bulk-skip':'mf-quo-dup-bulk-skip');
-  if(bulkSkipEl){
-    bulkSkipEl.onclick = ()=>{
-      if(!confirm(`要確認の${dupItems.length}件をすべてスキップします。\n（既存データと重複しているため取込みません）\nよろしいですか？`)) return;
-      const ids = new Set(dupItems.map(m=>m.id));
-      if(isInv) D.mfInvoices=(D.mfInvoices||[]).filter(m=>!ids.has(m.id));
-      else      D.mfQuotes  =(D.mfQuotes  ||[]).filter(m=>!ids.has(m.id));
-      save(); renderMfInvoicesPage(); renderMfQuotesPage(); renderMfInvoices(); renderMfQuotes();
-    };
-  }
-
   const thS='padding:6px 12px;font-size:11px;font-weight:600;color:var(--text3);background:var(--bg2);text-align:left';
   const labelS='padding:7px 12px;font-size:11px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)';
 
