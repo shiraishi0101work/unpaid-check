@@ -2127,8 +2127,8 @@ function runErrCheck(){
     title:'③ 担当者未設定の請求書',
     ok: noOwner.length===0,
     summary: noOwner.length===0 ? 'なし（全件OK）' : `${noOwner.length}件の請求書に担当者が設定されていません`,
-    rows: noOwner.map(i=>[i.client, i.name||'-', fmt(i.amount), fmtD(i.issued)]),
-    headers:['請求先','案件名','金額（税抜）','発行日']
+    rows: noOwner.map(i=>[i.billing_number||'-', i.client, i.name||'-', fmt(i.amount), fmtD(i.issued)]),
+    headers:['請求書番号','請求先','案件名','金額（税抜）','発行日']
   });
 
   // ── 4. 金額0の請求書 ─────────────────────────────────
