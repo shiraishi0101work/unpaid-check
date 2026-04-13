@@ -333,6 +333,15 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     </table>
     <div class="empty" id="mf-inv-page-empty">MFから同期してください。</div>
   </div>
+  <div id="mf-inv-dup-section" style="display:none;margin-top:0">
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title" style="color:#b45309">⚠ 要確認 — 既存データとの比較</span>
+        <span style="font-size:12px;color:var(--text3)">内容を確認して「スキップ」か「別件として取込む」を選んでください</span>
+      </div>
+      <div id="mf-inv-dup-cards" style="display:flex;flex-direction:column;gap:12px;padding:4px 0"></div>
+    </div>
+  </div>
   <div class="section" style="margin-top:0">
     <div class="sec-hdr"><span class="sec-title">取込み済み（MF→請求書）</span><button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteAllToInvoice()">→ 全件売上に移す</button></div>
     <table><colgroup><col style="width:17%"><col style="width:22%"><col style="width:13%"><col style="width:11%"><col style="width:11%"><col style="width:13%"><col style="width:13%"></colgroup>
