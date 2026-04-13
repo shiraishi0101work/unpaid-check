@@ -2002,9 +2002,19 @@ function renderOrders(){
   const tb=document.getElementById('o-tbody');
   const em=document.getElementById('o-empty');
   const q=(document.getElementById('search-orders')?.value||'').toLowerCase();
+  // 受注月セレクト更新
+  const omSel=document.getElementById('order-month-filter');
+  if(omSel){
+    const months=[...new Set(D.orders.map(o=>(o.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
+    const cur=omSel.value;
+    omSel.innerHTML='<option value="">受注月：全期間</option>'+months.map(m=>`<option value="${m}">${m.replace('-','年')}月</option>`).join('');
+    if(cur) omSel.value=cur;
+  }
   syncOwnerSelect('owner-orders', D.orders);
   const ow=getOwnerFilter('owner-orders');
+  const om=omSel?.value||'';
   let list=D.orders;
+  if(om) list=list.filter(o=>(o.date||'').startsWith(om));
   if(q) list=list.filter(o=>(o.client+o.name+(o.owner||'')+(o.payment||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(o=>(o.owner||'')===ow);
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
