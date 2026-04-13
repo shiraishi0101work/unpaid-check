@@ -387,7 +387,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     <button class="btn btn-sm" onclick="chMonth(1)">›</button>
     <span style="font-size:11px;color:var(--text3)" id="monthly-mode-desc">【CF】売上＝請求書の支払期限月　仕入れ＝支払期限月</span>
     <div style="display:flex;gap:4px;margin-left:auto">
-      <button class="btn btn-sm" id="pf-btn" onclick="setMonthlyMode('PF')" style="font-weight:700">PF</button>
+      <button class="btn btn-sm" id="pf-btn" onclick="setMonthlyMode('PL')" style="font-weight:700">PL</button>
       <button class="btn btn-sm btn-primary" id="cf-btn" onclick="setMonthlyMode('CF')" style="font-weight:700">CF</button>
     </div>
     <button class="btn btn-sm" onclick="exportMonthlyExcel()">↓ Excel出力</button>
@@ -473,7 +473,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         <button class="chip" onclick="setChartMode('h2',this)">下半期（7-12月）</button>
       </div>
       <div style="display:flex;gap:4px">
-        <button class="btn btn-sm" id="chart-pf-btn" onclick="setMonthlyMode('PF')" style="font-weight:700">PF</button>
+        <button class="btn btn-sm" id="chart-pf-btn" onclick="setMonthlyMode('PL')" style="font-weight:700">PL</button>
         <button class="btn btn-sm btn-primary" id="chart-cf-btn" onclick="setMonthlyMode('CF')" style="font-weight:700">CF</button>
       </div>
     </div>
@@ -2438,9 +2438,9 @@ function filterOwnerDetail(name, chipEl){
   }
   // omを再取得（D.currentMonthから）
   const m=D.currentMonth;
-  const isPF=D.monthlyMode==='PF';
-  const mP=isPF?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
-  const mI=isPF?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
+  const isPL=D.monthlyMode==='PL';
+  const mP=isPL?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
+  const mI=isPL?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   const om={};
   const ao=(owner,field,amt)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);};
@@ -2524,7 +2524,7 @@ function chMonth(d){
 function setMonthlyMode(mode){
   D.monthlyMode=mode;
   _monthlyInvPage=0; _monthlyPuPage=0; _ownerInvPages={};
-  ['pf-btn','chart-pf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='PF'?' btn-primary':'');});
+  ['pf-btn','chart-pf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='PL'?' btn-primary':'');});
   ['cf-btn','chart-cf-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='btn btn-sm'+(mode==='CF'?' btn-primary':'');});
   renderMonthly();
   renderChart();
@@ -2533,25 +2533,25 @@ function renderMonthly(){
   const m=D.currentMonth;
   const[y,mo]=m.split('-');
   document.getElementById('month-lbl').textContent=y+'年'+parseInt(mo)+'月';
-  const isPF=D.monthlyMode==='PF';
-  // PF = 受注の契約日 / CF = 請求書の着金月（支払期限）
-  const mP=isPF?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
+  const isPL=D.monthlyMode==='PL';
+  // PL = 受注の契約日 / CF = 請求書の着金月（支払期限）
+  const mP=isPL?D.prospects.filter(p=>(p.issued||p.createdAt||p.deadline||'').startsWith(m)):[];
   // CF時は見込み非表示
   const prospectRow=document.getElementById('m-prospect-row');
   const prospectSec=document.getElementById('m-prospect-sec');
-  if(prospectRow) prospectRow.style.display=isPF?'':'none';
-  if(prospectSec) prospectSec.style.display=isPF?'':'none';
-  const mSales=isPF
+  if(prospectRow) prospectRow.style.display=isPL?'':'none';
+  if(prospectSec) prospectSec.style.display=isPL?'':'none';
+  const mSales=isPL
     ? D.orders.filter(o=>(o.date||'').startsWith(m))
     : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
   const mPu=D.purchases.filter(p=>(p.due||'').startsWith(m));
   // 説明ラベル・セクションタイトル更新
   const desc=document.getElementById('monthly-mode-desc');
-  if(desc) desc.textContent=isPF
-    ? '【PF】売上＝受注の契約日月　仕入れ＝支払期限月　見込み＝見積発行月'
+  if(desc) desc.textContent=isPL
+    ? '【PL】売上＝受注の契約日月　仕入れ＝支払期限月　見込み＝見積発行月'
     : '【CF】売上＝請求書の支払期限月　仕入れ＝支払期限月';
   const stEl=document.getElementById('m-sales-sec-title');
-  if(stEl) stEl.textContent=isPF?'受注':'売上請求書';
+  if(stEl) stEl.textContent=isPL?'受注':'売上請求書';
   const mIt=mSales.reduce((s,i)=>s+(i.amount||0),0);
   const mTax=mSales.reduce((s,i)=>s+calcTax(i.amount,i.tax),0);
   const mTaxIn=mIt+mTax;
@@ -2619,7 +2619,7 @@ function renderMonthly(){
     document.getElementById('m-i-prev').disabled=_monthlyInvPage===0;
     document.getElementById('m-i-next').disabled=_monthlyInvPage>=totalInvPages-1;
   }
-  setTbl('m-i-tbody','m-i-empty', isPF
+  setTbl('m-i-tbody','m-i-empty', isPL
     ? pageInvs.map(o=>`<tr><td>${o.client}</td><td>${o.name||'-'}</td><td class="amount">${fmt(o.amount)}</td><td class="amount" style="color:var(--text2)">${o.tax!=null?fmt((o.amount||0)+(o.tax||0)):'-'}</td></tr>`).join('')
     : pageInvs.map(i=>`<tr><td>${i.client}</td><td>${i.name||'-'}</td><td class="amount">${fmt(i.amount)}</td><td class="amount" style="color:var(--text2)">${i.tax!=null?fmt((i.amount||0)+(i.tax||0)):'-'}</td></tr>`).join(''));
   // 仕入れテーブル（ページネーション20件）
@@ -2655,9 +2655,9 @@ function renderChart(){
   const months=getChartMonths();
   const[sy,sm]=months[0].split('-');const[ey,em]=months[months.length-1].split('-');
   document.getElementById('chart-lbl').textContent=chartSt.year+'年 '+parseInt(sm)+'月〜'+parseInt(em)+'月';
-  const isPF=D.monthlyMode==='PF';
+  const isPL=D.monthlyMode==='PL';
   const data=months.map(m=>{
-    const salesItems=isPF
+    const salesItems=isPL
       ? D.orders.filter(o=>(o.date||'').startsWith(m))
       : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
     const pur=D.purchases.filter(p=>(p.due||'').startsWith(m));
