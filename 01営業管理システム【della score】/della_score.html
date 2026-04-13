@@ -1048,6 +1048,7 @@ const D = {
   mfInvoices: [],
   mfQuotes: [],
   importedMfInvIds: [],
+  settings: { bizName: '', fiscalStart: 4, fiscalEnd: 3 },
   filterStatus: 'all',
   currentMonth: (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})(),
   monthlyMode: 'CF',
