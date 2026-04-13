@@ -2558,9 +2558,21 @@ function renderMonthly(){
     else{em.style.display='none';tb.innerHTML=rows;}
   };
   setTbl('m-p-tbody','m-p-empty',mP.map(p=>`<tr><td>${p.client}</td><td>${p.name}</td><td class="amount">${fmt(p.amount)}</td></tr>`).join(''));
+  // 請求書テーブル（ページネーション20件）
+  const INV_PAGE=20;
+  const totalInvPages=Math.max(1,Math.ceil(mSales.length/INV_PAGE));
+  _monthlyInvPage=Math.min(_monthlyInvPage,totalInvPages-1);
+  const pageInvs=mSales.slice(_monthlyInvPage*INV_PAGE,(_monthlyInvPage+1)*INV_PAGE);
+  const pager=document.getElementById('m-i-pager');
+  if(pager){
+    pager.style.display=totalInvPages>1?'flex':'none';
+    document.getElementById('m-i-page-lbl').textContent=`${_monthlyInvPage+1} / ${totalInvPages} ページ`;
+    document.getElementById('m-i-prev').disabled=_monthlyInvPage===0;
+    document.getElementById('m-i-next').disabled=_monthlyInvPage>=totalInvPages-1;
+  }
   setTbl('m-i-tbody','m-i-empty', isPF
-    ? mSales.map(o=>`<tr><td>${o.client}</td><td>${o.name||'-'}</td><td class="amount">${fmt(o.amount)}</td><td class="amount" style="color:var(--text2)">${o.tax!=null?fmt((o.amount||0)+(o.tax||0)):'-'}</td></tr>`).join('')
-    : mSales.map(i=>`<tr><td>${i.client}</td><td>${i.name||'-'}</td><td class="amount">${fmt(i.amount)}</td><td class="amount" style="color:var(--text2)">${i.tax!=null?fmt((i.amount||0)+(i.tax||0)):'-'}</td></tr>`).join(''));
+    ? pageInvs.map(o=>`<tr><td>${o.client}</td><td>${o.name||'-'}</td><td class="amount">${fmt(o.amount)}</td><td class="amount" style="color:var(--text2)">${o.tax!=null?fmt((o.amount||0)+(o.tax||0)):'-'}</td></tr>`).join('')
+    : pageInvs.map(i=>`<tr><td>${i.client}</td><td>${i.name||'-'}</td><td class="amount">${fmt(i.amount)}</td><td class="amount" style="color:var(--text2)">${i.tax!=null?fmt((i.amount||0)+(i.tax||0)):'-'}</td></tr>`).join(''));
   setTbl('m-pu-tbody','m-pu-empty',mPu.map(p=>`<tr><td>${p.supplier}</td><td>${p.desc||'-'}</td><td class="amount">${fmt(p.amount)}</td><td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td><td>${p.status==='paid'?'<span class="badge bpd">支払済み</span>':'<span class="badge bpu">未払い</span>'}</td></tr>`).join(''));
 }
 
