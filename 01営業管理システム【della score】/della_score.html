@@ -2175,7 +2175,7 @@ function renderMonthly(){
   const desc=document.getElementById('monthly-mode-desc');
   if(desc) desc.textContent=isPF
     ? '【PF】売上＝受注の契約日月　仕入れ＝支払期限月　見込み＝見積発行月'
-    : '【CF】売上＝請求書の着金月　仕入れ＝支払期限月　見込み＝見積発行月';
+    : '【CF】売上＝請求書の発行月　仕入れ＝支払期限月　見込み＝見積発行月';
   const stEl=document.getElementById('m-sales-sec-title');
   if(stEl) stEl.textContent=isPF?'受注':'売上請求書';
   const mIt=mSales.reduce((s,i)=>s+(i.amount||0),0);
