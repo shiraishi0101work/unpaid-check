@@ -1965,6 +1965,25 @@ function renderClients(){
   </tr>`).join('');
 }
 
+function renderSettings(){
+  const s = D.settings || {};
+  const nameEl = document.getElementById('set-biz-name');
+  const startEl = document.getElementById('set-fiscal-start');
+  const endEl = document.getElementById('set-fiscal-end');
+  if(nameEl) nameEl.value = s.bizName || '';
+  if(startEl) startEl.value = s.fiscalStart || 4;
+  if(endEl) endEl.value = s.fiscalEnd || 3;
+}
+function saveSettings(){
+  D.settings = {
+    bizName: document.getElementById('set-biz-name').value.trim(),
+    fiscalStart: parseInt(document.getElementById('set-fiscal-start').value),
+    fiscalEnd: parseInt(document.getElementById('set-fiscal-end').value)
+  };
+  save();
+  const msg = document.getElementById('settings-saved');
+  if(msg){ msg.style.display=''; setTimeout(()=>msg.style.display='none', 2000); }
+}
 function renderRecurring(){
   // 固定請求
   const ritb=document.getElementById('ri-tbody');
