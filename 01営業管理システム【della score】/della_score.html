@@ -1633,24 +1633,6 @@ function renderMfInvoicesPage(){
       }).join('');
     }
   }
-  const dtb=document.getElementById('mf-inv-done-tbody');
-  const dem=document.getElementById('mf-inv-done-empty');
-  if(dtb){
-    if(!done.length){dtb.innerHTML='';dem.style.display='';}else{
-      dem.style.display='none';
-      dtb.innerHTML=done.map(i=>`<tr>
-        <td style="font-weight:600">${i.client}</td><td>${i.name||'-'}</td>
-        <td class="amount">${fmt(i.amount)}</td>
-        <td>${i.issued||'-'}</td><td>${i.due||'-'}</td>
-        <td>${i.owner?`<span class="pill">${i.owner}</span>`:'<span style="color:var(--red);font-size:12px">未設定</span>'}</td>
-        <td style="display:flex;gap:3px;flex-wrap:wrap">
-          <button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteToInvoice('${i.id}')">→ 売上に移す</button>
-          <button class="btn btn-sm btn-ghost" onclick="editInvoice('${i.id}')">編集</button>
-          <button class="btn btn-sm btn-danger" onclick="delItem('invoices','${i.id}')">削除</button>
-        </td>
-      </tr>`).join('');
-    }
-  }
   renderMfDupCards('inv');
 }
 
