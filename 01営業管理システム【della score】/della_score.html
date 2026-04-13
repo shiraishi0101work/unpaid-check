@@ -282,7 +282,14 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
   </div>
   <div class="section">
     <div class="sec-hdr">
-      <span class="sec-title">案件一覧</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="sec-title">案件一覧</span>
+        <div id="prospect-pager" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-prev" onclick="chProspectPage(-1)">‹ 前へ</button>
+          <span id="prospect-page-lbl"></span>
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-next" onclick="chProspectPage(1)">次へ ›</button>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <input id="search-prospects" placeholder="🔍 検索..." oninput="renderProspects()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
         <select id="owner-prospects" onchange="renderProspects()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
