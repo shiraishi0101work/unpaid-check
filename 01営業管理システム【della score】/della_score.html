@@ -1292,7 +1292,7 @@ function toggleMfInvDupFilter(){
 }
 function renderMfInvoicesPage(){
   const q=(document.getElementById('search-mf-inv')?.value||'').toLowerCase();
-  const imported = new Set(D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id));
+  const imported = new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id), ...(D.importedMfInvIds||[])]);
   const importedBillingNums = new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
   let pending = (D.mfInvoices||[]).filter(m=>{
     if(imported.has(m.id)) return false;
