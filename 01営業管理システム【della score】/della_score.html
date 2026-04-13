@@ -2203,7 +2203,7 @@ function renderMonthly(){
   const om={};
   const ao=(owner,field,amt)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);};
   mP.forEach(p=>{ao(p.owner,'prospect',p.amount);const k=p.owner||'（未設定）';om[k].proItems.push(p);});
-  mSales.forEach(i=>{ao(i.owner,'sales',i.amount);ao(i.owner,'salesTax',i.tax||0);const k=i.owner||'（未設定）';om[k].invItems.push(i);});
+  mSales.forEach(i=>{ao(i.owner,'sales',i.amount);ao(i.owner,'salesTax',calcTax(i.amount,i.tax));const k=i.owner||'（未設定）';om[k].invItems.push(i);});
   mPu.forEach(p=>{ao(p.owner,'purchase',p.amount);const k=p.owner||'（未設定）';om[k].purItems.push(p);});
   const owners=Object.entries(om).sort((a,b)=>(b[1].sales+b[1].prospect)-(a[1].sales+a[1].prospect));
   const maxS=Math.max(...owners.map(([,v])=>v.sales),1);
