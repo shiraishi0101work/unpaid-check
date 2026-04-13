@@ -1981,7 +1981,7 @@ function openMfQuoteImport(mfId){
   document.getElementById('mf-quote-preview').innerHTML =
     `<b>${q.partner||''}</b>　${q.title||''}<br>金額：¥${q.total_price!=null?Math.round(q.total_price).toLocaleString('ja-JP'):'-'}　見積日：${q.quote_date||'-'}`;
   // 重複警告
-  const dups = mfDupCheck(q.partner, q.total_price, q.quote_date, D.prospects, 'issued');
+  const dups = mfDupCheck(q, D.prospects, 'quo');
   const warn = document.getElementById('mf-quote-dup-warning');
   if(dups.length){
     warn.style.display='';
