@@ -1860,6 +1860,7 @@ function renderMfQuotesPage(){
   const pending=(D.mfQuotes||[]).filter(m=>{
     if(imported.has(m.id)) return false;
     if(m.quote_number && importedQuoNums.has(m.quote_number)) return false;
+    if(mfDupCheck(m, D.prospects, 'quo').length > 0) return false; // 重複はテーブルに出さない（要確認セクションへ）
     return !q||(m.partner+m.title).toLowerCase().includes(q);
   });
   const done=D.prospects.filter(p=>p.mf_quote_id&&(!q||(p.client+p.name).toLowerCase().includes(q)));
