@@ -563,6 +563,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <div style="display:flex;align-items:center;gap:8px">
         <input id="search-orders" placeholder="🔍 検索..." oninput="renderOrders()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
         <select id="owner-orders" onchange="renderOrders()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
+        <select id="order-month-filter" onchange="renderOrders()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">受注月：全期間</option></select>
         <button class="btn btn-primary btn-sm" onclick="openOrderModal()">＋ 登録</button>
       </div>
     </div>
