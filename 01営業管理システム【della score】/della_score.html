@@ -2068,6 +2068,21 @@ function renderClients(){
   </tr>`).join('');
 }
 
+function errCheckDeleteMatchedMfInv(){
+  const imported=new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
+  const importedBilNums=new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
+  const pending=(D.mfInvoices||[]).filter(m=>{
+    if(imported.has(m.id)) return false;
+    if(m.billing_number && importedBilNums.has(m.billing_number)) return false;
+    return true;
+  });
+  const matched=pending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0);
+  if(!matched.length){alert('削除対象がありません');return;}
+  if(!confirm(`既存の請求書と内容が一致している${matched.length}件をMFリストから削除しますか？\n（売上データは削除されません）`))return;
+  const delIds=new Set(matched.map(m=>m.id));
+  D.mfInvoices=(D.mfInvoices||[]).filter(m=>!delIds.has(m.id));
+  save(); render();
+}
 function errCheckBulkImportMfInv(){
   const imported=new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
   const importedBilNums=new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
