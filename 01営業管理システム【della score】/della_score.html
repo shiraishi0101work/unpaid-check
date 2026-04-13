@@ -1961,7 +1961,7 @@ function renderMfQuotes(){
   em.style.display='none';
   tb.innerHTML = pending.map(q=>{
     // 重複チェック
-    const dups = mfDupCheck(q.partner, q.total_price, q.quote_date, D.prospects, 'issued');
+    const dups = mfDupCheck(q, D.prospects, 'quo');
     const dupBadge = dups.length ? `<span class="badge biv" title="手入力の「${dups[0].client}」と重複の可能性">要確認</span> ` : '';
     return `<tr>
     <td style="font-weight:600">${dupBadge}${q.partner||'-'}</td>
