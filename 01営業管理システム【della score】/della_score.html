@@ -1621,9 +1621,11 @@ function bulkImportMfInvoices(){
 }
 
 function bulkImportMfQuotes(){
-  const imported = new Set(D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id));
+  const imported = new Set([...D.prospects.filter(p=>p.mf_quote_id).map(p=>p.mf_quote_id),...(D.importedMfQuoIds||[])]);
+  const importedQuoNums = new Set(D.prospects.filter(p=>p.quote_number).map(p=>p.quote_number));
   const targets = (D.mfQuotes||[]).filter(q=>{
     if(imported.has(q.id)) return false;
+    if(q.quote_number && importedQuoNums.has(q.quote_number)) return false;
     const dups = mfDupCheck(q.partner, q.total_price, q.quote_date, D.prospects, 'issued');
     return dups.length === 0;
   });
@@ -1634,11 +1636,12 @@ function bulkImportMfQuotes(){
   const msg = `${targets.length}件を見込みに一括取込みします。\n✅ 担当者自動設定：${mapped.length}件\n⚠ 担当者未設定：${unmapped.length}件\n\nよろしいですか？`;
   if(!confirm(msg)) return;
   targets.forEach(q=>{
+    D.importedMfQuoIds.push(q.id);
     D.prospects.unshift({
-      id: uid(), mf_quote_id: q.id,
+      id: uid(), quote_number: q.quote_number||'',
       client: q.partner||'', name: q.title||'',
       amount: q.total_price||0, cost: 0,
-      issued: q.quote_date||'', due: q.expired_date||'',
+      issued: q.quote_date||'', deadline: q.expired_date||'',
       owner: ownerMap[q.partner]||'', status:'prospect', memo:'', items:''
     });
   });
