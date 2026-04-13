@@ -2607,8 +2607,20 @@ function filterOwnerDetail(name, chipEl){
   const om={};
   const ao=(owner,field,amt)=>{const k=owner||'（未設定）';if(!om[k])om[k]={prospect:0,sales:0,salesTax:0,purchase:0,invItems:[],proItems:[],purItems:[]};om[k][field]+=(amt||0);};
   mP.forEach(p=>{ao(p.owner,'prospect',p.amount);const k=p.owner||'（未設定）';om[k].proItems.push(p);});
-  mI.forEach(i=>{ao(i.owner,'sales',i.amount);ao(i.owner,'salesTax',calcTax(i.amount,i.tax));const k=i.owner||'（未設定）';om[k].invItems.push(i);});
-  mPu.forEach(p=>{ao(p.owner,'purchase',p.amount);const k=p.owner||'（未設定）';om[k].purItems.push(p);});
+  mI.forEach(i=>{
+    if(i.ownerItems&&i.ownerItems.length>0){
+      i.ownerItems.forEach(oi=>{const o=oi.owner||i.owner;ao(o,'sales',oi.amount);const k=o||'（未設定）';om[k].invItems.push({...i,name:oi.desc||i.name,amount:oi.amount,owner:o,_subItem:true});});
+    } else {
+      ao(i.owner,'sales',i.amount);ao(i.owner,'salesTax',calcTax(i.amount,i.tax));const k=i.owner||'（未設定）';om[k].invItems.push(i);
+    }
+  });
+  mPu.forEach(p=>{
+    if(p.ownerItems&&p.ownerItems.length>0){
+      p.ownerItems.forEach(oi=>{const o=oi.owner||p.owner;ao(o,'purchase',oi.amount);const k=o||'（未設定）';om[k].purItems.push({...p,desc:oi.desc||p.desc,amount:oi.amount,owner:o,_subItem:true});});
+    } else {
+      ao(p.owner,'purchase',p.amount);const k=p.owner||'（未設定）';om[k].purItems.push(p);
+    }
+  });
   renderOwnerDetail(om, name);
 }
 
