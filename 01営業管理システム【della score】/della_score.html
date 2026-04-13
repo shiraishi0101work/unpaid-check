@@ -1774,8 +1774,13 @@ function renderMfInvoices(){
   const cnt = document.getElementById('mf-pending-count');
   if(!sec) return;
   // 取込み済みのmf_idセット
-  const imported = new Set(D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id));
-  const pending = (D.mfInvoices||[]).filter(m=>!imported.has(m.id));
+  const imported = new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
+  const importedBillingNums = new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
+  const pending = (D.mfInvoices||[]).filter(m=>{
+    if(imported.has(m.id)) return false;
+    if(m.billing_number && importedBillingNums.has(m.billing_number)) return false;
+    return true;
+  });
   if(!D.mfInvoices || D.mfInvoices.length===0){ sec.style.display='none'; return; }
   sec.style.display='';
   cnt.textContent = pending.length+'件 未取込み';
