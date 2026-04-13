@@ -1889,25 +1889,6 @@ function renderMfQuotesPage(){
       }).join('');
     }
   }
-  const dtb=document.getElementById('mf-quo-done-tbody');
-  const dem=document.getElementById('mf-quo-done-empty');
-  if(dtb){
-    if(!done.length){dtb.innerHTML='';dem.style.display='';}else{
-      dem.style.display='none';
-      dtb.innerHTML=done.map(p=>`<tr>
-        <td><input type="checkbox" class="mf-quo-done-chk" value="${p.id}" style="cursor:pointer"></td>
-        <td style="font-weight:600">${p.client}</td><td>${p.name||'-'}</td>
-        <td class="amount">${fmt(p.amount)}</td>
-        <td>${p.issued||'-'}</td>
-        <td>${p.owner?`<span class="pill">${p.owner}</span>`:'<span style="color:var(--red);font-size:12px">未設定</span>'}</td>
-        <td>${SB[p.status]||SB.prospect}</td>
-        <td style="display:flex;gap:3px;flex-wrap:wrap">
-          <button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="promoteToProspect('${p.id}')">→ 見込みに移す</button>
-          <button class="btn btn-sm btn-danger" onclick="delItem('prospects','${p.id}')">削除</button>
-        </td>
-      </tr>`).join('');
-    }
-  }
   renderMfDupCards('quo');
 }
 
