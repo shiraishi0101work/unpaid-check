@@ -2143,13 +2143,28 @@ function runErrCheck(){
 
   // ── 5. MF取込み済みIDの確認 ──────────────────────────
   const mfIds=new Set([...D.invoices.filter(i=>i.mf_id).map(i=>i.mf_id),...(D.importedMfInvIds||[])]);
-  const mfPending=(D.mfInvoices||[]).filter(m=>!mfIds.has(m.id));
+  const mfInvBilNums=new Set(D.invoices.filter(i=>i.billing_number).map(i=>i.billing_number));
+  const mfPending=(D.mfInvoices||[]).filter(m=>{
+    if(mfIds.has(m.id)) return false;
+    if(m.billing_number && mfInvBilNums.has(m.billing_number)) return false;
+    return true;
+  });
+  const mfPendingNoDup=mfPending.filter(m=>mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length===0);
   sections.push({
     title:'⑤ MF未取込み請求書',
     ok: mfPending.length===0,
-    summary: mfPending.length===0 ? 'なし（全件取込み済み）' : `${mfPending.length}件がまだ取込まれていません`,
-    rows: mfPending.map(m=>[m.partner||'-', m.title||'-', fmt(m.total_price), m.billing_date||'-']),
-    headers:['取引先','件名','金額','請求日']
+    summary: mfPending.length===0
+      ? 'なし（全件取込み済み）'
+      : `${mfPending.length}件が未取込み（うち要確認なし ${mfPendingNoDup.length}件を一括取込み可能）`,
+    rows: mfPending.map(m=>{
+      const isDup=mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length>0;
+      return [m.billing_number||'-', m.partner||'-', m.title||'-', fmt(m.total_price), m.billing_date||'-',
+        isDup?'<span style="color:var(--red);font-size:11px">⚠ 要確認</span>':''];
+    }),
+    headers:['請求書番号','取引先','件名','金額','請求日',''],
+    action: mfPendingNoDup.length
+      ? `<button class="btn btn-sm btn-primary" onclick="errCheckBulkImportMfInv();runErrCheck()">↓ 要確認以外を一括取込み（${mfPendingNoDup.length}件）</button>`
+      : ''
   });
 
   // ── 6. 旧形式MF取込み済み見積書（mf_quote_idが残存） ───────
