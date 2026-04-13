@@ -2068,6 +2068,15 @@ function renderClients(){
   </tr>`).join('');
 }
 
+function deleteProspectById(id){
+  if(!confirm('この見込みを削除しますか？'))return;
+  D.prospects=D.prospects.filter(p=>p.id!==id);
+  save(); render();
+}
+function promoteAllOldMfQuotes(){
+  D.prospects.filter(p=>p.mf_quote_id).forEach(p=>{ delete p.mf_quote_id; });
+  save(); render();
+}
 function renderErrCheck(){
   document.getElementById('errcheck-result').innerHTML=
     '<div style="color:var(--text3);font-size:13px;padding:20px 0">「チェック実行」ボタンを押してください</div>';
