@@ -1482,12 +1482,12 @@ function mfDupCheck(mfItem, existList, type) {
   const mfNum    = (mfItem[numKey]||'').trim();
   const mfName   = normCompany(mfItem.partner);
   const mfAmount = Math.round(parseFloat(mfItem.total_price)||0);
-  const mfTitle  = (mfItem.title||'').trim().toLowerCase();
+  const mfTitle  = normTitle(mfItem.title);
   return existList.filter(ex=>{
     const exNum   = (ex[numKey]||ex.billing_number||ex.quote_number||'').trim();
     const exName  = normCompany(ex.client);
     const exAmt   = Math.round(parseFloat(ex.amount)||0);
-    const exTitle = (ex.name||'').trim().toLowerCase();
+    const exTitle = normTitle(ex.name);
     // ① 請求書番号一致
     if(mfNum && exNum && mfNum===exNum) return true;
     // ② 会社名 + 案件名 一致
