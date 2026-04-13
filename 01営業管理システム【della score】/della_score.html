@@ -3285,6 +3285,36 @@ function saveClientDetail(){
   save(); closeModal('client-modal'); renderClients();
 }
 
+// ── 請求書 一括担当者設定 ────────────────────────────
+function updateInvBulkBar(){
+  const checked=[...document.querySelectorAll('.inv-row-chk:checked')];
+  const bar=document.getElementById('inv-bulk-owner-bar');
+  const cnt=document.getElementById('inv-bulk-sel-count');
+  if(!bar) return;
+  if(checked.length){
+    bar.style.display='flex';
+    cnt.textContent=`${checked.length}件選択中`;
+  } else {
+    bar.style.display='none';
+  }
+}
+function clearInvSelection(){
+  document.querySelectorAll('.inv-row-chk').forEach(c=>c.checked=false);
+  const all=document.getElementById('inv-chk-all');
+  if(all) all.checked=false;
+  updateInvBulkBar();
+}
+function bulkSetOwnerInvoices(){
+  const owner=(document.getElementById('inv-bulk-owner-input')?.value||'').trim();
+  if(!owner){alert('担当者名を入力してください');return;}
+  const ids=new Set([...document.querySelectorAll('.inv-row-chk:checked')].map(c=>c.value));
+  if(!ids.size){alert('請求書を選択してください');return;}
+  D.invoices.forEach(i=>{if(ids.has(i.id)) i.owner=owner;});
+  save(); renderInvoices();
+  document.getElementById('inv-bulk-owner-input').value='';
+  alert(`${ids.size}件の担当者を「${owner}」に設定しました。`);
+}
+
 // ── 品目別担当者 ──────────────────────────────────
 function addOwnerItemRow(type, item){
   const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
