@@ -1716,6 +1716,25 @@ function renderMfQuotesPage(){
   }
 }
 
+// ── 取込み済み（旧形式）削除 ────────────────────────────
+function deleteMfQuoDoneSelected(){
+  const ids=new Set([...document.querySelectorAll('.mf-quo-done-chk:checked')].map(c=>c.value));
+  if(!ids.size){alert('削除するデータを選択してください');return;}
+  if(!confirm(ids.size+'件を削除しますか？（見込みリストからも削除されます）'))return;
+  D.prospects=D.prospects.filter(p=>!ids.has(p.id));
+  const allChk=document.getElementById('mf-quo-done-chk-all');
+  if(allChk) allChk.checked=false;
+  save(); renderMfQuotesPage(); renderMfQuotes();
+}
+function deleteAllMfQuoDone(){
+  const targets=D.prospects.filter(p=>p.mf_quote_id);
+  if(!targets.length){alert('削除するデータがありません');return;}
+  if(!confirm(`取込み済みセクションの${targets.length}件を全て削除しますか？\n（見込みリストからも削除されます）`))return;
+  const ids=new Set(targets.map(p=>p.id));
+  D.prospects=D.prospects.filter(p=>!ids.has(p.id));
+  save(); renderMfQuotesPage(); renderMfQuotes();
+}
+
 // ── MF見積書 ────────────────────────────────────────
 let _mfQuoteTarget = null;
 
