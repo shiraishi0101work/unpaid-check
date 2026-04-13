@@ -529,6 +529,7 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <span class="sec-title">仕入れ請求書一覧</span>
       <div style="display:flex;align-items:center;gap:8px">
         <input id="search-purchases" placeholder="🔍 検索..." oninput="renderPurchases()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
+        <select id="month-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
         <select id="owner-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
         <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 登録</button>
       </div>
