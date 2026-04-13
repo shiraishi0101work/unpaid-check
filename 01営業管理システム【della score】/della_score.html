@@ -2669,6 +2669,7 @@ function staffChMonth(d){
   const[y,m]=staffSt.month.split('-').map(Number);
   const dt=new Date(y,m-1+d,1);
   staffSt.month=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+  staffSt.invPage={};
   renderStaff();
 }
 
