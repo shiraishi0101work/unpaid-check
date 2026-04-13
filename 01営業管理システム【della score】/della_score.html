@@ -2302,7 +2302,7 @@ function errCheckBulkImportMfInv(){
   const targets=(D.mfInvoices||[]).filter(m=>{
     if(imported.has(m.id)) return false;
     if(m.billing_number && importedBilNums.has(m.billing_number)) return false;
-    return mfDupCheck(m.partner,m.total_price,m.billing_date,D.invoices,'issued').length===0;
+    return mfDupCheck(m,D.invoices,'inv').length===0;
   });
   if(!targets.length){alert('取込みできる請求書がありません');return;}
   if(!confirm(`${targets.length}件を請求書（売上）に取込みますか？`))return;
