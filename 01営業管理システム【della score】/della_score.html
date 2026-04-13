@@ -705,6 +705,21 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     </div>
   </div>
 
+  <!-- システム連携エクスポート -->
+  <div class="section" style="max-width:480px;margin-top:16px">
+    <div class="sec-hdr"><span class="sec-title">システム連携エクスポート</span></div>
+    <div style="padding:16px">
+      <p style="margin:0 0 8px;font-size:13px;color:var(--text2)">DellaScore・イワタアシスト両方のデータをまとめてZIPファイルに出力します。<br>他システムや他のAIとの連携・データ引き渡しにご利用ください。</p>
+      <div style="margin-top:4px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--r);font-size:12px;color:var(--text3);line-height:1.8">
+        <strong style="color:var(--text2)">含まれるデータ：</strong><br>
+        DellaScore → 見込み・売上請求書・受注・仕入れ請求書・取引先<br>
+        イワタアシスト → 仕入れ発注履歴<br>
+        ＋ フィールド定義書（schema.json）・README.md
+      </div>
+      <a href="/export_zip.php" class="btn btn-primary" style="text-decoration:none;display:inline-block">↓ 連携用ZIPをダウンロード</a>
+    </div>
+  </div>
+
   <!-- MF連携ルール一覧 -->
   <div class="section" style="max-width:780px;margin-top:16px">
     <div class="sec-hdr"><span class="sec-title">MFクラウド連携 重複チェックルール</span></div>
