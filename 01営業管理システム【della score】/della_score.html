@@ -1205,6 +1205,7 @@ function nav(page, el){
 // ── フィルタ ─────────────────────────────────────
 function filt(s, el){
   D.filterStatus=s;
+  _prospectPage=0;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   renderProspects();
