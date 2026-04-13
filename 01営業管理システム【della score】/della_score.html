@@ -434,7 +434,14 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <div class="empty" id="m-i-empty" style="display:none">なし</div>
     </div>
     <div class="section" style="grid-column:1/-1">
-      <div class="sec-hdr"><span class="sec-title">仕入れ支払</span></div>
+      <div class="sec-hdr">
+        <span class="sec-title">仕入れ支払</span>
+        <div id="m-pu-pager" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="m-pu-prev" onclick="chMonthlyPuPage(-1)">‹ 前へ</button>
+          <span id="m-pu-page-lbl"></span>
+          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="m-pu-next" onclick="chMonthlyPuPage(1)">次へ ›</button>
+        </div>
+      </div>
       <table><colgroup><col style="width:22%"><col style="width:30%"><col style="width:18%"><col style="width:14%"><col style="width:16%"></colgroup>
         <thead><tr><th>仕入れ先</th><th>内容</th><th>金額</th><th>担当者</th><th>ステータス</th></tr></thead>
         <tbody id="m-pu-tbody"></tbody>
