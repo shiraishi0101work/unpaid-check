@@ -2495,6 +2495,8 @@ function renderOwnerDetail(om, filterName){
 let _monthlyInvPage=0;
 let _monthlyPuPage=0;
 let _ownerInvPages={};
+let _prospectPage=0;
+function chProspectPage(d){ _prospectPage+=d; renderProspects(); }
 function chMonthlyInvPage(d){ _monthlyInvPage+=d; renderMonthly(); }
 function chMonthlyPuPage(d){ _monthlyPuPage+=d; renderMonthly(); }
 function setOwnerInvPage(name,page){ _ownerInvPages[name]=page; filterOwnerDetail(name,null); }
