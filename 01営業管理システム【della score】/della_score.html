@@ -1514,7 +1514,14 @@ function promoteToInvoice(id){
   const inv=D.invoices.find(x=>x.id===id);
   if(!inv) return;
   if(!confirm(`「${inv.client}」を売上リストに移しますか？\nMF請求書ページからは外れ、通常の売上として管理されます。`)) return;
-  delete inv.mf_id;
+  if(inv.mf_id){ D.importedMfInvIds.push(inv.mf_id); delete inv.mf_id; }
+  save(); render();
+}
+function promoteAllToInvoice(){
+  const targets=D.invoices.filter(i=>i.mf_id);
+  if(!targets.length){alert('移すものがありません');return;}
+  if(!confirm(`取込み済みの${targets.length}件を全て売上リストに移しますか？`)) return;
+  targets.forEach(inv=>{ D.importedMfInvIds.push(inv.mf_id); delete inv.mf_id; });
   save(); render();
 }
 
