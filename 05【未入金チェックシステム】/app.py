@@ -601,6 +601,11 @@ def payments_fetch():
     fiscal_year = get_current_fiscal_year(start_month)
     from_date, to_date = get_fiscal_year_range(fiscal_year, start_month)
 
+    # MF会計APIは未来日付を受け付けないため、終了日を今日に制限
+    today = date.today().strftime("%Y-%m-%d")
+    if to_date > today:
+        to_date = today
+
     try:
         deals   = get_income_deals(from_date=from_date, to_date=to_date)
         cleaned = [{k: v for k, v in d.items() if k != "_matched"} for d in deals]
