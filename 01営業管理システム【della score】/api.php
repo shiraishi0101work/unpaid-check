@@ -95,7 +95,7 @@ $db = new PDO('sqlite:' . __DIR__ . '/della_score.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE IF NOT EXISTS store (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
 
-$keys = ['prospects','invoices','purchases','orders','recurringInv','recurringPur','clients','mf_invoices','mf_quotes'];
+$keys = ['prospects','invoices','purchases','orders','recurringInv','recurringPur','clients','mf_invoices','mf_quotes','mf_deleted_warnings'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt = $db->prepare('SELECT key, value FROM store WHERE key = ?');
