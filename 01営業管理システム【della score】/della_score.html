@@ -3640,7 +3640,7 @@ function saveOrder(){
     // 見込みから転記した場合はprospectIdを取得してステータス更新
     const actionsEl=document.getElementById('ord-actions');
     const prospectId=actionsEl?actionsEl.dataset.prospectId:'';
-    D.orders.unshift({id:uid(),client,name:g('of-name'),amount:parseFloat(g('of-amount'))||null,tax:parseFloat(g('of-tax'))||null,owner,date,delivery:g('of-delivery'),payment:g('of-payment'),desc:g('of-desc'),collectionMonth,prospectId});
+    D.orders.unshift({id:uid(),client,name:g('of-name'),amount:parseFloat(g('of-amount'))||null,tax:parseFloat(g('of-tax'))||null,owner,date,delivery:g('of-delivery'),payment:g('of-payment'),desc:g('of-desc'),collectionMonth,prospectId,order_number:g('of-order-number')});
     if(prospectId){
       const p=D.prospects.find(x=>x.id===prospectId);
       if(p)p.status='ordered';
