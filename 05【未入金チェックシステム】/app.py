@@ -591,15 +591,86 @@ def payments():
     )
 
 
+def _auto_link_deals(deals: list, existing_links: dict) -> dict:
+    """
+    入金データと請求書を自動照合してリンクを生成する。
+    既存の手動リンクは上書きしない。
+    """
+    import name_utils
+
+    result   = _load_result()
+    if not result:
+        return existing_links
+
+    all_billings = result.get("unpaid", []) + result.get("paid", [])
+    links = dict(existing_links)
+
+    AMOUNT_TOLERANCE = 500   # 振込手数料差引などを許容
+    NAME_THRESHOLD   = 0.75  # 自動リンクの最低類似度
+
+    for deal in deals:
+        deal_id = deal.get("取引ID", "")
+        # 手動リンク済みはスキップ
+        if deal_id in links and links[deal_id].get("invoice_ids"):
+            continue
+
+        candidates = name_utils.find_matches(
+            deal.get("取引先名", ""), all_billings, threshold=NAME_THRESHOLD
+        )
+        if not candidates:
+            continue
+
+        deal_amount = deal.get("入金金額", 0)
+
+        # ① 金額完全一致（誤差許容）の候補を探す
+        exact = [
+            c for c in candidates
+            if abs(c.get("請求金額", 0) - deal_amount) <= AMOUNT_TOLERANCE
+        ]
+
+        if len(exact) == 1:
+            # 1件だけ金額一致 → 自動リンク
+            links[deal_id] = {
+                "invoice_ids": [exact[0]["請求書ID"]],
+                "note": "自動紐づけ",
+                "auto": True,
+            }
+        elif len(exact) > 1:
+            # 複数件金額一致 → 合算の可能性、IDを全部候補として記録（未確定）
+            links[deal_id] = {
+                "invoice_ids": [c["請求書ID"] for c in exact],
+                "note": "自動紐づけ（合算確認）",
+                "auto": True,
+            }
+        elif len(candidates) == 1:
+            # 金額不一致でも候補1件なら仮リンク
+            links[deal_id] = {
+                "invoice_ids": [candidates[0]["請求書ID"]],
+                "note": f"自動紐づけ（金額差: ¥{deal_amount - candidates[0].get('請求金額',0):,}）",
+                "auto": True,
+            }
+
+    return links
+
+
 @app.route("/payments/fetch", methods=["POST"])
 def payments_fetch():
-    """MFクラウド会計から今年度の入金データを取得してキャッシュ"""
+    """MFクラウド会計から入金データを取得してキャッシュ、自動紐づけも実行"""
     from mf_accounting import get_income_deals
 
-    settings    = load_settings()
-    start_month = settings["fiscal_year_start_month"]
-    fiscal_year = get_current_fiscal_year(start_month)
-    from_date, to_date = get_fiscal_year_range(fiscal_year, start_month)
+    # フォームから日付取得、未入力なら年度から自動設定
+    from_date = request.form.get("from_date") or None
+    to_date   = request.form.get("to_date")   or None
+
+    if not from_date or not to_date:
+        settings    = load_settings()
+        start_month = settings["fiscal_year_start_month"]
+        fiscal_year = get_current_fiscal_year(start_month)
+        fy_from, fy_to = get_fiscal_year_range(fiscal_year, start_month)
+        if not from_date:
+            from_date = fy_from
+        if not to_date:
+            to_date = fy_to
 
     # MF会計APIは未来日付を受け付けないため、終了日を今日に制限
     today = date.today().strftime("%Y-%m-%d")
@@ -610,7 +681,14 @@ def payments_fetch():
         deals   = get_income_deals(from_date=from_date, to_date=to_date)
         cleaned = [{k: v for k, v in d.items() if k != "_matched"} for d in deals]
         save_payment_history(cleaned)
-        flash(f"入金データ {len(cleaned)}件を取得しました", "success")
+
+        # 自動紐づけ実行
+        existing_links = load_payment_links()
+        new_links = _auto_link_deals(cleaned, existing_links)
+        save_payment_links(new_links)
+        auto_count = sum(1 for v in new_links.values() if v.get("auto"))
+
+        flash(f"入金データ {len(cleaned)}件を取得しました（自動紐づけ: {auto_count}件）", "success")
     except Exception as e:
         flash(f"取得エラー: {e}", "error")
     return redirect(url_for("payments"))
