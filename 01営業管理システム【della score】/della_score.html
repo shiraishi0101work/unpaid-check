@@ -1281,8 +1281,9 @@ async function loadFromServer(){
     if('recurringInv' in d) D.recurringInv = d.recurringInv || [];
     if('recurringPur' in d) D.recurringPur = d.recurringPur || [];
     if('clients'      in d) D.clients      = d.clients      || [];
-    if('mf_invoices'       in d) D.mfInvoices       = d.mf_invoices        || [];
-    if('mf_quotes'         in d) D.mfQuotes         = d.mf_quotes          || [];
+    if('mf_invoices'         in d) D.mfInvoices         = d.mf_invoices          || [];
+    if('mf_quotes'           in d) D.mfQuotes           = d.mf_quotes            || [];
+    if('mf_deleted_warnings' in d) D.mfDeletedWarnings  = d.mf_deleted_warnings  || [];
     if('importedMfInvIds'  in d) D.importedMfInvIds = d.importedMfInvIds   || [];
     if('importedMfQuoIds'  in d) D.importedMfQuoIds = d.importedMfQuoIds   || [];
     if('mfSkipCounts'      in d) D.mfSkipCounts     = d.mfSkipCounts       || {};
