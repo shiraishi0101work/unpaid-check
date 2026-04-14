@@ -3625,7 +3625,7 @@ function saveInvoice(){
   const ownerItems=getOwnerItems('inv');
   if(D.editId){
     const inv=D.invoices.find(x=>x.id===D.editId);
-    if(inv){inv.client=client;inv.name=g('if-name');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');inv.ownerItems=ownerItems;}
+    if(inv){inv.client=client;inv.name=g('if-name');inv.billing_number=g('if-billing-number');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');inv.ownerItems=ownerItems;}
     D.editId=null;
   } else {
     const prospectId=g('if-prospect');
