@@ -120,6 +120,11 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
 
     params: dict = {"per_page": 100}
 
+    # office_id が必要な場合に備えて取得して付与
+    office_id = _get_office_id()
+    if office_id:
+        params["office_id"] = office_id
+
     journals = _get_all_pages(params)
     print(f"[会計] 仕訳 {len(journals)}件 取得完了")
 
