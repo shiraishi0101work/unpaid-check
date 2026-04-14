@@ -2303,6 +2303,7 @@ function renderInvoices(){
     <td><input type="checkbox" class="inv-row-chk" value="${i.id}" onchange="updateInvBulkBar()" style="cursor:pointer"></td>
     <td title="${i.client}" style="font-weight:600">${i.client}</td>
     <td title="${i.name||''}">${i.name||'-'}</td>
+    <td style="font-size:11px;color:var(--text3)">${i.billing_number||'-'}</td>
     <td class="amount">${fmtTax(i.amount,i.tax)}</td>
     <td>${i.issued?fmtD(i.issued):'<span style="color:var(--red);font-size:11px">日付なし</span>'}</td>
     <td>${fmtD(i.due)}</td>
