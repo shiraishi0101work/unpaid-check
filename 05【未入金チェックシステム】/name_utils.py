@@ -43,7 +43,7 @@ def normalize(name: str) -> str:
         return ""
     s = name.strip()
     s = _CORP.sub('', s)                                           # 法人格除去
-    s = jaconv.h2k(s)                                              # ひらがな→カタカナ
+    s = jaconv.hira2kata(s)                                        # ひらがな→カタカナ
     s = jaconv.h2z(s, kana=True, ascii=False, digit=False)        # 半角カタカナ→全角
     s = _NOISE.sub('', s)                                          # 記号・空白除去
     s = s.upper()                                                  # 英字大文字化
