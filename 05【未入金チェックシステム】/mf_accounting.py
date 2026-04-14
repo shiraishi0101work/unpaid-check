@@ -122,9 +122,7 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     today = _date.today().strftime("%Y-%m-%d")
 
     params: dict = {"per_page": 100}
-    # APIは start_date か end_date のどちらかが必須。未来日付は拒否されるため today で上限
-    if from_date:
-        params["start_date"] = from_date
+    # APIは end_date のみ有効（start_date は非対応）。未来日付は拒否されるため today で上限
     params["end_date"] = min(to_date, today) if to_date else today
 
     journals = _get_all_pages(params)
