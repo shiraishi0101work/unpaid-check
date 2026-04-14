@@ -437,6 +437,49 @@ def test_connection():
     return jsonify(results)
 
 
+@app.route("/api/debug-accounting")
+def debug_accounting():
+    """会計APIの動作確認用デバッグエンドポイント"""
+    import requests as _req
+    import traceback
+    result = {}
+
+    # トークン取得
+    try:
+        token = auth.get_access_token("accounting")
+        result["token_prefix"] = token[:15] + "..."
+    except Exception as e:
+        return jsonify({"step": "token", "error": str(e)}), 500
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+    }
+
+    # offices API
+    try:
+        r = _req.get("https://api-accounting.moneyforward.com/api/v3/offices",
+                     headers=headers, timeout=10)
+        result["offices_status"] = r.status_code
+        result["offices_body"]   = r.text[:500]
+        if r.ok:
+            offices = r.json().get("offices", [])
+            result["office_ids"] = [o.get("id") for o in offices]
+    except Exception as e:
+        result["offices_error"] = str(e)
+
+    # journals API（1件だけ）
+    try:
+        r = _req.get("https://api-accounting.moneyforward.com/api/v3/journals",
+                     headers=headers, params={"per_page": 1, "page": 1}, timeout=10)
+        result["journals_status"] = r.status_code
+        result["journals_body"]   = r.text[:1000]
+    except Exception as e:
+        result["journals_error"] = str(e)
+
+    return jsonify(result)
+
+
 @app.route("/api/debug-check")
 def debug_check():
     try:
