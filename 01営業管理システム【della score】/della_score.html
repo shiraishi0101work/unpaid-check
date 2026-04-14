@@ -3629,7 +3629,7 @@ function saveInvoice(){
     D.editId=null;
   } else {
     const prospectId=g('if-prospect');
-    D.invoices.unshift({id:uid(),client,name:g('if-name'),amount:parseFloat(g('if-amount'))||null,tax:parseFloat(g('if-tax'))||null,owner,issued,due,bank:g('if-bank'),items:g('if-items'),ownerItems,prospectId});
+    D.invoices.unshift({id:uid(),client,name:g('if-name'),billing_number:g('if-billing-number'),amount:parseFloat(g('if-amount'))||null,tax:parseFloat(g('if-tax'))||null,owner,issued,due,bank:g('if-bank'),items:g('if-items'),ownerItems,prospectId});
     if(prospectId){const p=D.prospects.find(x=>x.id===prospectId);if(p)p.status='invoiced';}
     upsertClient({name:client,owner,date:issued});
   }
