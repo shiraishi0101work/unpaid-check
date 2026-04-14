@@ -235,7 +235,11 @@ a{display:inline-block;margin-top:20px;padding:9px 20px;background:#1B2B4B;color
 <h2>マネーフォワード同期完了</h2>
 <p>期間：{$DATE_FROM} ～ {$DATE_TO}</p>
 <p>請求書：<span class='new'>新規 {$addedInv}件</span> / <span class='upd'>更新 {$updatedInv}件</span>（合計 " . count($mergedInvoices) . "件保持）</p>
-<p>見積書：<span class='new'>新規 {$addedQuo}件</span> / <span class='upd'>更新 {$updatedQuo}件</span>（合計 " . count($mergedQuotes) . "件保持）</p>
+<p>見積書：<span class='new'>新規 {$addedQuo}件</span> / <span class='upd'>更新 {$updatedQuo}件</span>（合計 " . count($mergedQuotes) . "件保持）</p>" .
+(count($deletedWarnings) > 0
+    ? "<p style='color:#B45309;font-weight:700;margin-top:12px'>⚠ MF上に存在しない請求書が " . count($deletedWarnings) . " 件あります。DellaScoreで確認してください。</p>"
+    : "<p style='color:#1A6644'>✓ MF上から消えた請求書はありません</p>"
+) . "
 <a href='/della_score.html'>Della Scoreに戻る</a>
 </div></body></html>";
 
