@@ -3608,10 +3608,10 @@ function saveProspect(){
   const deadline=g(px+'deadline');
   if(D.editId){
     const p=D.prospects.find(x=>x.id===D.editId);
-    if(p){p.client=client;p.name=name;p.amount=parseFloat(g(px+'amount'))||null;p.cost=parseFloat(g(px+'cost'))||null;p.issued=issued;p.deadline=deadline;p.owner=owner;p.memo=t==='manual'?g('f-memo'):'';}
+    if(p){p.client=client;p.name=name;p.amount=parseFloat(g(px+'amount'))||null;p.cost=parseFloat(g(px+'cost'))||null;p.issued=issued;p.deadline=deadline;p.owner=owner;p.memo=t==='manual'?g('f-memo'):'';p.quote_number=g('f-quote-number');}
     D.editId=null;
   } else {
-    D.prospects.unshift({id:uid(),client,name,amount:parseFloat(g(px+'amount'))||null,cost:parseFloat(g(px+'cost'))||null,issued,deadline,owner,memo:t==='manual'?g('f-memo'):'',status:'prospect',createdAt:today()});
+    D.prospects.unshift({id:uid(),client,name,amount:parseFloat(g(px+'amount'))||null,cost:parseFloat(g(px+'cost'))||null,issued,deadline,owner,memo:t==='manual'?g('f-memo'):'',status:'prospect',createdAt:today(),quote_number:g('f-quote-number')});
     upsertClient({name:client,owner,date:deadline});
   }
   save(); closeModal('add-modal'); render();
