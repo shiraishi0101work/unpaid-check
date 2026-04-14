@@ -3705,7 +3705,7 @@ function editInvoice(id){
 
 function editPurchase(id){
   const p=D.purchases.find(x=>x.id===id);if(!p)return;
-  clr('pf-supplier','pf-desc','pf-amount','pf-tax','pf-bank','pf-owner','pf-due');
+  clr('pf-supplier','pf-desc','pf-amount','pf-tax','pf-bank','pf-owner','pf-due','pf-invoice-number');
   sv('pf-issued',today()); sv('pf-status','unpaid');
   document.getElementById('pur-fn').style.display='none';
   document.getElementById('pur-status').style.display='none';
