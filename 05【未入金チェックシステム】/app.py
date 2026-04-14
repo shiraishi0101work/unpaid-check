@@ -468,14 +468,27 @@ def debug_accounting():
     except Exception as e:
         result["offices_error"] = str(e)
 
-    # journals API（1件だけ）
-    try:
-        r = _req.get("https://api-accounting.moneyforward.com/api/v3/journals",
-                     headers=headers, params={"per_page": 1, "page": 1}, timeout=10)
-        result["journals_status"] = r.status_code
-        result["journals_body"]   = r.text[:1000]
-    except Exception as e:
-        result["journals_error"] = str(e)
+    # journals API - パターン別に試す
+    from datetime import date as _d
+    today = _d.today().strftime("%Y-%m-%d")
+    test_cases = [
+        {"per_page": 1, "page": 1, "end_date": today},
+        {"per_page": 1, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
+        {"limit": 1, "page": 1, "end_date": today},
+        {"count": 1, "page": 1, "end_date": today},
+        {"page": 1, "end_date": today},
+    ]
+    for i, params in enumerate(test_cases):
+        try:
+            r = _req.get("https://api-accounting.moneyforward.com/api/v3/journals",
+                         headers=headers, params=params, timeout=10)
+            result[f"test{i}_params"] = params
+            result[f"test{i}_status"] = r.status_code
+            result[f"test{i}_body"]   = r.text[:300]
+            if r.ok:
+                break  # 成功したら終了
+        except Exception as e:
+            result[f"test{i}_error"] = str(e)
 
     return jsonify(result)
 
