@@ -3707,7 +3707,7 @@ function editProspect(id){
   refreshOwners();
   D.editId=id;
   document.getElementById('add-modal-title').textContent='案件を編集';
-  sv('f-client',p.client);sv('f-name',p.name);sv('f-amount',p.amount||'');sv('f-cost',p.cost||'');sv('f-issued',p.issued||today());sv('f-deadline',p.deadline||'');sv('f-owner',p.owner||'');sv('f-memo',p.memo||'');
+  sv('f-client',p.client);sv('f-name',p.name);sv('f-amount',p.amount||'');sv('f-cost',p.cost||'');sv('f-issued',p.issued||today());sv('f-deadline',p.deadline||'');sv('f-owner',p.owner||'');sv('f-memo',p.memo||'');sv('f-quote-number',p.quote_number||'');
   document.getElementById('add-actions').innerHTML=`<button class="btn btn-danger btn-sm" onclick="delItem('prospects','${id}');closeModal('add-modal')">削除</button><span style="flex:1"></span><button class="btn" onclick="closeModal('add-modal')">キャンセル</button><button class="btn btn-primary" onclick="saveProspect()">更新する</button>`;
   openModal('add-modal');
 }
