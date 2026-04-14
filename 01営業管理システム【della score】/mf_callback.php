@@ -189,10 +189,41 @@ while (true) {
 }
 $quoPageCount = $page;
 
+// ── MF削除検知：同期期間内にあった請求書でMFから消えたものをピックアップ ──
+$deletedMfItems = []; // billing_number => existing mf_invoice item
+foreach ($existingInvoices as $ex) {
+    $created = $ex['created_at'] ?? '';
+    if ($created === '' || $created < $DATE_FROM || $created > $DATE_TO) continue;
+    $id  = $ex['id'] ?? '';
+    $num = $ex['billing_number'] ?? '';
+    if ($id && isset($newInvIds[$id])) continue;   // 今回も取得できた
+    if ($num && isset($newInvNums[$num])) continue; // 番号一致で取得できた
+    if ($num) $deletedMfItems[$num] = $ex;
+}
+
+$deletedWarnings = [];
+if ($deletedMfItems) {
+    $dsInvoices = loadFull($db, 'invoices');
+    foreach ($dsInvoices as $inv) {
+        $bn = $inv['billing_number'] ?? '';
+        if ($bn && isset($deletedMfItems[$bn])) {
+            $deletedWarnings[] = [
+                'id'             => $inv['id'] ?? '',
+                'billing_number' => $bn,
+                'client'         => $inv['client'] ?? '',
+                'name'           => $inv['name'] ?? '',
+                'amount'         => $inv['amount'] ?? 0,
+                'issued'         => $inv['issued'] ?? '',
+            ];
+        }
+    }
+}
+
 // ── DBに保存（マージ結果） ──
 $stmt = $db->prepare('INSERT OR REPLACE INTO store (key, value) VALUES (?, ?)');
 $stmt->execute(['mf_invoices', json_encode(array_values($mergedInvoices), JSON_UNESCAPED_UNICODE)]);
 $stmt->execute(['mf_quotes',   json_encode(array_values($mergedQuotes),   JSON_UNESCAPED_UNICODE)]);
+$stmt->execute(['mf_deleted_warnings', json_encode($deletedWarnings, JSON_UNESCAPED_UNICODE)]);
 
 // ── 完了画面 ──
 echo "<!DOCTYPE html><html lang='ja'><head><meta charset='UTF-8'><title>MF連携完了</title>
