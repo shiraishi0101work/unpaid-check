@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+
+{# ==================== 左サイドバー ==================== #}
+{% block sidebar %}
+
+<!-- MF連携ステータス -->
+<div class="sidebar-section">
+  <div class="sidebar-label">MFクラウド連携</div>
+
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-text{% if auth_invoice %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド請求書</span>
+    </span>
+    {% if auth_invoice %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
+
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-calculator{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド会計</span>
+    </span>
+    {% if auth_accounting %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
+</div>
+
+<hr class="sidebar-divider">
+
+<!-- データ取得 -->
+<div class="sidebar-section">
+  <div class="sidebar-label">入金データ取得</div>
+  <div class="sidebar-item">
+    <form method="POST" action="{{ url_for('payments_fetch') }}">
+      <button type="submit" class="btn btn-primary btn-sm w-100"
+        {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}>
+        <i class="bi bi-cloud-download me-1"></i>会計データ取得
+      </button>
+    </form>
+    <p class="text-muted mt-1" style="font-size:0.72rem">今年度の入金仕訳を取得します</p>
+  </div>
+</div>
+
+<hr class="sidebar-divider">
+
+<!-- ナビ -->
+<div class="sidebar-section">
+  <div class="sidebar-label">ナビゲーション</div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start">
+      <i class="bi bi-speedometer2 me-1"></i>ダッシュボード
+    </a>
+  </div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('payments') }}" class="btn btn-secondary btn-sm w-100 text-start">
+      <i class="bi bi-cash-stack me-1"></i>入金履歴
+    </a>
+  </div>
+</div>
+
+{% endblock %}
+
+{# ==================== メインコンテンツ ==================== #}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0 fw-bold">
+    <i class="bi bi-cash-stack me-2 text-success"></i>入金履歴
+    <span class="badge bg-secondary ms-2" style="font-size:0.75rem">{{ deals|length }}件</span>
+  </h5>
+</div>
+
+{% if not deals %}
+  <div class="alert alert-info d-flex align-items-center gap-2">
+    <i class="bi bi-info-circle-fill fs-5"></i>
+    <div>
+      入金データがありません。<br>
+      左の「会計データ取得」ボタンでMFクラウド会計から今年度の入金データを取得してください。
+    </div>
+  </div>
+{% else %}
+
+<!-- 合算確認アラート -->
+{% set needs_check = deals | selectattr('合算確認') | list %}
+{% if needs_check %}
+<div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-3">
+  <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+  <div>
+    <strong>合算確認が必要な入金が {{ needs_check|length }}件</strong>あります。
+    同一取引先で複数の未入金請求書が存在するため、合算入金の可能性があります。
+  </div>
+</div>
+{% endif %}
+
+<!-- サマリーカード -->
+<div class="row g-3 mb-3">
+  {% set linked_count   = deals | selectattr('紐づけ請求書IDs') | list | length %}
+  {% set unlinked_count = deals | length - linked_count %}
+  {% set gasan_count    = deals | selectattr('合算確認') | list | length %}
+  <div class="col-auto">
+    <div class="card border-0 shadow-sm px-3 py-2">
+      <div class="text-muted" style="font-size:0.7rem">紐づけ済み</div>
+      <div class="fw-bold text-success fs-5">{{ linked_count }}</div>
+    </div>
+  </div>
+  <div class="col-auto">
+    <div class="card border-0 shadow-sm px-3 py-2">
+      <div class="text-muted" style="font-size:0.7rem">未紐づけ</div>
+      <div class="fw-bold text-secondary fs-5">{{ unlinked_count }}</div>
+    </div>
+  </div>
+  <div class="col-auto">
+    <div class="card border-0 shadow-sm px-3 py-2">
+      <div class="text-muted" style="font-size:0.7rem">合算確認</div>
+      <div class="fw-bold text-warning fs-5">{{ gasan_count }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- フィルター -->
+<div class="card mb-3 border-0 shadow-sm">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label mb-0 small">取引先名</label>
+        <input type="text" id="filter-company" class="form-control form-control-sm" placeholder="絞り込み...">
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0 small">紐づけ状態</label>
+        <select id="filter-link" class="form-select form-select-sm">
+          <option value="">すべて</option>
+          <option value="unlinked">未紐づけのみ</option>
+          <option value="linked">紐づけ済みのみ</option>
+          <option value="gasan">合算確認のみ</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+          <i class="bi bi-x-circle me-1"></i>クリア
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 入金履歴テーブル -->
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0" id="payments-table">
+        <thead class="table-light">
+          <tr>
+            <th style="width:100px">着金日</th>
+            <th>取引先名（会計）</th>
+            <th class="text-end" style="width:120px">入金金額</th>
+            <th style="width:90px">科目</th>
+            <th style="width:160px">備考</th>
+            <th>紐づけ済み請求書</th>
+            <th style="width:90px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for deal in deals %}
+          <tr data-company="{{ deal.取引先名 | e }}"
+              data-linked="{{ 'yes' if deal.紐づけ請求書IDs else 'no' }}"
+              data-gasan="{{ 'yes' if deal.合算確認 else 'no' }}">
+
+            <td class="text-nowrap small">{{ deal.着金日 }}</td>
+
+            <td>
+              <span class="fw-semibold">{{ deal.取引先名 }}</span>
+              {% if deal.合算確認 %}
+                <span class="badge bg-warning text-dark ms-1" title="同一取引先で複数の未入金請求書あり（合算入金の可能性）">
+                  合算確認
+                </span>
+              {% endif %}
+            </td>
+
+            <td class="text-end fw-semibold text-success">
+              ¥{{ "{:,}".format(deal.入金金額) }}
+            </td>
+
+            <td class="small text-muted">{{ deal.科目 }}</td>
+
+            <td class="small text-muted text-truncate" style="max-width:160px" title="{{ deal.備考 }}">
+              {{ deal.備考 or '—' }}
+            </td>
+
+            <td>
+              {% if deal.紐づけ請求書 %}
+                {% for b in deal.紐づけ請求書 %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle me-1 mb-1"
+                        style="font-size:0.7rem; white-space:normal">
+                    {{ b.請求番号 or b.請求書ID[:8] }} &nbsp;{{ b.取引先名 }}&nbsp;
+                    ¥{{ "{:,}".format(b.請求金額) }}
+                  </span>
+                {% endfor %}
+                {% if deal.紐づけメモ %}
+                  <div class="text-muted" style="font-size:0.72rem">{{ deal.紐づけメモ }}</div>
+                {% endif %}
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <button class="btn btn-outline-primary btn-xs py-0 px-2"
+                onclick="openLinkModal(
+                  '{{ deal.取引ID | e }}',
+                  {{ deal | tojson }}
+                )">
+                <i class="bi bi-link-45deg"></i>
+                {{ '編集' if deal.紐づけ請求書IDs else '紐づけ' }}
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 全請求書データをページに埋め込み（紐づけ候補表示用） -->
+<script>
+const ALL_BILLINGS = {{ all_billings | tojson }};
+</script>
+{% endif %}
+
+{% endblock %}
+
+{# ==================== スクリプト ==================== #}
+{% block scripts %}
+
+<!-- 請求書紐づけモーダル -->
+<div class="modal fade" id="linkModal" tabindex="-1" aria-labelledby="linkModalLabel">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+
+      <div class="modal-header py-2">
+        <h6 class="modal-title fw-bold" id="linkModalLabel">
+          <i class="bi bi-link-45deg me-2"></i>請求書を紐づける
+        </h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- 入金情報 -->
+        <div class="card bg-light border-0 mb-3">
+          <div class="card-body py-2">
+            <div class="row g-3 align-items-center">
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">取引先（会計）</div>
+                <strong id="modal-company"></strong>
+                <span id="modal-gasan-badge" class="badge bg-warning text-dark ms-1 d-none">合算確認</span>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">着金日</div>
+                <strong id="modal-date"></strong>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">入金金額</div>
+                <strong id="modal-amount" class="text-success fs-6"></strong>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">科目</div>
+                <span id="modal-account"></span>
+              </div>
+              <div class="col">
+                <div class="text-muted" style="font-size:0.72rem">備考</div>
+                <span id="modal-remark" class="small"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 候補検索 -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button class="btn btn-outline-primary btn-sm" id="suggest-btn" onclick="loadSuggestions()">
+            <i class="bi bi-magic me-1"></i>会社名で自動検索
+          </button>
+          <div class="input-group input-group-sm" style="max-width:320px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="billing-search" class="form-control"
+              placeholder="請求書を直接検索..." oninput="filterBillings()">
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" onclick="showAll()">全件表示</button>
+        </div>
+
+        <!-- 候補テーブルエリア -->
+        <div id="suggestions-area" style="min-height:80px">
+          <p class="text-muted small">「会社名で自動検索」または検索ボックスで請求書を探してください。</p>
+        </div>
+
+        <hr>
+
+        <!-- 紐づけリスト -->
+        <div class="fw-semibold small mb-2">
+          紐づける請求書
+          <span id="selected-count" class="badge bg-primary ms-1">0</span>
+        </div>
+        <div id="selected-billings" class="d-flex flex-wrap gap-1 mb-3">
+          <span class="text-muted small">まだ選択されていません</span>
+        </div>
+
+        <div>
+          <label class="form-label small mb-1">メモ（任意）</label>
+          <input type="text" id="link-note" class="form-control form-control-sm"
+            placeholder="例: 合算入金 / 振込手数料差引">
+        </div>
+      </div>
+
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveLink()">
+          <i class="bi bi-check-lg me-1"></i>保存
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let _dealId      = null;
+let _selectedIds = [];
+let _suggestions = [];
+
+/* ---- モーダルを開く ---- */
+function openLinkModal(dealId, deal) {
+  _dealId      = dealId;
+  _selectedIds = [...(deal['紐づけ請求書IDs'] || [])];
+
+  document.getElementById('modal-company').textContent = deal['取引先名'] || '';
+  document.getElementById('modal-date').textContent    = deal['着金日']   || '';
+  document.getElementById('modal-amount').textContent  = '¥' + (deal['入金金額'] || 0).toLocaleString('ja-JP');
+  document.getElementById('modal-account').textContent = deal['科目']     || '';
+  document.getElementById('modal-remark').textContent  = deal['備考']     || '';
+  document.getElementById('link-note').value           = deal['紐づけメモ'] || '';
+  document.getElementById('billing-search').value      = '';
+
+  const badge = document.getElementById('modal-gasan-badge');
+  deal['合算確認'] ? badge.classList.remove('d-none') : badge.classList.add('d-none');
+
+  _suggestions = [];
+  document.getElementById('suggestions-area').innerHTML =
+    '<p class="text-muted small">「会社名で自動検索」または検索ボックスで請求書を探してください。</p>';
+
+  renderSelected();
+  new bootstrap.Modal(document.getElementById('linkModal')).show();
+}
+
+/* ---- 自動候補取得 ---- */
+async function loadSuggestions() {
+  const btn = document.getElementById('suggest-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>検索中...';
+  try {
+    const resp = await fetch(`/api/payments/${_dealId}/suggest`);
+    _suggestions = await resp.json();
+    renderTable(_suggestions, true);
+  } catch(e) {
+    document.getElementById('suggestions-area').innerHTML =
+      `<div class="alert alert-danger small py-1">エラー: ${escHtml(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-magic me-1"></i>会社名で自動検索';
+  }
+}
+
+/* ---- 全件表示 ---- */
+function showAll() {
+  renderTable(ALL_BILLINGS.map(b => ({...b, _score: null})), false);
+}
+
+/* ---- 直接検索 ---- */
+function filterBillings() {
+  const q = document.getElementById('billing-search').value.toLowerCase().trim();
+  if (!q) {
+    if (_suggestions.length > 0) renderTable(_suggestions, true);
+    else showAll();
+    return;
+  }
+  const filtered = ALL_BILLINGS.filter(b =>
+    (b['取引先名'] || '').toLowerCase().includes(q) ||
+    (b['請求番号'] || '').toLowerCase().includes(q) ||
+    (b['件名']     || '').toLowerCase().includes(q)
+  ).map(b => ({...b, _score: null})).slice(0, 50);
+  renderTable(filtered, false);
+}
+
+/* ---- テーブル描画 ---- */
+function renderTable(items, showScore) {
+  if (!items || items.length === 0) {
+    document.getElementById('suggestions-area').innerHTML =
+      '<p class="text-muted small">候補が見つかりませんでした。検索ボックスで直接検索してください。</p>';
+    return;
+  }
+  const rows = items.map(b => {
+    const id      = b['請求書ID'] || '';
+    const checked = _selectedIds.includes(id) ? 'checked' : '';
+    const score   = (showScore && b['_score'] != null)
+      ? `<span class="badge bg-light text-dark border" style="font-size:0.65rem">${Math.round(b['_score'] * 100)}%</span>`
+      : '';
+    const statusCls = b['入金状態'] === '入金済み' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
+    const statusLbl = b['入金状態'] || '';
+    return `<tr>
+      <td class="text-center">
+        <input type="checkbox" class="form-check-input billing-cb"
+          value="${escHtml(id)}" ${checked}
+          data-billing='${JSON.stringify({id, name: b['取引先名']||'', num: b['請求番号']||'', amount: b['請求金額']||0}).replace(/'/g,"&#39;")}'
+          onchange="toggleBilling(this)">
+      </td>
+      <td class="small text-nowrap">${escHtml(b['請求日'] || '')}</td>
+      <td class="small">${escHtml(b['取引先名'] || '')}</td>
+      <td class="small text-nowrap">${escHtml(b['請求番号'] || '')}</td>
+      <td class="text-end small">¥${(b['請求金額']||0).toLocaleString('ja-JP')}</td>
+      <td class="small text-nowrap">${escHtml(b['支払期限'] || '')}</td>
+      <td><span class="badge ${statusCls} border" style="font-size:0.65rem">${escHtml(statusLbl)}</span></td>
+      <td>${score}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('suggestions-area').innerHTML = `
+    <div class="table-responsive" style="max-height:280px;overflow-y:auto">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="width:36px"></th>
+            <th>請求日</th>
+            <th>取引先名</th>
+            <th>請求番号</th>
+            <th class="text-end">請求金額</th>
+            <th>支払期限</th>
+            <th>状態</th>
+            ${showScore ? '<th>類似度</th>' : '<th></th>'}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ---- チェックボックス操作 ---- */
+function toggleBilling(cb) {
+  const id = cb.value;
+  if (cb.checked) {
+    if (!_selectedIds.includes(id)) _selectedIds.push(id);
+  } else {
+    _selectedIds = _selectedIds.filter(x => x !== id);
+  }
+  renderSelected();
+}
+
+function renderSelected() {
+  const container = document.getElementById('selected-billings');
+  document.getElementById('selected-count').textContent = _selectedIds.length;
+  if (_selectedIds.length === 0) {
+    container.innerHTML = '<span class="text-muted small">まだ選択されていません</span>';
+    return;
+  }
+  container.innerHTML = _selectedIds.map(id => {
+    const b = ALL_BILLINGS.find(x => x['請求書ID'] === id);
+    const label = b
+      ? `${b['請求番号'] || id.slice(0,8)} &nbsp;${escHtml(b['取引先名']||'')} &nbsp;¥${(b['請求金額']||0).toLocaleString('ja-JP')}`
+      : escHtml(id);
+    return `<span class="badge bg-primary-subtle text-primary border border-primary-subtle"
+      style="cursor:pointer;white-space:normal"
+      onclick="removeSelected('${escHtml(id)}')" title="クリックで削除">
+      ${label} <i class="bi bi-x"></i>
+    </span>`;
+  }).join('');
+}
+
+function removeSelected(id) {
+  _selectedIds = _selectedIds.filter(x => x !== id);
+  const cb = document.querySelector(`.billing-cb[value="${CSS.escape(id)}"]`);
+  if (cb) cb.checked = false;
+  renderSelected();
+}
+
+/* ---- 保存 ---- */
+async function saveLink() {
+  const note = document.getElementById('link-note').value.trim();
+  try {
+    const resp = await fetch(`/api/payments/${_dealId}/link`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ invoice_ids: _selectedIds, note })
+    });
+    if (resp.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('linkModal')).hide();
+      location.reload();
+    } else {
+      alert('保存に失敗しました');
+    }
+  } catch(e) {
+    alert('保存に失敗しました: ' + e.message);
+  }
+}
+
+/* ---- フィルタリング ---- */
+function clearFilters() {
+  document.getElementById('filter-company').value = '';
+  document.getElementById('filter-link').value    = '';
+  applyFilter();
+}
+
+function applyFilter() {
+  const company   = document.getElementById('filter-company').value.toLowerCase();
+  const linkState = document.getElementById('filter-link').value;
+  document.querySelectorAll('#payments-table tbody tr').forEach(row => {
+    let show = true;
+    if (company   && !row.dataset.company.toLowerCase().includes(company)) show = false;
+    if (linkState === 'unlinked' && row.dataset.linked !== 'no')  show = false;
+    if (linkState === 'linked'   && row.dataset.linked !== 'yes') show = false;
+    if (linkState === 'gasan'    && row.dataset.gasan  !== 'yes') show = false;
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+document.getElementById('filter-company')?.addEventListener('input',  applyFilter);
+document.getElementById('filter-link')?.addEventListener('change', applyFilter);
+
+/* ---- ユーティリティ ---- */
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}
