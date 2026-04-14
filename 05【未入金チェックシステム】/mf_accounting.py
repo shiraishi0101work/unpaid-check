@@ -34,6 +34,7 @@ def _get_all_pages(params: dict) -> list:
     """仕訳一覧を全ページ取得して返す"""
     results = []
     page = 1
+    prev_count = None
     while True:
         params["page"] = page
         resp = requests.get(
@@ -41,21 +42,30 @@ def _get_all_pages(params: dict) -> list:
             headers=_headers(),
             params=params,
         )
+        # ページ超過による 400 は終端と判定して正常終了
+        if resp.status_code == 400:
+            print(f"[会計API] page={page} 400→ページ終端と判定して終了")
+            break
         if not resp.ok:
             print(f"[会計API] エラー {resp.status_code}: {resp.text[:500]}")
-        resp.raise_for_status()
-        data = resp.json()
+            resp.raise_for_status()
 
+        data = resp.json()
         journals = data.get("journals", [])
         if not journals:
             break
 
         results.extend(journals)
+        print(f"[会計API] page={page} {len(journals)}件取得 (累計{len(results)}件)")
 
         meta = data.get("metadata", {})
         total_pages = meta.get("total_pages", 1)
         if page >= total_pages:
             break
+        # 前ページより少なければ最終ページと判定
+        if prev_count is not None and len(journals) < prev_count:
+            break
+        prev_count = len(journals)
         page += 1
 
     return results
