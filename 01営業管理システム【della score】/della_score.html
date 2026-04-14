@@ -2250,7 +2250,22 @@ function confirmMfImport(){
   _mfImportTarget = null;
 }
 
+function renderMfDeletedBanner(){
+  const banner=document.getElementById('mf-deleted-banner');
+  const listEl=document.getElementById('mf-deleted-list');
+  if(!banner||!listEl) return;
+  const warns=D.mfDeletedWarnings||[];
+  if(!warns.length){banner.style.display='none';return;}
+  banner.style.display='';
+  listEl.innerHTML=warns.map(w=>`<div style="margin-bottom:3px">・<strong>${w.client||'（取引先不明）'}</strong>${w.name?' / '+w.name:''} — 請求書番号: ${w.billing_number||'-'} — ¥${(w.amount||0).toLocaleString('ja-JP')} （発行日: ${w.issued||'-'}）</div>`).join('');
+}
+function dismissMfDeletedWarnings(){
+  D.mfDeletedWarnings=[];
+  fetch('/api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mf_deleted_warnings:[]})}).catch(()=>{});
+  renderMfDeletedBanner();
+}
 function renderInvoices(){
+  renderMfDeletedBanner();
   const tb=document.getElementById('i-tbody');
   const em=document.getElementById('i-empty');
   const q=(document.getElementById('search-invoices')?.value||'').toLowerCase();
