@@ -118,12 +118,14 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     """
     print("[会計] 入金データを取得中 (API v3)...")
 
-    params: dict = {"per_page": 100}
+    from datetime import date as _date
+    today = _date.today().strftime("%Y-%m-%d")
 
-    # office_id が必要な場合に備えて取得して付与
-    office_id = _get_office_id()
-    if office_id:
-        params["office_id"] = office_id
+    params: dict = {"per_page": 100}
+    # APIは start_date か end_date のどちらかが必須。未来日付は拒否されるため today で上限
+    if from_date:
+        params["start_date"] = from_date
+    params["end_date"] = min(to_date, today) if to_date else today
 
     journals = _get_all_pages(params)
     print(f"[会計] 仕訳 {len(journals)}件 取得完了")
