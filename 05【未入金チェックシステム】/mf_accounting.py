@@ -30,6 +30,26 @@ def _headers() -> dict:
     }
 
 
+def _get_office_id() -> str | None:
+    """MFクラウド会計の事業所IDを取得する"""
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/api/v3/offices",
+            headers=_headers(),
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        offices = data.get("offices", [])
+        if offices:
+            oid = offices[0].get("id", "")
+            print(f"[会計API] office_id={oid}")
+            return oid
+    except Exception as e:
+        print(f"[会計API] office_id取得失敗: {e}")
+    return None
+
+
 def _get_all_pages(params: dict) -> list:
     """仕訳一覧を全ページ取得して返す"""
     results = []
@@ -44,11 +64,9 @@ def _get_all_pages(params: dict) -> list:
         )
         if resp.status_code == 400:
             if page > 1:
-                # 2ページ目以降の 400 はページ超過→終端として正常終了
                 print(f"[会計API] page={page} 400→ページ終端と判定して終了")
                 break
             else:
-                # 1ページ目の 400 は本物のエラー
                 print(f"[会計API] エラー {resp.status_code}: {resp.text[:500]}")
                 resp.raise_for_status()
         if not resp.ok:
@@ -67,7 +85,6 @@ def _get_all_pages(params: dict) -> list:
         total_pages = meta.get("total_pages", 1)
         if page >= total_pages:
             break
-        # 前ページより少なければ最終ページと判定
         if prev_count is not None and len(journals) < prev_count:
             break
         prev_count = len(journals)
