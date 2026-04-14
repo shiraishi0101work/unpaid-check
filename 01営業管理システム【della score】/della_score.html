@@ -2387,7 +2387,7 @@ function renderOrders(){
 function editOrder(id){
   const o=D.orders.find(x=>x.id===id);
   if(!o) return;
-  clr('of-client','of-name','of-amount','of-tax','of-owner','of-delivery','of-payment','of-desc','of-collection-month');
+  clr('of-client','of-name','of-amount','of-tax','of-owner','of-delivery','of-payment','of-desc','of-collection-month','of-order-number');
   sv('of-date',today());
   document.getElementById('of-diff-wrap').style.display='none';
   clearBulk('order');
