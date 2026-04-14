@@ -125,5 +125,17 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
                 "_matched": False,
             })
 
+    # Python 側で日付フィルタ
+    if from_date or to_date:
+        filtered = []
+        for r in result:
+            d = r.get("着金日", "")
+            if from_date and d and d < from_date:
+                continue
+            if to_date and d and d > to_date:
+                continue
+            filtered.append(r)
+        result = filtered
+
     print(f"[会計] 入金仕訳 {len(result)}件 抽出完了")
     return result
