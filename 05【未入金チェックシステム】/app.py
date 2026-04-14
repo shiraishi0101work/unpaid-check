@@ -500,6 +500,164 @@ def oauth_revoke(service_name):
     return redirect(url_for("dashboard"))
 
 # ========================================
+# 入金履歴ページ
+# ========================================
+
+PAYMENT_LINKS_FILE   = os.path.join(DATA_DIR, "payment_links.json")
+PAYMENT_HISTORY_FILE = os.path.join(DATA_DIR, "payment_history.json")
+
+
+def load_payment_links() -> dict:
+    if not os.path.exists(PAYMENT_LINKS_FILE):
+        return {}
+    with open(PAYMENT_LINKS_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_payment_links(links: dict):
+    with open(PAYMENT_LINKS_FILE, "w", encoding="utf-8") as f:
+        json.dump(links, f, ensure_ascii=False, indent=2)
+
+
+def load_payment_history() -> list:
+    if not os.path.exists(PAYMENT_HISTORY_FILE):
+        return []
+    with open(PAYMENT_HISTORY_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_payment_history(deals: list):
+    with open(PAYMENT_HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(deals, f, ensure_ascii=False, indent=2)
+
+
+@app.route("/payments")
+def payments():
+    import name_utils
+    from collections import Counter
+
+    auth_accounting = auth.is_authenticated("accounting")
+    auth_invoice    = auth.is_authenticated("invoice")
+    deals           = load_payment_history()
+    links           = load_payment_links()
+    settings        = load_settings()
+
+    # 全請求書（紐づけ候補として利用）
+    result = _load_result()
+    all_billings = []
+    if result:
+        all_billings = result.get("unpaid", []) + result.get("paid", [])
+    # _raw キーを除去してJSONシリアライズ可能にする
+    all_billings = [{k: v for k, v in b.items() if k != "_raw"} for b in all_billings]
+
+    # 合算確認フラグ: 未入金請求書を取引先の正規化名でカウント
+    unpaid_billings = result.get("unpaid", []) if result else []
+    company_count = Counter(
+        name_utils.normalize(b["取引先名"])
+        for b in unpaid_billings
+        if b.get("取引先名")
+    )
+
+    # 各 deal に紐づけ情報と合算確認フラグを付与
+    enriched = []
+    billing_by_id = {b["請求書ID"]: b for b in all_billings}
+
+    for d in deals:
+        deal = {k: v for k, v in d.items() if k != "_matched"}
+        deal_id = deal.get("取引ID", "")
+        link = links.get(deal_id, {})
+        linked_ids = link.get("invoice_ids", [])
+
+        deal["紐づけ請求書IDs"] = linked_ids
+        deal["紐づけメモ"]       = link.get("note", "")
+        deal["紐づけ請求書"]     = [billing_by_id[bid] for bid in linked_ids if bid in billing_by_id]
+
+        # 合算確認: 同一取引先（正規化後）で未入金請求書が2件以上
+        norm = name_utils.normalize(deal.get("取引先名", ""))
+        deal["合算確認"] = company_count.get(norm, 0) >= 2
+
+        enriched.append(deal)
+
+    # 着金日の降順でソート
+    enriched.sort(key=lambda x: x.get("着金日", ""), reverse=True)
+
+    return render_template(
+        "payments.html",
+        deals=enriched,
+        all_billings=all_billings,
+        auth_accounting=auth_accounting,
+        auth_invoice=auth_invoice,
+        settings=settings,
+    )
+
+
+@app.route("/payments/fetch", methods=["POST"])
+def payments_fetch():
+    """MFクラウド会計から今年度の入金データを取得してキャッシュ"""
+    from mf_accounting import get_income_deals
+
+    settings    = load_settings()
+    start_month = settings["fiscal_year_start_month"]
+    fiscal_year = get_current_fiscal_year(start_month)
+    from_date, to_date = get_fiscal_year_range(fiscal_year, start_month)
+
+    try:
+        deals   = get_income_deals(from_date=from_date, to_date=to_date)
+        cleaned = [{k: v for k, v in d.items() if k != "_matched"} for d in deals]
+        save_payment_history(cleaned)
+        flash(f"入金データ {len(cleaned)}件を取得しました", "success")
+    except Exception as e:
+        flash(f"取得エラー: {e}", "error")
+    return redirect(url_for("payments"))
+
+
+@app.route("/api/payments/<deal_id>/link", methods=["POST"])
+def payments_link(deal_id):
+    """入金データに請求書を紐づけ保存"""
+    data        = request.get_json() or {}
+    invoice_ids = data.get("invoice_ids", [])
+    note        = data.get("note", "")
+
+    links = load_payment_links()
+    links[deal_id] = {"invoice_ids": invoice_ids, "note": note}
+    save_payment_links(links)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/payments/<deal_id>/suggest")
+def payments_suggest(deal_id):
+    """会計の取引先名からファジーマッチで請求書候補を返す"""
+    import name_utils
+
+    deals = load_payment_history()
+    deal  = next((d for d in deals if d.get("取引ID") == deal_id), None)
+    if not deal:
+        return jsonify([])
+
+    result = _load_result()
+    if not result:
+        return jsonify([])
+
+    all_billings = result.get("unpaid", []) + result.get("paid", [])
+    suggestions  = name_utils.find_matches(deal.get("取引先名", ""), all_billings, threshold=0.4)
+
+    return jsonify([
+        {
+            "請求書ID": b["請求書ID"],
+            "請求番号": b["請求番号"],
+            "取引先名": b["取引先名"],
+            "件名":     b.get("件名", ""),
+            "請求金額": b["請求金額"],
+            "請求日":   b["請求日"],
+            "支払期限": b["支払期限"],
+            "入金状態": b["入金状態"],
+            "_score":   b["_score"],
+        }
+        for b in suggestions[:30]
+    ])
+
+
+# ========================================
 # 起動
 # ========================================
 
