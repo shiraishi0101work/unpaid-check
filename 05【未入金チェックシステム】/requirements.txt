@@ -4,3 +4,5 @@ openpyxl
 pandas
 flask
 apscheduler
+jaconv
+rapidfuzz
