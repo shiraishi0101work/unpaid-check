@@ -83,7 +83,7 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     """
     print("[会計] 入金データを取得中 (API v3)...")
 
-    params: dict = {"per_page": 1000}
+    params: dict = {"per_page": 100}
     if from_date:
         params["start_date"] = from_date
     if to_date:
