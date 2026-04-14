@@ -99,8 +99,8 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
         jid      = j.get("id", "")
 
         for branch in j.get("branches", []):
-            creditor = branch.get("creditor", {})
-            debitor  = branch.get("debitor",  {})
+            creditor = branch.get("creditor") or {}
+            debitor  = branch.get("debitor")  or {}
 
             cr_account = creditor.get("account_name", "")
             db_account = debitor.get("account_name",  "")
