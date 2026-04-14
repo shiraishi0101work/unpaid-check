@@ -2262,7 +2262,7 @@ function renderInvoices(){
   const mf=msel?.value||'';
   let list=D.invoices;
   if(mf) list=list.filter(i=>(i.issued||'').slice(0,7)===mf);
-  if(q) list=list.filter(i=>(i.client+i.name+(i.owner||'')+(i.items||'')).toLowerCase().includes(q));
+  if(q) list=list.filter(i=>(i.client+i.name+(i.owner||'')+(i.items||'')+(i.billing_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(i=>(i.owner||'')===ow);
   if(document.getElementById('filter-no-owner-invoices')?.checked) list=list.filter(i=>!(i.owner||'').trim());
   if(!list.length){tb.innerHTML='';em.style.display='';
