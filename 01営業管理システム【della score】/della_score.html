@@ -2359,7 +2359,7 @@ function renderOrders(){
   const om=omSel?.value||'';
   let list=D.orders;
   if(om) list=list.filter(o=>(o.date||'').startsWith(om));
-  if(q) list=list.filter(o=>(o.client+o.name+(o.owner||'')+(o.payment||'')).toLowerCase().includes(q));
+  if(q) list=list.filter(o=>(o.client+o.name+(o.owner||'')+(o.payment||'')+(o.order_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(o=>(o.owner||'')===ow);
   if(document.getElementById('filter-no-owner-orders')?.checked) list=list.filter(o=>!(o.owner||'').trim());
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
