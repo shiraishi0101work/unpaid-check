@@ -2314,7 +2314,7 @@ function renderPurchases(){
   const mpf=mpsel?.value||'';
   let list=D.purchases;
   if(mpf) list=list.filter(p=>(p.issued||'').slice(0,7)===mpf);
-  if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')).toLowerCase().includes(q));
+  if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')+(p.invoice_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')===ow);
   if(document.getElementById('filter-no-owner-purchases')?.checked) list=list.filter(p=>!(p.owner||'').trim());
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
