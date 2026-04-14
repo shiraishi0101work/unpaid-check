@@ -42,10 +42,15 @@ def _get_all_pages(params: dict) -> list:
             headers=_headers(),
             params=params,
         )
-        # ページ超過による 400 は終端と判定して正常終了
         if resp.status_code == 400:
-            print(f"[会計API] page={page} 400→ページ終端と判定して終了")
-            break
+            if page > 1:
+                # 2ページ目以降の 400 はページ超過→終端として正常終了
+                print(f"[会計API] page={page} 400→ページ終端と判定して終了")
+                break
+            else:
+                # 1ページ目の 400 は本物のエラー
+                print(f"[会計API] エラー {resp.status_code}: {resp.text[:500]}")
+                resp.raise_for_status()
         if not resp.ok:
             print(f"[会計API] エラー {resp.status_code}: {resp.text[:500]}")
             resp.raise_for_status()
