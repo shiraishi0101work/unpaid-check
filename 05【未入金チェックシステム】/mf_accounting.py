@@ -41,6 +41,8 @@ def _get_all_pages(params: dict) -> list:
             headers=_headers(),
             params=params,
         )
+        if not resp.ok:
+            print(f"[会計API] エラー {resp.status_code}: {resp.text[:500]}")
         resp.raise_for_status()
         data = resp.json()
 
