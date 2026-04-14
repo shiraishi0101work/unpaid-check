@@ -1513,7 +1513,7 @@ function renderProspects(){
   let list=D.prospects;
   if(D.filterStatus!=='all') list=list.filter(p=>p.status===D.filterStatus);
   if(mf) list=list.filter(p=>(p.issued||'').startsWith(mf));
-  if(q) list=list.filter(p=>(p.client+p.name+(p.owner||'')+(p.memo||'')).toLowerCase().includes(q));
+  if(q) list=list.filter(p=>(p.client+p.name+(p.owner||'')+(p.memo||'')+(p.quote_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')=== ow);
   if(document.getElementById('filter-no-owner-prospects')?.checked) list=list.filter(p=>!(p.owner||'').trim());
   // ページネーション
