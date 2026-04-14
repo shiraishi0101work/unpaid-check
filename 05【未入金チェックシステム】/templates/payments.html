@@ -37,15 +37,23 @@
 <!-- データ取得 -->
 <div class="sidebar-section">
   <div class="sidebar-label">入金データ取得</div>
-  <div class="sidebar-item">
-    <form method="POST" action="{{ url_for('payments_fetch') }}">
+  <form method="POST" action="{{ url_for('payments_fetch') }}">
+    <div class="sidebar-item">
+      <label class="sidebar-sublabel">開始日（省略で年度自動）</label>
+      <input type="date" name="from_date" class="form-control form-control-sm">
+    </div>
+    <div class="sidebar-item">
+      <label class="sidebar-sublabel">終了日（省略で今日）</label>
+      <input type="date" name="to_date" class="form-control form-control-sm">
+    </div>
+    <div class="sidebar-item">
       <button type="submit" class="btn btn-primary btn-sm w-100"
         {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}>
         <i class="bi bi-cloud-download me-1"></i>会計データ取得
       </button>
-    </form>
-    <p class="text-muted mt-1" style="font-size:0.72rem">今年度の入金仕訳を取得します</p>
-  </div>
+      <p class="text-muted mt-1 mb-0" style="font-size:0.72rem">取込後に請求書を自動紐づけします</p>
+    </div>
+  </form>
 </div>
 
 <hr class="sidebar-divider">
