@@ -84,7 +84,7 @@ def get_income_deals(from_date: str = None, to_date: str = None) -> list[dict]:
     """
     print("[会計] 入金データを取得中 (API v3)...")
 
-    params: dict = {"per_page": 100}
+    params: dict = {}
 
     journals = _get_all_pages(params)
     print(f"[会計] 仕訳 {len(journals)}件 取得完了")
