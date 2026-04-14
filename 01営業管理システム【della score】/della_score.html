@@ -3698,7 +3698,7 @@ function saveRecurringPur(){
 function editProspect(id){
   const p=D.prospects.find(x=>x.id===id);if(!p)return;
   // フォームリセット→editIdセット→値入力（openAddModalは呼ばない）
-  clr('f-client','f-name','f-amount','f-cost','f-owner','f-memo');
+  clr('f-client','f-name','f-amount','f-cost','f-owner','f-memo','f-quote-number');
   sv('f-issued',today());
   sv('f-deadline','');
   document.getElementById('q-status').style.display='none';
