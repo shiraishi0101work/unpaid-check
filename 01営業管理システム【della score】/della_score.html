@@ -1550,6 +1550,7 @@ function renderProspects(){
       <td><input type="checkbox" class="pro-row-chk" value="${p.id}" onchange="updateProBulkBar()" style="cursor:pointer"></td>
       <td title="${p.client}" style="font-weight:600">${p.client}</td>
       <td title="${p.name||''}">${p.name||'-'}</td>
+      <td style="font-size:11px;color:var(--text3)">${p.quote_number||'-'}</td>
       <td class="amount">${fmt(p.amount)}</td>
       <td class="amount" style="color:var(--text2)">${fmt(p.cost)}</td>
       <td class="amount" style="color:${pc}">${fmt(pf)}</td>
