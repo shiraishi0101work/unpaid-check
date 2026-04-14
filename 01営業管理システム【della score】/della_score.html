@@ -3616,7 +3616,7 @@ function savePurchase(){
     if(p){p.supplier=supplier;p.desc=g('pf-desc');p.amount=parseFloat(g('pf-amount'))||null;p.tax=parseFloat(g('pf-tax'))||null;p.bank=g('pf-bank');p.owner=owner;p.issued=issued;p.due=g('pf-due');p.status=g('pf-status');p.ownerItems=ownerItems;p.invoice_number=g('pf-invoice-number');}
     D.editId=null;
   } else {
-    D.purchases.unshift({id:uid(),supplier,desc:g('pf-desc'),amount:parseFloat(g('pf-amount'))||null,tax:parseFloat(g('pf-tax'))||null,bank:g('pf-bank'),owner,issued,due:g('pf-due'),refId:g('pf-ref'),status:g('pf-status'),ownerItems});
+    D.purchases.unshift({id:uid(),supplier,desc:g('pf-desc'),amount:parseFloat(g('pf-amount'))||null,tax:parseFloat(g('pf-tax'))||null,bank:g('pf-bank'),owner,issued,due:g('pf-due'),refId:g('pf-ref'),status:g('pf-status'),ownerItems,invoice_number:g('pf-invoice-number')});
     upsertClient({name:supplier,owner,date:issued});
   }
   save(); closeModal('purchase-modal'); nav('purchases',document.querySelectorAll('.nav-item')[5]); render();
