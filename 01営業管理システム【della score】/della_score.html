@@ -3716,7 +3716,7 @@ function editProspect(id){
 function editInvoice(id){
   const inv=D.invoices.find(x=>x.id===id);if(!inv)return;
   // フォームを先にリセット（editIdは上書きしない）
-  clr('if-client','if-name','if-amount','if-tax','if-owner','if-due','if-bank','if-items');
+  clr('if-client','if-name','if-amount','if-tax','if-owner','if-due','if-bank','if-items','if-billing-number');
   sv('if-issued',today());
   document.getElementById('inv-fn').style.display='none';
   clearBulk('invoice');
