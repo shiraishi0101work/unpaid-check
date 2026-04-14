@@ -2397,7 +2397,7 @@ function editOrder(id){
   document.getElementById('ord-modal-title').textContent='受注を編集';
   sv('of-client',o.client); sv('of-name',o.name||''); sv('of-amount',o.amount||''); sv('of-tax',o.tax||'');
   sv('of-date',o.date||''); sv('of-delivery',o.delivery||''); sv('of-payment',o.payment||'');
-  sv('of-owner',o.owner||''); sv('of-collection-month',o.collectionMonth||''); sv('of-desc',o.desc||'');
+  sv('of-owner',o.owner||''); sv('of-collection-month',o.collectionMonth||''); sv('of-desc',o.desc||''); sv('of-order-number',o.order_number||'');
   document.getElementById('ord-actions').innerHTML=
     `<button class="btn btn-danger btn-sm" onclick="delItem('orders','${id}');closeModal('order-modal')">削除</button>`+
     `<span style="flex:1"></span>`+
