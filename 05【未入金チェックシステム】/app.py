@@ -472,11 +472,12 @@ def debug_accounting():
     from datetime import date as _d
     today = _d.today().strftime("%Y-%m-%d")
     test_cases = [
-        {"per_page": 1, "page": 1, "end_date": today},
-        {"per_page": 1, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
-        {"limit": 1, "page": 1, "end_date": today},
-        {"count": 1, "page": 1, "end_date": today},
-        {"page": 1, "end_date": today},
+        {"per_page": 100, "page": 1, "end_date": today},
+        {"per_page":  50, "page": 1, "end_date": today},
+        {"per_page":  20, "page": 1, "end_date": today},
+        {"per_page":  10, "page": 1, "end_date": today},
+        {"per_page": 100, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
+        {"per_page":  10, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
     ]
     for i, params in enumerate(test_cases):
         try:
