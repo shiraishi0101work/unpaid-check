@@ -27,10 +27,11 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "mf-unpaid-check-secret-2026")
 
-DATA_DIR     = os.path.join(os.path.dirname(__file__), "data")
-RESULT_FILE  = os.path.join(DATA_DIR, "last_result.json")
-SETTINGS_FILE= os.path.join(DATA_DIR, "settings.json")
-META_FILE    = os.path.join(DATA_DIR, "invoice_meta.json")
+DATA_DIR           = os.path.join(os.path.dirname(__file__), "data")
+RESULT_FILE        = os.path.join(DATA_DIR, "last_result.json")
+SETTINGS_FILE      = os.path.join(DATA_DIR, "settings.json")
+META_FILE          = os.path.join(DATA_DIR, "invoice_meta.json")
+COMPANY_TANTOU_FILE= os.path.join(DATA_DIR, "company_tantou.json")  # 取引先名→担当者マップ
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
