@@ -12,6 +12,7 @@ API: https://api-accounting.moneyforward.com
 入金 = 借方が「普通預金・現金」かつ 貸方が「売掛金」の仕訳を対象とする。
 """
 
+import time
 import requests
 from auth import get_access_token
 
