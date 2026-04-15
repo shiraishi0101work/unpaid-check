@@ -69,6 +69,38 @@ def save_meta(meta: dict):
     with open(META_FILE, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
+
+def load_company_tantou() -> dict:
+    """取引先名 → 担当者 のマッピングを返す"""
+    if not os.path.exists(COMPANY_TANTOU_FILE):
+        return {}
+    with open(COMPANY_TANTOU_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_company_tantou(mapping: dict):
+    with open(COMPANY_TANTOU_FILE, "w", encoding="utf-8") as f:
+        json.dump(mapping, f, ensure_ascii=False, indent=2)
+
+
+def apply_auto_tantou(billings: list, meta: dict) -> list:
+    """
+    担当者が未設定の請求書に、同じ取引先名で登録済みの担当者を自動セットする。
+    meta（請求書IDベース）→ 取引先名ベースのマップも参照。
+    """
+    company_tantou = load_company_tantou()
+    for b in billings:
+        if b.get("担当者"):
+            continue  # すでに設定済みはスキップ
+        company = b.get("取引先名", "").strip()
+        if not company:
+            continue
+        # 取引先名マップから自動セット
+        tantou = company_tantou.get(company, "")
+        if tantou:
+            b["担当者"] = tantou
+    return billings
+
 # ========================================
 # 年度ユーティリティ
 # ========================================
