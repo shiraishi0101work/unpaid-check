@@ -9,6 +9,7 @@ payment_status の実際の値:
   "入金済み" → 入金確認済み
 """
 
+import time
 import requests
 from auth import get_access_token
 
