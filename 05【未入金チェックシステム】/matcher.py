@@ -12,14 +12,41 @@
 """
 
 import os
+import re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import jaconv
 
 load_dotenv()
 
 AMOUNT_TOLERANCE  = int(os.getenv("MATCH_AMOUNT_TOLERANCE", 0))
 DATE_BEFORE_DAYS  = int(os.getenv("MATCH_DATE_BEFORE_DAYS", 0))
 DATE_AFTER_DAYS   = int(os.getenv("MATCH_DATE_AFTER_DAYS", 365))
+
+# 法人格プレフィックス/サフィックスを除去する正規表現
+_LEGAL_STRIP = re.compile(
+    r"^(株式会社|有限会社|合同会社|一般社団法人|医療法人|社会福祉法人|税理士法人|特定非営利活動法人|NPO法人)\s*"
+    r"|^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）)\s*"  # 振込略称プレフィックス
+    r"|\s*(株式会社|有限会社|合同会社|株|（株）|\(株\))$"
+)
+
+
+def _normalize(text: str) -> str:
+    """照合用に文字列を正規化する
+    - 法人格プレフィックス/サフィックスを除去
+    - ひらがな→カタカナ変換
+    - 大文字化
+    - 空白・記号を除去
+    """
+    t = text.strip()
+    t = _LEGAL_STRIP.sub("", t).strip()
+    t = jaconv.hira2kata(t)   # ひらがな → カタカナ
+    t = t.upper()
+    # 全角英数→半角
+    t = jaconv.z2h(t, kana=False, ascii=True, digit=True)
+    # 空白・ハイフン・ドットなど記号除去
+    t = re.sub(r"[\s\-・\.、。　,\.()（）「」【】\[\]]", "", t)
+    return t
 
 
 def _parse_date(date_str: str) -> datetime | None:
@@ -32,19 +59,35 @@ def _parse_date(date_str: str) -> datetime | None:
 
 
 def _name_match(invoice_name: str, deal_name: str, deal_remark: str = "") -> bool:
-    """取引先名の一致判定（部分一致）
-    取引先名が空の場合は備考（摘要）テキストから検索する"""
+    """取引先名の一致判定
+    1. 取引先名同士: 部分一致（正規化あり）
+    2. 取引先名が空の場合: 備考テキストを正規化して検索
+    """
     if not invoice_name:
         return False
-    a = invoice_name.strip()
+
+    a_raw  = invoice_name.strip()
+    a_norm = _normalize(a_raw)
 
     if deal_name and deal_name.strip():
-        b = deal_name.strip()
-        return a in b or b in a or a == b
+        b_raw  = deal_name.strip()
+        b_norm = _normalize(b_raw)
+        # 正規化後の部分一致
+        if a_norm and b_norm:
+            return a_norm in b_norm or b_norm in a_norm or a_norm == b_norm
+        # フォールバック: 元文字列の部分一致
+        return a_raw in b_raw or b_raw in a_raw
 
-    # 取引先名が空の場合：備考テキストに請求書取引先名が含まれているか
+    # 取引先名が空の場合: 備考テキストで検索
     if deal_remark:
-        return a in deal_remark
+        remark_norm = _normalize(deal_remark)
+        # 正規化後の名前が備考に含まれるか（最低4文字以上で照合）
+        if len(a_norm) >= 4 and a_norm in remark_norm:
+            return True
+        # 元の名前（法人格なし）が備考に含まれるか
+        a_core = _LEGAL_STRIP.sub("", a_raw).strip()
+        if len(a_core) >= 2 and a_core in deal_remark:
+            return True
 
     return False
 
