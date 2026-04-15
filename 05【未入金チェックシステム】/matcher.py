@@ -29,13 +29,22 @@ def _parse_date(date_str: str) -> datetime | None:
         return None
 
 
-def _name_match(invoice_name: str, deal_name: str) -> bool:
-    """取引先名の一致判定（部分一致）"""
-    if not invoice_name or not deal_name:
+def _name_match(invoice_name: str, deal_name: str, deal_remark: str = "") -> bool:
+    """取引先名の一致判定（部分一致）
+    取引先名が空の場合は備考（摘要）テキストから検索する"""
+    if not invoice_name:
         return False
     a = invoice_name.strip()
-    b = deal_name.strip()
-    return a in b or b in a or a == b
+
+    if deal_name and deal_name.strip():
+        b = deal_name.strip()
+        return a in b or b in a or a == b
+
+    # 取引先名が空の場合：備考テキストに請求書取引先名が含まれているか
+    if deal_remark:
+        return a in deal_remark
+
+    return False
 
 
 def _amount_match(invoice_amount: int, deal_amount: int) -> bool:
