@@ -92,7 +92,10 @@
   }
   .image-upload-area:hover, .image-upload-area.dragover { border-color: #e94560; background: #fff5f7; }
   .image-upload-area input { display: none; }
-  .preview-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px; }
+  /* 画像：リサイズなし・自然サイズで表示、はみ出しはスクロール */
+  .preview-img { display: block; width: auto; height: auto; border-radius: 8px; margin-top: 10px; max-width: none; }
+  .img-scroll-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; padding: 8px; margin-top: 10px; }
+  .img-scroll-wrap .preview-img { margin-top: 0; }
   .remove-img { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 0.8rem; margin-top: 4px; }
 
   /* 空状態 */
