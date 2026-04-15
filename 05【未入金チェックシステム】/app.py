@@ -210,18 +210,101 @@ def _run_check(from_date=None, to_date=None):
         _update_status(running=False, error=str(e), message="エラーが発生しました", progress=0)
 
 
+def _clean_items(items: list) -> list:
+    return [{k: v for k, v in item.items() if k != "_raw"} for item in items]
+
+
+def _merge_results(existing: dict, new_result: dict) -> dict:
+    """
+    既存の照合結果と新しい照合結果をマージする。
+
+    ルール:
+    - 今回のフェッチ対象外（日付範囲外）の請求書はそのまま保持
+    - 今回の対象内の請求書:
+        paid/diff → 常に採用（確認済みを上書きしない）
+        unpaid    → 既存がpaid/diffなら既存を維持、そうでなければ新結果を採用
+    - 新しく登場した請求書（既存にない）は追加
+    """
+    def by_id(lst):
+        return {b["請求書ID"]: b for b in lst if b.get("請求書ID")}
+
+    ex_paid   = by_id(existing.get("paid",   []))
+    ex_diff   = by_id(existing.get("diff",   []))
+    ex_unpaid = by_id(existing.get("unpaid", []))
+
+    nw_paid   = by_id(new_result.get("paid",   []))
+    nw_diff   = by_id(new_result.get("diff",   []))
+    nw_unpaid = by_id(new_result.get("unpaid", []))
+
+    all_new_ids = set(nw_paid) | set(nw_diff) | set(nw_unpaid)
+
+    merged_paid   = {}
+    merged_diff   = {}
+    merged_unpaid = {}
+
+    # ── 既存結果の保持（今回対象外のものはそのまま残す） ──
+    for bid, b in ex_paid.items():
+        if bid not in all_new_ids:
+            merged_paid[bid] = b          # 今回未対象 → そのまま保持
+
+    for bid, b in ex_diff.items():
+        if bid not in all_new_ids:
+            merged_diff[bid] = b
+
+    for bid, b in ex_unpaid.items():
+        if bid not in all_new_ids:
+            merged_unpaid[bid] = b
+
+    # ── 新しい照合結果を優先的にマージ ──
+    for bid, b in nw_paid.items():
+        merged_paid[bid] = b              # 今回 paid → 常に採用
+        merged_diff.pop(bid, None)
+        merged_unpaid.pop(bid, None)
+
+    for bid, b in nw_diff.items():
+        if bid not in merged_paid:        # paid済みは下げない
+            merged_diff[bid] = b
+            merged_unpaid.pop(bid, None)
+
+    for bid, b in nw_unpaid.items():
+        if bid not in merged_paid and bid not in merged_diff:
+            # 既存で paid/diff だったものは下げない
+            if bid in ex_paid or bid in ex_diff:
+                pass
+            else:
+                merged_unpaid[bid] = b
+
+    paid_list   = list(merged_paid.values())
+    diff_list   = list(merged_diff.values())
+    unpaid_list = list(merged_unpaid.values())
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    overdue  = sorted([b for b in unpaid_list if b.get("支払期限", "") and b["支払期限"] < today_str],
+                      key=lambda x: x.get("支払期限", ""))
+    upcoming = sorted([b for b in unpaid_list if not b.get("支払期限") or b["支払期限"] >= today_str],
+                      key=lambda x: x.get("支払期限", ""))
+
+    return {
+        "paid":            paid_list,
+        "diff":            diff_list,
+        "unpaid":          unpaid_list,
+        "overdue":         overdue,
+        "upcoming":        upcoming,
+        "unmatched_deals": new_result.get("unmatched_deals", []),
+        "total":           len(paid_list) + len(diff_list) + len(unpaid_list),
+    }
+
+
 def _save_result(result: dict, output_path: str):
-    def _clean(items):
-        return [{k: v for k, v in item.items() if k != "_raw"} for item in items]
     data = {
         "saved_at":        datetime.now().isoformat(),
         "output_path":     output_path,
-        "unpaid":          _clean(result["unpaid"]),
-        "overdue":         _clean(result["overdue"]),
-        "upcoming":        _clean(result["upcoming"]),
-        "paid":            _clean(result["paid"]),
-        "diff":            _clean(result["diff"]),
-        "unmatched_deals": _clean(result["unmatched_deals"]),
+        "unpaid":          _clean_items(result["unpaid"]),
+        "overdue":         _clean_items(result["overdue"]),
+        "upcoming":        _clean_items(result["upcoming"]),
+        "paid":            _clean_items(result["paid"]),
+        "diff":            _clean_items(result["diff"]),
+        "unmatched_deals": _clean_items(result["unmatched_deals"]),
         "total":           result["total"],
         "from_date":       result.get("from_date", ""),
         "to_date":         result.get("to_date", ""),
