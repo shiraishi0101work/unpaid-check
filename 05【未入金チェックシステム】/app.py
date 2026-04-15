@@ -387,7 +387,8 @@ def dashboard():
         return fy_from <= d <= fy_to
 
     if result:
-        # メタデータを最新にマージ
+        # メタデータを最新にマージ＋担当者自動振り分け
+        company_tantou = load_company_tantou()
         for lst in [result.get("unpaid",[]), result.get("overdue",[]),
                     result.get("upcoming",[]), result.get("paid",[])]:
             for b in lst:
@@ -397,6 +398,11 @@ def dashboard():
                 b["メモ_手動"]     = m.get("メモ", b.get("メモ_手動",""))
                 b["着金日_手動"]   = m.get("着金日_手動", b.get("着金日_手動",""))
                 b["着金金額_手動"] = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+                # 担当者未設定なら取引先名マップから自動セット
+                if not b.get("担当者"):
+                    company = b.get("取引先名", "").strip()
+                    if company and company in company_tantou:
+                        b["担当者"] = company_tantou[company]
 
         all_data  = result.get("unpaid",[]) + result.get("paid",[])
         overdue   = [b for b in result.get("overdue",[])  if in_fy(b)]
