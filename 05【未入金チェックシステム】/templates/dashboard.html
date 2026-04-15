@@ -457,8 +457,8 @@
           {% set manual_amt = b.着金金額_手動 | default(0) | int %}
           {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
           <tr>
-            <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
             <td class="small">{{ b.担当者 }}</td>
             <td class="small">{{ b.請求日 }}</td>
