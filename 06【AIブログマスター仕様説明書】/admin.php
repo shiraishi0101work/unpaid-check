@@ -189,7 +189,7 @@ function render() {
     card.draggable = true;
 
     const imgHtml = s.image_path
-      ? `<img src="${s.image_path}" class="preview-img"><br><button class="remove-img" onclick="removeImage(${s.id})">✕ 画像を削除</button>`
+      ? `<div class="img-scroll-wrap"><img src="${s.image_path}" class="preview-img"></div><br><button class="remove-img" onclick="removeImage(${s.id})">✕ 画像を削除</button>`
       : `<div class="image-upload-area" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,${s.id},this)">
            <input type="file" accept="image/*" id="file-${s.id}" onchange="uploadImage(${s.id},this)">
            <label for="file-${s.id}" style="cursor:pointer;">
