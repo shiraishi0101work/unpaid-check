@@ -223,8 +223,13 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
 
         result = {
             **merged,
-            "from_date": from_date or "",
-            "to_date":   to_date   or "",
+            "invoice_from": invoice_from or "",
+            "invoice_to":   invoice_to   or "",
+            "deal_from":    deal_from    or "",
+            "deal_to":      deal_to      or "",
+            # 後方互換（旧コードが参照する可能性）
+            "from_date": invoice_from or "",
+            "to_date":   invoice_to   or "",
         }
 
         added_count = sum(
