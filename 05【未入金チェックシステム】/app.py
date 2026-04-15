@@ -186,7 +186,7 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
         if auth.is_authenticated("accounting"):
             _update_status(progress=60, message="会計データを取得して照合中...")
             try:
-                income_deals = get_income_deals(from_date=from_date, to_date=to_date)
+                income_deals = get_income_deals(from_date=deal_from, to_date=deal_to)
                 print(f"[照合] 入金データ {len(income_deals)}件で照合開始")
 
                 if income_deals:
