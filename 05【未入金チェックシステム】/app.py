@@ -462,15 +462,49 @@ def run():
     if fiscal_year is None:
         fiscal_year = get_current_fiscal_year(start_month)
 
-    from_date = request.form.get("from_date") or None
-    to_date   = request.form.get("to_date")   or None
+    # 請求書発行月（YYYY-MM 形式 → YYYY-MM-01 / YYYY-MM-末日 に変換）
+    invoice_from_ym = request.form.get("invoice_from_ym") or ""
+    invoice_to_ym   = request.form.get("invoice_to_ym")   or ""
+    # 入金月
+    deal_from_ym    = request.form.get("deal_from_ym")    or ""
+    deal_to_ym      = request.form.get("deal_to_ym")      or ""
 
-    # 日付未指定なら年度から自動設定
-    if not from_date and not to_date:
-        from_date, to_date = get_fiscal_year_range(fiscal_year, start_month)
+    def ym_to_from(ym: str) -> str | None:
+        """YYYY-MM → YYYY-MM-01"""
+        if not ym:
+            return None
+        try:
+            return f"{ym}-01"
+        except Exception:
+            return None
+
+    def ym_to_to(ym: str) -> str | None:
+        """YYYY-MM → YYYY-MM-末日"""
+        import calendar
+        if not ym:
+            return None
+        try:
+            y, m = int(ym[:4]), int(ym[5:7])
+            last = calendar.monthrange(y, m)[1]
+            return f"{ym}-{last:02d}"
+        except Exception:
+            return None
+
+    invoice_from = ym_to_from(invoice_from_ym)
+    invoice_to   = ym_to_to(invoice_to_ym)
+    deal_from    = ym_to_from(deal_from_ym)
+    deal_to      = ym_to_to(deal_to_ym)
+
+    # 未指定なら年度から自動設定
+    if not invoice_from and not invoice_to:
+        invoice_from, invoice_to = get_fiscal_year_range(fiscal_year, start_month)
+    if not deal_from and not deal_to:
+        deal_from, deal_to = get_fiscal_year_range(fiscal_year, start_month)
 
     thread = threading.Thread(
-        target=_run_check, args=(from_date, to_date), daemon=True
+        target=_run_check,
+        args=(invoice_from, invoice_to, deal_from, deal_to),
+        daemon=True,
     )
     thread.start()
     return redirect(url_for("dashboard", year=fiscal_year))
