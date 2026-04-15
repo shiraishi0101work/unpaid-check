@@ -167,6 +167,9 @@ def _run_check(from_date=None, to_date=None):
             b["着金日_手動"]   = m.get("着金日_手動", "")
             b["着金金額_手動"] = m.get("着金金額_手動", 0)
 
+        # 担当者が未設定の請求書に取引先名ベースで自動セット
+        all_billings = apply_auto_tantou(all_billings, meta)
+
         # MF Invoice のステータスで一次分類
         mf_unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
         mf_paid   = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
