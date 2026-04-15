@@ -171,28 +171,31 @@ def _run_check(from_date=None, to_date=None):
         else:
             print("[照合] 会計未連携のため、MF請求書ステータスのみで分類")
 
-        # ── 未入金を期限超過/期日前に分類 ───────────────────────────
-        _update_status(progress=80, message="分類中...")
-        overdue  = sorted(
-            [b for b in unpaid_billings if b.get("支払期限", "") and b.get("支払期限", "") < today_str],
-            key=lambda x: x.get("支払期限", "")
-        )
-        upcoming = sorted(
-            [b for b in unpaid_billings if not b.get("支払期限") or b.get("支払期限", "") >= today_str],
-            key=lambda x: x.get("支払期限", "")
-        )
-
-        result = {
-            "unpaid":          unpaid_billings,
-            "overdue":         overdue,
-            "upcoming":        upcoming,
+        # ── 既存の照合結果とマージ（確認済みデータを消さない） ──────────
+        _update_status(progress=80, message="既存の照合結果とマージ中...")
+        new_result = {
             "paid":            paid_billings,
             "diff":            diff_billings,
+            "unpaid":          unpaid_billings,
             "unmatched_deals": unmatched_deals,
-            "total":           len(all_billings),
-            "from_date":       from_date or "",
-            "to_date":         to_date or "",
         }
+        existing = _load_result() or {}
+        merged = _merge_results(existing, new_result)
+
+        result = {
+            **merged,
+            "from_date": from_date or "",
+            "to_date":   to_date   or "",
+        }
+
+        added_count = sum(
+            1 for b in merged["unpaid"] + merged["paid"] + merged["diff"]
+            if b.get("請求書ID") not in
+               {x.get("請求書ID") for x in
+                existing.get("unpaid", []) + existing.get("paid", []) + existing.get("diff", [])}
+        )
+        if added_count:
+            print(f"[マージ] 新規追加: {added_count}件")
 
         _update_status(progress=90, message="Excelレポートを生成中...")
         output_path = generate_report(result)
