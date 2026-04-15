@@ -305,7 +305,7 @@ async function uploadImage(id, input) {
     await api('update', { id, title, content, image_path: res.path });
     // プレビュー更新
     document.getElementById('img-area-' + id).innerHTML =
-      `<img src="${res.path}" class="preview-img"><br><button class="remove-img" onclick="removeImage(${id})">✕ 画像を削除</button>`;
+      `<div class="img-scroll-wrap"><img src="${res.path}" class="preview-img"></div><br><button class="remove-img" onclick="removeImage(${id})">✕ 画像を削除</button>`;
     toast('画像をアップロードしました ✓', 'success');
   } else {
     toast('アップロード失敗: ' + res.error, 'error');
@@ -327,7 +327,7 @@ async function handleDrop(e, id, area) {
     const content = document.getElementById('content-' + id)?.value || '';
     await api('update', { id, title, content, image_path: res.path });
     document.getElementById('img-area-' + id).innerHTML =
-      `<img src="${res.path}" class="preview-img"><br><button class="remove-img" onclick="removeImage(${id})">✕ 画像を削除</button>`;
+      `<div class="img-scroll-wrap"><img src="${res.path}" class="preview-img"></div><br><button class="remove-img" onclick="removeImage(${id})">✕ 画像を削除</button>`;
     toast('画像をアップロードしました ✓', 'success');
   }
 }
