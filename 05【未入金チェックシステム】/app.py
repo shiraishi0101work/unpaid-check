@@ -139,8 +139,11 @@ def _update_status(**kwargs):
     with _status_lock:
         _status.update(kwargs)
 
-def _run_check(from_date=None, to_date=None):
-    """バックグラウンドで照合処理を実行"""
+def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None):
+    """バックグラウンドで照合処理を実行
+    invoice_from/invoice_to: 請求書発行日の絞り込み範囲
+    deal_from/deal_to:       入金（着金）日の絞り込み範囲
+    """
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
@@ -148,7 +151,7 @@ def _run_check(from_date=None, to_date=None):
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
-        all_billings = get_all_billings(from_date=from_date, to_date=to_date)
+        all_billings = get_all_billings(from_date=invoice_from, to_date=invoice_to)
         if len(all_billings) == 0:
             raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
