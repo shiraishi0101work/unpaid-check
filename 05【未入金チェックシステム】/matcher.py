@@ -68,24 +68,29 @@ def _name_match(invoice_name: str, deal_name: str, deal_remark: str = "") -> boo
 
     a_raw  = invoice_name.strip()
     a_norm = _normalize(a_raw)
+    # 法人格なしのコア名称（部分一致用）
+    a_core = _LEGAL_STRIP.sub("", a_raw).strip()
+    # ひらがな→カタカナ変換済みコア（「いぶき」→「イブキ」）
+    a_kata = jaconv.hira2kata(a_core)
 
     if deal_name and deal_name.strip():
         b_raw  = deal_name.strip()
         b_norm = _normalize(b_raw)
-        # 正規化後の部分一致
         if a_norm and b_norm:
             return a_norm in b_norm or b_norm in a_norm or a_norm == b_norm
-        # フォールバック: 元文字列の部分一致
         return a_raw in b_raw or b_raw in a_raw
 
     # 取引先名が空の場合: 備考テキストで検索
     if deal_remark:
         remark_norm = _normalize(deal_remark)
-        # 正規化後の名前が備考に含まれるか（最低4文字以上で照合）
-        if len(a_norm) >= 4 and a_norm in remark_norm:
+        # 正規化後の名前が備考に含まれるか（最低3文字以上で照合）
+        if len(a_norm) >= 3 and a_norm in remark_norm:
             return True
-        # 元の名前（法人格なし）が備考に含まれるか
-        a_core = _LEGAL_STRIP.sub("", a_raw).strip()
+        # カタカナ変換後のコア名称が備考（元テキスト）に含まれるか
+        # 例: 「いぶき」→「イブキ」が「振込 ゼイ)イブキ」に含まれる
+        if len(a_kata) >= 2 and a_kata in deal_remark:
+            return True
+        # 元のコア名称が備考に直接含まれるか
         if len(a_core) >= 2 and a_core in deal_remark:
             return True
 
