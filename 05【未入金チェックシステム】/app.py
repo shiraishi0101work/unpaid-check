@@ -508,6 +508,25 @@ def invoice_meta(invoice_id):
             if key in data:
                 meta[invoice_id][key] = data[key]
         save_meta(meta)
+
+        # 担当者が設定された場合、取引先名→担当者マップも更新
+        tantou = data.get("担当者", "").strip()
+        if tantou:
+            # 請求書IDから取引先名を逆引き
+            result = _load_result()
+            company_name = ""
+            if result:
+                all_b = (result.get("unpaid", []) + result.get("paid", [])
+                         + result.get("diff", []))
+                for b in all_b:
+                    if b.get("請求書ID") == invoice_id:
+                        company_name = b.get("取引先名", "").strip()
+                        break
+            if company_name:
+                mapping = load_company_tantou()
+                mapping[company_name] = tantou
+                save_company_tantou(mapping)
+
         return jsonify({"ok": True})
     return jsonify(meta.get(invoice_id, {}))
 
