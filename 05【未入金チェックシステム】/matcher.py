@@ -111,7 +111,7 @@ def match(billings: list[dict], deals: list[dict]) -> dict:
                 continue
             if not _amount_match(billing["請求金額"], deal["入金金額"]):
                 continue
-            if not _name_match(billing["取引先名"], deal["取引先名"]):
+            if not _name_match(billing["取引先名"], deal["取引先名"], deal.get("備考", "")):
                 continue
             if not _date_ok(billing["請求日"], deal["着金日"]):
                 continue
@@ -132,7 +132,7 @@ def match(billings: list[dict], deals: list[dict]) -> dict:
         for deal in deals:
             if deal["_matched"]:
                 continue
-            if not _name_match(billing["取引先名"], deal["取引先名"]):
+            if not _name_match(billing["取引先名"], deal["取引先名"], deal.get("備考", "")):
                 continue
             if not _date_ok(billing["請求日"], deal["着金日"]):
                 continue
