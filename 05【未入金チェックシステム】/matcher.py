@@ -148,6 +148,32 @@ def match(billings: list[dict], deals: list[dict]) -> dict:
                 status = f"差額あり（過払い ¥{diff:,}）"
             diff_billings.append(_build_paid_entry(billing, matched_deal, status))
         else:
+            remaining_billings2.append(billing)
+
+    # =========================================================
+    # パス3: 金額 + 日付のみ（取引先名が空の入金データを対象）
+    # 取引先名が空かつ備考でも照合できなかった入金データとのマッチング
+    # =========================================================
+    unpaid_billings = []
+    for billing in remaining_billings2:
+        matched_deal = None
+        for deal in deals:
+            if deal["_matched"]:
+                continue
+            if deal.get("取引先名", "").strip():
+                continue  # 取引先名がある入金は名前照合で弾かれたものなのでスキップ
+            if not _amount_match(billing["請求金額"], deal["入金金額"]):
+                continue
+            if not _date_ok(billing["請求日"], deal["着金日"]):
+                continue
+            matched_deal = deal
+            deal["_matched"] = True
+            break
+
+        if matched_deal:
+            # 取引先名不明での金額一致
+            paid_billings.append(_build_paid_entry(billing, matched_deal, "完全入金（金額一致）"))
+        else:
             entry = dict(billing)
             entry["照合結果"] = "未入金"
             unpaid_billings.append(entry)
