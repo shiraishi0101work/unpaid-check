@@ -37,7 +37,7 @@
   .btn-outline:hover { background: #1a1a2e; color: #fff; }
 
   /* レイアウト */
-  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
   .top-bar {
     display: flex; gap: 10px; align-items: center; margin-bottom: 24px;
     background: #fff; padding: 16px 20px; border-radius: 12px;
