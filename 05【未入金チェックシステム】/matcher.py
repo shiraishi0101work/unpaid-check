@@ -127,6 +127,7 @@ def match(billings: list[dict], deals: list[dict]) -> dict:
     # =========================================================
     # パス2: 取引先名 + 日付のみ（金額不問）で差額照合
     # =========================================================
+    remaining_billings2 = []
     for billing in remaining_billings:
         matched_deal = None
         for deal in deals:
