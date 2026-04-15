@@ -151,7 +151,8 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
-        all_billings = get_all_billings(from_date=invoice_from, to_date=invoice_to)
+        # 請求書は日付フィルタなしで全件取得（支払期限超過の旧年度分も漏れなく取得するため）
+        all_billings = get_all_billings()
         if len(all_billings) == 0:
             raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
@@ -179,8 +180,20 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
 
         paid_billings   = list(mf_paid)
         diff_billings   = []
-        unpaid_billings = list(mf_unpaid)
         unmatched_deals = []
+
+        # 会計照合には invoice_from/invoice_to の範囲内の未入金請求書のみ渡す
+        # （旧年度分を照合対象に含めると誤マッチの原因になるため）
+        def in_invoice_range(b):
+            d = b.get("請求日", "") or b.get("支払期限", "")
+            if invoice_from and d and d < invoice_from:
+                return False
+            if invoice_to and d and d > invoice_to:
+                return False
+            return True
+
+        mf_unpaid_for_match = [b for b in mf_unpaid if in_invoice_range(b)]
+        unpaid_billings = list(mf_unpaid)  # 全未入金（超過チェック用に日付制限なし）
 
         # ── MF会計と照合（連携済みの場合）──────────────────────────
         if auth.is_authenticated("accounting"):
@@ -190,7 +203,7 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
                 print(f"[照合] 入金データ {len(income_deals)}件で照合開始")
 
                 if income_deals:
-                    matched = match(mf_unpaid, income_deals)
+                    matched = match(mf_unpaid_for_match, income_deals)
                     # 会計照合で入金確認できたものを追加
                     paid_billings   += matched["paid"]
                     diff_billings    = matched["diff"]
