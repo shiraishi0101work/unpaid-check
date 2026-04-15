@@ -205,14 +205,19 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None)
                 if income_deals:
                     matched = match(mf_unpaid_for_match, income_deals)
                     # 会計照合で入金確認できたものを追加
-                    paid_billings   += matched["paid"]
-                    diff_billings    = matched["diff"]
-                    unpaid_billings  = matched["unpaid"]
-                    unmatched_deals  = matched["unmatched_deals"]
+                    paid_billings  += matched["paid"]
+                    diff_billings   = matched["diff"]
+                    unmatched_deals = matched["unmatched_deals"]
+
+                    # 照合範囲外（旧年度など）の未入金請求書を照合結果の未入金に追加
+                    matched_ids = {b["請求書ID"] for b in matched["paid"] + matched["diff"] + matched["unpaid"]}
+                    out_of_range_unpaid = [b for b in mf_unpaid if b.get("請求書ID") not in matched_ids]
+                    unpaid_billings = matched["unpaid"] + out_of_range_unpaid
+
                     print(
                         f"[照合] 完了: 入金確認={len(paid_billings)}件 "
                         f"差額={len(diff_billings)}件 "
-                        f"未入金={len(unpaid_billings)}件"
+                        f"未入金={len(unpaid_billings)}件（範囲外含む）"
                     )
                 else:
                     print("[照合] 入金データ0件のため照合スキップ、MF請求書ステータスのみで分類")
