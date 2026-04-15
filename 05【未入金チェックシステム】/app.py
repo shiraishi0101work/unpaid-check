@@ -431,7 +431,8 @@ def dashboard():
                         b["担当者"] = company_tantou[company]
 
         all_data  = result.get("unpaid",[]) + result.get("paid",[])
-        overdue   = [b for b in result.get("overdue",[])  if in_fy(b)]
+        # overdue は年度関係なく全件表示（旧年度分の支払期限超過も漏れなく表示するため）
+        overdue   = result.get("overdue", [])
         upcoming  = [b for b in result.get("upcoming",[]) if in_fy(b)]
         paid_fy   = [b for b in result.get("paid",[])     if in_fy(b)]
         diff_fy   = [b for b in result.get("diff",[])     if in_fy(b)]
