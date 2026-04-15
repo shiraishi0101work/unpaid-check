@@ -51,6 +51,24 @@ def _get_office_id() -> str | None:
     return None
 
 
+_REQUEST_INTERVAL = 1.5   # ページ間の待機秒数
+_MAX_RETRIES      = 5     # 429 時の最大リトライ回数
+
+
+def _request_with_retry(url: str, headers: dict, params: dict) -> requests.Response:
+    """429 Too Many Requests を受けたら Retry-After を尊重してリトライする"""
+    for attempt in range(_MAX_RETRIES):
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
+        if resp.status_code == 429:
+            wait = int(resp.headers.get("Retry-After", 60))
+            print(f"[会計API] 429 Rate Limit → {wait}秒待機してリトライ ({attempt+1}/{_MAX_RETRIES})")
+            time.sleep(wait)
+            continue
+        return resp
+    # リトライ上限を超えた場合は最後のレスポンスをそのまま返す
+    return resp
+
+
 def _get_all_pages(params: dict) -> list:
     """仕訳一覧を全ページ取得して返す"""
     results = []
@@ -58,7 +76,7 @@ def _get_all_pages(params: dict) -> list:
     prev_count = None
     while True:
         params["page"] = page
-        resp = requests.get(
+        resp = _request_with_retry(
             f"{BASE_URL}/api/v3/journals",
             headers=_headers(),
             params=params,
@@ -90,6 +108,9 @@ def _get_all_pages(params: dict) -> list:
             break
         prev_count = len(journals)
         page += 1
+
+        # 連続リクエストによるレート制限を避けるためウェイト
+        time.sleep(_REQUEST_INTERVAL)
 
     return results
 
