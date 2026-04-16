@@ -703,13 +703,10 @@
 {# ===== 照合不能 手動紐づけモーダル ===== #}
 {% if result and result.unmatched_deals %}
 <!-- 全請求書データ埋め込み（照合候補表示用） -->
-<script id="all-billings-data" type="application/json">
-{{ (result.unpaid + result.paid + result.diff) | map(attribute='__class__') | list }}
-</script>
 <script>
 const ALL_BILLINGS_UNMATCHED = {{ (
   (result.unpaid or []) + (result.paid or []) + (result.diff or [])
-) | map('dictsort') | list | tojson }};
+) | tojson }};
 </script>
 
 <!-- 照合不能 手動紐づけモーダル -->
