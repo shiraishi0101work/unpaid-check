@@ -972,6 +972,126 @@ def payments_link(deal_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/unmatched/<deal_id>/suggest")
+def unmatched_suggest(deal_id):
+    """照合不能な入金データの取引先名からファジーマッチで請求書候補を返す"""
+    import name_utils
+
+    result = _load_result()
+    if not result:
+        return jsonify([])
+
+    deal = next((d for d in result.get("unmatched_deals", []) if d.get("取引ID") == deal_id), None)
+    if not deal:
+        return jsonify([])
+
+    all_billings = result.get("unpaid", []) + result.get("paid", []) + result.get("diff", [])
+    suggestions  = name_utils.find_matches(deal.get("取引先名", ""), all_billings, threshold=0.4)
+
+    return jsonify([
+        {
+            "請求書ID": b["請求書ID"],
+            "請求番号": b["請求番号"],
+            "取引先名": b["取引先名"],
+            "件名":     b.get("件名", ""),
+            "請求金額": b["請求金額"],
+            "請求日":   b["請求日"],
+            "支払期限": b["支払期限"],
+            "入金状態": b["入金状態"],
+            "_score":   b["_score"],
+        }
+        for b in suggestions[:30]
+    ])
+
+
+@app.route("/api/unmatched/<deal_id>/link", methods=["POST"])
+def unmatched_link(deal_id):
+    """照合不能な入金データを請求書に手動紐づけして照合済みに移動"""
+    data        = request.get_json() or {}
+    invoice_ids = data.get("invoice_ids", [])
+    note        = data.get("note", "")
+
+    if not invoice_ids:
+        return jsonify({"error": "invoice_ids が必要です"}), 400
+
+    result = _load_result()
+    if not result:
+        return jsonify({"error": "照合結果がありません"}), 404
+
+    # 対象の入金データを検索
+    unmatched = result.get("unmatched_deals", [])
+    deal = next((d for d in unmatched if d.get("取引ID") == deal_id), None)
+    if not deal:
+        return jsonify({"error": "指定された取引IDが見つかりません"}), 404
+
+    # 全請求書から対象を検索
+    all_billings_map = {
+        b["請求書ID"]: b
+        for b in result.get("unpaid", []) + result.get("paid", []) + result.get("diff", [])
+        if b.get("請求書ID")
+    }
+
+    deal_amount = deal.get("入金金額", 0)
+    moved_paid  = []
+    moved_diff  = []
+
+    for bid in invoice_ids:
+        billing = all_billings_map.get(bid)
+        if not billing:
+            continue
+        diff = deal_amount - billing.get("請求金額", 0)
+        entry = dict(billing)
+        entry["着金日"]     = deal.get("着金日", "")
+        entry["着金金額"]   = deal_amount
+        entry["差額"]       = diff
+        entry["会計取引ID"] = deal_id
+        entry["科目"]       = deal.get("科目", "")
+        entry["会計備考"]   = deal.get("備考", "")
+        entry["照合結果"]   = f"完全入金（手動照合）" if diff == 0 else (
+            f"差額あり（手動照合 {'不足' if diff < 0 else '過払い'} ¥{abs(diff):,}）"
+        )
+        if note:
+            entry["照合メモ"] = note
+        if diff == 0:
+            moved_paid.append(entry)
+        else:
+            moved_diff.append(entry)
+
+    if not moved_paid and not moved_diff:
+        return jsonify({"error": "対象の請求書が見つかりません"}), 404
+
+    # 結果を更新
+    linked_ids = {e["請求書ID"] for e in moved_paid + moved_diff}
+
+    result["unmatched_deals"] = [d for d in unmatched if d.get("取引ID") != deal_id]
+
+    # 各リストから対象請求書IDを除去してから追加（重複防止）
+    for key in ("unpaid", "paid", "diff"):
+        result[key] = [b for b in result.get(key, []) if b.get("請求書ID") not in linked_ids]
+
+    result["paid"]  = result.get("paid",  []) + moved_paid
+    result["diff"]  = result.get("diff",  []) + moved_diff
+
+    # overdue/upcoming を再計算
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    unpaid_list = result.get("unpaid", [])
+    result["overdue"]  = sorted(
+        [b for b in unpaid_list if b.get("支払期限") and b["支払期限"] < today_str],
+        key=lambda x: x.get("支払期限", "")
+    )
+    result["upcoming"] = sorted(
+        [b for b in unpaid_list if not b.get("支払期限") or b["支払期限"] >= today_str],
+        key=lambda x: x.get("支払期限", "")
+    )
+    result["total"] = len(result["paid"]) + len(result["diff"]) + len(unpaid_list)
+
+    # 保存（output_path は既存のものを引き継ぐ）
+    output_path = result.get("output_path", "")
+    _save_result(result, output_path)
+
+    return jsonify({"ok": True, "moved_paid": len(moved_paid), "moved_diff": len(moved_diff)})
+
+
 @app.route("/api/payments/<deal_id>/suggest")
 def payments_suggest(deal_id):
     """会計の取引先名からファジーマッチで請求書候補を返す"""
