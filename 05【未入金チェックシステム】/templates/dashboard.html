@@ -700,6 +700,98 @@
   </div>
 </div>
 
+{# ===== 照合不能 手動紐づけモーダル ===== #}
+{% if result and result.unmatched_deals %}
+<!-- 全請求書データ埋め込み（照合候補表示用） -->
+<script id="all-billings-data" type="application/json">
+{{ (result.unpaid + result.paid + result.diff) | map(attribute='__class__') | list }}
+</script>
+<script>
+const ALL_BILLINGS_UNMATCHED = {{ (
+  (result.unpaid or []) + (result.paid or []) + (result.diff or [])
+) | map('dictsort') | list | tojson }};
+</script>
+
+<!-- 照合不能 手動紐づけモーダル -->
+<div class="modal fade" id="unmatchedLinkModal" tabindex="-1" aria-labelledby="unmatchedLinkModalLabel">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title fw-bold" id="unmatchedLinkModalLabel">
+          <i class="bi bi-link-45deg me-2"></i>請求書を紐づける（手動照合）
+        </h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- 入金情報 -->
+        <div class="card bg-light border-0 mb-3">
+          <div class="card-body py-2">
+            <div class="row g-3 align-items-center">
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">取引先（会計）</div>
+                <strong id="um-modal-company"></strong>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">着金日</div>
+                <strong id="um-modal-date"></strong>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">入金金額</div>
+                <strong id="um-modal-amount" class="text-success fs-6"></strong>
+              </div>
+              <div class="col-auto">
+                <div class="text-muted" style="font-size:0.72rem">科目</div>
+                <span id="um-modal-account"></span>
+              </div>
+              <div class="col">
+                <div class="text-muted" style="font-size:0.72rem">備考</div>
+                <span id="um-modal-remark" class="small"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 候補検索 -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button class="btn btn-outline-primary btn-sm" id="um-suggest-btn" onclick="umLoadSuggestions()">
+            <i class="bi bi-magic me-1"></i>会社名で自動検索
+          </button>
+          <div class="input-group input-group-sm" style="max-width:320px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="um-billing-search" class="form-control"
+              placeholder="請求書を直接検索..." oninput="umFilterBillings()">
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" onclick="umShowAll()">全件表示</button>
+        </div>
+        <!-- 候補テーブルエリア -->
+        <div id="um-suggestions-area" style="min-height:80px">
+          <p class="text-muted small">「会社名で自動検索」または検索ボックスで請求書を探してください。</p>
+        </div>
+        <hr>
+        <!-- 紐づけリスト -->
+        <div class="fw-semibold small mb-2">
+          紐づける請求書
+          <span id="um-selected-count" class="badge bg-primary ms-1">0</span>
+        </div>
+        <div id="um-selected-billings" class="d-flex flex-wrap gap-1 mb-3">
+          <span class="text-muted small">まだ選択されていません</span>
+        </div>
+        <div>
+          <label class="form-label small mb-1">メモ（任意）</label>
+          <input type="text" id="um-link-note" class="form-control form-control-sm"
+            placeholder="例: 合算入金 / 振込手数料差引">
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="umSaveLink()">
+          <i class="bi bi-check-lg me-1"></i>照合済みにする
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
