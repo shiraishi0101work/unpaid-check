@@ -614,24 +614,31 @@
   {# --- 照合不能 --- #}
   {% if result.unmatched_deals %}
   <div class="tab-pane fade" id="tab-unmatched">
-    <p class="text-muted small mb-2">請求書と紐付けできなかった入金データです。手動で確認してください。</p>
+    <p class="text-muted small mb-2">請求書と紐付けできなかった入金データです。「紐づける」ボタンで手動照合できます。</p>
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-secondary">
           <tr>
-            <th>取引ID</th><th>着金日</th><th>取引先名</th>
+            <th>着金日</th><th>取引先名</th>
             <th class="text-end">入金金額</th><th>科目</th><th>備考</th>
+            <th class="text-center" style="width:80px">操作</th>
           </tr>
         </thead>
         <tbody>
           {% for d in result.unmatched_deals %}
           <tr>
-            <td class="text-muted small">{{ d.取引ID }}</td>
             <td class="small">{{ d.着金日 }}</td>
             <td class="fw-semibold">{{ d.取引先名 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(d.入金金額 | default(0)) }}</td>
             <td class="text-muted small">{{ d.科目 }}</td>
             <td class="text-muted small">{{ d.備考 }}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-xs py-0 px-2 unmatched-link-btn"
+                style="font-size:0.7rem"
+                data-deal='{{ {"取引ID": d.取引ID, "取引先名": d.取引先名, "着金日": d.着金日, "入金金額": d.入金金額|default(0), "科目": d.科目, "備考": d.備考} | tojson | forceescape }}'>
+                <i class="bi bi-link-45deg"></i> 紐づける
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
