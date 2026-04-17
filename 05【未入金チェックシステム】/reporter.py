@@ -340,37 +340,43 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
 
     overdue         = result.get("overdue", [])
     seikyu_kakunin  = result.get("seikyu_kakunin", [])
+    ichiji_hokan    = result.get("ichiji_hokan", [])
     upcoming        = result.get("upcoming", [])
     paid            = result.get("paid", [])
     unpaid          = result.get("unpaid", [])
 
     overdue_total        = sum(b.get("請求金額", 0) for b in overdue)
     seikyu_kakunin_total = sum(b.get("請求金額", 0) for b in seikyu_kakunin)
+    ichiji_total         = sum(b.get("請求金額", 0) for b in ichiji_hokan)
     upcoming_total       = sum(b.get("請求金額", 0) for b in upcoming)
     paid_total           = sum(b.get("請求金額", 0) for b in paid)
 
     rows = [
-        ("集計日時",               generated_at),
+        ("集計日時",                generated_at),
         (None, None),
         ("■ 未収（未入金）",          None),
-        ("件数",                   len(overdue)),
-        ("合計金額（税込）",        overdue_total),
+        ("件数",                    len(overdue)),
+        ("合計金額（税込）",         overdue_total),
         (None, None),
-        ("■ 請求済みか確認",         None),
-        ("件数",                   len(seikyu_kakunin)),
-        ("合計金額（税込）",        seikyu_kakunin_total),
+        ("■ 請求済みか確認",          None),
+        ("件数",                    len(seikyu_kakunin)),
+        ("合計金額（税込）",         seikyu_kakunin_total),
         (None, None),
-        ("■ 期日前請求書",          None),
-        ("件数",                   len(upcoming)),
-        ("合計金額（税込）",        upcoming_total),
+        ("■ 一時保管（毎月要確認）",  None),
+        ("件数",                    len(ichiji_hokan)),
+        ("合計金額（税込）",         ichiji_total),
         (None, None),
-        ("■ 未入金合計",            None),
-        ("件数",                   len(unpaid)),
-        ("合計金額（税込）",        overdue_total + seikyu_kakunin_total + upcoming_total),
+        ("■ 期日前請求書",           None),
+        ("件数",                    len(upcoming)),
+        ("合計金額（税込）",         upcoming_total),
         (None, None),
-        ("■ 入金確認済み",          None),
-        ("件数",                   len(paid)),
-        ("合計金額（税込）",        paid_total),
+        ("■ 未入金合計",             None),
+        ("件数",                    len(unpaid)),
+        ("合計金額（税込）",         overdue_total + seikyu_kakunin_total + ichiji_total + upcoming_total),
+        (None, None),
+        ("■ 入金確認済み",           None),
+        ("件数",                    len(paid)),
+        ("合計金額（税込）",         paid_total),
     ]
 
     for r, (label, value) in enumerate(rows, start=1):
