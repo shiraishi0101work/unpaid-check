@@ -987,6 +987,117 @@ def payments_suggest(deal_id):
 
 
 # ========================================
+# 要確認ページ（未入金企業からの入金を手動紐づけ）
+# ========================================
+
+@app.route("/yoakinin")
+def yoakinin():
+    import name_utils
+    result   = _load_result()
+    unpaid   = result.get("unpaid", []) if result else []
+    settings = load_settings()
+    auth_accounting = auth.is_authenticated("accounting")
+
+    # 未入金企業の正規化名 → 請求書リスト
+    unpaid_by_norm = {}
+    for b in unpaid:
+        norm = name_utils.normalize(b.get("取引先名", ""))
+        if norm:
+            unpaid_by_norm.setdefault(norm, []).append(b)
+
+    deals = load_payment_history()
+    links = load_payment_links()
+
+    yoakinin_deals = []
+    for d in deals:
+        deal_id = d.get("取引ID", "")
+        # リンク済みはスキップ
+        if links.get(deal_id, {}).get("invoice_ids"):
+            continue
+
+        deal_norm   = name_utils.normalize(d.get("取引先名", ""))
+        remark_norm = name_utils.normalize(d.get("備考", ""))
+
+        matched = []
+        seen_ids = set()
+        for company_norm, billings in unpaid_by_norm.items():
+            hit = False
+            if deal_norm and (deal_norm in company_norm or company_norm in deal_norm):
+                hit = True
+            elif len(company_norm) >= 3 and company_norm in remark_norm:
+                hit = True
+            if hit:
+                for b in billings:
+                    if b["請求書ID"] not in seen_ids:
+                        matched.append(b)
+                        seen_ids.add(b["請求書ID"])
+
+        if matched:
+            dc = {k: v for k, v in d.items()}
+            dc["対象請求書"] = sorted(matched, key=lambda x: x.get("支払期限", ""))
+            yoakinin_deals.append(dc)
+
+    yoakinin_deals.sort(key=lambda x: x.get("着金日", ""), reverse=True)
+
+    return render_template(
+        "yoakinin.html",
+        deals=yoakinin_deals,
+        auth_accounting=auth_accounting,
+        settings=settings,
+    )
+
+
+@app.route("/api/yoakinin/<deal_id>/confirm", methods=["POST"])
+def yoakinin_confirm(deal_id):
+    """要確認ページから請求書に入金を紐づけ、手動着金として保存"""
+    data       = request.get_json() or {}
+    invoice_id = data.get("invoice_id", "")
+    note       = data.get("note", "")
+
+    if not invoice_id:
+        return jsonify({"error": "invoice_id が必要です"}), 400
+
+    deals = load_payment_history()
+    deal  = next((d for d in deals if d.get("取引ID") == deal_id), None)
+    if not deal:
+        return jsonify({"error": "取引IDが見つかりません"}), 404
+
+    # payment_links に保存
+    links = load_payment_links()
+    links[deal_id] = {
+        "invoice_ids":  [invoice_id],
+        "note":         note,
+        "confirmed_at": datetime.now().isoformat(),
+    }
+    save_payment_links(links)
+
+    # invoice_meta に着金日・着金金額を保存（次の実行で入金確認済みに昇格）
+    meta = load_meta()
+    meta.setdefault(invoice_id, {})
+    meta[invoice_id]["着金日_手動"]   = deal.get("着金日", "")
+    meta[invoice_id]["着金金額_手動"] = deal.get("入金金額", 0)
+    if note:
+        meta[invoice_id]["メモ"] = note
+    save_meta(meta)
+
+    # 担当者自動反映（取引先名マップを更新）
+    result = _load_result()
+    if result:
+        all_b = result.get("unpaid", []) + result.get("paid", [])
+        for b in all_b:
+            if b.get("請求書ID") == invoice_id:
+                company = b.get("取引先名", "").strip()
+                tantou  = meta[invoice_id].get("担当者", "")
+                if company and tantou:
+                    mapping = load_company_tantou()
+                    mapping[company] = tantou
+                    save_company_tantou(mapping)
+                break
+
+    return jsonify({"ok": True})
+
+
+# ========================================
 # 入金チェックルール表
 # ========================================
 
