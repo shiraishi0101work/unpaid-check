@@ -276,6 +276,7 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
             "overdue":         overdue,
             "seikyu_kakunin":  seikyu_kakunin,
             "draft_overdue":   draft_overdue,
+            "ichiji_hokan":    ichiji_hokan,
             "upcoming":        upcoming,
             "total":           len(all_paid) + len(unpaid),
             "invoice_from":    invoice_from or "",
@@ -283,7 +284,8 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
         }
 
         print(f"[分類] 未入金={len(unpaid)}件（"
-              f"超過:{len(overdue)} 請求済確認:{len(seikyu_kakunin)} 下書き超過:{len(draft_overdue)} 期日前:{len(upcoming)}）"
+              f"未収:{len(overdue)} 請求済確認:{len(seikyu_kakunin)} 下書き:{len(draft_overdue)} "
+              f"一時保管:{len(ichiji_hokan)} 期日前:{len(upcoming)}）"
               f" 入金済み={len(all_paid)}件（MF:{len(paid_mf)} 手動:{len(paid_manual)}）")
 
         _update_status(progress=85, message="Excelレポートを生成中...")
