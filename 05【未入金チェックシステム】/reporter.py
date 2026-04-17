@@ -133,7 +133,7 @@ def _write_overdue_sheet(ws, overdue: list[dict]):
     sorted_billings = sorted(overdue, key=lambda x: x.get("支払期限", ""))
     _write_unpaid_billings(
         ws, sorted_billings,
-        title="支払期限超過請求書",
+        title="未収",
         tab_color="C00000",
         header_color=COLOR_HEADER_OVERDUE,
         row_color=COLOR_ROW_OVERDUE,
