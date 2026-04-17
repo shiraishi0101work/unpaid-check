@@ -403,28 +403,44 @@
     {% endif %}
   </div>
 
-  {# --- 請求済み・未確認 --- #}
+  {# --- 請求済みか確認 --- #}
   {% if seikyu_kakunin %}
   <div class="tab-pane fade" id="tab-seikyu-kakunin">
     <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
-      <i class="bi bi-info-circle-fill"></i>
-      <span>MFクラウド請求書の入金ステータスが「未設定」ですが、請求書をお客様に送付済み（DL・メール・郵送）のものです。入金を確認し、MF上のステータスを更新してください。</span>
+      <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+      <span>請求書をお客様に送付済み（DL・メール・郵送）ですが、MF上の入金ステータスが「未設定」のものです。入金確認済みならMFを更新、未請求なら「未請求」ボタンで除外してください。</span>
     </div>
+
+    {# 一括操作バー #}
+    <div class="d-flex align-items-center gap-2 mb-2" id="seikyu-bulk-bar">
+      <button class="btn btn-outline-danger btn-sm" id="seikyu-bulk-btn" disabled>
+        <i class="bi bi-x-circle me-1"></i>未請求にする（<span id="seikyu-check-count">0</span>件）
+      </button>
+      <span class="text-muted small" id="seikyu-select-hint">行を選択してまとめて操作できます</span>
+    </div>
+
     <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle mb-0">
+      <table class="table table-sm table-hover align-middle mb-0" id="seikyu-table">
         <thead class="table-info">
           <tr>
+            <th style="width:36px">
+              <input type="checkbox" id="seikyu-check-all" class="form-check-input">
+            </th>
             <th>取引先名</th><th>請求番号</th><th>件名</th>
             <th>担当者</th><th>支払期限</th>
             <th class="text-end">請求金額</th>
             <th>送付方法</th>
             <th>社内メモ</th>
-            <th class="text-center" style="width:70px">編集</th>
+            <th class="text-center" style="width:140px">操作</th>
           </tr>
         </thead>
         <tbody>
           {% for b in seikyu_kakunin %}
-          <tr>
+          <tr id="seikyu-row-{{ b.請求書ID }}">
+            <td>
+              <input type="checkbox" class="form-check-input seikyu-check"
+                value="{{ b.請求書ID }}">
+            </td>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
@@ -444,22 +460,31 @@
             </td>
             <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
-              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
-                data-id="{{ b.請求書ID }}"
-                data-name="{{ b.取引先名 }}"
-                data-num="{{ b.請求番号 }}"
-                data-tantou="{{ b.担当者 }}"
-                data-memo="{{ b.メモ_手動 }}"
-                data-kikin-date="{{ b.着金日_手動 }}"
-                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
-                <i class="bi bi-pencil-fill"></i> 編集
-              </button>
+              <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}"
+                  data-tantou="{{ b.担当者 }}"
+                  data-memo="{{ b.メモ_手動 }}"
+                  data-kikin-date="{{ b.着金日_手動 }}"
+                  data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm py-0 px-2 seikyu-unmade-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}">
+                  未請求
+                </button>
+              </div>
             </td>
           </tr>
           {% endfor %}
         </tbody>
         <tfoot class="table-secondary fw-bold">
           <tr>
+            <td></td>
             <td colspan="4">合計</td>
             <td></td>
             <td class="text-end">¥{{ "{:,.0f}".format(seikyu_kakunin|sum(attribute='請求金額')) }}</td>
