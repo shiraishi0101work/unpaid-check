@@ -141,6 +141,60 @@ def _write_overdue_sheet(ws, overdue: list[dict]):
     )
 
 
+def _write_seikyu_kakunin_sheet(ws, billings: list[dict]):
+    """請求済み・未確認シート（送付済みだがMF未入金ステータスが未設定のもの）"""
+    ws.title = "請求済み・未確認"
+    ws.sheet_properties.tabColor = "0070C0"
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    cols = ["請求番号", "取引先名", "件名", "請求日", "支払期限", "請求金額",
+            "送付方法", "超過日数", "メモ"]
+    for c, name in enumerate(cols, start=1):
+        _header_cell(ws, 1, c, name, COLOR_HEADER_SEIKYU)
+
+    ws.row_dimensions[1].height = 25
+
+    sorted_billings = sorted(billings, key=lambda x: x.get("支払期限", ""))
+    for r, billing in enumerate(sorted_billings, start=2):
+        due_date = billing.get("支払期限", "")
+        bg = COLOR_ROW_SEIKYU
+
+        # 送付方法を整理
+        methods = []
+        if billing.get("DL済み"):
+            methods.append("DL")
+        if billing.get("メール状態") and billing.get("メール状態") != "未送信":
+            methods.append("メール")
+        if billing.get("送付状態") and billing.get("送付状態") != "未郵送":
+            methods.append("郵送")
+        method_str = " / ".join(methods) if methods else "—"
+
+        _data_cell(ws, r, 1, billing.get("請求番号", ""), bg, center=True)
+        _data_cell(ws, r, 2, billing.get("取引先名", ""), bg)
+        _data_cell(ws, r, 3, billing.get("件名", ""),     bg)
+        _data_cell(ws, r, 4, billing.get("請求日", ""),   bg, center=True)
+        _data_cell(ws, r, 5, due_date,                    bg, center=True)
+        _data_cell(ws, r, 6, billing.get("請求金額", 0),  bg,
+                   number_format='#,##0', center=True)
+        _data_cell(ws, r, 7, method_str,                  bg, center=True)
+
+        if due_date:
+            try:
+                delta = (datetime.strptime(today_str, "%Y-%m-%d")
+                         - datetime.strptime(due_date, "%Y-%m-%d")).days
+                cell = _data_cell(ws, r, 8, delta, bg,
+                                  number_format='#,##0', center=True)
+                cell.font = Font(color=COLOR_OVERDUE, bold=True)
+            except ValueError:
+                _data_cell(ws, r, 8, "", bg)
+        else:
+            _data_cell(ws, r, 8, "", bg)
+
+        _data_cell(ws, r, 9, billing.get("メモ", ""), bg)
+
+    _auto_column_width(ws)
+
+
 def _write_upcoming_sheet(ws, upcoming: list[dict]):
     """期日前請求書シート（支払期限が近い順に並べる）"""
     sorted_billings = sorted(upcoming, key=lambda x: x.get("支払期限", ""))
