@@ -308,7 +308,7 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
     rows = [
         ("集計日時",               generated_at),
         (None, None),
-        ("■ 支払期限超過（未入金）", None),
+        ("■ 未収（未入金）",          None),
         ("件数",                   len(overdue)),
         ("合計金額（税込）",        overdue_total),
         (None, None),
