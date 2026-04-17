@@ -400,7 +400,7 @@ def dashboard():
             )
         )
     else:
-        overdue = seikyu_kakunin = draft_overdue = upcoming = paid_fy = []
+        overdue = seikyu_kakunin = draft_overdue = ichiji_hokan = upcoming = paid_fy = []
         yoakinin_count = 0
 
     return render_template(
@@ -411,6 +411,7 @@ def dashboard():
         overdue=overdue,
         seikyu_kakunin=seikyu_kakunin,
         draft_overdue=draft_overdue,
+        ichiji_hokan=ichiji_hokan,
         upcoming=upcoming,
         paid_fy=paid_fy,
         yoakinin_count=yoakinin_count,
