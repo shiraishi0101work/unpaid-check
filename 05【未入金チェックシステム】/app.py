@@ -269,15 +269,16 @@ def _clean_items(items: list) -> list:
 
 def _save_result(result: dict, output_path: str):
     data = {
-        "saved_at":     datetime.now().isoformat(),
-        "output_path":  output_path,
-        "unpaid":       _clean_items(result["unpaid"]),
-        "overdue":      _clean_items(result["overdue"]),
-        "upcoming":     _clean_items(result["upcoming"]),
-        "paid":         _clean_items(result["paid"]),
-        "total":        result["total"],
-        "invoice_from": result.get("invoice_from", ""),
-        "invoice_to":   result.get("invoice_to", ""),
+        "saved_at":      datetime.now().isoformat(),
+        "output_path":   output_path,
+        "unpaid":        _clean_items(result["unpaid"]),
+        "overdue":       _clean_items(result["overdue"]),
+        "draft_overdue": _clean_items(result.get("draft_overdue", [])),
+        "upcoming":      _clean_items(result["upcoming"]),
+        "paid":          _clean_items(result["paid"]),
+        "total":         result["total"],
+        "invoice_from":  result.get("invoice_from", ""),
+        "invoice_to":    result.get("invoice_to", ""),
     }
     with open(RESULT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
