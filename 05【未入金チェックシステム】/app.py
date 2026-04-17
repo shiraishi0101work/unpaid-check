@@ -187,19 +187,16 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
         # 会計照合には指定範囲内の未入金請求書のみ渡す
         # （旧年度分を照合対象に含めると誤マッチの原因になるため）
         def in_invoice_range(b):
-            # 支払期限フィルタが指定されている場合はそちらを優先
-            if due_from or due_to:
-                d = b.get("支払期限", "")
-                if due_from and d and d < due_from:
-                    return False
-                if due_to and d and d > due_to:
-                    return False
-                return True
-            # 通常は請求日ベースでフィルタ
-            d = b.get("請求日", "") or b.get("支払期限", "")
-            if invoice_from and d and d < invoice_from:
+            # デフォルトは支払期限ベースでフィルタ
+            # 支払期限が未設定の場合は請求日にフォールバック
+            due = b.get("支払期限", "")
+            d = due or b.get("請求日", "")
+            # due_from/due_to が明示指定された場合はそちらを使用
+            f = due_from or invoice_from
+            t = due_to   or invoice_to
+            if f and d and d < f:
                 return False
-            if invoice_to and d and d > invoice_to:
+            if t and d and d > t:
                 return False
             return True
 
