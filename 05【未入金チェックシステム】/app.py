@@ -138,13 +138,8 @@ def _update_status(**kwargs):
     with _status_lock:
         _status.update(kwargs)
 
-def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
-               due_from=None, due_to=None):
-    """バックグラウンドで照合処理を実行
-    invoice_from/invoice_to: 請求書発行日の絞り込み範囲
-    deal_from/deal_to:       入金（着金）日の絞り込み範囲
-    due_from/due_to:         支払期限の絞り込み範囲
-    """
+def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
+    """MF請求書ステータス＋手動確認のみで未入金を判定する（MF会計照合なし）"""
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
@@ -152,13 +147,12 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
-        # 請求書は日付フィルタなしで全件取得（支払期限超過の旧年度分も漏れなく取得するため）
         all_billings = get_all_billings()
-        if len(all_billings) == 0:
+        if not all_billings:
             raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
-        print(f"[照合] 請求書 {len(all_billings)}件 取得完了")
-        _update_status(progress=40, message=f"請求書 {len(all_billings)}件 取得完了。メタデータをマージ中...")
+        print(f"[取得] 請求書 {len(all_billings)}件")
+        _update_status(progress=50, message=f"請求書 {len(all_billings)}件 取得完了。分類中...")
 
         today_str = datetime.now().strftime("%Y-%m-%d")
         meta = load_meta()
@@ -172,25 +166,11 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
             b["着金日_手動"]   = m.get("着金日_手動", "")
             b["着金金額_手動"] = m.get("着金金額_手動", 0)
 
-        # 担当者が未設定の請求書に取引先名ベースで自動セット
         all_billings = apply_auto_tantou(all_billings, meta)
 
-        # MF Invoice のステータスで一次分類
-        mf_unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
-        mf_paid   = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
-
-        paid_billings   = list(mf_paid)
-        diff_billings   = []
-        unmatched_deals = []
-
-        # 会計照合には指定範囲内の未入金請求書のみ渡す
-        # （旧年度分を照合対象に含めると誤マッチの原因になるため）
-        def in_invoice_range(b):
-            # デフォルトは支払期限ベースでフィルタ
-            # 支払期限が未設定の場合は請求日にフォールバック
-            due = b.get("支払期限", "")
-            d = due or b.get("請求日", "")
-            # due_from/due_to が明示指定された場合はそちらを使用
+        # 日付フィルタ（支払期限ベース、未設定は請求日にフォールバック）
+        def in_range(b):
+            d = b.get("支払期限", "") or b.get("請求日", "")
             f = due_from or invoice_from
             t = due_to   or invoice_to
             if f and d and d < f:
@@ -199,74 +179,42 @@ def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
                 return False
             return True
 
-        mf_unpaid_for_match = [b for b in mf_unpaid if in_invoice_range(b)]
-        unpaid_billings = list(mf_unpaid)  # 全未入金（超過チェック用に日付制限なし）
+        filtered = [b for b in all_billings if in_range(b)]
 
-        # ── MF会計と照合（連携済みの場合）──────────────────────────
-        if auth.is_authenticated("accounting"):
-            _update_status(progress=60, message="会計データを取得して照合中...")
-            try:
-                income_deals = get_income_deals(from_date=deal_from, to_date=deal_to)
-                print(f"[照合] 入金データ {len(income_deals)}件で照合開始")
+        # 分類
+        # ① MF請求書が入金済み → 入金確認済み（MF）
+        # ② MF未入金 かつ 手動着金日あり → 入金確認済み（手動）
+        # ③ MF未入金 かつ 手動着金日なし → 未入金
+        paid_mf     = [b for b in filtered if b["入金状態"] in PAID_STATUSES]
+        paid_manual = [b for b in filtered
+                       if b["入金状態"] in UNPAID_STATUSES and b.get("着金日_手動")]
+        unpaid      = [b for b in filtered
+                       if b["入金状態"] in UNPAID_STATUSES and not b.get("着金日_手動")]
 
-                if income_deals:
-                    matched = match(mf_unpaid_for_match, income_deals)
-                    # 会計照合で入金確認できたものを追加
-                    paid_billings  += matched["paid"]
-                    diff_billings   = matched["diff"]
-                    unmatched_deals = matched["unmatched_deals"]
+        all_paid = paid_mf + paid_manual
 
-                    # 照合範囲外（旧年度など）の未入金請求書を照合結果の未入金に追加
-                    matched_ids = {b["請求書ID"] for b in matched["paid"] + matched["diff"] + matched["unpaid"]}
-                    out_of_range_unpaid = [b for b in mf_unpaid if b.get("請求書ID") not in matched_ids]
-                    unpaid_billings = matched["unpaid"] + out_of_range_unpaid
-
-                    print(
-                        f"[照合] 完了: 入金確認={len(paid_billings)}件 "
-                        f"差額={len(diff_billings)}件 "
-                        f"未入金={len(unpaid_billings)}件（範囲外含む）"
-                    )
-                else:
-                    print("[照合] 入金データ0件のため照合スキップ、MF請求書ステータスのみで分類")
-            except Exception as e:
-                import traceback
-                print(f"[照合] 会計API照合エラー（MFステータスのみで分類）: {e}")
-                traceback.print_exc()
-        else:
-            print("[照合] 会計未連携のため、MF請求書ステータスのみで分類")
-
-        # ── 既存の照合結果とマージ（確認済みデータを消さない） ──────────
-        _update_status(progress=80, message="既存の照合結果とマージ中...")
-        new_result = {
-            "paid":            paid_billings,
-            "diff":            diff_billings,
-            "unpaid":          unpaid_billings,
-            "unmatched_deals": unmatched_deals,
-        }
-        existing = _load_result() or {}
-        merged = _merge_results(existing, new_result)
+        # 未入金を期限超過/期日前に分類
+        overdue  = sorted(
+            [b for b in unpaid if b.get("支払期限") and b["支払期限"] < today_str],
+            key=lambda x: x.get("支払期限", ""))
+        upcoming = sorted(
+            [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str],
+            key=lambda x: x.get("支払期限", ""))
 
         result = {
-            **merged,
+            "paid":         all_paid,
+            "unpaid":       unpaid,
+            "overdue":      overdue,
+            "upcoming":     upcoming,
+            "total":        len(all_paid) + len(unpaid),
             "invoice_from": invoice_from or "",
             "invoice_to":   invoice_to   or "",
-            "deal_from":    deal_from    or "",
-            "deal_to":      deal_to      or "",
-            # 後方互換（旧コードが参照する可能性）
-            "from_date": invoice_from or "",
-            "to_date":   invoice_to   or "",
         }
 
-        added_count = sum(
-            1 for b in merged["unpaid"] + merged["paid"] + merged["diff"]
-            if b.get("請求書ID") not in
-               {x.get("請求書ID") for x in
-                existing.get("unpaid", []) + existing.get("paid", []) + existing.get("diff", [])}
-        )
-        if added_count:
-            print(f"[マージ] 新規追加: {added_count}件")
+        print(f"[分類] 未入金={len(unpaid)}件（超過:{len(overdue)} 期日前:{len(upcoming)}）"
+              f" 入金済み={len(all_paid)}件（MF:{len(paid_mf)} 手動:{len(paid_manual)}）")
 
-        _update_status(progress=90, message="Excelレポートを生成中...")
+        _update_status(progress=85, message="Excelレポートを生成中...")
         output_path = generate_report(result)
         _save_result(result, output_path)
 
