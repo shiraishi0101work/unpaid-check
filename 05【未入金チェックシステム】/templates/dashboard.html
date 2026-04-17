@@ -303,18 +303,16 @@
 <ul class="nav nav-tabs mb-0" id="resultTabs">
   <li class="nav-item">
     <a class="nav-link active" data-bs-toggle="tab" href="#tab-overdue" id="btn-tab-overdue">
-      <i class="bi bi-exclamation-circle text-danger"></i> 支払期限超過
+      <i class="bi bi-exclamation-circle text-danger"></i> 未収
       <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
     </a>
   </li>
-  {% if seikyu_kakunin %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-seikyu-kakunin" id="btn-tab-seikyu-kakunin">
       <i class="bi bi-question-circle text-info"></i> 請求済みか確認
       <span class="badge bg-info text-dark ms-1">{{ seikyu_kakunin|length }}</span>
     </a>
   </li>
-  {% endif %}
   {% if draft_overdue %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-draft-overdue" id="btn-tab-draft-overdue">
