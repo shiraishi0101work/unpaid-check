@@ -381,6 +381,7 @@ def dashboard():
         overdue          = result.get("overdue", [])
         seikyu_kakunin   = result.get("seikyu_kakunin", [])
         draft_overdue    = result.get("draft_overdue", [])
+        ichiji_hokan     = result.get("ichiji_hokan", [])
         upcoming         = [b for b in result.get("upcoming", []) if in_fy(b)]
         paid_fy          = [b for b in result.get("paid", [])     if in_fy(b)]
 
