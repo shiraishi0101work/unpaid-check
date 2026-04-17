@@ -140,6 +140,16 @@
     <span class="badge bg-danger">{{ overdue|length }}</span>
   </a>
 
+  {% if draft_overdue %}
+  <a href="#tab-draft-overdue" class="sidebar-stat-item text-decoration-none" data-tab="tab-draft-overdue">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-text text-secondary"></i>
+      <span class="small text-dark">下書き（期限超過）</span>
+    </span>
+    <span class="badge bg-secondary">{{ draft_overdue|length }}</span>
+  </a>
+  {% endif %}
+
   <a href="#tab-upcoming" class="sidebar-stat-item text-decoration-none" data-tab="tab-upcoming">
     <span class="d-flex align-items-center gap-2">
       <i class="bi bi-hourglass-split text-warning"></i>
