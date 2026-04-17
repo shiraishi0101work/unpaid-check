@@ -151,6 +151,17 @@ def save_deleted_drafts(ids: set):
     with open(DELETED_DRAFTS_FILE, "w", encoding="utf-8") as f:
         json.dump(list(ids), f, ensure_ascii=False)
 
+def load_deleted_seikyu() -> set:
+    """未請求扱いとして除外された請求書IDセットを返す"""
+    if not os.path.exists(DELETED_SEIKYU_FILE):
+        return set()
+    with open(DELETED_SEIKYU_FILE, encoding="utf-8") as f:
+        return set(json.load(f))
+
+def save_deleted_seikyu(ids: set):
+    with open(DELETED_SEIKYU_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(ids), f, ensure_ascii=False)
+
 def _is_delivered(b: dict) -> bool:
     """顧客への送付が確認されている（DL・メール・郵送のいずれか）"""
     return (
