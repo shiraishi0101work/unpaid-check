@@ -87,16 +87,17 @@ def _to_billing_dict(b: dict) -> dict:
     """請求書データを整形"""
     partner = b.get("partner") or {}
     return {
-        "請求書ID":  b.get("id", ""),
-        "請求番号":  b.get("billing_number", ""),
-        "件名":      b.get("title", ""),
-        "取引先名":  b.get("partner_name") or partner.get("name", ""),
-        "請求日":    _normalize_date(b.get("billing_date", "")),
-        "支払期限":  _normalize_date(b.get("due_date", "")),
-        "請求金額":  int(float(b.get("total_price", 0) or 0)),
-        "入金状態":  b.get("payment_status", ""),
-        "メモ":      b.get("memo", ""),
-        "_raw":      b,
+        "請求書ID":    b.get("id", ""),
+        "請求番号":    b.get("billing_number", ""),
+        "件名":        b.get("title", ""),
+        "取引先名":    b.get("partner_name") or partner.get("name", ""),
+        "請求日":      _normalize_date(b.get("billing_date", "")),
+        "支払期限":    _normalize_date(b.get("due_date", "")),
+        "請求金額":    int(float(b.get("total_price", 0) or 0)),
+        "入金状態":    b.get("payment_status", ""),
+        "請求ステータス": b.get("billing_status", ""),
+        "メモ":        b.get("memo", ""),
+        "_raw":        b,
     }
 
 
