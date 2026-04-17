@@ -591,6 +591,29 @@
 </div>
 {% endif %}
 
+{# ===== 下書き削除確認モーダル ===== #}
+<div class="modal fade" id="deleteDraftModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-trash me-2 text-danger"></i>下書きを削除</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-1">以下の請求書をリストから削除します。</p>
+        <p class="small fw-semibold mb-0" id="dd-info"></p>
+        <p class="small text-muted mt-2 mb-0">再実行しても表示されなくなります。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger btn-sm" id="dd-confirm-btn">
+          <i class="bi bi-trash me-1"></i>削除
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {# ===== 案件編集モーダル ===== #}
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
