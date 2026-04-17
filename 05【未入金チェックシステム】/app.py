@@ -32,6 +32,7 @@ SETTINGS_FILE         = os.path.join(DATA_DIR, "settings.json")
 META_FILE             = os.path.join(DATA_DIR, "invoice_meta.json")
 COMPANY_TANTOU_FILE   = os.path.join(DATA_DIR, "company_tantou.json")  # 取引先名→担当者マップ
 DELETED_DRAFTS_FILE   = os.path.join(DATA_DIR, "deleted_drafts.json")  # 下書き削除済みID
+DELETED_SEIKYU_FILE   = os.path.join(DATA_DIR, "deleted_seikyu.json")  # 未請求扱い削除済みID
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
