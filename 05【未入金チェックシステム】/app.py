@@ -1037,6 +1037,31 @@ def delete_draft_invoice(invoice_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/invoice/mark-unmade", methods=["POST"])
+def mark_unmade():
+    """請求済みか確認タブの請求書を「未請求」として除外する（複数対応）"""
+    data        = request.get_json() or {}
+    invoice_ids = data.get("invoice_ids", [])
+    if not invoice_ids:
+        return jsonify({"error": "invoice_ids が必要です"}), 400
+
+    ids = load_deleted_seikyu()
+    ids.update(invoice_ids)
+    save_deleted_seikyu(ids)
+
+    # last_result.json からも即時除去
+    result = _load_result()
+    if result:
+        id_set = set(invoice_ids)
+        result["seikyu_kakunin"] = [
+            b for b in result.get("seikyu_kakunin", [])
+            if b.get("請求書ID") not in id_set
+        ]
+        _save_result(result, result.get("output_path", ""))
+
+    return jsonify({"ok": True, "count": len(invoice_ids)})
+
+
 @app.route("/api/debug-billing-raw")
 def debug_billing_raw():
     """請求書APIの実際のフィールド一覧を確認するデバッグエンドポイント"""
