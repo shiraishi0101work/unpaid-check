@@ -150,16 +150,17 @@ def save_deleted_drafts(ids: set):
     with open(DELETED_DRAFTS_FILE, "w", encoding="utf-8") as f:
         json.dump(list(ids), f, ensure_ascii=False)
 
-def _is_draft_invoice(b: dict) -> bool:
-    """
-    下書き（顧客未着）とみなす条件:
-    メール送信・郵送・PDFダウンロードのいずれも行われていない請求書。
-    """
+def _is_delivered(b: dict) -> bool:
+    """顧客への送付が確認されている（DL・メール・郵送のいずれか）"""
     return (
-        b.get("メール状態") == "未送信" and
-        b.get("送付状態") == "未郵送" and
-        not b.get("DL済み", False)
+        bool(b.get("DL済み", False)) or
+        b.get("メール状態") != "未送信" or
+        b.get("送付状態") != "未郵送"
     )
+
+def _is_draft_invoice(b: dict) -> bool:
+    """下書き（顧客未着）: DL・メール・郵送のいずれも行われていない"""
+    return not _is_delivered(b)
 
 
 def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
