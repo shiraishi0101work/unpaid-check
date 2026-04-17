@@ -309,6 +309,14 @@
       <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
     </a>
   </li>
+  {% if seikyu_kakunin %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-seikyu-kakunin" id="btn-tab-seikyu-kakunin">
+      <i class="bi bi-question-circle text-info"></i> 請求済み・未確認
+      <span class="badge bg-info text-dark ms-1">{{ seikyu_kakunin|length }}</span>
+    </a>
+  </li>
+  {% endif %}
   {% if draft_overdue %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-draft-overdue" id="btn-tab-draft-overdue">
