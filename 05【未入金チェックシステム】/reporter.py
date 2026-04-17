@@ -247,6 +247,48 @@ def _write_diff_sheet(ws, diff_billings: list[dict]):
     _auto_column_width(ws)
 
 
+def _write_ichiji_hokan_sheet(ws, billings: list[dict]):
+    """一時保管（毎月要確認）シート"""
+    ws.title = "一時保管（毎月要確認）"
+    ws.sheet_properties.tabColor = "6f42c1"
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    cols = ["請求番号", "取引先名", "件名", "担当者", "請求日", "支払期限",
+            "請求金額", "超過日数", "理由（社内メモ）"]
+    for c, name in enumerate(cols, start=1):
+        _header_cell(ws, 1, c, name, COLOR_HEADER_ICHIJI)
+
+    ws.row_dimensions[1].height = 25
+
+    sorted_billings = sorted(billings, key=lambda x: x.get("支払期限", ""))
+    for r, b in enumerate(sorted_billings, start=2):
+        due_date = b.get("支払期限", "")
+        bg = COLOR_ROW_ICHIJI
+
+        _data_cell(ws, r, 1, b.get("請求番号", ""), bg, center=True)
+        _data_cell(ws, r, 2, b.get("取引先名", ""), bg)
+        _data_cell(ws, r, 3, b.get("件名", ""),     bg)
+        _data_cell(ws, r, 4, b.get("担当者", ""),   bg, center=True)
+        _data_cell(ws, r, 5, b.get("請求日", ""),   bg, center=True)
+        _data_cell(ws, r, 6, due_date,               bg, center=True)
+        _data_cell(ws, r, 7, b.get("請求金額", 0),  bg, number_format='#,##0', center=True)
+
+        if due_date:
+            try:
+                delta = (datetime.strptime(today_str, "%Y-%m-%d")
+                         - datetime.strptime(due_date, "%Y-%m-%d")).days
+                cell = _data_cell(ws, r, 8, delta, bg, number_format='#,##0', center=True)
+                cell.font = Font(color=COLOR_OVERDUE, bold=True)
+            except ValueError:
+                _data_cell(ws, r, 8, "", bg)
+        else:
+            _data_cell(ws, r, 8, "", bg)
+
+        _data_cell(ws, r, 9, b.get("メモ_手動", ""), bg)
+
+    _auto_column_width(ws)
+
+
 def _write_paid_sheet(ws, paid: list[dict]):
     ws.title = "入金確認済み"
     ws.sheet_properties.tabColor = "375623"
