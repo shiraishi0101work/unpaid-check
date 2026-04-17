@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section">
+  <div class="sidebar-label">ページ内ジャンプ</div>
+  <div class="sidebar-item">
+    <a href="#section-status"   class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>入金ステータス定義
+    </a>
+    <a href="#section-match"    class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>照合ロジック（3パス）
+    </a>
+    <a href="#section-name"     class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>取引先名の照合ルール
+    </a>
+    <a href="#section-params"   class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>照合パラメータ
+    </a>
+    <a href="#section-flow"     class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>全体フロー
+    </a>
+  </div>
+</div>
+
+<hr class="sidebar-divider">
+
+<div class="sidebar-section">
+  <div class="sidebar-item">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-speedometer2 me-1"></i>ダッシュボードへ
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <i class="bi bi-book fs-4 text-primary"></i>
+  <h5 class="fw-bold mb-0">入金チェックルール表</h5>
+  <span class="badge bg-secondary ms-1">参照用</span>
+</div>
+
+{# ===== 1. 入金ステータス定義 ===== #}
+<div id="section-status" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-tags me-2 text-primary"></i>1. 入金ステータス定義
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:160px">ステータス</th>
+            <th style="width:130px">区分</th>
+            <th>判定条件</th>
+            <th style="width:130px">表示箇所</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge bg-danger fs-6 px-2">支払期限超過</span></td>
+            <td><span class="text-danger fw-semibold">未入金（超過）</span></td>
+            <td>MFクラウド請求書ステータスが未払い <strong>かつ</strong> 支払期限が今日より前</td>
+            <td>ダッシュボード<br><span class="text-muted small">「支払期限超過」タブ</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-warning text-dark fs-6 px-2">期日前</span></td>
+            <td><span class="text-warning fw-semibold">未入金（期日前）</span></td>
+            <td>MFクラウド請求書ステータスが未払い <strong>かつ</strong> 支払期限が今日以降（または未設定）</td>
+            <td>ダッシュボード<br><span class="text-muted small">「期日前」タブ</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-success fs-6 px-2">完全入金</span></td>
+            <td><span class="text-success fw-semibold">入金確認済み</span></td>
+            <td>MF会計の入金データと照合成功（金額・取引先名・日付が一致）</td>
+            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-success fs-6 px-2">完全入金（金額一致）</span></td>
+            <td><span class="text-success fw-semibold">入金確認済み</span></td>
+            <td>MF会計の取引先名が空 かつ 金額・日付のみで一致（パス3照合）</td>
+            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-warning text-dark fs-6 px-2">差額あり（不足）</span></td>
+            <td><span class="text-warning fw-semibold">差額あり</span></td>
+            <td>取引先名・日付は一致したが、入金金額 ＜ 請求金額（振込手数料差引など）</td>
+            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ内</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-warning text-dark fs-6 px-2">差額あり（過払い）</span></td>
+            <td><span class="text-warning fw-semibold">差額あり</span></td>
+            <td>取引先名・日付は一致したが、入金金額 ＞ 請求金額（合算入金の可能性）</td>
+            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ内</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-secondary fs-6 px-2">照合不能</span></td>
+            <td><span class="text-secondary fw-semibold">要確認</span></td>
+            <td>MF会計に入金データが存在するが、どの請求書とも照合できなかった</td>
+            <td>ダッシュボード<br><span class="text-muted small">「照合不能」タブ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ===== 2. 照合ロジック ===== #}
+<div id="section-match" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-diagram-3 me-2 text-primary"></i>2. 照合ロジック（3パス方式）
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">MFクラウド請求書の未払い請求書と、MFクラウド会計の入金データを以下の順番で照合します。</p>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-primary">
+          <tr>
+            <th style="width:80px" class="text-center">パス</th>
+            <th>照合条件</th>
+            <th style="width:200px">一致した場合のステータス</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center fw-bold text-primary">パス 1</td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">金額一致</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">取引先名一致</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">日付範囲OK</span>
+            </td>
+            <td><span class="badge bg-success">完全入金</span></td>
+            <td class="small text-muted">最優先。3条件すべてが揃った場合のみ確定</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold text-warning">パス 2</td>
+            <td>
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle me-1">取引先名一致</span>
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle">日付範囲OK</span>
+              <span class="text-muted small ms-1">（金額不問）</span>
+            </td>
+            <td>
+              <span class="badge bg-warning text-dark">差額あり（不足）</span><br>
+              <span class="badge bg-warning text-dark mt-1">差額あり（過払い）</span>
+            </td>
+            <td class="small text-muted">パス1で照合できなかった請求書を対象に再試行。振込手数料差引などを検出</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold text-secondary">パス 3</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-1">金額一致</span>
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">日付範囲OK</span>
+              <span class="text-muted small ms-1">（取引先名は空のデータのみ）</span>
+            </td>
+            <td><span class="badge bg-success">完全入金（金額一致）</span></td>
+            <td class="small text-muted">会計仕訳に取引先名が未登録の場合のみ適用</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert alert-info py-2 mt-3 small mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      一度照合された入金データは次のパスの対象から除外されます（重複照合の防止）。
+      すべてのパスで照合できなかった入金データは「照合不能」として記録されます。
+    </div>
+  </div>
+</div>
+
+{# ===== 3. 取引先名の照合ルール ===== #}
+<div id="section-name" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-building me-2 text-primary"></i>3. 取引先名の照合ルール
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">取引先名は正規化処理を行った上で部分一致で照合します。</p>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:50px" class="text-center">順</th>
+            <th>処理内容</th>
+            <th>例</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center text-muted">①</td>
+            <td>法人格プレフィックス・サフィックスを除去</td>
+            <td class="small"><code>株式会社〇〇</code> → <code>〇〇</code><br><code>〇〇（株）</code> → <code>〇〇</code></td>
+          </tr>
+          <tr>
+            <td class="text-center text-muted">②</td>
+            <td>振込略称プレフィックスを除去</td>
+            <td class="small"><code>カ)〇〇</code> → <code>〇〇</code><br><code>ゼイ)〇〇</code> → <code>〇〇</code></td>
+          </tr>
+          <tr>
+            <td class="text-center text-muted">③</td>
+            <td>ひらがな → カタカナ変換</td>
+            <td class="small"><code>いぶき</code> → <code>イブキ</code></td>
+          </tr>
+          <tr>
+            <td class="text-center text-muted">④</td>
+            <td>英字を大文字化 / 全角英数 → 半角</td>
+            <td class="small"><code>ｄｅｌｌａ</code> → <code>DELLA</code></td>
+          </tr>
+          <tr>
+            <td class="text-center text-muted">⑤</td>
+            <td>空白・記号・括弧類を除去</td>
+            <td class="small"><code>〇〇 コーポ（株）</code> → <code>〇〇コーポ</code></td>
+          </tr>
+          <tr>
+            <td class="text-center text-muted">⑥</td>
+            <td>部分一致で比較（A⊂B または B⊂A）</td>
+            <td class="small"><code>イブキ</code> と <code>イブキインテリア</code> → 一致</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card bg-light border-0">
+      <div class="card-body py-2">
+        <p class="fw-semibold small mb-2"><i class="bi bi-lightbulb me-1 text-warning"></i>取引先名が空の場合の照合</p>
+        <ul class="small text-muted mb-0 ps-3">
+          <li>会計仕訳の備考（摘要）テキストを正規化して検索します</li>
+          <li>正規化後の名前が備考に含まれるか確認（最低3文字以上）</li>
+          <li>カタカナ変換後のコア名称が備考に含まれるか確認（最低2文字以上）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 4. 照合パラメータ ===== #}
+<div id="section-params" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-sliders me-2 text-primary"></i>4. 照合パラメータ
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>環境変数名</th>
+            <th style="width:140px" class="text-center">現在の設定値</th>
+            <th>意味</th>
+            <th>変更方法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MATCH_AMOUNT_TOLERANCE</code></td>
+            <td class="text-center fw-bold">¥{{ "{:,}".format(amount_tolerance) }}</td>
+            <td class="small">金額照合の許容誤差。この範囲内の差額は「金額一致」と判定する</td>
+            <td class="small text-muted">.env ファイルで設定</td>
+          </tr>
+          <tr>
+            <td><code>MATCH_DATE_BEFORE_DAYS</code></td>
+            <td class="text-center fw-bold">{{ date_before_days }}日前まで</td>
+            <td class="small">着金日が請求日より何日 <strong>前</strong> まで許容するか（前払いなど）</td>
+            <td class="small text-muted">.env ファイルで設定</td>
+          </tr>
+          <tr>
+            <td><code>MATCH_DATE_AFTER_DAYS</code></td>
+            <td class="text-center fw-bold">{{ date_after_days }}日後まで</td>
+            <td class="small">着金日が請求日より何日 <strong>後</strong> まで許容するか</td>
+            <td class="small text-muted">.env ファイルで設定</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-3 pb-3 pt-2">
+      <div class="alert alert-warning py-2 small mb-0">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        パラメータを変更した場合は、アプリを再起動してから「今すぐ実行」で再照合してください。
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 5. 全体フロー ===== #}
+<div id="section-flow" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-arrow-right-circle me-2 text-primary"></i>5. 全体フロー
+  </div>
+  <div class="card-body">
+    <div class="d-flex flex-column gap-2">
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">1</div>
+        <div>
+          <div class="fw-semibold">MFクラウド請求書から全請求書を取得</div>
+          <div class="text-muted small">発行済みの全件を取得（日付フィルタなし）。ステータスで「未払い」「支払済み」に一次分類。</div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">2</div>
+        <div>
+          <div class="fw-semibold">メタデータをマージ</div>
+          <div class="text-muted small">担当者・社内メモ・手動着金日・着金金額をシステム内DBから各請求書に付与。取引先名マップで担当者を自動セット。</div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">3</div>
+        <div>
+          <div class="fw-semibold">MFクラウド会計から入金データを取得（連携済みの場合）</div>
+          <div class="text-muted small">指定期間の入金仕訳を取得。未連携の場合はMF請求書ステータスのみで分類。</div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">4</div>
+        <div>
+          <div class="fw-semibold">3パス照合を実行</div>
+          <div class="text-muted small">上記「照合ロジック」に従って照合。完全入金 / 差額あり / 未入金 / 照合不能 に分類。</div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">5</div>
+        <div>
+          <div class="fw-semibold">既存結果とマージ</div>
+          <div class="text-muted small">前回の照合結果と統合。入金確認済みデータを誤って「未入金」に戻さないよう保護。新規請求書は追加。</div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">6</div>
+        <div>
+          <div class="fw-semibold">Excelレポート生成 &amp; 結果保存</div>
+          <div class="text-muted small">outputフォルダにExcelファイルを出力。次回起動時も結果を保持。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
