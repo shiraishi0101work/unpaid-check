@@ -647,6 +647,72 @@
     {% endif %}
   </div>
 
+  {# --- 一時保管（毎月要確認） --- #}
+  {% if ichiji_hokan %}
+  <div class="tab-pane fade" id="tab-ichiji">
+    <div class="alert d-flex align-items-center gap-2 py-2 mb-3" style="background:#f3eeff;border-color:#c9b8f0;font-size:0.82rem">
+      <i class="bi bi-archive-fill flex-shrink-0" style="color:#6f42c1"></i>
+      <span>社内メモが記入されている未収請求書です。次回の照合実行後も<strong>未収タブには表示されません</strong>。メモを削除すると未収に戻ります。</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead style="background:#e8d8ff">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>理由（社内メモ）</th>
+            <th class="text-center" style="width:70px">編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in ichiji_hokan %}
+          <tr>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small">
+              <span class="badge rounded-pill text-bg-light border" style="font-size:0.8rem;white-space:normal;text-align:left">
+                {{ b.メモ_手動 }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                <i class="bi bi-pencil-fill"></i> 編集
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot style="background:#e8d8ff;font-weight:bold">
+          <tr>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end">¥{{ "{:,.0f}".format(ichiji_hokan|sum(attribute='請求金額')) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
   {# --- 入金確認済み --- #}
   <div class="tab-pane fade" id="tab-paid">
     {% if paid_fy %}
