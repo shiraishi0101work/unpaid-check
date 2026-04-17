@@ -77,20 +77,6 @@
     </div>
 
     <div class="sidebar-item">
-      <label class="sidebar-sublabel" style="font-weight:600;color:#4a5568;">
-        <i class="bi bi-bank" style="font-size:0.75rem"></i> 入金月
-      </label>
-      <div class="d-flex gap-1 align-items-center">
-        <input type="month" name="deal_from_ym" class="form-control form-control-sm"
-               placeholder="開始月" style="flex:1; min-width:0;">
-        <span class="text-muted small">〜</span>
-        <input type="month" name="deal_to_ym" class="form-control form-control-sm"
-               placeholder="終了月" style="flex:1; min-width:0;">
-      </div>
-      <div class="form-text" style="font-size:0.68rem">省略で年度自動設定</div>
-    </div>
-
-    <div class="sidebar-item">
       <button type="submit" class="btn btn-primary btn-sm w-100"
         id="run-btn"
         {% if not auth_invoice %}disabled{% endif %}
