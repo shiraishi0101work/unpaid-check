@@ -218,24 +218,33 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
         all_paid = paid_mf + paid_manual
 
         # 未入金を期限超過/期日前に分類
-        overdue  = sorted(
-            [b for b in unpaid if b.get("支払期限") and b["支払期限"] < today_str],
-            key=lambda x: x.get("支払期限", ""))
-        upcoming = sorted(
+        all_overdue = [b for b in unpaid if b.get("支払期限") and b["支払期限"] < today_str]
+        upcoming    = sorted(
             [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str],
             key=lambda x: x.get("支払期限", ""))
 
+        # 期限超過を「通常」と「下書き（未発行）」に分離
+        deleted_draft_ids = load_deleted_drafts()
+        draft_overdue = sorted(
+            [b for b in all_overdue
+             if _is_draft_invoice(b) and b.get("請求書ID") not in deleted_draft_ids],
+            key=lambda x: x.get("支払期限", ""))
+        overdue = sorted(
+            [b for b in all_overdue if not _is_draft_invoice(b)],
+            key=lambda x: x.get("支払期限", ""))
+
         result = {
-            "paid":         all_paid,
-            "unpaid":       unpaid,
-            "overdue":      overdue,
-            "upcoming":     upcoming,
-            "total":        len(all_paid) + len(unpaid),
-            "invoice_from": invoice_from or "",
-            "invoice_to":   invoice_to   or "",
+            "paid":          all_paid,
+            "unpaid":        unpaid,
+            "overdue":       overdue,
+            "draft_overdue": draft_overdue,
+            "upcoming":      upcoming,
+            "total":         len(all_paid) + len(unpaid),
+            "invoice_from":  invoice_from or "",
+            "invoice_to":    invoice_to   or "",
         }
 
-        print(f"[分類] 未入金={len(unpaid)}件（超過:{len(overdue)} 期日前:{len(upcoming)}）"
+        print(f"[分類] 未入金={len(unpaid)}件（超過:{len(overdue)} 下書き超過:{len(draft_overdue)} 期日前:{len(upcoming)}）"
               f" 入金済み={len(all_paid)}件（MF:{len(paid_mf)} 手動:{len(paid_manual)}）")
 
         _update_status(progress=85, message="Excelレポートを生成中...")
