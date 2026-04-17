@@ -316,6 +316,7 @@ def _save_result(result: dict, output_path: str):
         "overdue":          _clean_items(result["overdue"]),
         "seikyu_kakunin":   _clean_items(result.get("seikyu_kakunin", [])),
         "draft_overdue":    _clean_items(result.get("draft_overdue", [])),
+        "ichiji_hokan":     _clean_items(result.get("ichiji_hokan", [])),
         "upcoming":         _clean_items(result["upcoming"]),
         "paid":             _clean_items(result["paid"]),
         "total":            result["total"],
