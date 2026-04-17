@@ -294,35 +294,39 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
     ws.title = "サマリー"
     ws.sheet_properties.tabColor = "1F3864"
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    paid   = result["paid"]
-    unpaid = result["unpaid"]
+    overdue         = result.get("overdue", [])
+    seikyu_kakunin  = result.get("seikyu_kakunin", [])
+    upcoming        = result.get("upcoming", [])
+    paid            = result.get("paid", [])
+    unpaid          = result.get("unpaid", [])
 
-    overdue  = [b for b in unpaid if b.get("支払期限", "") and b["支払期限"] < today_str]
-    upcoming = [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str]
-
-    overdue_total  = sum(b.get("請求金額", 0) for b in overdue)
-    upcoming_total = sum(b.get("請求金額", 0) for b in upcoming)
-    paid_total     = sum(b.get("請求金額", 0) for b in paid)
+    overdue_total        = sum(b.get("請求金額", 0) for b in overdue)
+    seikyu_kakunin_total = sum(b.get("請求金額", 0) for b in seikyu_kakunin)
+    upcoming_total       = sum(b.get("請求金額", 0) for b in upcoming)
+    paid_total           = sum(b.get("請求金額", 0) for b in paid)
 
     rows = [
-        ("集計日時",            generated_at),
+        ("集計日時",               generated_at),
         (None, None),
-        ("■ 支払期限超過請求書", None),
-        ("件数",                len(overdue)),
-        ("合計金額（税込）",     overdue_total),
+        ("■ 支払期限超過（未入金）", None),
+        ("件数",                   len(overdue)),
+        ("合計金額（税込）",        overdue_total),
         (None, None),
-        ("■ 期日前請求書",       None),
-        ("件数",                len(upcoming)),
-        ("合計金額（税込）",     upcoming_total),
+        ("■ 請求済み・未確認",      None),
+        ("件数",                   len(seikyu_kakunin)),
+        ("合計金額（税込）",        seikyu_kakunin_total),
         (None, None),
-        ("■ 未入金合計",         None),
-        ("件数",                len(unpaid)),
-        ("合計金額（税込）",     overdue_total + upcoming_total),
+        ("■ 期日前請求書",          None),
+        ("件数",                   len(upcoming)),
+        ("合計金額（税込）",        upcoming_total),
         (None, None),
-        ("■ 入金確認済み",       None),
-        ("件数",                len(paid)),
-        ("合計金額（税込）",     paid_total),
+        ("■ 未入金合計",            None),
+        ("件数",                   len(unpaid)),
+        ("合計金額（税込）",        overdue_total + seikyu_kakunin_total + upcoming_total),
+        (None, None),
+        ("■ 入金確認済み",          None),
+        ("件数",                   len(paid)),
+        ("合計金額（税込）",        paid_total),
     ]
 
     for r, (label, value) in enumerate(rows, start=1):
@@ -337,7 +341,7 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
             if isinstance(value, int) and "金額" in label:
                 cell_v.number_format = '#,##0'
 
-    ws.column_dimensions["A"].width = 28
+    ws.column_dimensions["A"].width = 32
     ws.column_dimensions["B"].width = 20
 
 
