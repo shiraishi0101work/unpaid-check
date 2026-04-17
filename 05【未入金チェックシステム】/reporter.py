@@ -421,6 +421,10 @@ def generate_report(result: dict, output_dir: str = None) -> str:
         ws_seikyu = wb.create_sheet()
         _write_seikyu_kakunin_sheet(ws_seikyu, result["seikyu_kakunin"])
 
+    if result.get("ichiji_hokan"):
+        ws_ichiji = wb.create_sheet()
+        _write_ichiji_hokan_sheet(ws_ichiji, result["ichiji_hokan"])
+
     ws_upcoming = wb.create_sheet()
     _write_upcoming_sheet(ws_upcoming, result.get("upcoming", []))
 
