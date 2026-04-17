@@ -61,7 +61,8 @@ def _parse_date(date_str: str) -> datetime | None:
 def _name_match(invoice_name: str, deal_name: str, deal_remark: str = "") -> bool:
     """取引先名の一致判定
     1. 取引先名同士: 部分一致（正規化あり）
-    2. 取引先名が空の場合: 備考テキストを正規化して検索
+    2. 取引先名で不一致 or 空の場合: 備考テキストを正規化して検索
+       ※ 銀行振込では取引先名が略称で不一致でも備考に正式名が含まれることがある
     """
     if not invoice_name:
         return False
@@ -73,14 +74,19 @@ def _name_match(invoice_name: str, deal_name: str, deal_remark: str = "") -> boo
     # ひらがな→カタカナ変換済みコア（「いぶき」→「イブキ」）
     a_kata = jaconv.hira2kata(a_core)
 
+    # ── ① 取引先名同士で照合 ──
     if deal_name and deal_name.strip():
         b_raw  = deal_name.strip()
         b_norm = _normalize(b_raw)
         if a_norm and b_norm:
-            return a_norm in b_norm or b_norm in a_norm or a_norm == b_norm
-        return a_raw in b_raw or b_raw in a_raw
+            if a_norm in b_norm or b_norm in a_norm or a_norm == b_norm:
+                return True
+        else:
+            if a_raw in b_raw or b_raw in a_raw:
+                return True
+        # 取引先名で一致しなかった場合も備考チェックへ続ける
 
-    # 取引先名が空の場合: 備考テキストで検索
+    # ── ② 備考テキストで検索（取引先名が空 or 不一致の場合） ──
     if deal_remark:
         remark_norm = _normalize(deal_remark)
         # 正規化後の名前が備考に含まれるか（最低3文字以上で照合）
