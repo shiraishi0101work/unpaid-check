@@ -347,10 +347,11 @@ def dashboard():
                     if company and company in company_tantou:
                         b["担当者"] = company_tantou[company]
 
-        overdue       = result.get("overdue", [])
-        draft_overdue = result.get("draft_overdue", [])
-        upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
-        paid_fy       = [b for b in result.get("paid", [])     if in_fy(b)]
+        overdue          = result.get("overdue", [])
+        seikyu_kakunin   = result.get("seikyu_kakunin", [])
+        draft_overdue    = result.get("draft_overdue", [])
+        upcoming         = [b for b in result.get("upcoming", []) if in_fy(b)]
+        paid_fy          = [b for b in result.get("paid", [])     if in_fy(b)]
 
         # 要確認件数（未入金企業からの入金データ）
         payment_history = load_payment_history()
