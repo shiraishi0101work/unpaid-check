@@ -355,7 +355,7 @@ def dashboard():
             )
         )
     else:
-        overdue = upcoming = paid_fy = []
+        overdue = draft_overdue = upcoming = paid_fy = []
         yoakinin_count = 0
 
     return render_template(
@@ -364,6 +364,7 @@ def dashboard():
         auth_accounting=auth_accounting,
         result=result,
         overdue=overdue,
+        draft_overdue=draft_overdue,
         upcoming=upcoming,
         paid_fy=paid_fy,
         yoakinin_count=yoakinin_count,
