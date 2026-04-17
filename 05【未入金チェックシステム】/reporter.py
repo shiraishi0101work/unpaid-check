@@ -143,7 +143,7 @@ def _write_overdue_sheet(ws, overdue: list[dict]):
 
 def _write_seikyu_kakunin_sheet(ws, billings: list[dict]):
     """請求済み・未確認シート（送付済みだがMF未入金ステータスが未設定のもの）"""
-    ws.title = "請求済み・未確認"
+    ws.title = "請求済みか確認"
     ws.sheet_properties.tabColor = "0070C0"
     today_str = datetime.now().strftime("%Y-%m-%d")
 
