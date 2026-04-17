@@ -365,24 +365,23 @@ def generate_report(result: dict, output_dir: str = None) -> str:
     filename     = f"未入金チェック_{timestamp}.xlsx"
     filepath     = os.path.join(output_dir, filename)
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    unpaid    = result["unpaid"]
-    overdue   = [b for b in unpaid if b.get("支払期限", "") < today_str]
-    upcoming  = [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")]
-
     wb = openpyxl.Workbook()
     # デフォルトシートを使ってサマリーを先頭に
     ws_summary = wb.active
     _write_summary_sheet(ws_summary, result, generated_at)
 
     ws_overdue = wb.create_sheet()
-    _write_overdue_sheet(ws_overdue, overdue)
+    _write_overdue_sheet(ws_overdue, result.get("overdue", []))
+
+    if result.get("seikyu_kakunin"):
+        ws_seikyu = wb.create_sheet()
+        _write_seikyu_kakunin_sheet(ws_seikyu, result["seikyu_kakunin"])
 
     ws_upcoming = wb.create_sheet()
-    _write_upcoming_sheet(ws_upcoming, upcoming)
+    _write_upcoming_sheet(ws_upcoming, result.get("upcoming", []))
 
     ws_paid = wb.create_sheet()
-    _write_paid_sheet(ws_paid, result["paid"])
+    _write_paid_sheet(ws_paid, result.get("paid", []))
 
     wb.save(filepath)
     print(f"[レポート] 保存完了: {filepath}")
