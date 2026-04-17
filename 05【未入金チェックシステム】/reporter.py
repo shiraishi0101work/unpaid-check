@@ -239,46 +239,34 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
     ws.sheet_properties.tabColor = "1F3864"
 
     today_str = datetime.now().strftime("%Y-%m-%d")
-    paid      = result["paid"]
-    diff      = result.get("diff", [])
-    unpaid    = result["unpaid"]
-    unmatch   = result["unmatched_deals"]
+    paid   = result["paid"]
+    unpaid = result["unpaid"]
 
-    overdue  = [b for b in unpaid if b.get("支払期限", "") < today_str]
-    upcoming = [b for b in unpaid if b.get("支払期限", "") >= today_str or not b.get("支払期限")]
+    overdue  = [b for b in unpaid if b.get("支払期限", "") and b["支払期限"] < today_str]
+    upcoming = [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str]
 
     overdue_total  = sum(b.get("請求金額", 0) for b in overdue)
     upcoming_total = sum(b.get("請求金額", 0) for b in upcoming)
-    diff_total     = sum(b.get("請求金額", 0) for b in diff)
-    diff_shortage  = sum(abs(b.get("差額", 0)) for b in diff if b.get("差額", 0) < 0)
     paid_total     = sum(b.get("請求金額", 0) for b in paid)
 
     rows = [
-        ("集計日時",                  generated_at),
+        ("集計日時",            generated_at),
         (None, None),
-        ("■ 支払期限超過請求書",       None),
-        ("件数",                      len(overdue)),
-        ("合計金額（税込）",           overdue_total),
+        ("■ 支払期限超過請求書", None),
+        ("件数",                len(overdue)),
+        ("合計金額（税込）",     overdue_total),
         (None, None),
-        ("■ 期日前請求書",             None),
-        ("件数",                      len(upcoming)),
-        ("合計金額（税込）",           upcoming_total),
+        ("■ 期日前請求書",       None),
+        ("件数",                len(upcoming)),
+        ("合計金額（税込）",     upcoming_total),
         (None, None),
-        ("■ 未入金合計",               None),
-        ("件数",                      len(unpaid)),
-        ("合計金額（税込）",           overdue_total + upcoming_total),
+        ("■ 未入金合計",         None),
+        ("件数",                len(unpaid)),
+        ("合計金額（税込）",     overdue_total + upcoming_total),
         (None, None),
-        ("■ 差額あり請求書",           None),
-        ("件数",                      len(diff)),
-        ("請求金額合計",               diff_total),
-        ("不足合計",                   diff_shortage),
-        (None, None),
-        ("■ 入金確認済み（金額一致）", None),
-        ("件数",                      len(paid)),
-        ("合計金額（税込）",           paid_total),
-        (None, None),
-        ("■ 照合不能な入金",           None),
-        ("件数",                      len(unmatch)),
+        ("■ 入金確認済み",       None),
+        ("件数",                len(paid)),
+        ("合計金額（税込）",     paid_total),
     ]
 
     for r, (label, value) in enumerate(rows, start=1):
@@ -287,7 +275,6 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
         cell_l = ws.cell(row=r, column=1, value=label)
         cell_l.font = Font(bold=True)
         cell_l.alignment = Alignment(horizontal="left", vertical="center")
-
         if value is not None:
             cell_v = ws.cell(row=r, column=2, value=value)
             cell_v.alignment = Alignment(horizontal="right", vertical="center")
