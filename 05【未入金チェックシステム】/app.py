@@ -139,6 +139,29 @@ def _update_status(**kwargs):
     with _status_lock:
         _status.update(kwargs)
 
+def load_deleted_drafts() -> set:
+    """下書きとして削除済みの請求書IDセットを返す"""
+    if not os.path.exists(DELETED_DRAFTS_FILE):
+        return set()
+    with open(DELETED_DRAFTS_FILE, encoding="utf-8") as f:
+        return set(json.load(f))
+
+def save_deleted_drafts(ids: set):
+    with open(DELETED_DRAFTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(ids), f, ensure_ascii=False)
+
+def _is_draft_invoice(b: dict) -> bool:
+    """
+    下書き（顧客未着）とみなす条件:
+    メール送信・郵送・PDFダウンロードのいずれも行われていない請求書。
+    """
+    return (
+        b.get("メール状態") == "未送信" and
+        b.get("送付状態") == "未郵送" and
+        not b.get("DL済み", False)
+    )
+
+
 def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
     """MF請求書ステータス＋手動確認のみで未入金を判定する（MF会計照合なし）"""
     try:
