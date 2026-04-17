@@ -989,6 +989,64 @@ def unmatched_link(deal_id):
     return jsonify({"ok": True, "moved_paid": len(moved_paid), "moved_diff": len(moved_diff)})
 
 
+@app.route("/api/invoice/<invoice_id>/delete-draft", methods=["POST"])
+def delete_draft_invoice(invoice_id):
+    """下書き（期限超過）タブから請求書を削除（非表示）する"""
+    ids = load_deleted_drafts()
+    ids.add(invoice_id)
+    save_deleted_drafts(ids)
+
+    # last_result.json からも即時除去
+    result = _load_result()
+    if result:
+        result["draft_overdue"] = [
+            b for b in result.get("draft_overdue", [])
+            if b.get("請求書ID") != invoice_id
+        ]
+        output_path = result.get("output_path", "")
+        _save_result(result, output_path)
+
+    return jsonify({"ok": True})
+
+
+@app.route("/api/debug-billing-raw")
+def debug_billing_raw():
+    """請求書APIの実際のフィールド一覧を確認するデバッグエンドポイント"""
+    import requests as _req
+    try:
+        token = auth.get_access_token("invoice")
+        r = _req.get(
+            "https://invoice.moneyforward.com/api/v3/billings",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            params={"per_page": 3, "page": 1},
+            timeout=30,
+        )
+        if r.ok:
+            items = r.json().get("data", [])
+            if items:
+                first = items[0]
+                return jsonify({
+                    "all_fields": sorted(first.keys()),
+                    "delivery_fields": {
+                        k: first.get(k)
+                        for k in ["posting_status", "posting", "email_status",
+                                  "is_downloaded", "is_locked", "billing_status",
+                                  "status", "draft", "payment_status"]
+                        if k in first
+                    },
+                    "sample_3": [
+                        {k: v for k, v in item.items()
+                         if k not in ("billing_items", "partner", "department",
+                                      "memo", "title")}
+                        for item in items
+                    ],
+                })
+        return jsonify({"error": f"HTTP {r.status_code}", "body": r.text[:500]})
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()})
+
+
 @app.route("/api/payments/<deal_id>/suggest")
 def payments_suggest(deal_id):
     """会計の取引先名からファジーマッチで請求書候補を返す"""
