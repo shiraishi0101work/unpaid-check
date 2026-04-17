@@ -747,6 +747,44 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ===== 下書き削除モーダル =====
+const deleteDraftModal = new bootstrap.Modal(document.getElementById('deleteDraftModal'));
+let _ddInvoiceId = null;
+
+document.querySelectorAll('.draft-delete-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    _ddInvoiceId = this.dataset.id;
+    document.getElementById('dd-info').textContent =
+      `${this.dataset.num} / ${this.dataset.name}`;
+    deleteDraftModal.show();
+  });
+});
+
+document.getElementById('dd-confirm-btn')?.addEventListener('click', async function() {
+  if (!_ddInvoiceId) return;
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>削除中...';
+  try {
+    const resp = await fetch(`/api/invoice/${_ddInvoiceId}/delete-draft`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      deleteDraftModal.hide();
+      const row = document.getElementById(`draft-row-${_ddInvoiceId}`);
+      if (row) row.remove();
+    } else {
+      alert('削除に失敗しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-trash me-1"></i>削除';
+  }
+});
+
 // ===== 案件編集モーダル =====
 document.getElementById('edit-save-btn')?.addEventListener('click', function() {
   const id = document.getElementById('edit-invoice-id').value;
