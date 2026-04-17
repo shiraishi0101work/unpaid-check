@@ -1126,6 +1126,23 @@ def payments_suggest(deal_id):
 
 
 # ========================================
+# 入金チェックルール表
+# ========================================
+
+@app.route("/rules")
+def rules_page():
+    from matcher import AMOUNT_TOLERANCE, DATE_BEFORE_DAYS, DATE_AFTER_DAYS
+    return render_template(
+        "rules.html",
+        amount_tolerance=AMOUNT_TOLERANCE,
+        date_before_days=DATE_BEFORE_DAYS,
+        date_after_days=DATE_AFTER_DAYS,
+        auth_invoice=auth.is_authenticated("invoice"),
+        auth_accounting=auth.is_authenticated("accounting"),
+        settings=load_settings(),
+    )
+
+# ========================================
 # 起動
 # ========================================
 
