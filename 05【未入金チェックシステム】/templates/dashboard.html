@@ -299,6 +299,14 @@
       <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
     </a>
   </li>
+  {% if draft_overdue %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-draft-overdue" id="btn-tab-draft-overdue">
+      <i class="bi bi-file-earmark-text text-secondary"></i> 下書き（期限超過）
+      <span class="badge bg-secondary ms-1">{{ draft_overdue|length }}</span>
+    </a>
+  </li>
+  {% endif %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-upcoming" id="btn-tab-upcoming">
       <i class="bi bi-hourglass-split text-warning"></i> 期日前
