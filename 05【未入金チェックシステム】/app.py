@@ -243,17 +243,19 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
             key=lambda x: x.get("支払期限", ""))
 
         result = {
-            "paid":          all_paid,
-            "unpaid":        unpaid,
-            "overdue":       overdue,
-            "draft_overdue": draft_overdue,
-            "upcoming":      upcoming,
-            "total":         len(all_paid) + len(unpaid),
-            "invoice_from":  invoice_from or "",
-            "invoice_to":    invoice_to   or "",
+            "paid":            all_paid,
+            "unpaid":          unpaid,
+            "overdue":         overdue,
+            "seikyu_kakunin":  seikyu_kakunin,
+            "draft_overdue":   draft_overdue,
+            "upcoming":        upcoming,
+            "total":           len(all_paid) + len(unpaid),
+            "invoice_from":    invoice_from or "",
+            "invoice_to":      invoice_to   or "",
         }
 
-        print(f"[分類] 未入金={len(unpaid)}件（超過:{len(overdue)} 下書き超過:{len(draft_overdue)} 期日前:{len(upcoming)}）"
+        print(f"[分類] 未入金={len(unpaid)}件（"
+              f"超過:{len(overdue)} 請求済確認:{len(seikyu_kakunin)} 下書き超過:{len(draft_overdue)} 期日前:{len(upcoming)}）"
               f" 入金済み={len(all_paid)}件（MF:{len(paid_mf)} 手動:{len(paid_manual)}）")
 
         _update_status(progress=85, message="Excelレポートを生成中...")
