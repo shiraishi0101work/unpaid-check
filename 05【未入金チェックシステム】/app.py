@@ -296,29 +296,32 @@ def dashboard():
                 b["メモ_手動"]     = m.get("メモ", b.get("メモ_手動",""))
                 b["着金日_手動"]   = m.get("着金日_手動", b.get("着金日_手動",""))
                 b["着金金額_手動"] = m.get("着金金額_手動", b.get("着金金額_手動", 0))
-                # 担当者未設定なら取引先名マップから自動セット
                 if not b.get("担当者"):
                     company = b.get("取引先名", "").strip()
                     if company and company in company_tantou:
                         b["担当者"] = company_tantou[company]
 
-        all_data  = result.get("unpaid",[]) + result.get("paid",[])
-        # overdue は年度関係なく全件表示（旧年度分の支払期限超過も漏れなく表示するため）
-        overdue   = result.get("overdue", [])
-        upcoming  = [b for b in result.get("upcoming",[]) if in_fy(b)]
-        paid_fy   = [b for b in result.get("paid",[])     if in_fy(b)]
-        diff_fy   = [b for b in result.get("diff",[])     if in_fy(b)]
+        overdue  = result.get("overdue", [])
+        upcoming = [b for b in result.get("upcoming", []) if in_fy(b)]
+        paid_fy  = [b for b in result.get("paid", [])     if in_fy(b)]
 
-        # 着金月ごとにグループ化（着金日 → 支払期限 → 請求日 の優先順で月を決める）
-        monthly = {}
-        for b in paid_fy:
-            ym = (b.get("着金日") or b.get("着金日_手動") or b.get("支払期限") or b.get("請求日") or "")[:7]
-            if ym:
-                monthly.setdefault(ym, []).append(b)
-        monthly_sorted = sorted(monthly.items())
+        # 要確認件数（未入金企業からの入金データ）
+        payment_history = load_payment_history()
+        payment_links   = load_payment_links()
+        import name_utils as _nu
+        unpaid_norms = {_nu.normalize(b.get("取引先名","")) for b in result.get("unpaid",[])}
+        yoakinin_count = sum(
+            1 for d in payment_history
+            if not payment_links.get(d.get("取引ID",""), {}).get("invoice_ids")
+            and (
+                _nu.normalize(d.get("取引先名","")) in unpaid_norms
+                or any(n and len(n) >= 3 and n in _nu.normalize(d.get("備考",""))
+                       for n in unpaid_norms)
+            )
+        )
     else:
-        overdue = upcoming = paid_fy = diff_fy = []
-        monthly_sorted = []
+        overdue = upcoming = paid_fy = []
+        yoakinin_count = 0
 
     return render_template(
         "dashboard.html",
@@ -328,8 +331,7 @@ def dashboard():
         overdue=overdue,
         upcoming=upcoming,
         paid_fy=paid_fy,
-        diff_fy=diff_fy,
-        monthly_sorted=monthly_sorted,
+        yoakinin_count=yoakinin_count,
         status=dict(_status),
         today=today_str,
         settings=settings,
