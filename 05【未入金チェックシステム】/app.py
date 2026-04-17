@@ -498,6 +498,9 @@ def run():
     # 入金月
     deal_from_ym    = request.form.get("deal_from_ym")    or ""
     deal_to_ym      = request.form.get("deal_to_ym")      or ""
+    # 支払期限月
+    due_from_ym     = request.form.get("due_from_ym")     or ""
+    due_to_ym       = request.form.get("due_to_ym")       or ""
 
     def ym_to_from(ym: str) -> str | None:
         """YYYY-MM → YYYY-MM-01"""
