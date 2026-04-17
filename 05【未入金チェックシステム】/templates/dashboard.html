@@ -394,13 +394,12 @@
     </div>
     {% else %}
     <div class="text-center text-muted py-4">
-      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>支払期限超過の請求書はありません
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>未収の請求書はありません
     </div>
     {% endif %}
   </div>
 
   {# --- 請求済みか確認 --- #}
-  {% if seikyu_kakunin %}
   <div class="tab-pane fade" id="tab-seikyu-kakunin">
     <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
       <i class="bi bi-info-circle-fill flex-shrink-0"></i>
