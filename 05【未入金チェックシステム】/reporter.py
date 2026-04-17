@@ -21,6 +21,7 @@ from openpyxl.utils import get_column_letter
 # カラー定義
 # ========================================
 COLOR_HEADER_OVERDUE  = "C00000"  # 深紅（支払期限超過ヘッダー）
+COLOR_HEADER_SEIKYU   = "0070C0"  # 青（請求済み・未確認ヘッダー）
 COLOR_HEADER_UPCOMING = "833C00"  # 深オレンジ（期日前ヘッダー）
 COLOR_HEADER_DIFF     = "7030A0"  # 紫（差額ありヘッダー）
 COLOR_HEADER_PAID     = "375623"  # 深緑（入金済みヘッダー）
@@ -28,6 +29,7 @@ COLOR_HEADER_UNMATCHED= "7F6000"  # 深黄（照合不能ヘッダー）
 COLOR_HEADER_SUMMARY  = "1F3864"  # 紺（サマリーヘッダー）
 COLOR_WHITE           = "FFFFFF"
 COLOR_ROW_OVERDUE     = "FCE4D6"  # 薄いオレンジ（超過）
+COLOR_ROW_SEIKYU      = "DEEAF1"  # 薄い青（請求済み・未確認）
 COLOR_ROW_UPCOMING    = "FFF2CC"  # 薄い黄色（期日前）
 COLOR_ROW_DIFF        = "E2CFED"  # 薄い紫（差額あり）
 COLOR_ROW_PAID        = "E2EFDA"  # 薄い緑
