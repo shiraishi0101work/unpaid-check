@@ -315,20 +315,6 @@
       <span class="badge bg-success ms-1">{{ paid_fy|length }}</span>
     </a>
   </li>
-  <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-monthly" id="btn-tab-monthly">
-      <i class="bi bi-calendar3 text-info"></i> 着金月別一覧
-      <span class="badge bg-info text-dark ms-1">{{ monthly_sorted|length }}ヶ月</span>
-    </a>
-  </li>
-  {% if result.unmatched_deals %}
-  <li class="nav-item">
-    <a class="nav-link" data-bs-toggle="tab" href="#tab-unmatched" id="btn-tab-unmatched">
-      <i class="bi bi-question-circle text-secondary"></i> 照合不能
-      <span class="badge bg-secondary ms-1">{{ result.unmatched_deals|length }}</span>
-    </a>
-  </li>
-  {% endif %}
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom p-3 bg-white shadow-sm">
