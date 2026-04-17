@@ -527,16 +527,20 @@ def run():
     invoice_to   = ym_to_to(invoice_to_ym)
     deal_from    = ym_to_from(deal_from_ym)
     deal_to      = ym_to_to(deal_to_ym)
+    due_from     = ym_to_from(due_from_ym)
+    due_to       = ym_to_to(due_to_ym)
 
     # 未指定なら年度から自動設定
     if not invoice_from and not invoice_to:
         invoice_from, invoice_to = get_fiscal_year_range(fiscal_year, start_month)
     if not deal_from and not deal_to:
         deal_from, deal_to = get_fiscal_year_range(fiscal_year, start_month)
+    # due_from/due_to は省略可（指定があれば支払期限フィルタが有効になる）
 
     thread = threading.Thread(
         target=_run_check,
         args=(invoice_from, invoice_to, deal_from, deal_to),
+        kwargs={"due_from": due_from, "due_to": due_to},
         daemon=True,
     )
     thread.start()
