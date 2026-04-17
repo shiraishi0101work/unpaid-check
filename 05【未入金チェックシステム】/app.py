@@ -218,6 +218,9 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
 
         filtered = [b for b in all_billings if in_range(b)]
 
+        # 請求金額0円を除外（テスト・内部用の無効請求書）
+        filtered = [b for b in filtered if (b.get("請求金額") or 0) > 0]
+
         # 分類
         # ① MF請求書が入金済み → 入金確認済み（MF）
         # ② MF未入金 かつ 手動着金日あり → 入金確認済み（手動）
