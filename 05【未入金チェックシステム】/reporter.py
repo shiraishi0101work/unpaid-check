@@ -312,7 +312,7 @@ def _write_summary_sheet(ws, result: dict, generated_at: str):
         ("件数",                   len(overdue)),
         ("合計金額（税込）",        overdue_total),
         (None, None),
-        ("■ 請求済み・未確認",      None),
+        ("■ 請求済みか確認",         None),
         ("件数",                   len(seikyu_kakunin)),
         ("合計金額（税込）",        seikyu_kakunin_total),
         (None, None),
