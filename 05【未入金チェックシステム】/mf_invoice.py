@@ -95,7 +95,9 @@ def _to_billing_dict(b: dict) -> dict:
         "支払期限":    _normalize_date(b.get("due_date", "")),
         "請求金額":    int(float(b.get("total_price", 0) or 0)),
         "入金状態":    b.get("payment_status", ""),
-        "請求ステータス": b.get("billing_status", ""),
+        "送付状態":    b.get("posting_status", ""),   # 未郵送/郵送中/郵送済み
+        "メール状態":  b.get("email_status", ""),      # 未送信/送信済み 等
+        "DL済み":      bool(b.get("is_downloaded", False)),
         "メモ":        b.get("memo", ""),
         "_raw":        b,
     }
