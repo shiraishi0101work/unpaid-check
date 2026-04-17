@@ -881,6 +881,99 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ===== 請求済みか確認タブ：チェックボックス＋未請求操作 =====
+const unmadeModal = new bootstrap.Modal(document.getElementById('unmadeModal'));
+let _umIds = [];
+
+function seikyuUpdateBulkBar() {
+  const checked = document.querySelectorAll('.seikyu-check:checked');
+  const count = checked.length;
+  const btn = document.getElementById('seikyu-bulk-btn');
+  const cntEl = document.getElementById('seikyu-check-count');
+  if (btn) btn.disabled = count === 0;
+  if (cntEl) cntEl.textContent = count;
+}
+
+// 全選択チェックボックス
+document.getElementById('seikyu-check-all')?.addEventListener('change', function() {
+  document.querySelectorAll('.seikyu-check').forEach(cb => {
+    cb.checked = this.checked;
+  });
+  seikyuUpdateBulkBar();
+});
+
+document.querySelectorAll('.seikyu-check').forEach(cb => {
+  cb.addEventListener('change', seikyuUpdateBulkBar);
+});
+
+function openUnmadeModal(ids, labels) {
+  _umIds = ids;
+  const ul = document.getElementById('um-list');
+  if (ul) {
+    ul.innerHTML = labels.map(l => `<li>${escHtml(l)}</li>`).join('');
+  }
+  unmadeModal.show();
+}
+
+// 行ごとの「未請求」ボタン
+document.querySelectorAll('.seikyu-unmade-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const id  = this.dataset.id;
+    const num = this.dataset.num;
+    const nm  = this.dataset.name;
+    openUnmadeModal([id], [`${num} / ${nm}`]);
+  });
+});
+
+// 一括「未請求にする」ボタン
+document.getElementById('seikyu-bulk-btn')?.addEventListener('click', function() {
+  const checked = document.querySelectorAll('.seikyu-check:checked');
+  const ids    = [];
+  const labels = [];
+  checked.forEach(cb => {
+    const row = document.getElementById(`seikyu-row-${cb.value}`);
+    const cells = row ? row.querySelectorAll('td') : [];
+    const num  = cells[2] ? cells[2].textContent.trim() : '';
+    const nm   = cells[1] ? cells[1].textContent.trim() : '';
+    ids.push(cb.value);
+    labels.push(`${num} / ${nm}`);
+  });
+  if (ids.length > 0) openUnmadeModal(ids, labels);
+});
+
+// モーダル確定ボタン
+document.getElementById('um-confirm-btn')?.addEventListener('click', async function() {
+  if (_umIds.length === 0) return;
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
+  try {
+    const resp = await fetch('/api/invoice/mark-unmade', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ invoice_ids: _umIds }),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      unmadeModal.hide();
+      _umIds.forEach(id => {
+        const row = document.getElementById(`seikyu-row-${id}`);
+        if (row) row.remove();
+      });
+      seikyuUpdateBulkBar();
+      // 全選択チェックボックスもリセット
+      const allCb = document.getElementById('seikyu-check-all');
+      if (allCb) allCb.checked = false;
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-x-circle me-1"></i>未請求にする';
+  }
+});
+
 // ===== 下書き削除モーダル =====
 const deleteDraftModal = new bootstrap.Modal(document.getElementById('deleteDraftModal'));
 let _ddInvoiceId = null;
