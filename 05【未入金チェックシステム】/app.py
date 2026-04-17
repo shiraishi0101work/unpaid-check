@@ -139,10 +139,12 @@ def _update_status(**kwargs):
     with _status_lock:
         _status.update(kwargs)
 
-def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None):
+def _run_check(invoice_from=None, invoice_to=None, deal_from=None, deal_to=None,
+               due_from=None, due_to=None):
     """バックグラウンドで照合処理を実行
     invoice_from/invoice_to: 請求書発行日の絞り込み範囲
     deal_from/deal_to:       入金（着金）日の絞り込み範囲
+    due_from/due_to:         支払期限の絞り込み範囲
     """
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
