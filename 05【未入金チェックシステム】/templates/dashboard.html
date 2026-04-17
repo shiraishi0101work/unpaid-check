@@ -401,6 +401,7 @@
 
   {# --- 請求済みか確認 --- #}
   <div class="tab-pane fade" id="tab-seikyu-kakunin">
+    {% if seikyu_kakunin %}
     <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
       <i class="bi bi-info-circle-fill flex-shrink-0"></i>
       <span>請求書をお客様に送付済み（DL・メール・郵送）ですが、MF上の入金ステータスが「未設定」のものです。入金確認済みならMFを更新、未請求なら「未請求」ボタンで除外してください。</span>
