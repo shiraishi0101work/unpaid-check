@@ -170,12 +170,12 @@
     <span class="badge bg-success">{{ paid_fy|length }}</span>
   </a>
 
-  <a href="#tab-monthly" class="sidebar-stat-item text-decoration-none" data-tab="tab-monthly">
+  <a href="{{ url_for('yoakinin') }}" class="sidebar-stat-item text-decoration-none">
     <span class="d-flex align-items-center gap-2">
-      <i class="bi bi-calendar3 text-info"></i>
-      <span class="small text-dark">着金月別一覧</span>
+      <i class="bi bi-exclamation-circle-fill text-warning"></i>
+      <span class="small text-dark">要確認（入金あり）</span>
     </span>
-    <span class="badge bg-info text-dark">{{ monthly_sorted|length }}ヶ月</span>
+    <span class="badge bg-warning text-dark">{{ yoakinin_count }}</span>
   </a>
 </div>
 {% endif %}
