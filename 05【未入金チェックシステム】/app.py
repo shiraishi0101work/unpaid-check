@@ -224,14 +224,22 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
             [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str],
             key=lambda x: x.get("支払期限", ""))
 
-        # 期限超過を「通常」と「下書き（未発行）」に分離
+        # 期限超過を3分類
+        # ① MFで「未入金」明示 → 支払期限超過
+        # ② MFで「未設定」かつ送付済み → 請求済み・未確認
+        # ③ MFで「未設定」かつ未送付 → 下書き（期限超過）
         deleted_draft_ids = load_deleted_drafts()
+        overdue = sorted(
+            [b for b in all_overdue if b.get("入金状態") == "未入金"],
+            key=lambda x: x.get("支払期限", ""))
+        seikyu_kakunin = sorted(
+            [b for b in all_overdue
+             if b.get("入金状態") == "未設定" and _is_delivered(b)],
+            key=lambda x: x.get("支払期限", ""))
         draft_overdue = sorted(
             [b for b in all_overdue
-             if _is_draft_invoice(b) and b.get("請求書ID") not in deleted_draft_ids],
-            key=lambda x: x.get("支払期限", ""))
-        overdue = sorted(
-            [b for b in all_overdue if not _is_draft_invoice(b)],
+             if b.get("入金状態") == "未設定" and _is_draft_invoice(b)
+             and b.get("請求書ID") not in deleted_draft_ids],
             key=lambda x: x.get("支払期限", ""))
 
         result = {
