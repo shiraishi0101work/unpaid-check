@@ -186,12 +186,12 @@ main {
 
 /* ===== テーブル ===== */
 .table {
-  font-size: 0.825rem;
+  font-size: 0.875rem;
   margin-bottom: 0;
 }
 .table th {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   white-space: nowrap;
   vertical-align: middle;
   letter-spacing: 0.02em;
