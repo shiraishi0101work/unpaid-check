@@ -1168,10 +1168,11 @@ document.getElementById('dd-confirm-btn')?.addEventListener('click', async funct
 document.getElementById('edit-save-btn')?.addEventListener('click', function() {
   const id = document.getElementById('edit-invoice-id').value;
   const payload = {
-    担当者:       document.getElementById('edit-tantou').value.trim(),
-    メモ:         document.getElementById('edit-memo').value.trim(),
-    着金日_手動:   document.getElementById('edit-kikin-date').value,
-    着金金額_手動: parseInt(document.getElementById('edit-kikin-amt').value) || 0,
+    担当者:         document.getElementById('edit-tantou').value.trim(),
+    メモ:           document.getElementById('edit-memo').value.trim(),
+    入金予定日_手動: document.getElementById('edit-yotei-date').value,
+    着金日_手動:     document.getElementById('edit-kikin-date').value,
+    着金金額_手動:   parseInt(document.getElementById('edit-kikin-amt').value) || 0,
   };
 
   this.disabled = true;
