@@ -257,8 +257,12 @@ def admin_companies():
 @app.route("/api/admin/create-company", methods=["POST"])
 def api_create_company():
     if not session.get("is_admin"):
-        return jsonify({"error": "権限がありません"}), 403
-    req_data = request.get_json() or {}
+        # セッションにない場合はDBから確認
+        c = _find_company_by_id(session.get("company_id", ""))
+        if not (c and c.get("is_admin")):
+            return jsonify({"error": "権限がありません"}), 403
+        session["is_admin"] = True
+    req_data = request.get_json(force=True, silent=True) or {}
     email    = req_data.get("email", "").strip()
     password = req_data.get("password", "")
     confirm  = req_data.get("confirm", "")
