@@ -340,7 +340,6 @@ def _load_result() -> dict | None:
 def dashboard():
     settings        = load_settings()
     auth_invoice    = auth.is_authenticated("invoice")
-    auth_accounting = auth.is_authenticated("accounting")
     result          = _load_result()
     meta            = load_meta()
     today_str       = datetime.now().strftime("%Y-%m-%d")
