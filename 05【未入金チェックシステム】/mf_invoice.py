@@ -103,7 +103,7 @@ def _to_billing_dict(b: dict) -> dict:
     }
 
 
-def get_all_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+def get_all_billings(from_date: str = None, to_date: str = None, company_id: str = "") -> list[dict]:
     """
     全請求書を取得してPython側でフィルタリング
     MF Invoice API v3 は billing_status / payment_status フィルタ不可のため全件取得
@@ -111,7 +111,7 @@ def get_all_billings(from_date: str = None, to_date: str = None) -> list[dict]:
     print("[請求書] 全請求書を取得中...")
 
     params = {"per_page": 100}
-    billings_raw = _get_all_pages(params)
+    billings_raw = _get_all_pages(params, company_id=company_id)
     print(f"[請求書] API取得: {len(billings_raw)}件")
 
     # 日付範囲フィルタ（Python側）
