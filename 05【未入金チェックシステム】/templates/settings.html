@@ -127,15 +127,9 @@ function testConnection() {
       document.getElementById('test-result').classList.remove('d-none');
 
       const inv = data.invoice || {};
-      const acc = data.accounting || {};
-
       const invEl = document.getElementById('test-invoice');
       invEl.className = 'alert py-2 small mb-2 ' + (inv.ok ? 'alert-success' : 'alert-danger');
       invEl.innerHTML = '<strong>請求書API:</strong> ' + (inv.message || '-');
-
-      const accEl = document.getElementById('test-accounting');
-      accEl.className = 'alert py-2 small ' + (acc.ok ? 'alert-success' : 'alert-danger');
-      accEl.innerHTML = '<strong>会計API:</strong> ' + (acc.message || '-');
 
       document.getElementById('btn-test').disabled = false;
     })
