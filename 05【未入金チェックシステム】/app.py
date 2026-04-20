@@ -918,10 +918,9 @@ def settings_page():
         save_settings(settings)
         flash("設定を保存しました", "success")
         return redirect(url_for("settings_page"))
-    auth_data = load_auth() or {}
     return render_template("settings.html", settings=settings,
                            auth_invoice=auth.is_authenticated("invoice", get_company_id()),
-                           current_email=auth_data.get("email", ""))
+                           current_email=session.get("email", ""))
 
 @app.route("/api/update-credentials", methods=["POST"])
 def update_credentials():
