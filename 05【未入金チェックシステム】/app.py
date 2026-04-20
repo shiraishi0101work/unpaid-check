@@ -712,7 +712,6 @@ def rules_page():
     return render_template(
         "rules.html",
         auth_invoice=auth.is_authenticated("invoice"),
-        auth_accounting=auth.is_authenticated("accounting"),
         settings=load_settings(),
     )
 
