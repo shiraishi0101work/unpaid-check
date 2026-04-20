@@ -258,6 +258,37 @@ def api_create_company():
     company = _create_company_account(email, password, is_admin=False)
     return jsonify({"ok": True, "id": company["id"], "email": company["email"]})
 
+@app.route("/api/admin/update-company-login", methods=["POST"])
+def api_update_company_login():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    req_data  = request.get_json() or {}
+    cid       = req_data.get("id", "")
+    new_email = req_data.get("email", "").strip().lower()
+    new_pw    = req_data.get("password", "")
+    confirm   = req_data.get("confirm", "")
+    if not new_email or "@" not in new_email:
+        return jsonify({"error": "有効なメールアドレスを入力してください"}), 400
+    if new_pw and len(new_pw) < 6:
+        return jsonify({"error": "パスワードは6文字以上にしてください"}), 400
+    if new_pw and new_pw != confirm:
+        return jsonify({"error": "パスワードが一致しません"}), 400
+    # 別アカウントと重複チェック
+    existing = _find_company_by_email(new_email)
+    if existing and existing["id"] != cid:
+        return jsonify({"error": "このメールアドレスはすでに使用されています"}), 400
+    data = _load_auth_data()
+    for c in data["companies"]:
+        if c["id"] == cid:
+            c["email"] = new_email
+            if new_pw:
+                c["password_hash"] = generate_password_hash(new_pw)
+            break
+    else:
+        return jsonify({"error": "アカウントが見つかりません"}), 404
+    _save_auth_data(data)
+    return jsonify({"ok": True, "email": new_email})
+
 @app.route("/api/admin/delete-company", methods=["POST"])
 def api_delete_company():
     if not session.get("is_admin"):
