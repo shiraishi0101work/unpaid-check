@@ -149,7 +149,7 @@ def login_required(f):
     return decorated
 
 @app.context_processor
-def inject_company_name():
+def inject_globals():
     s = load_settings()
     # セッションに is_admin がない場合は auth データから補完
     is_admin = session.get("is_admin")
@@ -157,9 +157,20 @@ def inject_company_name():
         c = _find_company_by_id(session["company_id"])
         is_admin = c.get("is_admin", False) if c else False
         session["is_admin"] = is_admin
+    # 管理者用：全社リスト・現在参照中の会社情報
+    all_companies = []
+    viewing_company = None
+    if is_admin:
+        auth_data = _load_auth_data()
+        all_companies = auth_data.get("companies", [])
+        vcid = get_company_id()
+        viewing_company = next((c for c in all_companies if c["id"] == vcid), None)
     return {
-        "company_name": s.get("company_name", ""),
-        "is_admin":     bool(is_admin),
+        "company_name":    s.get("company_name", ""),
+        "is_admin":        bool(is_admin),
+        "all_companies":   all_companies,
+        "viewing_company": viewing_company,
+        "viewing_cid":     get_company_id(),
     }
 
 @app.before_request
