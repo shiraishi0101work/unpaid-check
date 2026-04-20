@@ -312,4 +312,61 @@
 
 </div>
 {% endif %}
+
+{% if detail %}
+<script>
+// 削除ボタン
+document.querySelectorAll('.hist-delete-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    if (!confirm('この行を削除しますか？\nこの操作は元に戻せません。')) return;
+    const ym  = this.dataset.ym;
+    const body = {
+      type:  this.dataset.type,
+      index: parseInt(this.dataset.index),
+      cid:   this.dataset.cid || ''
+    };
+    fetch('/api/history/' + ym + '/delete-item', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      if (d.ok) {
+        location.reload();
+      } else {
+        alert('エラー: ' + (d.error || '不明'));
+      }
+    });
+  });
+});
+
+// 編集ボタン（メモ編集）
+document.querySelectorAll('.hist-edit-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    const tr      = this.closest('tr');
+    const memoCell = tr.querySelector('.hist-memo-cell');
+    const current  = memoCell ? memoCell.dataset.current : '';
+    const newMemo  = prompt('社内メモを編集してください:', current);
+    if (newMemo === null) return;  // キャンセル
+    const ym  = this.dataset.ym;
+    const body = {
+      type:    this.dataset.type,
+      index:   parseInt(this.dataset.index),
+      cid:     this.dataset.cid || '',
+      updates: { 'メモ_手動': newMemo }
+    };
+    fetch('/api/history/' + ym + '/update-item', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      if (d.ok) {
+        location.reload();
+      } else {
+        alert('エラー: ' + (d.error || '不明'));
+      }
+    });
+  });
+});
+</script>
+{% endif %}
 {% endblock %}
