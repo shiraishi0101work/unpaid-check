@@ -141,11 +141,31 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="modal-company-id">
-        <div class="mb-2">
+        <input type="hidden" id="modal-is-admin">
+        <div class="mb-3 p-2 bg-light rounded d-flex align-items-center gap-2">
           <span class="badge me-1" id="modal-role-badge"></span>
           <span class="small text-muted" id="modal-company-email-label"></span>
         </div>
         <div id="login-modal-result" class="d-none mb-3"></div>
+
+        <!-- ロール変更 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">ロール</label>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm flex-fill" id="role-btn-admin"
+                    onclick="setRole(true)">
+              <i class="bi bi-shield-fill me-1"></i>管理者
+            </button>
+            <button type="button" class="btn btn-sm flex-fill" id="role-btn-general"
+                    onclick="setRole(false)">
+              <i class="bi bi-building me-1"></i>一般
+            </button>
+          </div>
+          <div class="form-text">管理者は全社データの閲覧・切り替えが可能です</div>
+        </div>
+
+        <hr class="my-3">
+
         <div class="mb-3">
           <label class="form-label fw-semibold">メールアドレス</label>
           <input type="email" id="modal-email" class="form-control">
