@@ -58,6 +58,185 @@ def save_settings(settings: dict):
         json.dump(settings, f, ensure_ascii=False, indent=2)
 
 # ========================================
+# 月次履歴管理
+# ========================================
+
+def load_history_list() -> list:
+    """保存済み月次履歴の一覧（新しい順）を返す"""
+    files = sorted(
+        [f for f in os.listdir(HISTORY_DIR) if f.endswith(".json")],
+        reverse=True,
+    )
+    result = []
+    for f in files:
+        try:
+            with open(os.path.join(HISTORY_DIR, f), encoding="utf-8") as fp:
+                result.append(json.load(fp))
+        except Exception:
+            pass
+    return result
+
+def load_history(year_month: str) -> dict | None:
+    path = os.path.join(HISTORY_DIR, f"{year_month}.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+def save_history(year_month: str, data: dict):
+    path = os.path.join(HISTORY_DIR, f"{year_month}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def get_prev_year_month() -> str:
+    """前月の YYYY-MM 文字列を返す"""
+    from datetime import timedelta
+    first = date.today().replace(day=1)
+    return (first - timedelta(days=1)).strftime("%Y-%m")
+
+def get_current_year_month() -> str:
+    return date.today().strftime("%Y-%m")
+
+def _build_history_snapshot(year_month: str) -> dict | None:
+    """現在の last_result + meta から月次スナップショットを構築する"""
+    result = _load_result()
+    if not result:
+        return None
+    meta = load_meta()
+
+    def apply_meta(lst):
+        for b in lst:
+            bid = b.get("請求書ID", "")
+            m = meta.get(bid, {})
+            b["担当者"]        = m.get("担当者", b.get("担当者", ""))
+            b["メモ_手動"]     = m.get("メモ", b.get("メモ_手動", ""))
+            b["着金日_手動"]   = m.get("着金日_手動", b.get("着金日_手動", ""))
+            b["着金金額_手動"] = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+
+    seikyu_raw   = result.get("seikyu_kakunin", [])
+    seikyu_paid  = [b for b in seikyu_raw if meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
+    seikyu_unpaid = [b for b in seikyu_raw if not meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
+
+    unpaid_all = (result.get("overdue", []) + result.get("upcoming", []) +
+                  result.get("unpaid", []) + seikyu_unpaid)
+    paid_all   = result.get("paid", []) + seikyu_paid
+
+    apply_meta(unpaid_all)
+    apply_meta(paid_all)
+
+    return {
+        "year_month":   year_month,
+        "confirmed_at": datetime.now().isoformat(),
+        "summary": {
+            "unpaid_count": len(unpaid_all),
+            "unpaid_total": int(sum(b.get("請求金額", 0) for b in unpaid_all)),
+            "paid_count":   len(paid_all),
+            "paid_total":   int(sum(b.get("請求金額", 0) for b in paid_all)),
+        },
+        "unpaid": _clean_items(unpaid_all),
+        "paid":   _clean_items(paid_all),
+    }
+
+def _generate_history_excel(history: dict) -> str:
+    """月次履歴のExcelを生成してパスを返す"""
+    import openpyxl
+    from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+
+    def thin_border():
+        s = Side(style="thin")
+        return Border(left=s, right=s, top=s, bottom=s)
+
+    def hdr(ws, r, c, val, bg, fc="FFFFFF"):
+        cell = ws.cell(row=r, column=c, value=val)
+        cell.fill = PatternFill("solid", fgColor=bg)
+        cell.font = Font(bold=True, color=fc)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = thin_border()
+        return cell
+
+    def dat(ws, r, c, val, bg=None, fmt=None, bold=False):
+        cell = ws.cell(row=r, column=c, value=val)
+        if bg:
+            cell.fill = PatternFill("solid", fgColor=bg)
+        if fmt:
+            cell.number_format = fmt
+        cell.font = Font(bold=bold)
+        cell.border = thin_border()
+        return cell
+
+    ym   = history["year_month"]
+    summ = history["summary"]
+    wb   = openpyxl.Workbook()
+
+    # ---- サマリーシート ----
+    ws = wb.active
+    ws.title = "サマリー"
+    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["B"].width = 20
+
+    hdr(ws, 1, 1, f"{ym} 月次確定レポート", "1F3864")
+    ws.merge_cells("A1:B1")
+    rows = [
+        ("未入金件数",   summ["unpaid_count"]),
+        ("未入金総額",   summ["unpaid_total"]),
+        ("入金確認済み件数", summ["paid_count"]),
+        ("入金確認済み総額", summ["paid_total"]),
+        ("確定日時",     history.get("confirmed_at", "")[:19].replace("T", " ")),
+    ]
+    for i, (label, val) in enumerate(rows, start=2):
+        dat(ws, i, 1, label, bold=True)
+        cell = dat(ws, i, 2, val)
+        if isinstance(val, int):
+            cell.number_format = '#,##0'
+
+    # ---- 未入金シート ----
+    ws2 = wb.create_sheet("未入金")
+    cols = ["取引先名", "請求番号", "件名", "担当者", "請求日", "支払期限", "請求金額", "メモ"]
+    for c, col in enumerate(cols, 1):
+        hdr(ws2, 1, c, col, "C00000")
+        ws2.column_dimensions[openpyxl.utils.get_column_letter(c)].width = 18
+    ws2.column_dimensions["C"].width = 30
+    ws2.column_dimensions["H"].width = 25
+
+    for r, b in enumerate(history.get("unpaid", []), start=2):
+        bg = "FCE4D6"
+        dat(ws2, r, 1, b.get("取引先名", ""),  bg)
+        dat(ws2, r, 2, b.get("請求番号", ""),  bg)
+        dat(ws2, r, 3, b.get("件名", ""),      bg)
+        dat(ws2, r, 4, b.get("担当者", ""),    bg)
+        dat(ws2, r, 5, b.get("請求日", ""),    bg)
+        dat(ws2, r, 6, b.get("支払期限", ""),  bg)
+        dat(ws2, r, 7, b.get("請求金額", 0),   bg, '#,##0')
+        dat(ws2, r, 8, b.get("メモ_手動", ""), bg)
+
+    # ---- 入金確認済みシート ----
+    ws3 = wb.create_sheet("入金確認済み")
+    cols3 = ["取引先名", "請求番号", "件名", "担当者", "請求日", "支払期限", "請求金額", "着金日", "着金金額", "メモ"]
+    for c, col in enumerate(cols3, 1):
+        hdr(ws3, 1, c, col, "375623")
+        ws3.column_dimensions[openpyxl.utils.get_column_letter(c)].width = 16
+    ws3.column_dimensions["C"].width = 30
+
+    for r, b in enumerate(history.get("paid", []), start=2):
+        bg = "E2EFDA"
+        dat(ws3, r, 1, b.get("取引先名", ""),       bg)
+        dat(ws3, r, 2, b.get("請求番号", ""),       bg)
+        dat(ws3, r, 3, b.get("件名", ""),           bg)
+        dat(ws3, r, 4, b.get("担当者", ""),         bg)
+        dat(ws3, r, 5, b.get("請求日", ""),         bg)
+        dat(ws3, r, 6, b.get("支払期限", ""),       bg)
+        dat(ws3, r, 7, b.get("請求金額", 0),        bg, '#,##0')
+        dat(ws3, r, 8, b.get("着金日_手動", ""),    bg)
+        dat(ws3, r, 9, b.get("着金金額_手動", 0),   bg, '#,##0')
+        dat(ws3, r,10, b.get("メモ_手動", ""),      bg)
+
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, f"月次履歴_{ym}.xlsx")
+    wb.save(path)
+    return path
+
+# ========================================
 # 請求書メタデータ管理（担当者・メモ・手動着金）
 # ========================================
 
