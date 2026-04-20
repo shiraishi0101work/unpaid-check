@@ -1075,7 +1075,7 @@ def oauth_callback(service_name):
 def oauth_revoke(service_name):
     if service_name != "invoice":
         return "不正なサービス名", 400
-    auth.revoke_token(service_name)
+    auth.revoke_token(service_name, get_company_id())
     flash("MFクラウド請求書の認証を解除しました")
     return redirect(url_for("dashboard"))
 
