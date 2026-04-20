@@ -486,8 +486,7 @@ def settings_page():
         flash("設定を保存しました", "success")
         return redirect(url_for("settings_page"))
     return render_template("settings.html", settings=settings,
-                           auth_invoice=auth.is_authenticated("invoice"),
-                           auth_accounting=auth.is_authenticated("accounting"))
+                           auth_invoice=auth.is_authenticated("invoice"))
 
 # ========================================
 # ルーティング — 請求書メタデータ編集
