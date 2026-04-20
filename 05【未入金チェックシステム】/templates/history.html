@@ -255,12 +255,13 @@
             <th class="text-end">請求金額</th>
             <th>着金日</th><th class="text-end">着金金額</th>
             <th>社内メモ</th>
+            <th style="width:60px"></th>
           </tr>
         </thead>
         <tbody>
           {% for b in detail.paid %}
           {% set manual_amt = b.着金金額_手動 | default(0) | int %}
-          <tr>
+          <tr data-row-index="{{ loop.index0 }}">
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
@@ -273,7 +274,25 @@
             <td class="text-end small">
               {% if manual_amt %}¥{{ "{:,.0f}".format(manual_amt) }}{% else %}—{% endif %}
             </td>
-            <td class="small text-muted">{{ b.メモ_手動 }}</td>
+            <td class="small text-muted hist-memo-cell" data-current="{{ b.メモ_手動 or '' }}">{{ b.メモ_手動 or '—' }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-outline-secondary btn-xs py-0 px-1 hist-edit-btn"
+                        data-type="paid" data-index="{{ loop.index0 }}"
+                        data-ym="{{ detail.year_month }}"
+                        {% if admin_aggregate %}data-cid="{{ detail._company_id }}"{% endif %}
+                        title="メモ編集">
+                  <i class="bi bi-pencil" style="font-size:0.65rem"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-xs py-0 px-1 hist-delete-btn"
+                        data-type="paid" data-index="{{ loop.index0 }}"
+                        data-ym="{{ detail.year_month }}"
+                        {% if admin_aggregate %}data-cid="{{ detail._company_id }}"{% endif %}
+                        title="削除">
+                  <i class="bi bi-trash3" style="font-size:0.65rem"></i>
+                </button>
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -281,7 +300,7 @@
           <tr>
             <td colspan="5">合計</td>
             <td class="text-end">¥{{ "{:,.0f}".format(detail.paid|sum(attribute='請求金額')) }}</td>
-            <td colspan="3"></td>
+            <td colspan="4"></td>
           </tr>
         </tfoot>
       </table>
