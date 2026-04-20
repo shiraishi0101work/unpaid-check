@@ -825,6 +825,8 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
         import traceback
         traceback.print_exc()
         _update_status(running=False, error=str(e), message="エラーが発生しました", progress=0)
+    finally:
+        _thread_local.company_id = None
 
 
 def _clean_items(items: list) -> list:
