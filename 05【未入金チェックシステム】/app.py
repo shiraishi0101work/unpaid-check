@@ -294,8 +294,11 @@ def api_switch_company():
 @app.route("/api/admin/update-company-login", methods=["POST"])
 def api_update_company_login():
     if not session.get("is_admin"):
-        return jsonify({"error": "権限がありません"}), 403
-    req_data  = request.get_json() or {}
+        c = _find_company_by_id(session.get("company_id", ""))
+        if not (c and c.get("is_admin")):
+            return jsonify({"error": "権限がありません"}), 403
+        session["is_admin"] = True
+    req_data  = request.get_json(force=True, silent=True) or {}
     cid       = req_data.get("id", "")
     new_email = req_data.get("email", "").strip().lower()
     new_pw    = req_data.get("password", "")
