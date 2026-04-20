@@ -551,22 +551,6 @@ def test_connection():
     except Exception as e:
         results["invoice"] = {"ok": False, "message": f"❌ {e}"}
 
-    # 会計API
-    try:
-        token = auth.get_access_token("accounting")
-        import requests as req
-        r = req.get(
-            "https://api-accounting.moneyforward.com/api/v3/offices",
-            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
-            timeout=10,
-        )
-        if r.ok:
-            results["accounting"] = {"ok": True, "message": "✅ 接続OK"}
-        else:
-            results["accounting"] = {"ok": False, "message": f"❌ HTTPエラー {r.status_code}"}
-    except Exception as e:
-        results["accounting"] = {"ok": False, "message": f"❌ {e}"}
-
     return jsonify(results)
 
 
