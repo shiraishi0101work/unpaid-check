@@ -280,8 +280,11 @@ def api_create_company():
 @app.route("/api/admin/switch-company", methods=["POST"])
 def api_switch_company():
     if not session.get("is_admin"):
-        return jsonify({"error": "権限がありません"}), 403
-    data = request.get_json() or {}
+        c = _find_company_by_id(session.get("company_id", ""))
+        if not (c and c.get("is_admin")):
+            return jsonify({"error": "権限がありません"}), 403
+        session["is_admin"] = True
+    data = request.get_json(force=True, silent=True) or {}
     cid  = data.get("company_id", "")
     if not _find_company_by_id(cid):
         return jsonify({"error": "会社が見つかりません"}), 404
