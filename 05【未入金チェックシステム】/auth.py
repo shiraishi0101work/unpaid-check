@@ -65,22 +65,23 @@ def _svc(service_name: str) -> dict:
 TOKEN_DIR = os.path.join(os.path.dirname(__file__), "tokens")
 
 # OAuth stateパラメータを一時保存（CSRF対策）
-_pending_states: dict[str, str] = {}  # state -> service_name
+_pending_states: dict[str, str] = {}  # state -> (service_name, company_id)
 
 
-def _token_path(service_name: str) -> str:
-    os.makedirs(TOKEN_DIR, exist_ok=True)
-    return os.path.join(TOKEN_DIR, _SERVICE_DEFS[service_name]["token_file"])
+def _token_path(service_name: str, company_id: str = "") -> str:
+    token_dir = os.path.join(TOKEN_DIR, company_id) if company_id else TOKEN_DIR
+    os.makedirs(token_dir, exist_ok=True)
+    return os.path.join(token_dir, _SERVICE_DEFS[service_name]["token_file"])
 
 
-def save_token(service_name: str, token_data: dict):
+def save_token(service_name: str, token_data: dict, company_id: str = ""):
     token_data["saved_at"] = time.time()
-    with open(_token_path(service_name), "w", encoding="utf-8") as f:
+    with open(_token_path(service_name, company_id), "w", encoding="utf-8") as f:
         json.dump(token_data, f, ensure_ascii=False, indent=2)
 
 
-def _load_token(service_name: str) -> dict | None:
-    path = _token_path(service_name)
+def _load_token(service_name: str, company_id: str = "") -> dict | None:
+    path = _token_path(service_name, company_id)
     if not os.path.exists(path):
         return None
     with open(path, "r", encoding="utf-8") as f:

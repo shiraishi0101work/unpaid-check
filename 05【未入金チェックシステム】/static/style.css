@@ -384,3 +384,11 @@ main {
 /* ===== テキスト系 ===== */
 .fw-semibold { font-weight: 600; }
 .small { font-size: 0.82rem; }
+
+/* ===== 社内メモ/入金予定日あり行の強調 ===== */
+tr.row-noted td {
+  background-color: #e6ffed !important;
+}
+tr.row-noted:hover td {
+  background-color: #d1fae5 !important;
+}
