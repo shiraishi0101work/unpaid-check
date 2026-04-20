@@ -35,9 +35,96 @@ COMPANY_TANTOU_FILE   = os.path.join(DATA_DIR, "company_tantou.json")
 DELETED_DRAFTS_FILE   = os.path.join(DATA_DIR, "deleted_drafts.json")
 DELETED_SEIKYU_FILE   = os.path.join(DATA_DIR, "deleted_seikyu.json")
 HISTORY_DIR           = os.path.join(DATA_DIR, "history")
+AUTH_FILE             = os.path.join(DATA_DIR, "auth.json")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(HISTORY_DIR, exist_ok=True)
+
+# ========================================
+# 認証管理
+# ========================================
+
+def load_auth() -> dict | None:
+    if not os.path.exists(AUTH_FILE):
+        return None
+    with open(AUTH_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+def save_auth(email: str, password: str):
+    data = {
+        "email":         email.strip().lower(),
+        "password_hash": generate_password_hash(password),
+    }
+    with open(AUTH_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login", next=request.path))
+        return f(*args, **kwargs)
+    return decorated
+
+@app.before_request
+def check_auth():
+    public = ("/login", "/setup", "/static/")
+    if not any(request.path.startswith(p) for p in public):
+        if not session.get("logged_in"):
+            auth_data = load_auth()
+            if auth_data is None:
+                # 未設定 → セットアップへ
+                if request.path != "/setup":
+                    return redirect(url_for("setup"))
+            else:
+                return redirect(url_for("login", next=request.path))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("logged_in"):
+        return redirect(url_for("dashboard"))
+    auth_data = load_auth()
+    if auth_data is None:
+        return redirect(url_for("setup"))
+    error = None
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        if email == auth_data["email"] and check_password_hash(auth_data["password_hash"], password):
+            session["logged_in"] = True
+            session["email"]     = email
+            next_url = request.form.get("next") or url_for("dashboard")
+            return redirect(next_url)
+        error = "メールアドレスまたはパスワードが違います"
+    return render_template("login.html", error=error, next=request.args.get("next", ""))
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+@app.route("/setup", methods=["GET", "POST"])
+def setup():
+    if load_auth() is not None and not session.get("logged_in"):
+        return redirect(url_for("login"))
+    error = None
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        confirm  = request.form.get("confirm", "")
+        if not email or "@" not in email:
+            error = "有効なメールアドレスを入力してください"
+        elif len(password) < 6:
+            error = "パスワードは6文字以上にしてください"
+        elif password != confirm:
+            error = "パスワードが一致しません"
+        else:
+            save_auth(email, password)
+            session["logged_in"] = True
+            session["email"]     = email.lower()
+            flash("アカウントを設定しました", "success")
+            return redirect(url_for("dashboard"))
+    return render_template("login.html", setup_mode=True, error=error, next="")
 
 # ========================================
 # 設定管理
