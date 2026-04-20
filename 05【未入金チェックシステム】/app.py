@@ -275,14 +275,15 @@ DEFAULT_SETTINGS = {
 }
 
 def load_settings() -> dict:
-    if not os.path.exists(SETTINGS_FILE):
+    path = os.path.join(_cdir(), "settings.json")
+    if not os.path.exists(path):
         return dict(DEFAULT_SETTINGS)
-    with open(SETTINGS_FILE, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         s = json.load(f)
     return {**DEFAULT_SETTINGS, **s}
 
 def save_settings(settings: dict):
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+    with open(os.path.join(_cdir(), "settings.json"), "w", encoding="utf-8") as f:
         json.dump(settings, f, ensure_ascii=False, indent=2)
 
 # ========================================
