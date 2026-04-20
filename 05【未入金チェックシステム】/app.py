@@ -273,6 +273,17 @@ def api_create_company():
     company = _create_company_account(email, password, is_admin=False)
     return jsonify({"ok": True, "id": company["id"], "email": company["email"]})
 
+@app.route("/api/admin/switch-company", methods=["POST"])
+def api_switch_company():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    data = request.get_json() or {}
+    cid  = data.get("company_id", "")
+    if not _find_company_by_id(cid):
+        return jsonify({"error": "会社が見つかりません"}), 404
+    session["viewing_company_id"] = cid
+    return jsonify({"ok": True})
+
 @app.route("/api/admin/update-company-login", methods=["POST"])
 def api_update_company_login():
     if not session.get("is_admin"):
