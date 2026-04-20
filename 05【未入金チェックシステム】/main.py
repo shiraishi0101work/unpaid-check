@@ -19,17 +19,7 @@ from reporter   import generate_report
 
 def main():
     parser = argparse.ArgumentParser(
-        description="MFクラウド請求書 × MFクラウド会計 未入金チェックシステム"
-    )
-    parser.add_argument(
-        "--from", dest="from_date", default=None,
-        metavar="YYYY-MM-DD",
-        help="入金データの取得開始日（例: 2026-01-01）"
-    )
-    parser.add_argument(
-        "--to", dest="to_date", default=None,
-        metavar="YYYY-MM-DD",
-        help="入金データの取得終了日（例: 2026-03-31）"
+        description="MFクラウド請求書 未入金チェックシステム"
     )
     parser.add_argument(
         "--open", dest="auto_open", action="store_true",
