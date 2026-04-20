@@ -291,6 +291,33 @@ def api_switch_company():
     session["viewing_company_id"] = cid
     return jsonify({"ok": True})
 
+@app.route("/api/admin/update-company-role", methods=["POST"])
+def api_update_company_role():
+    if not session.get("is_admin"):
+        c = _find_company_by_id(session.get("company_id", ""))
+        if not (c and c.get("is_admin")):
+            return jsonify({"error": "権限がありません"}), 403
+        session["is_admin"] = True
+    req_data = request.get_json(force=True, silent=True) or {}
+    cid      = req_data.get("id", "")
+    is_admin = req_data.get("is_admin", False)
+    # 自分自身の管理者権限は外せない
+    if cid == session.get("company_id") and not is_admin:
+        return jsonify({"error": "自分自身の管理者権限は外せません"}), 400
+    # 管理者が0人にならないようチェック
+    data = _load_auth_data()
+    admins = [c for c in data["companies"] if c.get("is_admin") and c["id"] != cid]
+    if not is_admin and not admins:
+        return jsonify({"error": "管理者が0人になるため変更できません"}), 400
+    for c in data["companies"]:
+        if c["id"] == cid:
+            c["is_admin"] = bool(is_admin)
+            break
+    else:
+        return jsonify({"error": "アカウントが見つかりません"}), 404
+    _save_auth_data(data)
+    return jsonify({"ok": True})
+
 @app.route("/api/admin/update-company-login", methods=["POST"])
 def api_update_company_login():
     if not session.get("is_admin"):
