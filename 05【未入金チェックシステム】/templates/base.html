@@ -47,6 +47,13 @@
   <!-- ======== 左サイドバー ======== -->
   <aside class="sidebar bg-white border-end" style="width:240px;min-width:240px;overflow-y:auto">
 
+    {% if company_name %}
+    <div style="background: linear-gradient(135deg, #1a3c5e 0%, #2563a8 100%); padding: 14px 16px 12px;">
+      <div class="text-white-50" style="font-size:0.65rem; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:2px">会社名</div>
+      <div class="text-white fw-bold" style="font-size:1rem; line-height:1.3">{{ company_name }}</div>
+    </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} alert-dismissible fade show mx-2 mt-2 py-2 small" role="alert">
