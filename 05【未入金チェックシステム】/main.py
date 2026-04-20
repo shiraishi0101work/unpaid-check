@@ -38,16 +38,9 @@ def main():
         print("\n未入金の請求書はありません。")
         return
 
-    # ② MFクラウド会計から入金データを取得
-    deals = get_income_deals(
-        from_date=args.from_date,
-        to_date=args.to_date,
-    )
+    result = {"unpaid": billings, "paid": [], "diff": [], "unmatched_deals": []}
 
-    # ③ 照合
-    result = match(billings, deals)
-
-    # ④ Excelレポート生成
+    # ② Excelレポート生成
     output_path = generate_report(result)
 
     # ⑤ サマリーをコンソールにも表示
