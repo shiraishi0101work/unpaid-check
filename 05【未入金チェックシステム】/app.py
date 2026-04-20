@@ -774,8 +774,43 @@ def settings_page():
         save_settings(settings)
         flash("設定を保存しました", "success")
         return redirect(url_for("settings_page"))
+    auth_data = load_auth() or {}
     return render_template("settings.html", settings=settings,
-                           auth_invoice=auth.is_authenticated("invoice"))
+                           auth_invoice=auth.is_authenticated("invoice"),
+                           current_email=auth_data.get("email", ""))
+
+@app.route("/api/update-credentials", methods=["POST"])
+def update_credentials():
+    """メールアドレス・パスワードの変更"""
+    data        = request.get_json() or {}
+    new_email   = data.get("email", "").strip()
+    new_password = data.get("password", "")
+    confirm     = data.get("confirm", "")
+    current_pw  = data.get("current_password", "")
+
+    auth_data = load_auth()
+    if not auth_data:
+        return jsonify({"error": "認証情報が設定されていません"}), 400
+    if not check_password_hash(auth_data["password_hash"], current_pw):
+        return jsonify({"error": "現在のパスワードが違います"}), 400
+    if not new_email or "@" not in new_email:
+        return jsonify({"error": "有効なメールアドレスを入力してください"}), 400
+    if new_password and len(new_password) < 6:
+        return jsonify({"error": "パスワードは6文字以上にしてください"}), 400
+    if new_password and new_password != confirm:
+        return jsonify({"error": "新しいパスワードが一致しません"}), 400
+
+    # パスワード未入力なら現在のハッシュを引き継ぐ
+    if new_password:
+        save_auth(new_email, new_password)
+    else:
+        with open(AUTH_FILE, "w", encoding="utf-8") as f:
+            json.dump({"email": new_email.lower(),
+                       "password_hash": auth_data["password_hash"]}, f,
+                      ensure_ascii=False, indent=2)
+
+    session["email"] = new_email.lower()
+    return jsonify({"ok": True})
 
 # ========================================
 # ルーティング — 請求書メタデータ編集
