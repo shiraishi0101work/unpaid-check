@@ -525,6 +525,14 @@ def dashboard():
     meta            = load_meta()
     today_str       = datetime.now().strftime("%Y-%m-%d")
 
+    # 先月未確定ポップアップ判定（月初7日以内）
+    prev_ym = get_prev_year_month()
+    show_history_popup = (
+        date.today().day <= 7 and
+        load_history(prev_ym) is None and
+        settings.get("history_popup_dismissed") != prev_ym
+    )
+
     start_month = settings["fiscal_year_start_month"]
     # URL パラメータで年度切替
     fiscal_year = request.args.get("year", type=int)
