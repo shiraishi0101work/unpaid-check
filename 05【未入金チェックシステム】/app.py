@@ -31,10 +31,18 @@ DATA_DIR  = os.path.join(os.path.dirname(__file__), "data")
 AUTH_FILE = os.path.join(DATA_DIR, "auth.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# バックグラウンドスレッド用：セッションの代わりにスレッドローカルで会社IDを保持
+_thread_local = threading.local()
+
 # ---- 会社IDごとのパスヘルパー ----
 def get_company_id() -> str:
-    """管理者は viewing_company_id で任意の会社を参照できる"""
-    return session.get("viewing_company_id") or session.get("company_id", "c_main")
+    """管理者は viewing_company_id で任意の会社を参照できる。スレッド内はthread_localを優先。"""
+    if getattr(_thread_local, "company_id", None):
+        return _thread_local.company_id
+    try:
+        return session.get("viewing_company_id") or session.get("company_id", "c_main")
+    except RuntimeError:
+        return "c_main"
 
 def _cdir(cid: str = None) -> str:
     """会社のデータディレクトリを返す（なければ作成）"""
