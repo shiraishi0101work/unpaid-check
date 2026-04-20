@@ -19,36 +19,13 @@
     {% endif %}
   </div>
 
-  <div class="sidebar-item d-flex align-items-center justify-content-between">
-    <span class="d-flex align-items-center gap-2">
-      <i class="bi bi-calculator{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
-      <span class="small">クラウド会計</span>
-    </span>
-    {% if auth_accounting %}
-      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
-    {% else %}
-      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
-    {% endif %}
-  </div>
-
-  {% if auth_invoice or auth_accounting %}
+  {% if auth_invoice %}
   <div class="sidebar-item">
-    <div class="d-flex gap-1 flex-wrap">
-      {% if auth_invoice %}
-      <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}">
-        <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="請求書連携解除">
-          <i class="bi bi-x-circle"></i> 請求書解除
-        </button>
-      </form>
-      {% endif %}
-      {% if auth_accounting %}
-      <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}">
-        <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="会計連携解除">
-          <i class="bi bi-x-circle"></i> 会計解除
-        </button>
-      </form>
-      {% endif %}
-    </div>
+    <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}">
+      <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="請求書連携解除">
+        <i class="bi bi-x-circle"></i> 請求書解除
+      </button>
+    </form>
   </div>
   {% endif %}
 </div>
