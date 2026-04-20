@@ -389,7 +389,6 @@ def dashboard():
     return render_template(
         "dashboard.html",
         auth_invoice=auth_invoice,
-        auth_accounting=auth_accounting,
         result=result,
         overdue=overdue,
         seikyu_kakunin=seikyu_kakunin,
@@ -397,7 +396,6 @@ def dashboard():
         ichiji_hokan=ichiji_hokan,
         upcoming=upcoming,
         paid_fy=paid_fy,
-        yoakinin_count=yoakinin_count,
         status=dict(_status),
         today=today_str,
         settings=settings,
