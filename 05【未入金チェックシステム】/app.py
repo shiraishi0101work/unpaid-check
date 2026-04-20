@@ -29,11 +29,13 @@ DATA_DIR              = os.path.join(os.path.dirname(__file__), "data")
 RESULT_FILE           = os.path.join(DATA_DIR, "last_result.json")
 SETTINGS_FILE         = os.path.join(DATA_DIR, "settings.json")
 META_FILE             = os.path.join(DATA_DIR, "invoice_meta.json")
-COMPANY_TANTOU_FILE   = os.path.join(DATA_DIR, "company_tantou.json")  # 取引先名→担当者マップ
-DELETED_DRAFTS_FILE   = os.path.join(DATA_DIR, "deleted_drafts.json")  # 下書き削除済みID
-DELETED_SEIKYU_FILE   = os.path.join(DATA_DIR, "deleted_seikyu.json")  # 未請求扱い削除済みID
+COMPANY_TANTOU_FILE   = os.path.join(DATA_DIR, "company_tantou.json")
+DELETED_DRAFTS_FILE   = os.path.join(DATA_DIR, "deleted_drafts.json")
+DELETED_SEIKYU_FILE   = os.path.join(DATA_DIR, "deleted_seikyu.json")
+HISTORY_DIR           = os.path.join(DATA_DIR, "history")
 
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(HISTORY_DIR, exist_ok=True)
 
 # ========================================
 # 設定管理
