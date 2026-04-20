@@ -9,10 +9,12 @@ import os
 import json
 import threading
 from datetime import datetime, date
+from functools import wraps
 from flask import (
     Flask, render_template, redirect, request,
-    jsonify, send_file, url_for, flash
+    jsonify, send_file, url_for, flash, session
 )
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
 import auth
