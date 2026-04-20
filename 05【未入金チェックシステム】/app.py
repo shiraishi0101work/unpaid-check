@@ -1458,6 +1458,24 @@ def _load_all_histories() -> list:
     return all_hist
 
 
+@app.route("/api/history/<year_month>/delete-month", methods=["POST"])
+def history_delete_month(year_month):
+    """確定月の履歴ファイルを丸ごと削除する"""
+    data = request.get_json() or {}
+    cid  = data.get("cid", "")
+
+    if _is_admin_aggregate() and cid:
+        path = os.path.join(DATA_DIR, cid, "history", f"{year_month}.json")
+    else:
+        path = os.path.join(_hdir(), f"{year_month}.json")
+
+    if not os.path.exists(path):
+        return jsonify({"error": "履歴が見つかりません"}), 404
+
+    os.remove(path)
+    return jsonify({"ok": True})
+
+
 @app.route("/api/history/confirm", methods=["POST"])
 def history_confirm():
     data = request.get_json() or {}
