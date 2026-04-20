@@ -14,17 +14,6 @@
       <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
     {% endif %}
   </div>
-  <div class="sidebar-item d-flex align-items-center justify-content-between">
-    <span class="d-flex align-items-center gap-2">
-      <i class="bi bi-calculator{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
-      <span class="small">クラウド会計</span>
-    </span>
-    {% if auth_accounting %}
-      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
-    {% else %}
-      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
-    {% endif %}
-  </div>
 </div>
 <hr class="sidebar-divider">
 <div class="sidebar-section">
