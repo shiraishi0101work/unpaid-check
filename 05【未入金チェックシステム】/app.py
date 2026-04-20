@@ -554,62 +554,6 @@ def test_connection():
     return jsonify(results)
 
 
-@app.route("/api/debug-accounting")
-def debug_accounting():
-    """会計APIの動作確認用デバッグエンドポイント"""
-    import requests as _req
-    import traceback
-    result = {}
-
-    # トークン取得
-    try:
-        token = auth.get_access_token("accounting")
-        result["token_prefix"] = token[:15] + "..."
-    except Exception as e:
-        return jsonify({"step": "token", "error": str(e)}), 500
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
-    }
-
-    # offices API
-    try:
-        r = _req.get("https://api-accounting.moneyforward.com/api/v3/offices",
-                     headers=headers, timeout=10)
-        result["offices_status"] = r.status_code
-        result["offices_body"]   = r.text[:500]
-        if r.ok:
-            offices = r.json().get("offices", [])
-            result["office_ids"] = [o.get("id") for o in offices]
-    except Exception as e:
-        result["offices_error"] = str(e)
-
-    # journals API - パターン別に試す
-    from datetime import date as _d
-    today = _d.today().strftime("%Y-%m-%d")
-    test_cases = [
-        {"per_page": 100, "page": 1, "end_date": today},
-        {"per_page":  50, "page": 1, "end_date": today},
-        {"per_page":  20, "page": 1, "end_date": today},
-        {"per_page":  10, "page": 1, "end_date": today},
-        {"per_page": 100, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
-        {"per_page":  10, "page": 1, "start_date": "2025-12-01", "end_date": "2026-02-28"},
-    ]
-    for i, params in enumerate(test_cases):
-        try:
-            r = _req.get("https://api-accounting.moneyforward.com/api/v3/journals",
-                         headers=headers, params=params, timeout=10)
-            result[f"test{i}_params"] = params
-            result[f"test{i}_status"] = r.status_code
-            result[f"test{i}_body"]   = r.text[:300]
-            if r.ok:
-                break  # 成功したら終了
-        except Exception as e:
-            result[f"test{i}_error"] = str(e)
-
-    return jsonify(result)
-
 
 @app.route("/api/debug-check")
 def debug_check():
