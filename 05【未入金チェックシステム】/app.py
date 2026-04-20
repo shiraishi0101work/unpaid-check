@@ -698,7 +698,8 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
-        all_billings = get_all_billings()
+        cid = company_id or get_company_id()
+        all_billings = get_all_billings(company_id=cid)
         if not all_billings:
             raise RuntimeError("請求書データが0件でした。APIの応答を確認してください。")
 
