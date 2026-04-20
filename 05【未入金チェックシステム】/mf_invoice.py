@@ -20,8 +20,8 @@ UNPAID_STATUSES = {"未設定", "未入金"}
 PAID_STATUSES   = {"入金済み"}
 
 
-def _headers() -> dict:
-    token = get_access_token("invoice")
+def _headers(company_id: str = "") -> dict:
+    token = get_access_token("invoice", company_id)
     return {
         "Authorization": f"Bearer {token}",
         "Accept": "application/json",
@@ -45,13 +45,13 @@ def _request_with_retry(url: str, headers: dict, params: dict) -> requests.Respo
     return resp
 
 
-def _get_all_pages(params: dict) -> list:
+def _get_all_pages(params: dict, company_id: str = "") -> list:
     """ページネーションを自動処理して全請求書を取得"""
     results = []
     page = 1
     while True:
         params["page"] = page
-        resp = _request_with_retry(f"{BASE_URL}/billings", headers=_headers(), params=params)
+        resp = _request_with_retry(f"{BASE_URL}/billings", headers=_headers(company_id), params=params)
         print(f"[請求書API] page={page} status={resp.status_code}", flush=True)
         if resp.status_code != 200:
             print(f"[請求書API] エラーレスポンス: {resp.text[:300]}", flush=True)
