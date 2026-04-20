@@ -457,7 +457,7 @@
         <tbody>
           {% for b in seikyu_kakunin %}
           {% set has_note_s = b.メモ_手動 or b.入金予定日_手動 %}
-          <tr id="seikyu-row-{{ b.請求書ID }}" {% if has_note_s %}style="background-color:#f0fff4"{% endif %}>
+          <tr id="seikyu-row-{{ b.請求書ID }}" {% if has_note_s %}class="row-noted"{% endif %}>
             <td>
               <input type="checkbox" class="form-check-input seikyu-check"
                 value="{{ b.請求書ID }}">
