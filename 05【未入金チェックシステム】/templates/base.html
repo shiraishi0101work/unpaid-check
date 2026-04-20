@@ -29,12 +29,41 @@
       <i class="bi bi-book me-1"></i>チェックルール
     </a>
     <span class="text-white-50 small" id="nav-clock"></span>
+
+    {% if is_admin and all_companies %}
+    {# 管理者：会社切り替えドロップダウン #}
+    <div class="dropdown">
+      <button class="btn btn-warning btn-sm py-0 dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
+        <i class="bi bi-building me-1"></i>
+        {{ viewing_company.email if viewing_company else '会社を選択' }}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:220px">
+        <li><h6 class="dropdown-header small">閲覧する会社を切り替え</h6></li>
+        {% for c in all_companies %}
+        <li>
+          <button class="dropdown-item d-flex align-items-center gap-2 {% if c.id == viewing_cid %}active{% endif %}"
+                  onclick="switchCompany('{{ c.id }}')">
+            <i class="bi bi-{% if c.is_admin %}shield-fill text-danger{% else %}building{% endif %}"></i>
+            <div>
+              <div class="fw-semibold" style="font-size:0.82rem">{{ c.email }}</div>
+              <div class="text-muted" style="font-size:0.68rem">{{ '管理者' if c.is_admin else '一般' }}</div>
+            </div>
+            {% if c.id == viewing_cid %}<i class="bi bi-check-lg ms-auto"></i>{% endif %}
+          </button>
+        </li>
+        {% endfor %}
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a href="/admin/companies" class="dropdown-item small">
+            <i class="bi bi-gear me-1"></i>会社アカウント管理
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% else %}
     <span class="text-white-50 small"><i class="bi bi-person-circle me-1"></i>{{ session.get('email', '') }}</span>
-    {% if is_admin %}
-    <a href="/admin/companies" class="btn btn-outline-warning btn-sm py-0">
-      <i class="bi bi-building me-1"></i>会社管理
-    </a>
     {% endif %}
+
     <a href="/settings" class="btn btn-outline-light btn-sm py-0">
       <i class="bi bi-gear me-1"></i>設定
     </a>
