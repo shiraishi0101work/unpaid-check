@@ -583,12 +583,15 @@ def _is_draft_invoice(b: dict) -> bool:
     return not _is_delivered(b)
 
 
-def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
+def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, company_id=None):
     """MF請求書ステータス＋手動確認のみで未入金を判定する（MF会計照合なし）"""
+    # スレッド内でsessionが使えないため company_id を引数で受け取る
+    if company_id:
+        session["company_id"] = company_id
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
-            auth.get_access_token("invoice", get_company_id())
+            auth.get_access_token("invoice", company_id or get_company_id())
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
