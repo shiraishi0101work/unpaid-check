@@ -588,7 +588,7 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None):
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
-            auth.get_access_token("invoice")
+            auth.get_access_token("invoice", get_company_id())
         except Exception as e:
             raise RuntimeError(f"MFクラウド請求書の認証が必要です: {e}")
 
@@ -999,7 +999,7 @@ def test_connection():
 
     # 請求書API
     try:
-        token = auth.get_access_token("invoice")
+        token = auth.get_access_token("invoice", get_company_id())
         import requests as req
         r = req.get(
             "https://invoice.moneyforward.com/api/v3/billings",
@@ -1022,7 +1022,7 @@ def test_connection():
 @app.route("/api/debug-check")
 def debug_check():
     try:
-        token = auth.get_access_token("invoice")
+        token = auth.get_access_token("invoice", get_company_id())
         billings = get_all_billings()
         from collections import Counter
         status_count = Counter(b["入金状態"] for b in billings)
@@ -1133,7 +1133,7 @@ def debug_billing_raw():
     """請求書APIの実際のフィールド一覧を確認するデバッグエンドポイント"""
     import requests as _req
     try:
-        token = auth.get_access_token("invoice")
+        token = auth.get_access_token("invoice", get_company_id())
         r = _req.get(
             "https://invoice.moneyforward.com/api/v3/billings",
             headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
