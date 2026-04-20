@@ -468,26 +468,27 @@ def _generate_history_excel(history: dict) -> str:
 # ========================================
 
 def load_meta() -> dict:
-    if not os.path.exists(META_FILE):
+    path = os.path.join(_cdir(), "invoice_meta.json")
+    if not os.path.exists(path):
         return {}
-    with open(META_FILE, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 def save_meta(meta: dict):
-    with open(META_FILE, "w", encoding="utf-8") as f:
+    with open(os.path.join(_cdir(), "invoice_meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
 def load_company_tantou() -> dict:
-    """取引先名 → 担当者 のマッピングを返す"""
-    if not os.path.exists(COMPANY_TANTOU_FILE):
+    path = os.path.join(_cdir(), "company_tantou.json")
+    if not os.path.exists(path):
         return {}
-    with open(COMPANY_TANTOU_FILE, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_company_tantou(mapping: dict):
-    with open(COMPANY_TANTOU_FILE, "w", encoding="utf-8") as f:
+    with open(os.path.join(_cdir(), "company_tantou.json"), "w", encoding="utf-8") as f:
         json.dump(mapping, f, ensure_ascii=False, indent=2)
 
 
