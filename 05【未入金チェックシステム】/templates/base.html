@@ -124,6 +124,17 @@
   }
   updateClock();
   setInterval(updateClock, 1000);
+
+  async function switchCompany(companyId) {
+    const resp = await fetch('/api/admin/switch-company', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company_id: companyId}),
+    });
+    const data = await resp.json();
+    if (data.ok) window.location.href = '/';
+    else alert('切り替えエラー: ' + (data.error || ''));
+  }
 </script>
 {% block scripts %}{% endblock %}
 </body>
