@@ -852,39 +852,141 @@ def _load_result() -> dict | None:
 # ルーティング — ダッシュボード
 # ========================================
 
+def _load_admin_aggregate() -> dict:
+    """全一般会社のlast_resultを集約して返す"""
+    auth_data = _load_auth_data()
+    agg = {
+        "overdue": [], "seikyu_kakunin": [], "draft_overdue": [],
+        "ichiji_hokan": [], "upcoming": [], "paid": [],
+        "has_data": False,
+        "company_count": 0,
+    }
+
+    for c in auth_data.get("companies", []):
+        if c.get("is_admin"):
+            continue
+        cid = c["id"]
+
+        # 会社名（settings.json から取得、なければメール）
+        settings_path = os.path.join(DATA_DIR, cid, "settings.json")
+        comp_name = c["email"]
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, encoding="utf-8") as f:
+                    s = json.load(f)
+                comp_name = s.get("company_name") or c["email"]
+            except Exception:
+                pass
+
+        # 最終照合結果
+        result_path = os.path.join(DATA_DIR, cid, "last_result.json")
+        if not os.path.exists(result_path):
+            continue
+        try:
+            with open(result_path, encoding="utf-8") as f:
+                result = json.load(f)
+        except Exception:
+            continue
+
+        # メタデータ
+        meta = {}
+        meta_path = os.path.join(DATA_DIR, cid, "invoice_meta.json")
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, encoding="utf-8") as f:
+                    meta = json.load(f)
+            except Exception:
+                pass
+
+        agg["has_data"] = True
+        agg["company_count"] += 1
+
+        for cat in ["overdue", "seikyu_kakunin", "draft_overdue", "ichiji_hokan", "upcoming"]:
+            for b in result.get(cat, []):
+                bid = b.get("請求書ID", "")
+                m = meta.get(bid, {})
+                item = dict(b)
+                item["担当者"]          = m.get("担当者", b.get("担当者", ""))
+                item["メモ_手動"]       = m.get("メモ", b.get("メモ_手動", ""))
+                item["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動", ""))
+                item["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+                item["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
+                item["_company_name"]   = comp_name
+                agg[cat].append(item)
+
+        # 入金確認済み（seikyu_kakuninの着金済みも含む）
+        seikyu_raw = result.get("seikyu_kakunin", [])
+        paid_all = result.get("paid", []) + [b for b in seikyu_raw if meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
+        for b in paid_all:
+            bid = b.get("請求書ID", "")
+            m = meta.get(bid, {})
+            item = dict(b)
+            item["担当者"]          = m.get("担当者", b.get("担当者", ""))
+            item["メモ_手動"]       = m.get("メモ", b.get("メモ_手動", ""))
+            item["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動", ""))
+            item["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+            item["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
+            item["_company_name"]   = comp_name
+            agg["paid"].append(item)
+
+    return agg
+
+
 @app.route("/")
 def dashboard():
-    settings        = load_settings()
-    auth_invoice    = auth.is_authenticated("invoice", get_company_id())
-    result          = _load_result()
-    meta            = load_meta()
-    today_str       = datetime.now().strftime("%Y-%m-%d")
+    settings  = load_settings()
+    today_str = datetime.now().strftime("%Y-%m-%d")
 
-    # 先月未確定ポップアップ判定（月初7日以内）
+    start_month = settings["fiscal_year_start_month"]
+    fiscal_year = request.args.get("year", type=int)
+    if fiscal_year is None:
+        fiscal_year = get_current_fiscal_year(start_month)
+    prev_year = fiscal_year - 1
+    next_year = fiscal_year + 1
+    fy_from, fy_to = get_fiscal_year_range(fiscal_year, start_month)
     prev_ym = get_prev_year_month()
+
+    # ── 管理者が自社（管理者アカウント）を閲覧中 → 全社集約ビュー ──
+    own_cid = session.get("company_id", "")
+    viewing_cid_now = get_company_id()
+    show_admin_aggregate = bool(session.get("is_admin")) and (viewing_cid_now == own_cid)
+
+    if show_admin_aggregate:
+        agg = _load_admin_aggregate()
+        return render_template(
+            "admin_dashboard.html",
+            agg=agg,
+            overdue=agg["overdue"],
+            seikyu_kakunin=agg["seikyu_kakunin"],
+            draft_overdue=agg["draft_overdue"],
+            ichiji_hokan=agg["ichiji_hokan"],
+            upcoming=agg["upcoming"],
+            paid_fy=agg["paid"],
+            settings=settings,
+            fiscal_year=fiscal_year,
+            prev_year=prev_year,
+            next_year=next_year,
+            fy_from=fy_from,
+            fy_to=fy_to,
+            today=today_str,
+        )
+
+    # ── 通常ビュー（個別会社） ──
+    auth_invoice = auth.is_authenticated("invoice", get_company_id())
+    result       = _load_result()
+    meta         = load_meta()
+
     show_history_popup = (
         date.today().day <= 7 and
         load_history(prev_ym) is None and
         settings.get("history_popup_dismissed") != prev_ym
     )
 
-    start_month = settings["fiscal_year_start_month"]
-    # URL パラメータで年度切替
-    fiscal_year = request.args.get("year", type=int)
-    if fiscal_year is None:
-        fiscal_year = get_current_fiscal_year(start_month)
-
-    prev_year = fiscal_year - 1
-    next_year = fiscal_year + 1
-    fy_from, fy_to = get_fiscal_year_range(fiscal_year, start_month)
-
-    # 年度フィルタをかけた一覧
     def in_fy(b):
         d = b.get("請求日") or b.get("支払期限") or ""
         return fy_from <= d <= fy_to
 
     if result:
-        # メタデータを最新にマージ＋担当者自動振り分け
         company_tantou = load_company_tantou()
         for lst in [result.get("unpaid",[]), result.get("overdue",[]),
                     result.get("upcoming",[]), result.get("paid",[]),
@@ -903,7 +1005,6 @@ def dashboard():
                     if company and company in company_tantou:
                         b["担当者"] = company_tantou[company]
 
-        # 請求済みか確認タブで着金日_手動が入力されたものは入金確認済みへ移動
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
         seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
