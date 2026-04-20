@@ -1181,5 +1181,70 @@ document.getElementById('edit-save-btn')?.addEventListener('click', function() {
     this.innerHTML = '<i class="bi bi-save me-1"></i>保存';
   });
 });
+
+// ===== 月次確定モーダル =====
+async function confirmHistory(yearMonth) {
+  const btn = document.getElementById('history-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  try {
+    const resp = await fetch('/api/history/confirm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: yearMonth}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('historyConfirmModal'))?.hide();
+      location.href = '/history/' + yearMonth;
+    } else {
+      alert('エラー: ' + (data.error || '確定に失敗しました'));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>確定・保存';
+  }
+}
+
+document.getElementById('history-confirm-btn')?.addEventListener('click', function() {
+  const ym = document.getElementById('history-ym-select').value;
+  confirmHistory(ym);
+});
+
+// ===== 先月未確定ポップアップ =====
+{% if show_history_popup %}
+document.addEventListener('DOMContentLoaded', function() {
+  new bootstrap.Modal(document.getElementById('historyPopupModal')).show();
+
+  document.getElementById('popup-yes-btn').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+    const resp = await fetch('/api/history/confirm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: '{{ prev_ym }}'}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      location.href = '/history/{{ prev_ym }}';
+    } else {
+      alert('エラー: ' + (data.error || ''));
+      this.disabled = false;
+      this.innerHTML = '<i class="bi bi-save me-1"></i>{{ prev_ym }} を確定する';
+    }
+  });
+
+  document.getElementById('popup-no-btn').addEventListener('click', function() {
+    fetch('/api/history/dismiss-popup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: '{{ prev_ym }}'}),
+    });
+    bootstrap.Modal.getInstance(document.getElementById('historyPopupModal')).hide();
+  });
+});
+{% endif %}
 </script>
 {% endblock %}
