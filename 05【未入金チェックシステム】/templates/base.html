@@ -30,6 +30,11 @@
     </a>
     <span class="text-white-50 small" id="nav-clock"></span>
     <span class="text-white-50 small"><i class="bi bi-person-circle me-1"></i>{{ session.get('email', '') }}</span>
+    {% if is_admin %}
+    <a href="/admin/companies" class="btn btn-outline-warning btn-sm py-0">
+      <i class="bi bi-building me-1"></i>会社管理
+    </a>
+    {% endif %}
     <a href="/settings" class="btn btn-outline-light btn-sm py-0">
       <i class="bi bi-gear me-1"></i>設定
     </a>
