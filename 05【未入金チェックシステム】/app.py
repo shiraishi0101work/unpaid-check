@@ -749,7 +749,7 @@ def _load_result() -> dict | None:
 @app.route("/")
 def dashboard():
     settings        = load_settings()
-    auth_invoice    = auth.is_authenticated("invoice")
+    auth_invoice    = auth.is_authenticated("invoice", get_company_id())
     result          = _load_result()
     meta            = load_meta()
     today_str       = datetime.now().strftime("%Y-%m-%d")
@@ -917,7 +917,7 @@ def settings_page():
         return redirect(url_for("settings_page"))
     auth_data = load_auth() or {}
     return render_template("settings.html", settings=settings,
-                           auth_invoice=auth.is_authenticated("invoice"),
+                           auth_invoice=auth.is_authenticated("invoice", get_company_id()),
                            current_email=auth_data.get("email", ""))
 
 @app.route("/api/update-credentials", methods=["POST"])
@@ -1216,7 +1216,7 @@ def history_list_page():
         histories=histories,
         detail=None,
         selected_ym=None,
-        auth_invoice=auth.is_authenticated("invoice"),
+        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=settings,
     )
 
@@ -1232,7 +1232,7 @@ def history_detail(year_month):
         histories=load_history_list(),
         detail=detail,
         selected_ym=year_month,
-        auth_invoice=auth.is_authenticated("invoice"),
+        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=settings,
     )
 
@@ -1253,7 +1253,7 @@ def history_download(year_month):
 def rules_page():
     return render_template(
         "rules.html",
-        auth_invoice=auth.is_authenticated("invoice"),
+        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=load_settings(),
     )
 
