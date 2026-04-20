@@ -879,6 +879,60 @@
 </div>
 
 
+{# ===== 月次確定モーダル ===== #}
+<div class="modal fade" id="historyConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-calendar-check me-2 text-primary"></i>月次データを確定する</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-3">現在のチェック結果を選択した月の履歴として保存します。</p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">確定する月</label>
+          <select id="history-ym-select" class="form-select">
+            <option value="{{ prev_ym }}">{{ prev_ym }}（先月）</option>
+            <option value="{{ current_ym }}">{{ current_ym }}（今月）</option>
+          </select>
+        </div>
+        <div class="alert alert-info py-2 small mb-0">
+          <i class="bi bi-info-circle me-1"></i>保存後はExcelダウンロードや一覧表示が可能です。上書き保存もできます。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary btn-sm" id="history-confirm-btn">
+          <i class="bi bi-save me-1"></i>確定・保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 先月未確定ポップアップ ===== #}
+{% if show_history_popup %}
+<div class="modal fade" id="historyPopupModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-exclamation-circle me-2 text-warning"></i>先月のデータが未確定です</h6>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2"><strong>{{ prev_ym }}</strong> の月次データがまだ保存されていません。</p>
+        <p class="text-muted small mb-0">確定すると月次履歴として保存され、いつでも参照・Excel出力できます。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="popup-no-btn">後で</button>
+        <button class="btn btn-warning btn-sm" id="popup-yes-btn">
+          <i class="bi bi-save me-1"></i>{{ prev_ym }} を確定する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
