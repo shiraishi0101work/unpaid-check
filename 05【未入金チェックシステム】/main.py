@@ -13,10 +13,8 @@ import os
 import subprocess
 import sys
 
-from mf_invoice    import get_unpaid_billings
-from mf_accounting import get_income_deals
-from matcher       import match
-from reporter      import generate_report
+from mf_invoice import get_unpaid_billings
+from reporter   import generate_report
 
 
 def main():
