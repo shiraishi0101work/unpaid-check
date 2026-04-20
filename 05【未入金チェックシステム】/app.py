@@ -880,7 +880,7 @@ def run():
 
     thread = threading.Thread(
         target=_run_check,
-        args=(invoice_from, invoice_to),
+        args=(invoice_from, invoice_to, None, None, get_company_id()),
         daemon=True,
     )
     thread.start()
