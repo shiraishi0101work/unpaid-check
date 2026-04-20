@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 
 import auth
 from mf_invoice    import get_all_billings, UNPAID_STATUSES, PAID_STATUSES
-from mf_accounting import get_income_deals
 from reporter      import generate_report
 from scheduler     import init_scheduler
 
