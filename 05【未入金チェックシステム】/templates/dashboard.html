@@ -111,6 +111,26 @@
   </div>
 </div>
 
+<!-- 月次確定セクション -->
+<hr class="sidebar-divider">
+<div class="sidebar-section">
+  <div class="sidebar-label">月次確定</div>
+  <div class="sidebar-item">
+    <button class="btn btn-outline-primary btn-sm w-100"
+            {% if not result %}disabled{% endif %}
+            data-bs-toggle="modal" data-bs-target="#historyConfirmModal">
+      <i class="bi bi-calendar-check me-1"></i>今月を確定する
+    </button>
+  </div>
+  {% if history_list %}
+  <div class="sidebar-item">
+    <a href="{{ url_for('history_list_page') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-clock-history me-1"></i>履歴を見る（{{ history_list|length }}件）
+    </a>
+  </div>
+  {% endif %}
+</div>
+
 {% if result %}
 <hr class="sidebar-divider">
 
