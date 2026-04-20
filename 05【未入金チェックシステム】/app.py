@@ -455,8 +455,22 @@ def _build_history_snapshot(year_month: str) -> dict | None:
     seikyu_paid  = [b for b in seikyu_raw if meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
     seikyu_unpaid = [b for b in seikyu_raw if not meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
 
-    unpaid_all = (result.get("overdue", []) + result.get("upcoming", []) +
-                  result.get("unpaid", []) + seikyu_unpaid)
+    # result["unpaid"] は overdue+upcoming の全体集合なので重複になる → カテゴリ別リストのみ使用
+    unpaid_all = (result.get("overdue", []) + seikyu_unpaid +
+                  result.get("draft_overdue", []) + result.get("ichiji_hokan", []) +
+                  result.get("upcoming", []))
+    # 請求書IDで重複除去（念のため）
+    seen_ids = set()
+    deduped = []
+    for b in unpaid_all:
+        bid = b.get("請求書ID", "")
+        if bid and bid in seen_ids:
+            continue
+        if bid:
+            seen_ids.add(bid)
+        deduped.append(b)
+    unpaid_all = deduped
+
     paid_all   = result.get("paid", []) + seikyu_paid
 
     apply_meta(unpaid_all)
