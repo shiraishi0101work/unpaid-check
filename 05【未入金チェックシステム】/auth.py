@@ -100,7 +100,7 @@ def _basic_auth_header(client_id: str, client_secret: str) -> dict:
     return {"Authorization": f"Basic {credentials}"}
 
 
-def _refresh(service_name: str, token_data: dict) -> dict:
+def _refresh(service_name: str, token_data: dict, company_id: str = "") -> dict:
     svc     = _svc(service_name)
     headers = _basic_auth_header(svc["client_id"], svc["client_secret"])
     resp    = requests.post(svc["token_url"], headers=headers, data={
@@ -109,7 +109,7 @@ def _refresh(service_name: str, token_data: dict) -> dict:
     })
     resp.raise_for_status()
     new_token = resp.json()
-    save_token(service_name, new_token)
+    save_token(service_name, new_token, company_id)
     return new_token
 
 
