@@ -33,7 +33,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 # ---- 会社IDごとのパスヘルパー ----
 def get_company_id() -> str:
-    return session.get("company_id", "c_main")
+    """管理者は viewing_company_id で任意の会社を参照できる"""
+    return session.get("viewing_company_id") or session.get("company_id", "c_main")
 
 def _cdir(cid: str = None) -> str:
     """会社のデータディレクトリを返す（なければ作成）"""
