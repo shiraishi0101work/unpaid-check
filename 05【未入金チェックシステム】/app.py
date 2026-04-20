@@ -66,6 +66,11 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+@app.context_processor
+def inject_company_name():
+    s = load_settings()
+    return {"company_name": s.get("company_name", "")}
+
 @app.before_request
 def check_auth():
     public = ("/login", "/setup", "/static/")
