@@ -292,29 +292,26 @@ def save_settings(settings: dict):
 
 def load_history_list() -> list:
     """保存済み月次履歴の一覧（新しい順）を返す"""
-    files = sorted(
-        [f for f in os.listdir(HISTORY_DIR) if f.endswith(".json")],
-        reverse=True,
-    )
+    hd = _hdir()
+    files = sorted([f for f in os.listdir(hd) if f.endswith(".json")], reverse=True)
     result = []
     for f in files:
         try:
-            with open(os.path.join(HISTORY_DIR, f), encoding="utf-8") as fp:
+            with open(os.path.join(hd, f), encoding="utf-8") as fp:
                 result.append(json.load(fp))
         except Exception:
             pass
     return result
 
 def load_history(year_month: str) -> dict | None:
-    path = os.path.join(HISTORY_DIR, f"{year_month}.json")
+    path = os.path.join(_hdir(), f"{year_month}.json")
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 def save_history(year_month: str, data: dict):
-    path = os.path.join(HISTORY_DIR, f"{year_month}.json")
-    with open(path, "w", encoding="utf-8") as f:
+    with open(os.path.join(_hdir(), f"{year_month}.json"), "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def get_prev_year_month() -> str:
