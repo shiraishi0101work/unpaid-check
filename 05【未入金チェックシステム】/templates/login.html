@@ -61,8 +61,11 @@
         </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-lock"></i></span>
-          <input type="password" name="password" class="form-control" required
+          <input type="password" name="password" id="pw1" class="form-control" required
                  placeholder="パスワード">
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePw('pw1', this)">
+            <i class="bi bi-eye"></i>
+          </button>
         </div>
       </div>
 
@@ -71,8 +74,11 @@
         <label class="form-label fw-semibold">パスワード（確認）</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-          <input type="password" name="confirm" class="form-control" required
+          <input type="password" name="confirm" id="pw2" class="form-control" required
                  placeholder="もう一度入力">
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePw('pw2', this)">
+            <i class="bi bi-eye"></i>
+          </button>
         </div>
       </div>
       {% else %}
