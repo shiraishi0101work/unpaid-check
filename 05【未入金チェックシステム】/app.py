@@ -27,18 +27,24 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "mf-unpaid-check-secret-2026")
 
-DATA_DIR              = os.path.join(os.path.dirname(__file__), "data")
-RESULT_FILE           = os.path.join(DATA_DIR, "last_result.json")
-SETTINGS_FILE         = os.path.join(DATA_DIR, "settings.json")
-META_FILE             = os.path.join(DATA_DIR, "invoice_meta.json")
-COMPANY_TANTOU_FILE   = os.path.join(DATA_DIR, "company_tantou.json")
-DELETED_DRAFTS_FILE   = os.path.join(DATA_DIR, "deleted_drafts.json")
-DELETED_SEIKYU_FILE   = os.path.join(DATA_DIR, "deleted_seikyu.json")
-HISTORY_DIR           = os.path.join(DATA_DIR, "history")
-AUTH_FILE             = os.path.join(DATA_DIR, "auth.json")
-
+DATA_DIR  = os.path.join(os.path.dirname(__file__), "data")
+AUTH_FILE = os.path.join(DATA_DIR, "auth.json")
 os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(HISTORY_DIR, exist_ok=True)
+
+# ---- 会社IDごとのパスヘルパー ----
+def get_company_id() -> str:
+    return session.get("company_id", "c_main")
+
+def _cdir(cid: str = None) -> str:
+    """会社のデータディレクトリを返す（なければ作成）"""
+    d = os.path.join(DATA_DIR, cid or get_company_id())
+    os.makedirs(d, exist_ok=True)
+    return d
+
+def _hdir(cid: str = None) -> str:
+    d = os.path.join(_cdir(cid), "history")
+    os.makedirs(d, exist_ok=True)
+    return d
 
 # ========================================
 # 認証管理
