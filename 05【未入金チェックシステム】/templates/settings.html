@@ -127,15 +127,24 @@
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">現在のパスワード <span class="text-danger">*</span></label>
-          <input type="password" id="current-pw" class="form-control" placeholder="必須">
+          <div class="input-group">
+            <input type="password" id="current-pw" class="form-control" placeholder="必須">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePw('current-pw',this)"><i class="bi bi-eye"></i></button>
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">新しいパスワード</label>
-          <input type="password" id="new-pw" class="form-control" placeholder="変更しない場合は空欄">
+          <div class="input-group">
+            <input type="password" id="new-pw" class="form-control" placeholder="変更しない場合は空欄">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePw('new-pw',this)"><i class="bi bi-eye"></i></button>
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">新しいパスワード（確認）</label>
-          <input type="password" id="new-pw-confirm" class="form-control" placeholder="変更しない場合は空欄">
+          <div class="input-group">
+            <input type="password" id="new-pw-confirm" class="form-control" placeholder="変更しない場合は空欄">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePw('new-pw-confirm',this)"><i class="bi bi-eye"></i></button>
+          </div>
         </div>
         <button class="btn btn-primary w-100" id="btn-update-cred" onclick="updateCredentials()">
           <i class="bi bi-save me-1"></i>変更を保存
