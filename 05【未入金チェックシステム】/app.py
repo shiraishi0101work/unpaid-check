@@ -328,8 +328,11 @@ def api_update_company_login():
 @app.route("/api/admin/delete-company", methods=["POST"])
 def api_delete_company():
     if not session.get("is_admin"):
-        return jsonify({"error": "権限がありません"}), 403
-    req_data = request.get_json() or {}
+        c = _find_company_by_id(session.get("company_id", ""))
+        if not (c and c.get("is_admin")):
+            return jsonify({"error": "権限がありません"}), 403
+        session["is_admin"] = True
+    req_data = request.get_json(force=True, silent=True) or {}
     cid = req_data.get("id", "")
     if cid == session.get("company_id"):
         return jsonify({"error": "自分自身のアカウントは削除できません"}), 400
