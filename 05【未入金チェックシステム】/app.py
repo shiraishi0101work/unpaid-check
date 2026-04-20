@@ -615,36 +615,6 @@ def oauth_revoke(service_name):
     flash("MFクラウド請求書の認証を解除しました")
     return redirect(url_for("dashboard"))
 
-# ========================================
-# 入金履歴ページ
-# ========================================
-
-PAYMENT_LINKS_FILE   = os.path.join(DATA_DIR, "payment_links.json")
-PAYMENT_HISTORY_FILE = os.path.join(DATA_DIR, "payment_history.json")
-
-
-def load_payment_links() -> dict:
-    if not os.path.exists(PAYMENT_LINKS_FILE):
-        return {}
-    with open(PAYMENT_LINKS_FILE, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_payment_links(links: dict):
-    with open(PAYMENT_LINKS_FILE, "w", encoding="utf-8") as f:
-        json.dump(links, f, ensure_ascii=False, indent=2)
-
-
-def load_payment_history() -> list:
-    if not os.path.exists(PAYMENT_HISTORY_FILE):
-        return []
-    with open(PAYMENT_HISTORY_FILE, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_payment_history(deals: list):
-    with open(PAYMENT_HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(deals, f, ensure_ascii=False, indent=2)
 
 
 @app.route("/payments")
