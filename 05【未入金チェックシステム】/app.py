@@ -915,6 +915,71 @@ def clear_data():
     return redirect(url_for("dashboard"))
 
 # ========================================
+# 月次履歴 API・ページ
+# ========================================
+
+@app.route("/api/history/confirm", methods=["POST"])
+def history_confirm():
+    data = request.get_json() or {}
+    year_month = data.get("year_month", "").strip()
+    if not year_month:
+        return jsonify({"error": "year_month が必要です"}), 400
+
+    snapshot = _build_history_snapshot(year_month)
+    if not snapshot:
+        return jsonify({"error": "チェック結果がありません。先にチェックを実行してください。"}), 400
+
+    save_history(year_month, snapshot)
+    return jsonify({"ok": True, "year_month": year_month})
+
+@app.route("/api/history/dismiss-popup", methods=["POST"])
+def history_dismiss_popup():
+    data = request.get_json() or {}
+    year_month = data.get("year_month", "")
+    s = load_settings()
+    s["history_popup_dismissed"] = year_month
+    save_settings(s)
+    return jsonify({"ok": True})
+
+@app.route("/history")
+def history_list_page():
+    histories = load_history_list()
+    settings  = load_settings()
+    return render_template(
+        "history.html",
+        histories=histories,
+        detail=None,
+        selected_ym=None,
+        auth_invoice=auth.is_authenticated("invoice"),
+        settings=settings,
+    )
+
+@app.route("/history/<year_month>")
+def history_detail(year_month):
+    detail = load_history(year_month)
+    if not detail:
+        flash(f"{year_month} の履歴が見つかりません", "error")
+        return redirect(url_for("history_list_page"))
+    settings = load_settings()
+    return render_template(
+        "history.html",
+        histories=load_history_list(),
+        detail=detail,
+        selected_ym=year_month,
+        auth_invoice=auth.is_authenticated("invoice"),
+        settings=settings,
+    )
+
+@app.route("/history/<year_month>/download")
+def history_download(year_month):
+    detail = load_history(year_month)
+    if not detail:
+        flash(f"{year_month} の履歴が見つかりません", "error")
+        return redirect(url_for("history_list_page"))
+    path = _generate_history_excel(detail)
+    return send_file(path, as_attachment=True)
+
+# ========================================
 # 入金チェックルール表
 # ========================================
 
