@@ -383,23 +383,8 @@ def dashboard():
         upcoming         = [b for b in result.get("upcoming", []) if in_fy(b)]
         paid_fy          = [b for b in result.get("paid", [])     if in_fy(b)]
 
-        # 要確認件数（未入金企業からの入金データ）
-        payment_history = load_payment_history()
-        payment_links   = load_payment_links()
-        import name_utils as _nu
-        unpaid_norms = {_nu.normalize(b.get("取引先名","")) for b in result.get("unpaid",[])}
-        yoakinin_count = sum(
-            1 for d in payment_history
-            if not payment_links.get(d.get("取引ID",""), {}).get("invoice_ids")
-            and (
-                _nu.normalize(d.get("取引先名","")) in unpaid_norms
-                or any(n and len(n) >= 3 and n in _nu.normalize(d.get("備考",""))
-                       for n in unpaid_norms)
-            )
-        )
     else:
         overdue = seikyu_kakunin = draft_overdue = ichiji_hokan = upcoming = paid_fy = []
-        yoakinin_count = 0
 
     return render_template(
         "dashboard.html",
