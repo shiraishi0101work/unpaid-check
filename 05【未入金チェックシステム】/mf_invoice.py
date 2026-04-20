@@ -131,17 +131,17 @@ def get_all_billings(from_date: str = None, to_date: str = None, company_id: str
     return [_to_billing_dict(b) for b in billings_raw]
 
 
-def get_unpaid_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+def get_unpaid_billings(from_date: str = None, to_date: str = None, company_id: str = "") -> list[dict]:
     """未入金の請求書のみ返す（payment_status が 未設定 or 未入金）"""
-    all_billings = get_all_billings(from_date, to_date)
+    all_billings = get_all_billings(from_date, to_date, company_id=company_id)
     unpaid = [b for b in all_billings if b["入金状態"] in UNPAID_STATUSES]
     print(f"[請求書] 未入金: {len(unpaid)}件")
     return unpaid
 
 
-def get_paid_billings(from_date: str = None, to_date: str = None) -> list[dict]:
+def get_paid_billings(from_date: str = None, to_date: str = None, company_id: str = "") -> list[dict]:
     """入金済みの請求書のみ返す"""
-    all_billings = get_all_billings(from_date, to_date)
+    all_billings = get_all_billings(from_date, to_date, company_id=company_id)
     paid = [b for b in all_billings if b["入金状態"] in PAID_STATUSES]
     print(f"[請求書] 入金済み: {len(paid)}件")
     return paid
