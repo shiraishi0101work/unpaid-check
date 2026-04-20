@@ -364,13 +364,15 @@
             <th>取引先名</th><th>請求番号</th><th>件名</th>
             <th>担当者</th><th>支払期限</th>
             <th class="text-end">請求金額</th>
+            <th>入金予定日</th>
             <th>社内メモ</th>
             <th class="text-center" style="width:70px">編集</th>
           </tr>
         </thead>
         <tbody>
           {% for b in overdue %}
-          <tr>
+          {% set has_note = b.メモ_手動 or b.入金予定日_手動 %}
+          <tr {% if has_note %}style="background-color:#f0fff4"{% endif %}>
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
@@ -383,6 +385,9 @@
             </td>
             <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
+              {{ b.入金予定日_手動 or '—' }}
+            </td>
             <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
               <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
@@ -392,7 +397,8 @@
                 data-tantou="{{ b.担当者 }}"
                 data-memo="{{ b.メモ_手動 }}"
                 data-kikin-date="{{ b.着金日_手動 }}"
-                data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                data-yotei-date="{{ b.入金予定日_手動 }}">
                 <i class="bi bi-pencil-fill"></i> 編集
               </button>
             </td>
