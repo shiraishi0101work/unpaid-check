@@ -1174,8 +1174,9 @@ def debug_billing_raw():
 
 @app.route("/api/clear-data", methods=["POST"])
 def clear_data():
-    if os.path.exists(RESULT_FILE):
-        os.remove(RESULT_FILE)
+    path = os.path.join(_cdir(), "last_result.json")
+    if os.path.exists(path):
+        os.remove(path)
     flash("表示データをクリアしました", "success")
     return redirect(url_for("dashboard"))
 
