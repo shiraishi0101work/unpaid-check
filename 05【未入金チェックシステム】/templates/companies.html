@@ -242,17 +242,40 @@ function escHtml(s) {
 // ===== ログイン設定モーダル =====
 const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
 
+let _currentIsAdmin = false;
+
 function openLoginModal(id, email, isAdmin) {
   document.getElementById('modal-company-id').value = id;
   document.getElementById('modal-email').value = email;
   document.getElementById('modal-company-email-label').textContent = email;
   document.getElementById('modal-pw').value = '';
   document.getElementById('modal-pw-confirm').value = '';
-  const badge = document.getElementById('modal-role-badge');
-  badge.className = 'badge me-1 ' + (isAdmin ? 'bg-danger' : 'bg-secondary');
-  badge.textContent = isAdmin ? '管理者' : '一般';
   document.getElementById('login-modal-result').classList.add('d-none');
+  _currentIsAdmin = isAdmin;
+  updateRoleButtons(isAdmin);
   loginModal.show();
+}
+
+function setRole(isAdmin) {
+  _currentIsAdmin = isAdmin;
+  updateRoleButtons(isAdmin);
+}
+
+function updateRoleButtons(isAdmin) {
+  const adminBtn   = document.getElementById('role-btn-admin');
+  const generalBtn = document.getElementById('role-btn-general');
+  const badge      = document.getElementById('modal-role-badge');
+  if (isAdmin) {
+    adminBtn.className   = 'btn btn-danger btn-sm flex-fill';
+    generalBtn.className = 'btn btn-outline-secondary btn-sm flex-fill';
+    badge.className = 'badge bg-danger me-1';
+    badge.textContent = '管理者';
+  } else {
+    adminBtn.className   = 'btn btn-outline-secondary btn-sm flex-fill';
+    generalBtn.className = 'btn btn-secondary btn-sm flex-fill';
+    badge.className = 'badge bg-secondary me-1';
+    badge.textContent = '一般';
+  }
 }
 
 async function saveLoginSettings() {
