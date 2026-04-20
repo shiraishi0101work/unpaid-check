@@ -108,12 +108,22 @@
 
 {% else %}
 {# 詳細表示 #}
-<div class="d-flex align-items-center gap-3 mb-4">
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
   <h6 class="fw-bold mb-0">{{ detail.year_month }} の確定データ</h6>
+  {% if admin_aggregate and detail._company_name %}
+  <span class="badge rounded-pill" style="background:#7c3aed;font-size:0.8rem">{{ detail._company_name }}</span>
+  {% endif %}
+  {% if admin_aggregate %}
+  <a href="{{ url_for('history_download', year_month=detail.year_month, cid=detail._company_id) }}"
+     class="btn btn-outline-success btn-sm">
+    <i class="bi bi-file-earmark-excel me-1"></i>Excelダウンロード
+  </a>
+  {% else %}
   <a href="{{ url_for('history_download', year_month=detail.year_month) }}"
      class="btn btn-outline-success btn-sm">
     <i class="bi bi-file-earmark-excel me-1"></i>Excelダウンロード
   </a>
+  {% endif %}
   <span class="text-muted small ms-auto">確定日時: {{ detail.confirmed_at[:19].replace('T',' ') }}</span>
 </div>
 
