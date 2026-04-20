@@ -2,125 +2,376 @@
    未入金チェックシステム カスタムCSS
    =================================== */
 
+/* ===== Google Fonts ===== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+/* ===== CSS変数（カラーパレット） ===== */
+:root {
+  --navy:        #1e2d42;
+  --navy-light:  #253650;
+  --accent:      #3b82f6;
+  --accent-soft: #eff6ff;
+  --bg-main:     #f1f5f9;
+  --bg-card:     #ffffff;
+  --border:      #e2e8f0;
+  --text:        #1e293b;
+  --text-muted:  #64748b;
+  --sidebar-w:   248px;
+
+  /* ステータスカラー */
+  --c-danger:    #ef4444;
+  --c-warning:   #f59e0b;
+  --c-success:   #22c55e;
+  --c-info:      #06b6d4;
+  --c-secondary: #94a3b8;
+  --c-purple:    #8b5cf6;
+}
+
+/* ===== ベース ===== */
 html, body {
   height: 100%;
-  font-size: 0.9rem;
-  background-color: #f4f6f9;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  font-size: 0.875rem;
+  background-color: var(--bg-main);
+  color: var(--text);
 }
 
-/* ======== レイアウト ======== */
+/* ===== ナビゲーションバー ===== */
+.navbar {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  height: 52px;
+  padding: 0 1.25rem !important;
+}
+
+.navbar-brand {
+  font-size: 0.95rem !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff !important;
+}
+
+.navbar .btn-outline-light {
+  border-color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.navbar .btn-outline-light:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.5);
+  color: #fff;
+}
+
+.navbar .btn-outline-warning {
+  border-color: #fbbf24;
+  color: #fbbf24;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.navbar .btn-outline-warning:hover {
+  background: rgba(251,191,36,0.15);
+  color: #fde68a;
+}
+
+/* ===== レイアウト ===== */
 .d-flex.flex-grow-1 {
-  height: calc(100vh - 48px); /* navbar高さを引く */
+  height: calc(100vh - 52px);
 }
 
+/* ===== サイドバー ===== */
 aside.sidebar {
-  background: #fff;
-  border-right: 1px solid #dee2e6;
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding-bottom: 1rem;
+  overflow-y: auto;
 }
 
 main {
   overflow-y: auto;
+  background: var(--bg-main);
 }
 
-/* ======== サイドバー部品 ======== */
+/* --- サイドバー部品 --- */
 .sidebar-section {
-  padding: 0.75rem 0.75rem 0.25rem;
+  padding: 0.75rem 0.85rem 0.35rem;
 }
 
 .sidebar-label {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6c757d;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
+  padding-left: 0.1rem;
 }
 
 .sidebar-sublabel {
   font-size: 0.72rem;
-  color: #6c757d;
+  color: var(--text-muted);
   margin-bottom: 0.2rem;
   display: block;
 }
 
 .sidebar-item {
-  padding: 0.25rem 0;
+  padding: 0.2rem 0;
 }
 
 .sidebar-divider {
-  margin: 0.25rem 0.75rem;
-  border-color: #e9ecef;
+  margin: 0.4rem 0.85rem;
+  border-color: var(--border);
+  opacity: 1;
 }
 
 .sidebar-stat-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  padding: 0.38rem 0.6rem;
+  border-radius: 8px;
   margin-bottom: 2px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.12s;
 }
-
 .sidebar-stat-item:hover {
-  background: #f8f9fa;
+  background: var(--accent-soft);
+}
+.sidebar-stat-item:hover .small {
+  color: var(--accent) !important;
 }
 
-/* 極小ボタン */
-.btn-xs {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.4rem;
-  line-height: 1.4;
-  border-radius: 4px;
-}
-
-/* ======== サマリーカード ======== */
+/* ===== カード共通 ===== */
 .card {
-  border-width: 1.5px;
-  transition: transform 0.15s;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04) !important;
+  transition: box-shadow 0.18s, transform 0.18s;
 }
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.11) !important;
 }
 
-/* ======== テーブル ======== */
+/* サマリーカードの左ボーダーアクセント */
+.card.border-danger  { border-left: 4px solid var(--c-danger)    !important; }
+.card.border-warning { border-left: 4px solid var(--c-warning)   !important; }
+.card.border-success { border-left: 4px solid var(--c-success)   !important; }
+.card.border-info    { border-left: 4px solid var(--c-info)      !important; }
+.card.border-primary { border-left: 4px solid var(--accent)      !important; }
+.card.border-secondary{ border-left: 4px solid var(--c-secondary)!important; }
+
+/* サマリーカード背景 */
+.card.border-danger  .card-body { background: linear-gradient(135deg, #fff 60%, #fff5f5); border-radius: 10px; }
+.card.border-warning .card-body { background: linear-gradient(135deg, #fff 60%, #fffbeb); border-radius: 10px; }
+.card.border-success .card-body { background: linear-gradient(135deg, #fff 60%, #f0fdf4); border-radius: 10px; }
+.card.border-info    .card-body { background: linear-gradient(135deg, #fff 60%, #ecfeff); border-radius: 10px; }
+
+/* カードヘッダー */
+.card-header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+/* ===== テーブル ===== */
+.table {
+  font-size: 0.825rem;
+  margin-bottom: 0;
+}
 .table th {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   white-space: nowrap;
   vertical-align: middle;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border) !important;
 }
 .table td {
   vertical-align: middle;
+  border-color: var(--border);
 }
+.table tbody tr {
+  transition: background 0.1s;
+}
+.table-hover tbody tr:hover {
+  background-color: #f8faff !important;
+}
+
+/* テーブルスクロール */
 .table-responsive {
   max-height: 480px;
   overflow-y: auto;
+  border-radius: 0 0 8px 8px;
 }
 .table thead th {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
+  background: inherit;
 }
 
-/* ======== タブ ======== */
+/* テーブルヘッダー色を柔らかく */
+.table-danger  thead { background-color: #fef2f2 !important; color: #991b1b; }
+.table-warning thead { background-color: #fffbeb !important; color: #92400e; }
+.table-success thead { background-color: #f0fdf4 !important; color: #166534; }
+.table-info    thead { background-color: #ecfeff !important; color: #164e63; }
+.table-secondary thead { background-color: #f8fafc !important; color: #475569; }
+.table-light   thead { background-color: #f8fafc !important; color: #334155; }
+
+/* thead の th が th要素で指定された場合 */
+.table-danger  th { background-color: #fef2f2 !important; }
+.table-warning th { background-color: #fffbeb !important; }
+.table-success th { background-color: #f0fdf4 !important; }
+.table-info    th { background-color: #ecfeff !important; }
+.table-secondary th { background-color: #f8fafc !important; }
+.table-light   th { background-color: #f8fafc !important; }
+.table-primary th  { background-color: var(--accent-soft) !important; color: #1e40af; }
+
+/* tfoot */
+.table tfoot td {
+  background: #f8fafc !important;
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-top: 2px solid var(--border) !important;
+}
+
+/* ===== タブ ===== */
+.nav-tabs {
+  border-bottom: 2px solid var(--border);
+}
 .nav-tabs .nav-link {
-  font-size: 0.82rem;
-  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.45rem 0.85rem;
+  color: var(--text-muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--text);
+  border-bottom-color: var(--border);
+  background: transparent;
 }
 .nav-tabs .nav-link.active {
-  font-weight: 600;
+  color: var(--accent);
+  font-weight: 700;
+  border-bottom: 2px solid var(--accent);
+  background: transparent;
 }
 
-/* ======== カラー ======== */
-.text-purple { color: #7030A0 !important; }
-.border-purple { border-color: #7030A0 !important; }
+.tab-content {
+  border: 1px solid var(--border) !important;
+  border-top: none !important;
+  border-radius: 0 0 10px 10px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+}
 
-/* ======== その他 ======== */
-.progress { background-color: #dee2e6; }
-.navbar-brand { font-size: 1rem; }
-.alert { font-size: 0.85rem; }
+/* ===== バッジ ===== */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ===== フォームコントロール ===== */
+.form-control, .form-select {
+  border-color: var(--border);
+  border-radius: 7px;
+  font-size: 0.825rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* ===== ボタン ===== */
+.btn {
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+.btn-xs {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  line-height: 1.4;
+  border-radius: 5px;
+}
+
+/* ===== モーダル ===== */
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+}
+.modal-footer {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+}
+
+/* ===== アラート ===== */
+.alert {
+  font-size: 0.82rem;
+  border-radius: 8px;
+  border: none;
+  padding: 0.6rem 0.9rem;
+}
+.alert-info    { background: #eff6ff; color: #1e40af; }
+.alert-warning { background: #fffbeb; color: #92400e; }
+.alert-danger  { background: #fef2f2; color: #991b1b; }
+.alert-success { background: #f0fdf4; color: #166534; }
+.alert-secondary { background: #f8fafc; color: #475569; }
+
+/* ===== プログレスバー ===== */
+.progress {
+  background-color: var(--border);
+  border-radius: 99px;
+}
+
+/* ===== ユーティリティ ===== */
+.text-purple   { color: var(--c-purple) !important; }
+.border-purple { border-color: var(--c-purple) !important; }
+.navbar-brand  { font-size: 1rem; }
+
+/* ===== ナビクロック ===== */
+#nav-clock {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  font-feature-settings: 'tnum';
+}
+
+/* ===== 年度ナビゲーション ===== */
+.d-flex.align-items-center.justify-content-between.mb-4 h5 {
+  font-size: 1.1rem;
+}
+
+/* ===== テキスト系 ===== */
+.fw-semibold { font-weight: 600; }
+.small { font-size: 0.78rem; }
