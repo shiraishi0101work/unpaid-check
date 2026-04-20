@@ -549,25 +549,25 @@ def _update_status(**kwargs):
         _status.update(kwargs)
 
 def load_deleted_drafts() -> set:
-    """下書きとして削除済みの請求書IDセットを返す"""
-    if not os.path.exists(DELETED_DRAFTS_FILE):
+    path = os.path.join(_cdir(), "deleted_drafts.json")
+    if not os.path.exists(path):
         return set()
-    with open(DELETED_DRAFTS_FILE, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return set(json.load(f))
 
 def save_deleted_drafts(ids: set):
-    with open(DELETED_DRAFTS_FILE, "w", encoding="utf-8") as f:
+    with open(os.path.join(_cdir(), "deleted_drafts.json"), "w", encoding="utf-8") as f:
         json.dump(list(ids), f, ensure_ascii=False)
 
 def load_deleted_seikyu() -> set:
-    """未請求扱いとして除外された請求書IDセットを返す"""
-    if not os.path.exists(DELETED_SEIKYU_FILE):
+    path = os.path.join(_cdir(), "deleted_seikyu.json")
+    if not os.path.exists(path):
         return set()
-    with open(DELETED_SEIKYU_FILE, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return set(json.load(f))
 
 def save_deleted_seikyu(ids: set):
-    with open(DELETED_SEIKYU_FILE, "w", encoding="utf-8") as f:
+    with open(os.path.join(_cdir(), "deleted_seikyu.json"), "w", encoding="utf-8") as f:
         json.dump(list(ids), f, ensure_ascii=False)
 
 def _is_delivered(b: dict) -> bool:
