@@ -1228,8 +1228,9 @@ def test_connection():
 @app.route("/api/debug-check")
 def debug_check():
     try:
-        token = auth.get_access_token("invoice", get_company_id())
-        billings = get_all_billings()
+        cid = get_company_id()
+        token = auth.get_access_token("invoice", cid)
+        billings = get_all_billings(company_id=cid)
         from collections import Counter
         status_count = Counter(b["入金状態"] for b in billings)
         return jsonify({
