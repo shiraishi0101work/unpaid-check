@@ -202,10 +202,11 @@ def _build_history_snapshot(year_month: str) -> dict | None:
         for b in lst:
             bid = b.get("請求書ID", "")
             m = meta.get(bid, {})
-            b["担当者"]        = m.get("担当者", b.get("担当者", ""))
-            b["メモ_手動"]     = m.get("メモ", b.get("メモ_手動", ""))
-            b["着金日_手動"]   = m.get("着金日_手動", b.get("着金日_手動", ""))
-            b["着金金額_手動"] = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+            b["担当者"]          = m.get("担当者", b.get("担当者", ""))
+            b["メモ_手動"]       = m.get("メモ", b.get("メモ_手動", ""))
+            b["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動", ""))
+            b["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
+            b["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
 
     seikyu_raw   = result.get("seikyu_kakunin", [])
     seikyu_paid  = [b for b in seikyu_raw if meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
