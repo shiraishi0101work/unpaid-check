@@ -696,9 +696,9 @@ def _is_draft_invoice(b: dict) -> bool:
 
 def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, company_id=None):
     """MF請求書ステータス＋手動確認のみで未入金を判定する（MF会計照合なし）"""
-    # スレッド内でsessionが使えないため company_id を引数で受け取る
+    # スレッドローカルに会社IDをセット（sessionはスレッド内で使えないため）
     if company_id:
-        session["company_id"] = company_id
+        _thread_local.company_id = company_id
     try:
         _update_status(running=True, error=None, progress=5, message="請求書データを取得中...")
         try:
