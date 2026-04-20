@@ -29,9 +29,15 @@
       <i class="bi bi-book me-1"></i>チェックルール
     </a>
     <span class="text-white-50 small" id="nav-clock"></span>
+    <span class="text-white-50 small"><i class="bi bi-person-circle me-1"></i>{{ session.get('email', '') }}</span>
     <a href="/settings" class="btn btn-outline-light btn-sm py-0">
       <i class="bi bi-gear me-1"></i>設定
     </a>
+    <form method="POST" action="/logout" class="m-0">
+      <button type="submit" class="btn btn-outline-danger btn-sm py-0">
+        <i class="bi bi-box-arrow-right me-1"></i>ログアウト
+      </button>
+    </form>
   </div>
 </nav>
 
