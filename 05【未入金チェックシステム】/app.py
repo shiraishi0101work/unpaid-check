@@ -1044,7 +1044,7 @@ def debug_check():
 def oauth_start(service_name):
     if service_name != "invoice":
         return "不正なサービス名", 400
-    return redirect(auth.get_auth_url(service_name))
+    return redirect(auth.get_auth_url(service_name, get_company_id()))
 
 
 @app.route("/oauth/callback/<service_name>")
