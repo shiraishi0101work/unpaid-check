@@ -117,11 +117,11 @@ def _refresh(service_name: str, token_data: dict, company_id: str = "") -> dict:
 # Webモード用: app.pyから呼び出す
 # ========================================
 
-def get_auth_url(service_name: str) -> str:
+def get_auth_url(service_name: str, company_id: str = "") -> str:
     """OAuthの認可URLを生成して返す（stateはセッション管理用に保持）"""
     svc   = _svc(service_name)
     state = secrets.token_urlsafe(16)
-    _pending_states[state] = service_name
+    _pending_states[state] = (service_name, company_id)
 
     params = {
         "response_type": "code",
@@ -134,13 +134,17 @@ def get_auth_url(service_name: str) -> str:
     return svc["auth_url"] + "?" + urlencode(params)
 
 
-def handle_callback(service_name: str, code: str, state: str) -> bool:
+def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str]:
     """
     OAuthコールバックを処理してトークンを保存する
-    Returns: 成功したらTrue
+    Returns: (成功したらTrue, company_id)
     """
-    if _pending_states.pop(state, None) != service_name:
-        return False  # stateが一致しない（不正リクエスト）
+    entry = _pending_states.pop(state, None)
+    if entry is None:
+        return False, ""
+    stored_service, company_id = entry
+    if stored_service != service_name:
+        return False, ""
 
     svc     = _svc(service_name)
     headers = _basic_auth_header(svc["client_id"], svc["client_secret"])
@@ -150,26 +154,26 @@ def handle_callback(service_name: str, code: str, state: str) -> bool:
         "redirect_uri":  svc["redirect_uri"],
     })
     resp.raise_for_status()
-    save_token(service_name, resp.json())
-    return True
+    save_token(service_name, resp.json(), company_id)
+    return True, company_id
 
 
-def is_authenticated(service_name: str) -> bool:
+def is_authenticated(service_name: str, company_id: str = "") -> bool:
     """トークンが存在し有効（またはリフレッシュ可能）かを確認"""
-    token_data = _load_token(service_name)
+    token_data = _load_token(service_name, company_id)
     if token_data is None:
         return False
     if _is_expired(token_data):
         try:
-            _refresh(service_name, token_data)
+            _refresh(service_name, token_data, company_id)
         except Exception:
             return False
     return True
 
 
-def revoke_token(service_name: str):
+def revoke_token(service_name: str, company_id: str = ""):
     """トークンファイルを削除（ログアウト）"""
-    path = _token_path(service_name)
+    path = _token_path(service_name, company_id)
     if os.path.exists(path):
         os.remove(path)
 
@@ -178,14 +182,14 @@ def revoke_token(service_name: str):
 # 共通: APIクライアントから呼び出す
 # ========================================
 
-def get_access_token(service_name: str) -> str:
+def get_access_token(service_name: str, company_id: str = "") -> str:
     """
     有効なアクセストークンを返す。
     Webアプリ内では事前にis_authenticated()で確認してから呼ぶこと。
     """
-    token_data = _load_token(service_name)
+    token_data = _load_token(service_name, company_id)
     if token_data is None:
         raise RuntimeError(f"{service_name} が未認証です。先にOAuth認証を行ってください。")
     if _is_expired(token_data):
-        token_data = _refresh(service_name, token_data)
+        token_data = _refresh(service_name, token_data, company_id)
     return token_data["access_token"]
