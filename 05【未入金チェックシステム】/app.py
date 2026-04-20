@@ -47,22 +47,97 @@ def _hdir(cid: str = None) -> str:
     return d
 
 # ========================================
-# 認証管理
+# 認証管理（マルチテナント）
 # ========================================
 
-def load_auth() -> dict | None:
+def _load_auth_data() -> dict:
+    """auth.json を読み込む。旧形式なら自動マイグレーション。"""
     if not os.path.exists(AUTH_FILE):
-        return None
+        return {"companies": []}
     with open(AUTH_FILE, encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    # 旧形式（email直接）→ 新形式へ移行
+    if "email" in data and "companies" not in data:
+        data = _migrate_auth(data)
+        _save_auth_data(data)
+    return data
 
-def save_auth(email: str, password: str):
-    data = {
-        "email":         email.strip().lower(),
-        "password_hash": generate_password_hash(password),
-    }
+def _save_auth_data(data: dict):
     with open(AUTH_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+def _migrate_auth(old: dict) -> dict:
+    """旧シングルテナント形式を新形式に移行し、データファイルもコピーする"""
+    import shutil, uuid
+    cid = "c_main"
+    new = {
+        "companies": [{
+            "id":            cid,
+            "email":         old["email"],
+            "password_hash": old["password_hash"],
+            "is_admin":      True,
+            "created_at":    datetime.now().isoformat(),
+        }]
+    }
+    # データファイルをサブディレクトリへコピー
+    company_dir = os.path.join(DATA_DIR, cid)
+    os.makedirs(company_dir, exist_ok=True)
+    for fname in ["last_result.json", "settings.json", "invoice_meta.json",
+                  "company_tantou.json", "deleted_drafts.json", "deleted_seikyu.json"]:
+        src = os.path.join(DATA_DIR, fname)
+        dst = os.path.join(company_dir, fname)
+        if os.path.exists(src) and not os.path.exists(dst):
+            shutil.copy2(src, dst)
+    src_hist = os.path.join(DATA_DIR, "history")
+    dst_hist = os.path.join(company_dir, "history")
+    if os.path.exists(src_hist) and not os.path.exists(dst_hist):
+        shutil.copytree(src_hist, dst_hist)
+    # トークンもコピー
+    tokens_dir = os.path.join(os.path.dirname(__file__), "tokens")
+    comp_tok_dir = os.path.join(tokens_dir, cid)
+    os.makedirs(comp_tok_dir, exist_ok=True)
+    for fname in ["token_invoice.json"]:
+        src = os.path.join(tokens_dir, fname)
+        dst = os.path.join(comp_tok_dir, fname)
+        if os.path.exists(src) and not os.path.exists(dst):
+            shutil.copy2(src, dst)
+    return new
+
+def _find_company_by_email(email: str) -> dict | None:
+    data = _load_auth_data()
+    for c in data.get("companies", []):
+        if c.get("email", "").lower() == email.strip().lower():
+            return c
+    return None
+
+def _find_company_by_id(cid: str) -> dict | None:
+    data = _load_auth_data()
+    for c in data.get("companies", []):
+        if c.get("id") == cid:
+            return c
+    return None
+
+def _create_company_account(email: str, password: str, is_admin: bool = False) -> dict:
+    import uuid
+    cid = "c_" + uuid.uuid4().hex[:8]
+    company = {
+        "id":            cid,
+        "email":         email.strip().lower(),
+        "password_hash": generate_password_hash(password),
+        "is_admin":      is_admin,
+        "created_at":    datetime.now().isoformat(),
+    }
+    data = _load_auth_data()
+    data["companies"].append(company)
+    _save_auth_data(data)
+    os.makedirs(_cdir(cid), exist_ok=True)
+    os.makedirs(_hdir(cid), exist_ok=True)
+    return company
+
+# 後方互換（settings_page が load_auth() を呼んでいるため）
+def load_auth() -> dict | None:
+    cid = get_company_id()
+    return _find_company_by_id(cid)
 
 def login_required(f):
     @wraps(f)
@@ -75,35 +150,43 @@ def login_required(f):
 @app.context_processor
 def inject_company_name():
     s = load_settings()
-    return {"company_name": s.get("company_name", "")}
+    return {
+        "company_name": s.get("company_name", ""),
+        "is_admin":     session.get("is_admin", False),
+    }
 
 @app.before_request
 def check_auth():
     public = ("/login", "/setup", "/static/")
     if not any(request.path.startswith(p) for p in public):
         if not session.get("logged_in"):
-            auth_data = load_auth()
-            if auth_data is None:
-                # 未設定 → セットアップへ
+            data = _load_auth_data()
+            if not data.get("companies"):
                 if request.path != "/setup":
                     return redirect(url_for("setup"))
             else:
                 return redirect(url_for("login", next=request.path))
+        # 管理者専用ページ
+        if request.path.startswith("/admin") and not session.get("is_admin"):
+            return redirect(url_for("dashboard"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("logged_in"):
         return redirect(url_for("dashboard"))
-    auth_data = load_auth()
-    if auth_data is None:
+    data = _load_auth_data()
+    if not data.get("companies"):
         return redirect(url_for("setup"))
     error = None
     if request.method == "POST":
         email    = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        if email == auth_data["email"] and check_password_hash(auth_data["password_hash"], password):
-            session["logged_in"] = True
-            session["email"]     = email
+        company  = _find_company_by_email(email)
+        if company and check_password_hash(company["password_hash"], password):
+            session["logged_in"]  = True
+            session["email"]      = email
+            session["company_id"] = company["id"]
+            session["is_admin"]   = company.get("is_admin", False)
             next_url = request.form.get("next") or url_for("dashboard")
             return redirect(next_url)
         error = "メールアドレスまたはパスワードが違います"
@@ -116,7 +199,8 @@ def logout():
 
 @app.route("/setup", methods=["GET", "POST"])
 def setup():
-    if load_auth() is not None and not session.get("logged_in"):
+    data = _load_auth_data()
+    if data.get("companies") and not session.get("logged_in"):
         return redirect(url_for("login"))
     error = None
     if request.method == "POST":
@@ -130,12 +214,56 @@ def setup():
         elif password != confirm:
             error = "パスワードが一致しません"
         else:
-            save_auth(email, password)
-            session["logged_in"] = True
-            session["email"]     = email.lower()
+            company = _create_company_account(email, password, is_admin=True)
+            session["logged_in"]  = True
+            session["email"]      = email.lower()
+            session["company_id"] = company["id"]
+            session["is_admin"]   = True
             flash("アカウントを設定しました", "success")
             return redirect(url_for("dashboard"))
     return render_template("login.html", setup_mode=True, error=error, next="")
+
+# ========================================
+# 管理者：会社アカウント管理
+# ========================================
+
+@app.route("/admin/companies", methods=["GET"])
+def admin_companies():
+    data = _load_auth_data()
+    companies = data.get("companies", [])
+    return render_template("companies.html", companies=companies)
+
+@app.route("/api/admin/create-company", methods=["POST"])
+def api_create_company():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    req_data = request.get_json() or {}
+    email    = req_data.get("email", "").strip()
+    password = req_data.get("password", "")
+    confirm  = req_data.get("confirm", "")
+    if not email or "@" not in email:
+        return jsonify({"error": "有効なメールアドレスを入力してください"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "パスワードは6文字以上にしてください"}), 400
+    if password != confirm:
+        return jsonify({"error": "パスワードが一致しません"}), 400
+    if _find_company_by_email(email):
+        return jsonify({"error": "このメールアドレスはすでに登録されています"}), 400
+    company = _create_company_account(email, password, is_admin=False)
+    return jsonify({"ok": True, "id": company["id"], "email": company["email"]})
+
+@app.route("/api/admin/delete-company", methods=["POST"])
+def api_delete_company():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    req_data = request.get_json() or {}
+    cid = req_data.get("id", "")
+    if cid == session.get("company_id"):
+        return jsonify({"error": "自分自身のアカウントは削除できません"}), 400
+    data = _load_auth_data()
+    data["companies"] = [c for c in data["companies"] if c["id"] != cid]
+    _save_auth_data(data)
+    return jsonify({"ok": True})
 
 # ========================================
 # 設定管理
