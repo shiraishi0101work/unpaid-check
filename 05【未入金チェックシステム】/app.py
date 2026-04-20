@@ -1401,6 +1401,49 @@ def clear_data():
 # 月次履歴 API・ページ
 # ========================================
 
+def _is_admin_aggregate() -> bool:
+    """管理者が自社（集約ビュー）を見ているか判定"""
+    own_cid = session.get("company_id", "")
+    return bool(session.get("is_admin")) and (get_company_id() == own_cid)
+
+
+def _load_all_histories() -> list:
+    """全一般会社の月次履歴を集約して返す（管理者集約ビュー用）"""
+    auth_data = _load_auth_data()
+    all_hist = []
+    for c in auth_data.get("companies", []):
+        if c.get("is_admin"):
+            continue
+        cid = c["id"]
+        # 会社名
+        settings_path = os.path.join(DATA_DIR, cid, "settings.json")
+        comp_name = c["email"]
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, encoding="utf-8") as f:
+                    s = json.load(f)
+                comp_name = s.get("company_name") or c["email"]
+            except Exception:
+                pass
+        hd = os.path.join(DATA_DIR, cid, "history")
+        if not os.path.exists(hd):
+            continue
+        for fname in sorted(os.listdir(hd), reverse=True):
+            if not fname.endswith(".json"):
+                continue
+            try:
+                with open(os.path.join(hd, fname), encoding="utf-8") as fp:
+                    h = json.load(fp)
+                h["_company_name"] = comp_name
+                h["_company_id"]   = cid
+                all_hist.append(h)
+            except Exception:
+                pass
+    # 年月・会社名でソート
+    all_hist.sort(key=lambda x: (x["year_month"], x["_company_name"]), reverse=True)
+    return all_hist
+
+
 @app.route("/api/history/confirm", methods=["POST"])
 def history_confirm():
     data = request.get_json() or {}
@@ -1426,39 +1469,94 @@ def history_dismiss_popup():
 
 @app.route("/history")
 def history_list_page():
+    settings = load_settings()
+    if _is_admin_aggregate():
+        histories = _load_all_histories()
+        return render_template(
+            "history.html",
+            histories=histories,
+            detail=None,
+            selected_ym=None,
+            admin_aggregate=True,
+            auth_invoice=False,
+            settings=settings,
+        )
     histories = load_history_list()
-    settings  = load_settings()
     return render_template(
         "history.html",
         histories=histories,
         detail=None,
         selected_ym=None,
+        admin_aggregate=False,
         auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=settings,
     )
 
 @app.route("/history/<year_month>")
 def history_detail(year_month):
+    settings = load_settings()
+    if _is_admin_aggregate():
+        # 管理者集約：会社IDをクエリパラメータから取得
+        cid = request.args.get("cid", "")
+        if cid:
+            path = os.path.join(DATA_DIR, cid, "history", f"{year_month}.json")
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    detail = json.load(f)
+                # 会社名を付与
+                c = _find_company_by_id(cid)
+                sp = os.path.join(DATA_DIR, cid, "settings.json")
+                comp_name = c["email"] if c else cid
+                if os.path.exists(sp):
+                    with open(sp, encoding="utf-8") as f:
+                        comp_name = json.load(f).get("company_name") or comp_name
+                detail["_company_name"] = comp_name
+                detail["_company_id"]   = cid
+            else:
+                flash(f"{year_month} の履歴が見つかりません", "error")
+                return redirect(url_for("history_list_page"))
+        else:
+            flash("会社を指定してください", "error")
+            return redirect(url_for("history_list_page"))
+        return render_template(
+            "history.html",
+            histories=_load_all_histories(),
+            detail=detail,
+            selected_ym=year_month,
+            admin_aggregate=True,
+            auth_invoice=False,
+            settings=settings,
+        )
     detail = load_history(year_month)
     if not detail:
         flash(f"{year_month} の履歴が見つかりません", "error")
         return redirect(url_for("history_list_page"))
-    settings = load_settings()
     return render_template(
         "history.html",
         histories=load_history_list(),
         detail=detail,
         selected_ym=year_month,
+        admin_aggregate=False,
         auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=settings,
     )
 
 @app.route("/history/<year_month>/download")
 def history_download(year_month):
-    detail = load_history(year_month)
-    if not detail:
-        flash(f"{year_month} の履歴が見つかりません", "error")
-        return redirect(url_for("history_list_page"))
+    if _is_admin_aggregate():
+        cid = request.args.get("cid", "")
+        path_json = os.path.join(DATA_DIR, cid, "history", f"{year_month}.json") if cid else None
+        if path_json and os.path.exists(path_json):
+            with open(path_json, encoding="utf-8") as f:
+                detail = json.load(f)
+        else:
+            flash(f"{year_month} の履歴が見つかりません", "error")
+            return redirect(url_for("history_list_page"))
+    else:
+        detail = load_history(year_month)
+        if not detail:
+            flash(f"{year_month} の履歴が見つかりません", "error")
+            return redirect(url_for("history_list_page"))
     path = _generate_history_excel(detail)
     return send_file(path, as_attachment=True)
 
