@@ -150,9 +150,15 @@ def login_required(f):
 @app.context_processor
 def inject_company_name():
     s = load_settings()
+    # セッションに is_admin がない場合は auth データから補完
+    is_admin = session.get("is_admin")
+    if is_admin is None and session.get("company_id"):
+        c = _find_company_by_id(session["company_id"])
+        is_admin = c.get("is_admin", False) if c else False
+        session["is_admin"] = is_admin
     return {
         "company_name": s.get("company_name", ""),
-        "is_admin":     session.get("is_admin", False),
+        "is_admin":     bool(is_admin),
     }
 
 @app.before_request
