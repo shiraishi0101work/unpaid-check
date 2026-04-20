@@ -4,20 +4,23 @@
 <div class="sidebar-section">
   <div class="sidebar-label">ページ内ジャンプ</div>
   <div class="sidebar-item">
-    <a href="#section-status"   class="sidebar-nav-link text-decoration-none d-block small py-1">
-      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>入金ステータス定義
+    <a href="#section-overview"  class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>概要・データソース
     </a>
-    <a href="#section-match"    class="sidebar-nav-link text-decoration-none d-block small py-1">
-      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>照合ロジック（3パス）
+    <a href="#section-classify"  class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>分類ルール（タブ対応表）
     </a>
-    <a href="#section-name"     class="sidebar-nav-link text-decoration-none d-block small py-1">
-      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>取引先名の照合ルール
+    <a href="#section-status"    class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>MF入金ステータス定義
     </a>
-    <a href="#section-params"   class="sidebar-nav-link text-decoration-none d-block small py-1">
-      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>照合パラメータ
+    <a href="#section-delivery"  class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>送付済み判定ルール
     </a>
-    <a href="#section-flow"     class="sidebar-nav-link text-decoration-none d-block small py-1">
-      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>全体フロー
+    <a href="#section-flow"      class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>処理フロー
+    </a>
+    <a href="#section-exclude"   class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>除外・非表示ルール
     </a>
   </div>
 </div>
@@ -36,251 +39,240 @@
 {% block content %}
 <div class="d-flex align-items-center gap-2 mb-4">
   <i class="bi bi-book fs-4 text-primary"></i>
-  <h5 class="fw-bold mb-0">入金チェックルール表</h5>
+  <h5 class="fw-bold mb-0">未入金チェックルール表</h5>
   <span class="badge bg-secondary ms-1">参照用</span>
 </div>
 
-{# ===== 1. 入金ステータス定義 ===== #}
-<div id="section-status" class="card shadow-sm mb-4">
+{# ===== 1. 概要・データソース ===== #}
+<div id="section-overview" class="card shadow-sm mb-4">
   <div class="card-header fw-bold">
-    <i class="bi bi-tags me-2 text-primary"></i>1. 入金ステータス定義
+    <i class="bi bi-database me-2 text-primary"></i>1. 概要・データソース
   </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th style="width:160px">ステータス</th>
-            <th style="width:130px">区分</th>
-            <th>判定条件</th>
-            <th style="width:130px">表示箇所</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="badge bg-danger fs-6 px-2">支払期限超過</span></td>
-            <td><span class="text-danger fw-semibold">未入金（超過）</span></td>
-            <td>MFクラウド請求書ステータスが未払い <strong>かつ</strong> 支払期限が今日より前</td>
-            <td>ダッシュボード<br><span class="text-muted small">「支払期限超過」タブ</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-warning text-dark fs-6 px-2">期日前</span></td>
-            <td><span class="text-warning fw-semibold">未入金（期日前）</span></td>
-            <td>MFクラウド請求書ステータスが未払い <strong>かつ</strong> 支払期限が今日以降（または未設定）</td>
-            <td>ダッシュボード<br><span class="text-muted small">「期日前」タブ</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-success fs-6 px-2">完全入金</span></td>
-            <td><span class="text-success fw-semibold">入金確認済み</span></td>
-            <td>MF会計の入金データと照合成功（金額・取引先名・日付が一致）</td>
-            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-success fs-6 px-2">完全入金（金額一致）</span></td>
-            <td><span class="text-success fw-semibold">入金確認済み</span></td>
-            <td>MF会計の取引先名が空 かつ 金額・日付のみで一致（パス3照合）</td>
-            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-warning text-dark fs-6 px-2">差額あり（不足）</span></td>
-            <td><span class="text-warning fw-semibold">差額あり</span></td>
-            <td>取引先名・日付は一致したが、入金金額 ＜ 請求金額（振込手数料差引など）</td>
-            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ内</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-warning text-dark fs-6 px-2">差額あり（過払い）</span></td>
-            <td><span class="text-warning fw-semibold">差額あり</span></td>
-            <td>取引先名・日付は一致したが、入金金額 ＞ 請求金額（合算入金の可能性）</td>
-            <td>ダッシュボード<br><span class="text-muted small">「入金確認済み」タブ内</span></td>
-          </tr>
-          <tr>
-            <td><span class="badge bg-secondary fs-6 px-2">照合不能</span></td>
-            <td><span class="text-secondary fw-semibold">要確認</span></td>
-            <td>MF会計に入金データが存在するが、どの請求書とも照合できなかった</td>
-            <td>ダッシュボード<br><span class="text-muted small">「照合不能」タブ</span></td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      このシステムは <strong>MFクラウド請求書のステータス</strong> を軸に未入金を判定します。
+      MFクラウド会計との連携は任意です（入金履歴ページで別途照合）。
+    </p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card border-primary h-100">
+          <div class="card-body py-2 px-3">
+            <div class="fw-semibold small text-primary mb-1">
+              <i class="bi bi-file-text me-1"></i>MFクラウド請求書（必須）
+            </div>
+            <ul class="small text-muted mb-0 ps-3">
+              <li>全請求書の入金ステータスを取得</li>
+              <li>支払期限・請求日・請求金額・取引先名</li>
+              <li>DL済み・メール送付・郵送の送付状況</li>
+              <li>請求金額が <strong>0円の請求書は除外</strong>（テスト用）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-secondary h-100">
+          <div class="card-body py-2 px-3">
+            <div class="fw-semibold small text-secondary mb-1">
+              <i class="bi bi-calculator me-1"></i>システム内データ（補助）
+            </div>
+            <ul class="small text-muted mb-0 ps-3">
+              <li>担当者・メモ（社内用メタデータ）</li>
+              <li>手動着金日・着金金額（手入力）</li>
+              <li>取引先名→担当者の自動割り当てマップ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-{# ===== 2. 照合ロジック ===== #}
-<div id="section-match" class="card shadow-sm mb-4">
+{# ===== 2. 分類ルール ===== #}
+<div id="section-classify" class="card shadow-sm mb-4">
   <div class="card-header fw-bold">
-    <i class="bi bi-diagram-3 me-2 text-primary"></i>2. 照合ロジック（3パス方式）
+    <i class="bi bi-diagram-3 me-2 text-primary"></i>2. 分類ルール（タブ対応表）
   </div>
-  <div class="card-body">
-    <p class="text-muted small mb-3">MFクラウド請求書の未払い請求書と、MFクラウド会計の入金データを以下の順番で照合します。</p>
+  <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-sm table-bordered align-middle mb-0">
         <thead class="table-primary">
           <tr>
-            <th style="width:80px" class="text-center">パス</th>
-            <th>照合条件</th>
-            <th style="width:200px">一致した場合のステータス</th>
-            <th>備考</th>
+            <th style="width:160px">分類名（タブ）</th>
+            <th>判定条件</th>
+            <th style="width:110px" class="text-center">MFステータス</th>
+            <th style="width:100px" class="text-center">支払期限</th>
+            <th style="width:130px" class="text-center">その他条件</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="text-center fw-bold text-primary">パス 1</td>
-            <td>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">金額一致</span>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">取引先名一致</span>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">日付範囲OK</span>
-            </td>
-            <td><span class="badge bg-success">完全入金</span></td>
-            <td class="small text-muted">最優先。3条件すべてが揃った場合のみ確定</td>
-          </tr>
-          <tr>
-            <td class="text-center fw-bold text-warning">パス 2</td>
-            <td>
-              <span class="badge bg-warning-subtle text-warning border border-warning-subtle me-1">取引先名一致</span>
-              <span class="badge bg-warning-subtle text-warning border border-warning-subtle">日付範囲OK</span>
-              <span class="text-muted small ms-1">（金額不問）</span>
-            </td>
-            <td>
-              <span class="badge bg-warning text-dark">差額あり（不足）</span><br>
-              <span class="badge bg-warning text-dark mt-1">差額あり（過払い）</span>
-            </td>
-            <td class="small text-muted">パス1で照合できなかった請求書を対象に再試行。振込手数料差引・一部入金などを検出</td>
-          </tr>
-          <tr>
-            <td class="text-center fw-bold text-secondary">パス 3</td>
-            <td>
-              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-1">金額一致</span>
-              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">日付範囲OK</span>
-              <span class="text-muted small ms-1">（取引先名は空のデータのみ）</span>
-            </td>
-            <td><span class="badge bg-success">完全入金（金額一致）</span></td>
-            <td class="small text-muted">会計仕訳に取引先名が未登録の場合のみ適用</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="alert alert-info py-2 mt-3 small mb-0">
-      <i class="bi bi-info-circle me-1"></i>
-      一度照合された入金データは次のパスの対象から除外されます（重複照合の防止）。
-      すべてのパスで照合できなかった入金データは「照合不能」として記録されます。
-    </div>
-  </div>
-</div>
 
-{# ===== 3. 取引先名の照合ルール ===== #}
-<div id="section-name" class="card shadow-sm mb-4">
-  <div class="card-header fw-bold">
-    <i class="bi bi-building me-2 text-primary"></i>3. 取引先名の照合ルール
-  </div>
-  <div class="card-body">
-    <p class="text-muted small mb-3">取引先名は正規化処理を行った上で部分一致で照合します。</p>
-    <div class="table-responsive mb-3">
-      <table class="table table-sm table-bordered align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th style="width:50px" class="text-center">順</th>
-            <th>処理内容</th>
-            <th>例</th>
+          {# 入金確認済み #}
+          <tr class="table-success">
+            <td><span class="badge bg-success">入金確認済み（MF）</span></td>
+            <td class="small">MF請求書ステータスが「入金済み」</td>
+            <td class="text-center"><code class="small">入金済み</code></td>
+            <td class="text-center text-muted small">—</td>
+            <td class="text-center text-muted small">—</td>
           </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="text-center text-muted">①</td>
-            <td>法人格プレフィックス・サフィックスを除去</td>
-            <td class="small"><code>株式会社〇〇</code> → <code>〇〇</code><br><code>〇〇（株）</code> → <code>〇〇</code></td>
+          <tr class="table-success">
+            <td><span class="badge bg-success">入金確認済み（手動）</span></td>
+            <td class="small">MF未払いだが <strong>手動着金日が入力済み</strong></td>
+            <td class="text-center"><code class="small">未設定 / 未入金</code></td>
+            <td class="text-center text-muted small">—</td>
+            <td class="text-center"><span class="badge bg-info text-dark small">手動着金日あり</span></td>
           </tr>
-          <tr>
-            <td class="text-center text-muted">②</td>
-            <td>振込略称プレフィックスを除去</td>
-            <td class="small"><code>カ)〇〇</code> → <code>〇〇</code><br><code>ゼイ)〇〇</code> → <code>〇〇</code></td>
+
+          <tr><td colspan="5" class="p-0"><div class="bg-light" style="height:4px"></div></td></tr>
+
+          {# 一時保管 #}
+          <tr class="table-warning">
+            <td><span class="badge bg-warning text-dark">一時保管</span></td>
+            <td class="small">期限超過 かつ <strong>社内メモが入力済み</strong>（毎月要確認）</td>
+            <td class="text-center"><code class="small">未設定 / 未入金</code></td>
+            <td class="text-center"><span class="text-danger small fw-semibold">超過</span></td>
+            <td class="text-center"><span class="badge bg-warning text-dark small">メモあり</span></td>
           </tr>
-          <tr>
-            <td class="text-center text-muted">③</td>
-            <td>ひらがな → カタカナ変換</td>
-            <td class="small"><code>いぶき</code> → <code>イブキ</code></td>
+
+          <tr><td colspan="5" class="p-0"><div class="bg-light" style="height:4px"></div></td></tr>
+
+          {# 未収 #}
+          <tr class="table-danger">
+            <td><span class="badge bg-danger">未収</span></td>
+            <td class="small">MFで明示的に「未入金」 かつ 期限超過</td>
+            <td class="text-center"><code class="small text-danger fw-bold">未入金</code></td>
+            <td class="text-center"><span class="text-danger small fw-semibold">超過</span></td>
+            <td class="text-center text-muted small">メモなし</td>
           </tr>
-          <tr>
-            <td class="text-center text-muted">④</td>
-            <td>英字を大文字化 / 全角英数 → 半角</td>
-            <td class="small"><code>ｄｅｌｌａ</code> → <code>DELLA</code></td>
+
+          {# 請求済み確認 #}
+          <tr class="table-warning">
+            <td><span class="badge bg-warning text-dark">請求済みか確認</span></td>
+            <td class="small">ステータス「未設定」で送付済み かつ 期限超過</td>
+            <td class="text-center"><code class="small">未設定</code></td>
+            <td class="text-center"><span class="text-danger small fw-semibold">超過</span></td>
+            <td class="text-center"><span class="badge bg-primary small">送付済み</span></td>
           </tr>
-          <tr>
-            <td class="text-center text-muted">⑤</td>
-            <td>空白・記号・括弧類を除去</td>
-            <td class="small"><code>〇〇 コーポ（株）</code> → <code>〇〇コーポ</code></td>
+
+          {# 下書き（期限超過） #}
+          <tr class="table-secondary">
+            <td><span class="badge bg-secondary">下書き（超過）</span></td>
+            <td class="small">ステータス「未設定」で未送付（下書き状態） かつ 期限超過</td>
+            <td class="text-center"><code class="small">未設定</code></td>
+            <td class="text-center"><span class="text-danger small fw-semibold">超過</span></td>
+            <td class="text-center"><span class="badge bg-secondary small">未送付</span></td>
           </tr>
+
+          <tr><td colspan="5" class="p-0"><div class="bg-light" style="height:4px"></div></td></tr>
+
+          {# 期日前 #}
           <tr>
-            <td class="text-center text-muted">⑥</td>
-            <td>部分一致で比較（A⊂B または B⊂A）</td>
-            <td class="small"><code>イブキ</code> と <code>イブキインテリア</code> → 一致</td>
+            <td><span class="badge bg-warning text-dark">期日前</span></td>
+            <td class="small">MF未払い かつ 支払期限が今日以降（または未設定）</td>
+            <td class="text-center"><code class="small">未設定 / 未入金</code></td>
+            <td class="text-center"><span class="text-success small fw-semibold">期日前 / 未設定</span></td>
+            <td class="text-center text-muted small">手動着金日なし</td>
           </tr>
+
         </tbody>
       </table>
     </div>
-    <div class="card bg-light border-0">
-      <div class="card-body py-2">
-        <p class="fw-semibold small mb-2"><i class="bi bi-lightbulb me-1 text-warning"></i>取引先名が空の場合の照合</p>
-        <ul class="small text-muted mb-0 ps-3">
-          <li>会計仕訳の備考（摘要）テキストを正規化して検索します</li>
-          <li>正規化後の名前が備考に含まれるか確認（最低3文字以上）</li>
-          <li>カタカナ変換後のコア名称が備考に含まれるか確認（最低2文字以上）</li>
-        </ul>
+    <div class="px-3 py-2">
+      <div class="alert alert-info py-2 small mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>一時保管の優先度が最高です。</strong>
+        メモが入力されている超過請求書は、他のタブ（未収・請求済み確認・下書き）には表示されません。
       </div>
     </div>
   </div>
 </div>
 
-{# ===== 4. 照合パラメータ ===== #}
-<div id="section-params" class="card shadow-sm mb-4">
+{# ===== 3. MFステータス定義 ===== #}
+<div id="section-status" class="card shadow-sm mb-4">
   <div class="card-header fw-bold">
-    <i class="bi bi-sliders me-2 text-primary"></i>4. 照合パラメータ
+    <i class="bi bi-tags me-2 text-primary"></i>3. MFクラウド請求書 入金ステータス定義
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>環境変数名</th>
-            <th style="width:140px" class="text-center">現在の設定値</th>
-            <th>意味</th>
-            <th>変更方法</th>
+            <th style="width:130px">ステータス値</th>
+            <th style="width:110px" class="text-center">区分</th>
+            <th>意味・MF側の状態</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><code>MATCH_AMOUNT_TOLERANCE</code></td>
-            <td class="text-center fw-bold">¥{{ "{:,}".format(amount_tolerance) }}</td>
-            <td class="small">金額照合の許容誤差。この範囲内の差額は「金額一致」と判定する</td>
-            <td class="small text-muted">.env ファイルで設定</td>
+            <td><code class="text-success fw-bold">入金済み</code></td>
+            <td class="text-center"><span class="badge bg-success">入金済み</span></td>
+            <td class="small">MFクラウド請求書上で入金登録が完了している</td>
           </tr>
           <tr>
-            <td><code>MATCH_DATE_BEFORE_DAYS</code></td>
-            <td class="text-center fw-bold">{{ date_before_days }}日前まで</td>
-            <td class="small">着金日が請求日より何日 <strong>前</strong> まで許容するか（前払いなど）</td>
-            <td class="small text-muted">.env ファイルで設定</td>
+            <td><code class="text-danger fw-bold">未入金</code></td>
+            <td class="text-center"><span class="badge bg-danger">未入金</span></td>
+            <td class="small">MF側で明示的に「未入金」としてマークされている</td>
           </tr>
           <tr>
-            <td><code>MATCH_DATE_AFTER_DAYS</code></td>
-            <td class="text-center fw-bold">{{ date_after_days }}日後まで</td>
-            <td class="small">着金日が請求日より何日 <strong>後</strong> まで許容するか</td>
-            <td class="small text-muted">.env ファイルで設定</td>
+            <td><code class="text-secondary fw-bold">未設定</code></td>
+            <td class="text-center"><span class="badge bg-secondary">未設定</span></td>
+            <td class="small">入金登録が行われていない（デフォルト状態）。下書き・送付後どちらの可能性もある</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="px-3 pb-3 pt-2">
-      <div class="alert alert-warning py-2 small mb-0">
-        <i class="bi bi-exclamation-triangle me-1"></i>
-        パラメータを変更した場合は、アプリを再起動してから「今すぐ実行」で再照合してください。
-      </div>
+  </div>
+</div>
+
+{# ===== 4. 送付済み判定ルール ===== #}
+<div id="section-delivery" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-send me-2 text-primary"></i>4. 送付済み判定ルール
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      ステータスが「未設定」の請求書を <strong>送付済み</strong> か <strong>下書き（未送付）</strong> か判定するためのルールです。
+      以下のいずれかを満たせば「送付済み」と判定します。
+    </p>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:50px" class="text-center">条件</th>
+            <th>判定根拠</th>
+            <th style="width:160px">MFのフィールド</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center fw-bold text-primary">①</td>
+            <td class="small">PDFダウンロード済み</td>
+            <td class="small"><code>is_downloaded = true</code></td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold text-primary">②</td>
+            <td class="small">メール送付済み（「未送信」以外のメール状態）</td>
+            <td class="small"><code>email_status ≠ 未送信</code></td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold text-primary">③</td>
+            <td class="small">郵送済み（「未郵送」以外の送付状態）</td>
+            <td class="small"><code>posting_status ≠ 未郵送</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert alert-secondary py-2 small mb-0">
+      <i class="bi bi-lightbulb me-1"></i>
+      ①〜③のいずれも満たさない場合は「下書き（未送付）」と判定し、
+      <span class="badge bg-secondary">下書き（超過）</span> タブに表示されます。
     </div>
   </div>
 </div>
 
-{# ===== 5. 全体フロー ===== #}
+{# ===== 5. 処理フロー ===== #}
 <div id="section-flow" class="card shadow-sm mb-4">
   <div class="card-header fw-bold">
-    <i class="bi bi-arrow-right-circle me-2 text-primary"></i>5. 全体フロー
+    <i class="bi bi-arrow-right-circle me-2 text-primary"></i>5. 処理フロー
   </div>
   <div class="card-body">
     <div class="d-flex flex-column gap-2">
@@ -290,7 +282,7 @@
              style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">1</div>
         <div>
           <div class="fw-semibold">MFクラウド請求書から全請求書を取得</div>
-          <div class="text-muted small">発行済みの全件を取得（日付フィルタなし）。ステータスで「未払い」「支払済み」に一次分類。</div>
+          <div class="text-muted small">全件を取得。請求金額0円・指定日付範囲外は除外。</div>
         </div>
       </div>
 
@@ -301,18 +293,7 @@
              style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">2</div>
         <div>
           <div class="fw-semibold">メタデータをマージ</div>
-          <div class="text-muted small">担当者・社内メモ・手動着金日・着金金額をシステム内DBから各請求書に付与。取引先名マップで担当者を自動セット。</div>
-        </div>
-      </div>
-
-      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
-
-      <div class="d-flex align-items-start gap-3">
-        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">3</div>
-        <div>
-          <div class="fw-semibold">MFクラウド会計から入金データを取得（連携済みの場合）</div>
-          <div class="text-muted small">指定期間の入金仕訳を取得。未連携の場合はMF請求書ステータスのみで分類。</div>
+          <div class="text-muted small">担当者・メモ・手動着金日・着金金額をシステム内DBから各請求書に付与。取引先名マップで担当者を自動セット。</div>
         </div>
       </div>
 
@@ -320,21 +301,44 @@
 
       <div class="d-flex align-items-start gap-3">
         <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0"
-             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">4</div>
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">3</div>
         <div>
-          <div class="fw-semibold">3パス照合を実行</div>
-          <div class="text-muted small">上記「照合ロジック」に従って照合。完全入金 / 差額あり / 未入金 / 照合不能 に分類。</div>
+          <div class="fw-semibold">入金済み / 未入金 の一次分類</div>
+          <div class="text-muted small">
+            MFステータスが「入金済み」→ <span class="badge bg-success">入金確認済み（MF）</span><br>
+            未払いで手動着金日あり →  <span class="badge bg-success">入金確認済み（手動）</span><br>
+            未払いで手動着金日なし →  <strong>未入金</strong>（次ステップで細分類）
+          </div>
         </div>
       </div>
 
       <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
 
       <div class="d-flex align-items-start gap-3">
-        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center flex-shrink-0"
+        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0"
+             style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">4</div>
+        <div>
+          <div class="fw-semibold">未入金を期限超過 / 期日前 に分類</div>
+          <div class="text-muted small">
+            支払期限が今日より前 → 期限超過グループ（次ステップでさらに細分類）<br>
+            支払期限が今日以降または未設定 → <span class="badge bg-warning text-dark">期日前</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center text-muted" style="font-size:1.2rem">↓</div>
+
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center flex-shrink-0"
              style="width:32px;height:32px;font-size:0.85rem;font-weight:bold">5</div>
         <div>
-          <div class="fw-semibold">既存結果とマージ</div>
-          <div class="text-muted small">前回の照合結果と統合。入金確認済みデータを誤って「未入金」に戻さないよう保護。新規請求書は追加。</div>
+          <div class="fw-semibold">期限超過グループをさらに4分類</div>
+          <div class="text-muted small">
+            <span class="badge bg-warning text-dark">一時保管</span> ← メモが入力されている（最優先）<br>
+            <span class="badge bg-danger">未収</span> ← MFステータスが「未入金」<br>
+            <span class="badge bg-warning text-dark">請求済みか確認</span> ← MFステータスが「未設定」かつ送付済み<br>
+            <span class="badge bg-secondary">下書き（超過）</span> ← MFステータスが「未設定」かつ未送付
+          </div>
         </div>
       </div>
 
@@ -349,6 +353,53 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+{# ===== 6. 除外・非表示ルール ===== #}
+<div id="section-exclude" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-eye-slash me-2 text-primary"></i>6. 除外・非表示ルール
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:200px">操作</th>
+            <th>対象タブ</th>
+            <th>動作</th>
+            <th style="width:180px">復元方法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="small fw-semibold">「削除」ボタン（下書き）</td>
+            <td><span class="badge bg-secondary">下書き（超過）</span></td>
+            <td class="small">一覧から非表示にする。<code>data/deleted_drafts.json</code> に除外IDを記録。</td>
+            <td class="small text-muted">JSONから対象IDを削除し再実行</td>
+          </tr>
+          <tr>
+            <td class="small fw-semibold">「未請求として除外」ボタン</td>
+            <td><span class="badge bg-warning text-dark">請求済みか確認</span></td>
+            <td class="small">一覧から非表示にする。<code>data/deleted_seikyu.json</code> に除外IDを記録。</td>
+            <td class="small text-muted">JSONから対象IDを削除し再実行</td>
+          </tr>
+          <tr>
+            <td class="small fw-semibold">請求金額 0円</td>
+            <td>全タブ</td>
+            <td class="small">実行時に自動除外（テスト・内部用の無効請求書）</td>
+            <td class="text-muted small">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-3 py-2">
+      <div class="alert alert-warning py-2 small mb-0">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        除外したIDは「今すぐ実行」を行っても復元されません。必要な場合は対応する JSON ファイルを直接編集してください。
+      </div>
     </div>
   </div>
 </div>
