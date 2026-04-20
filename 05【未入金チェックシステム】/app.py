@@ -827,7 +827,7 @@ def invoice_meta(invoice_id):
     if request.method == "POST":
         data = request.get_json() or {}
         meta.setdefault(invoice_id, {})
-        for key in ["担当者", "メモ", "着金日_手動", "着金金額_手動"]:
+        for key in ["担当者", "メモ", "着金日_手動", "着金金額_手動", "入金予定日_手動"]:
             if key in data:
                 meta[invoice_id][key] = data[key]
         save_meta(meta)
