@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section">
+  <div class="sidebar-label">管理メニュー</div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-arrow-left me-1"></i>ダッシュボードへ
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<h5 class="fw-bold mb-4"><i class="bi bi-building me-2"></i>会社アカウント管理</h5>
+
+<div class="row g-4">
+
+  <!-- 登録済み会社一覧 -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold"><i class="bi bi-list-ul me-2"></i>登録済みアカウント</div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">メールアドレス</th>
+              <th>ロール</th>
+              <th>データフォルダ</th>
+              <th>作成日時</th>
+              <th class="text-center" style="width:80px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="company-table-body">
+            {% for c in companies %}
+            <tr id="row-{{ c.id }}">
+              <td class="ps-3 fw-semibold">
+                {{ c.email }}
+                {% if c.id == session.get('company_id') %}
+                  <span class="badge bg-primary ms-1" style="font-size:0.6rem">ログイン中</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.is_admin %}
+                  <span class="badge bg-danger">管理者</span>
+                {% else %}
+                  <span class="badge bg-secondary">一般</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small font-monospace">{{ c.id }}</td>
+              <td class="small text-muted">{{ c.created_at[:10] if c.created_at else '—' }}</td>
+              <td class="text-center">
+                {% if c.id != session.get('company_id') %}
+                <button class="btn btn-outline-danger btn-sm py-0 px-2"
+                        onclick="deleteCompany('{{ c.id }}', '{{ c.email }}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+                {% else %}
+                <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">アカウントがありません</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規アカウント作成 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold"><i class="bi bi-person-plus me-2"></i>新しい会社アカウントを作成</div>
+      <div class="card-body">
+        <div id="create-result" class="d-none mb-3"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">メールアドレス <span class="text-danger">*</span></label>
+          <input type="email" id="new-email" class="form-control" placeholder="company@example.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">パスワード <span class="text-danger">*</span>（6文字以上）</label>
+          <div class="input-group">
+            <input type="password" id="new-pw" class="form-control" placeholder="パスワード">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePw('new-pw', this)">
+              <i class="bi bi-eye-slash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">パスワード（確認）<span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="password" id="new-pw-confirm" class="form-control" placeholder="もう一度入力">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePw('new-pw-confirm', this)">
+              <i class="bi bi-eye-slash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          作成後、そのメールアドレス・パスワードでログインすると別会社のデータが独立して管理できます。
+          MFクラウド連携も会社ごとに個別設定が必要です。
+        </div>
+        <button class="btn btn-primary w-100" id="btn-create" onclick="createCompany()">
+          <i class="bi bi-person-plus me-1"></i>アカウントを作成
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 説明カード -->
+  <div class="col-md-6">
+    <div class="card shadow-sm border-info">
+      <div class="card-header fw-bold text-info"><i class="bi bi-info-circle me-2"></i>マルチテナント機能について</div>
+      <div class="card-body small text-muted">
+        <ul class="mb-0 ps-3">
+          <li class="mb-2">会社ごとに<strong>独立したデータ</strong>（請求書・メモ・履歴）が管理できます</li>
+          <li class="mb-2">各会社アカウントで<strong>MFクラウド連携を個別設定</strong>する必要があります</li>
+          <li class="mb-2">ログインするアカウントを切り替えることで、会社を切り替えられます</li>
+          <li>管理者アカウントのみ、このページでアカウント管理ができます</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold text-danger"><i class="bi bi-trash me-2"></i>アカウント削除</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-1">以下のアカウントを削除しますか？</p>
+        <p class="fw-semibold small" id="delete-email"></p>
+        <p class="small text-danger mb-0">※データは削除されません（フォルダは残ります）</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger btn-sm" id="delete-confirm-btn">削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const icon  = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye-slash';
+  }
+}
+
+async function createCompany() {
+  const btn = document.getElementById('btn-create');
+  const res = document.getElementById('create-result');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>作成中...';
+  try {
+    const resp = await fetch('/api/admin/create-company', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email:   document.getElementById('new-email').value.trim(),
+        password: document.getElementById('new-pw').value,
+        confirm:  document.getElementById('new-pw-confirm').value,
+      }),
+    });
+    const data = await resp.json();
+    res.classList.remove('d-none', 'alert-success', 'alert-danger');
+    if (data.ok) {
+      res.className = 'alert alert-success py-2 small mb-3';
+      res.textContent = '✅ アカウントを作成しました: ' + data.email;
+      document.getElementById('new-email').value = '';
+      document.getElementById('new-pw').value = '';
+      document.getElementById('new-pw-confirm').value = '';
+      // テーブルに行を追加
+      const tbody = document.getElementById('company-table-body');
+      const tr = document.createElement('tr');
+      tr.id = 'row-' + data.id;
+      tr.innerHTML = `
+        <td class="ps-3 fw-semibold">${escHtml(data.email)}</td>
+        <td><span class="badge bg-secondary">一般</span></td>
+        <td class="text-muted small font-monospace">${escHtml(data.id)}</td>
+        <td class="small text-muted">${new Date().toISOString().slice(0,10)}</td>
+        <td class="text-center">
+          <button class="btn btn-outline-danger btn-sm py-0 px-2"
+                  onclick="deleteCompany('${data.id}', '${escHtml(data.email)}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+    } else {
+      res.className = 'alert alert-danger py-2 small mb-3';
+      res.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-person-plus me-1"></i>アカウントを作成';
+  }
+}
+
+const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+let _deleteId = null;
+
+function deleteCompany(id, email) {
+  _deleteId = id;
+  document.getElementById('delete-email').textContent = email;
+  deleteModal.show();
+}
+
+document.getElementById('delete-confirm-btn').addEventListener('click', async function() {
+  if (!_deleteId) return;
+  this.disabled = true;
+  try {
+    const resp = await fetch('/api/admin/delete-company', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: _deleteId}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      deleteModal.hide();
+      document.getElementById('row-' + _deleteId)?.remove();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e);
+  } finally {
+    this.disabled = false;
+  }
+});
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}
