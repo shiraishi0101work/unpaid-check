@@ -248,35 +248,44 @@ main {
 
 /* ===== タブ ===== */
 .nav-tabs {
-  border-bottom: 2px solid var(--border);
+  border-bottom: none;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 .nav-tabs .nav-link {
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
   color: var(--text-muted);
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  border-radius: 0;
-  transition: color 0.15s, border-color 0.15s;
+  background: #fff;
+  border: 1px solid var(--border) !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .nav-tabs .nav-link:hover {
   color: var(--text);
-  border-bottom-color: var(--border);
-  background: transparent;
+  background: #f8faff;
 }
 .nav-tabs .nav-link.active {
   color: var(--accent);
   font-weight: 700;
-  border-bottom: 2px solid var(--accent);
-  background: transparent;
+  background: #fff;
+  border-color: var(--border) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  box-shadow: 0 -2px 8px rgba(59,130,246,0.1);
+}
+.nav-tabs .nav-link .badge {
+  font-size: 0.75rem;
+  padding: 0.25em 0.55em;
 }
 
 .tab-content {
   border: 1px solid var(--border) !important;
-  border-top: none !important;
-  border-radius: 0 0 10px 10px !important;
+  border-top: 1px solid var(--border) !important;
+  border-radius: 0 8px 8px 8px !important;
   background: #fff !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
 }
