@@ -284,8 +284,24 @@ async function saveLoginSettings() {
   const cid = document.getElementById('modal-company-id').value;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  res.classList.add('d-none');
   try {
-    const resp = await fetch('/api/admin/update-company-login', {
+    // ① ロール変更
+    const roleResp = await fetch('/api/admin/update-company-role', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: cid, is_admin: _currentIsAdmin}),
+    });
+    const roleData = await roleResp.json();
+    if (!roleData.ok) {
+      res.className = 'alert alert-danger py-2 small mb-3';
+      res.classList.remove('d-none');
+      res.textContent = '❌ ' + (roleData.error || 'ロール変更に失敗しました');
+      return;
+    }
+
+    // ② ログイン情報変更
+    const loginResp = await fetch('/api/admin/update-company-login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -295,22 +311,31 @@ async function saveLoginSettings() {
         confirm:  document.getElementById('modal-pw-confirm').value,
       }),
     });
-    const data = await resp.json();
+    const loginData = await loginResp.json();
     res.classList.remove('d-none', 'alert-success', 'alert-danger');
-    if (data.ok) {
+    if (loginData.ok) {
       res.className = 'alert alert-success py-2 small mb-3';
       res.textContent = '✅ 保存しました';
-      // テーブル上のメールも更新
+      // テーブルのメール・ロールを更新
       const emailCell = document.getElementById('email-' + cid);
       if (emailCell) {
-        const badge = emailCell.querySelector('.badge');
-        emailCell.textContent = data.email;
-        if (badge) emailCell.appendChild(badge);
+        const loggedBadge = emailCell.querySelector('.badge.bg-primary');
+        emailCell.textContent = loginData.email;
+        if (loggedBadge) emailCell.appendChild(loggedBadge);
       }
-      document.getElementById('modal-company-email-label').textContent = data.email;
+      const row = document.getElementById('row-' + cid);
+      if (row) {
+        const roleTd = row.querySelectorAll('td')[1];
+        if (roleTd) {
+          roleTd.innerHTML = _currentIsAdmin
+            ? '<span class="badge bg-danger">管理者</span>'
+            : '<span class="badge bg-secondary">一般</span>';
+        }
+      }
+      document.getElementById('modal-company-email-label').textContent = loginData.email;
     } else {
       res.className = 'alert alert-danger py-2 small mb-3';
-      res.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+      res.textContent = '❌ ' + (loginData.error || 'エラーが発生しました');
     }
   } catch(e) {
     alert('エラー: ' + e);
