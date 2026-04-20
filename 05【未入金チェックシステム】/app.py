@@ -363,7 +363,9 @@ def dashboard():
         # メタデータを最新にマージ＋担当者自動振り分け
         company_tantou = load_company_tantou()
         for lst in [result.get("unpaid",[]), result.get("overdue",[]),
-                    result.get("upcoming",[]), result.get("paid",[])]:
+                    result.get("upcoming",[]), result.get("paid",[]),
+                    result.get("seikyu_kakunin",[]), result.get("ichiji_hokan",[]),
+                    result.get("draft_overdue",[])]:
             for b in lst:
                 bid = b.get("請求書ID","")
                 m = meta.get(bid, {})
@@ -376,12 +378,17 @@ def dashboard():
                     if company and company in company_tantou:
                         b["担当者"] = company_tantou[company]
 
-        overdue          = result.get("overdue", [])
-        seikyu_kakunin   = result.get("seikyu_kakunin", [])
-        draft_overdue    = result.get("draft_overdue", [])
-        ichiji_hokan     = result.get("ichiji_hokan", [])
-        upcoming         = [b for b in result.get("upcoming", []) if in_fy(b)]
-        paid_fy          = [b for b in result.get("paid", [])     if in_fy(b)]
+        # 請求済みか確認タブで着金日_手動が入力されたものは入金確認済みへ移動
+        seikyu_raw     = result.get("seikyu_kakunin", [])
+        seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
+        seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
+
+        paid_all      = result.get("paid", []) + seikyu_moved
+        overdue       = result.get("overdue", [])
+        draft_overdue = result.get("draft_overdue", [])
+        ichiji_hokan  = result.get("ichiji_hokan", [])
+        upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
+        paid_fy       = [b for b in paid_all if in_fy(b)]
 
     else:
         overdue = seikyu_kakunin = draft_overdue = ichiji_hokan = upcoming = paid_fy = []
