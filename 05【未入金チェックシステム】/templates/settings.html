@@ -110,11 +110,81 @@
     </div>
   </div>
 
+  <!-- ログイン情報変更 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold"><i class="bi bi-person-lock me-2"></i>ログイン情報の変更</div>
+      <div class="card-body">
+        <div id="cred-result" class="d-none mb-3"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">現在のメールアドレス</label>
+          <input type="text" class="form-control" value="{{ current_email }}" disabled>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">新しいメールアドレス</label>
+          <input type="email" id="new-email" class="form-control" placeholder="変更する場合のみ入力"
+                 value="{{ current_email }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">現在のパスワード <span class="text-danger">*</span></label>
+          <input type="password" id="current-pw" class="form-control" placeholder="必須">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">新しいパスワード</label>
+          <input type="password" id="new-pw" class="form-control" placeholder="変更しない場合は空欄">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">新しいパスワード（確認）</label>
+          <input type="password" id="new-pw-confirm" class="form-control" placeholder="変更しない場合は空欄">
+        </div>
+        <button class="btn btn-primary w-100" id="btn-update-cred" onclick="updateCredentials()">
+          <i class="bi bi-save me-1"></i>変更を保存
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+async function updateCredentials() {
+  const btn = document.getElementById('btn-update-cred');
+  const res = document.getElementById('cred-result');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  try {
+    const resp = await fetch('/api/update-credentials', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email:            document.getElementById('new-email').value.trim(),
+        current_password: document.getElementById('current-pw').value,
+        password:         document.getElementById('new-pw').value,
+        confirm:          document.getElementById('new-pw-confirm').value,
+      }),
+    });
+    const data = await resp.json();
+    res.classList.remove('d-none', 'alert-success', 'alert-danger');
+    if (data.ok) {
+      res.className = 'alert alert-success py-2 small mb-3';
+      res.textContent = '✅ 変更しました';
+      document.getElementById('current-pw').value = '';
+      document.getElementById('new-pw').value = '';
+      document.getElementById('new-pw-confirm').value = '';
+    } else {
+      res.className = 'alert alert-danger py-2 small mb-3';
+      res.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>変更を保存';
+  }
+}
+
 function testConnection() {
   document.getElementById('btn-test').disabled = true;
   document.getElementById('test-result').classList.add('d-none');
