@@ -479,6 +479,9 @@
               {% if b.メール状態 and b.メール状態 != "未送信" %}<span class="badge bg-light text-dark border me-1"><i class="bi bi-envelope"></i> メール</span>{% endif %}
               {% if b.送付状態 and b.送付状態 != "未郵送" %}<span class="badge bg-light text-dark border me-1"><i class="bi bi-mailbox"></i> 郵送</span>{% endif %}
             </td>
+            <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
+              {{ b.入金予定日_手動 or '—' }}
+            </td>
             <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
               <div class="d-flex gap-1 justify-content-center">
@@ -489,7 +492,8 @@
                   data-tantou="{{ b.担当者 }}"
                   data-memo="{{ b.メモ_手動 }}"
                   data-kikin-date="{{ b.着金日_手動 }}"
-                  data-kikin-amt="{{ b.着金金額_手動 | default('') }}">
+                  data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                  data-yotei-date="{{ b.入金予定日_手動 }}">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button class="btn btn-outline-danger btn-sm py-0 px-2 seikyu-unmade-btn"
