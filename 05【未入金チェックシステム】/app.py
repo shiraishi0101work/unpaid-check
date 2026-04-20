@@ -600,6 +600,10 @@ def dashboard():
         next_year=next_year,
         fy_from=fy_from,
         fy_to=fy_to,
+        show_history_popup=show_history_popup,
+        prev_ym=prev_ym,
+        current_ym=get_current_year_month(),
+        history_list=load_history_list(),
     )
 
 
