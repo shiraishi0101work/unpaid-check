@@ -711,6 +711,17 @@ def debug_billing_raw():
 
 
 # ========================================
+# データクリア
+# ========================================
+
+@app.route("/api/clear-data", methods=["POST"])
+def clear_data():
+    if os.path.exists(RESULT_FILE):
+        os.remove(RESULT_FILE)
+    flash("表示データをクリアしました", "success")
+    return redirect(url_for("dashboard"))
+
+# ========================================
 # 入金チェックルール表
 # ========================================
 
