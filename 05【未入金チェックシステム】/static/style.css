@@ -31,7 +31,7 @@
 html, body {
   height: 100%;
   font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   background-color: var(--bg-main);
   color: var(--text);
 }
