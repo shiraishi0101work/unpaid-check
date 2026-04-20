@@ -1472,6 +1472,85 @@ def history_confirm():
     save_history(year_month, snapshot)
     return jsonify({"ok": True, "year_month": year_month})
 
+@app.route("/api/history/<year_month>/delete-item", methods=["POST"])
+def history_delete_item(year_month):
+    """履歴の特定行を削除する（index指定で重複も個別削除可能）"""
+    data = request.get_json() or {}
+    item_type  = data.get("type", "")   # "unpaid" or "paid"
+    row_index  = data.get("index", -1)  # 0始まりのインデックス
+    cid        = data.get("cid", "")
+
+    if _is_admin_aggregate() and cid:
+        path = os.path.join(DATA_DIR, cid, "history", f"{year_month}.json")
+    else:
+        path = os.path.join(_hdir(), f"{year_month}.json")
+
+    if not os.path.exists(path):
+        return jsonify({"error": "履歴が見つかりません"}), 404
+
+    with open(path, encoding="utf-8") as f:
+        hist = json.load(f)
+
+    if item_type in ("unpaid", "paid"):
+        items = hist.get(item_type, [])
+        if 0 <= row_index < len(items):
+            items.pop(row_index)
+            hist[item_type] = items
+        else:
+            return jsonify({"error": "行が見つかりません"}), 404
+        # サマリー再計算
+        hist["summary"]["unpaid_count"] = len(hist["unpaid"])
+        hist["summary"]["unpaid_total"] = int(sum(b.get("請求金額", 0) for b in hist["unpaid"]))
+        hist["summary"]["paid_count"]   = len(hist["paid"])
+        hist["summary"]["paid_total"]   = int(sum(b.get("請求金額", 0) for b in hist["paid"]))
+    else:
+        return jsonify({"error": "type は unpaid か paid を指定してください"}), 400
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, indent=2)
+
+    return jsonify({"ok": True, "unpaid_count": hist["summary"]["unpaid_count"],
+                    "paid_count": hist["summary"]["paid_count"]})
+
+
+@app.route("/api/history/<year_month>/update-item", methods=["POST"])
+def history_update_item(year_month):
+    """履歴の特定行のメモ・担当者などを修正する"""
+    data      = request.get_json() or {}
+    item_type = data.get("type", "")   # "unpaid" or "paid"
+    row_index = data.get("index", -1)
+    updates   = data.get("updates", {})
+    cid       = data.get("cid", "")
+
+    if _is_admin_aggregate() and cid:
+        path = os.path.join(DATA_DIR, cid, "history", f"{year_month}.json")
+    else:
+        path = os.path.join(_hdir(), f"{year_month}.json")
+
+    if not os.path.exists(path):
+        return jsonify({"error": "履歴が見つかりません"}), 404
+
+    with open(path, encoding="utf-8") as f:
+        hist = json.load(f)
+
+    if item_type in ("unpaid", "paid"):
+        items = hist.get(item_type, [])
+        if 0 <= row_index < len(items):
+            allowed = {"メモ_手動", "担当者", "着金日_手動", "着金金額_手動"}
+            for k, v in updates.items():
+                if k in allowed:
+                    items[row_index][k] = v
+        else:
+            return jsonify({"error": "行が見つかりません"}), 404
+    else:
+        return jsonify({"error": "type は unpaid か paid を指定してください"}), 400
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, indent=2)
+
+    return jsonify({"ok": True})
+
+
 @app.route("/api/history/dismiss-popup", methods=["POST"])
 def history_dismiss_popup():
     data = request.get_json() or {}
