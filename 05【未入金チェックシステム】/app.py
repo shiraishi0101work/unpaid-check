@@ -176,6 +176,9 @@ def check_auth():
         # 管理者専用ページ
         if request.path.startswith("/admin") and not session.get("is_admin"):
             return redirect(url_for("dashboard"))
+        # 非管理者は viewing_company_id を自分の会社に固定
+        if session.get("logged_in") and not session.get("is_admin"):
+            session["viewing_company_id"] = session.get("company_id", "c_main")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
