@@ -34,23 +34,46 @@
     {# 管理者：会社切り替えドロップダウン #}
     <div class="dropdown">
       <button class="btn btn-warning btn-sm py-0 dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
-        <i class="bi bi-building me-1"></i>
-        {{ viewing_company.email if viewing_company else '会社を選択' }}
+        <i class="bi bi-{% if viewing_company and not viewing_company.is_admin %}building{% else %}diagram-3-fill{% endif %} me-1"></i>
+        {% if viewing_company and not viewing_company.is_admin %}
+          {{ viewing_company.email }}
+        {% else %}
+          全社統合ビュー
+        {% endif %}
       </button>
-      <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:220px">
+      <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:240px">
         <li><h6 class="dropdown-header small">閲覧する会社を切り替え</h6></li>
-        {% for c in all_companies %}
+        {# 全社統合ビュー（管理者自身のID） #}
+        {% set admin_own = all_companies | selectattr('is_admin') | first %}
+        {% if admin_own %}
         <li>
-          <button class="dropdown-item d-flex align-items-center gap-2 {% if c.id == viewing_cid %}active{% endif %}"
-                  onclick="switchCompany('{{ c.id }}')">
-            <i class="bi bi-{% if c.is_admin %}shield-fill text-danger{% else %}building{% endif %}"></i>
+          <button class="dropdown-item d-flex align-items-center gap-2 {% if viewing_company and viewing_company.is_admin %}active{% endif %}"
+                  onclick="switchCompany('{{ admin_own.id }}')">
+            <i class="bi bi-diagram-3-fill" style="color:#7c3aed"></i>
             <div>
-              <div class="fw-semibold" style="font-size:0.82rem">{{ c.email }}</div>
-              <div class="text-muted" style="font-size:0.68rem">{{ '管理者' if c.is_admin else '一般' }}</div>
+              <div class="fw-semibold" style="font-size:0.82rem">全社統合ビュー</div>
+              <div class="text-muted" style="font-size:0.68rem">全会社のデータを集約表示</div>
             </div>
-            {% if c.id == viewing_cid %}<i class="bi bi-check-lg ms-auto"></i>{% endif %}
+            {% if viewing_company and viewing_company.is_admin %}<i class="bi bi-check-lg ms-auto"></i>{% endif %}
           </button>
         </li>
+        <li><hr class="dropdown-divider"></li>
+        {% endif %}
+        {# 一般会社リスト #}
+        {% for c in all_companies %}
+        {% if not c.is_admin %}
+        <li>
+          <button class="dropdown-item d-flex align-items-center gap-2 {% if c.id == viewing_cid and viewing_company and not viewing_company.is_admin %}active{% endif %}"
+                  onclick="switchCompany('{{ c.id }}')">
+            <i class="bi bi-building"></i>
+            <div>
+              <div class="fw-semibold" style="font-size:0.82rem">{{ c.email }}</div>
+              <div class="text-muted" style="font-size:0.68rem">一般</div>
+            </div>
+            {% if c.id == viewing_cid and viewing_company and not viewing_company.is_admin %}<i class="bi bi-check-lg ms-auto"></i>{% endif %}
+          </button>
+        </li>
+        {% endif %}
         {% endfor %}
         <li><hr class="dropdown-divider"></li>
         <li>
