@@ -578,14 +578,14 @@ def debug_check():
 
 @app.route("/oauth/start/<service_name>")
 def oauth_start(service_name):
-    if service_name not in ("invoice", "accounting"):
+    if service_name != "invoice":
         return "不正なサービス名", 400
     return redirect(auth.get_auth_url(service_name))
 
 
 @app.route("/oauth/callback/<service_name>")
 def oauth_callback(service_name):
-    if service_name not in ("invoice", "accounting"):
+    if service_name != "invoice":
         return "不正なサービス名", 400
     code  = request.args.get("code")
     state = request.args.get("state", "")
@@ -599,8 +599,7 @@ def oauth_callback(service_name):
     try:
         ok = auth.handle_callback(service_name, code, state)
         if ok:
-            label = "クラウド請求書" if service_name == "invoice" else "クラウド会計"
-            flash(f"MF{label}の認証が完了しました", "success")
+            flash("MFクラウド請求書の認証が完了しました", "success")
         else:
             flash("認証に失敗しました（stateが一致しません）", "error")
     except Exception as e:
@@ -610,11 +609,10 @@ def oauth_callback(service_name):
 
 @app.route("/oauth/revoke/<service_name>", methods=["POST"])
 def oauth_revoke(service_name):
-    if service_name not in ("invoice", "accounting"):
+    if service_name != "invoice":
         return "不正なサービス名", 400
     auth.revoke_token(service_name)
-    label = "クラウド請求書" if service_name == "invoice" else "クラウド会計"
-    flash(f"MF{label}の認証を解除しました")
+    flash("MFクラウド請求書の認証を解除しました")
     return redirect(url_for("dashboard"))
 
 # ========================================
