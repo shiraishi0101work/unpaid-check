@@ -1061,7 +1061,7 @@ def oauth_callback(service_name):
         flash("認可コードが取得できませんでした")
         return redirect(url_for("dashboard"))
     try:
-        ok = auth.handle_callback(service_name, code, state)
+        ok, _cid = auth.handle_callback(service_name, code, state)
         if ok:
             flash("MFクラウド請求書の認証が完了しました", "success")
         else:
