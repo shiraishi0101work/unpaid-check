@@ -5,6 +5,19 @@
   <div class="sidebar-label">月次履歴</div>
   {% if histories %}
     {% for h in histories %}
+    {% if admin_aggregate %}
+    <a href="{{ url_for('history_detail', year_month=h.year_month, cid=h._company_id) }}"
+       class="sidebar-stat-item text-decoration-none {% if selected_ym == h.year_month and detail and detail._company_id == h._company_id %}bg-primary-subtle{% endif %}">
+      <span class="d-flex align-items-center gap-2">
+        <i class="bi bi-calendar3 text-primary"></i>
+        <div>
+          <div class="small text-dark fw-semibold">{{ h.year_month }}</div>
+          <div style="font-size:0.68rem;color:#7c3aed">{{ h._company_name }}</div>
+        </div>
+      </span>
+      <span class="badge bg-danger">{{ h.summary.unpaid_count }}</span>
+    </a>
+    {% else %}
     <a href="{{ url_for('history_detail', year_month=h.year_month) }}"
        class="sidebar-stat-item text-decoration-none {% if selected_ym == h.year_month %}bg-primary-subtle{% endif %}">
       <span class="d-flex align-items-center gap-2">
@@ -13,12 +26,24 @@
       </span>
       <span class="badge bg-danger">未入金 {{ h.summary.unpaid_count }}</span>
     </a>
+    {% endif %}
     {% endfor %}
   {% else %}
     <div class="sidebar-item text-muted small">まだ確定データがありません</div>
   {% endif %}
 </div>
 <hr class="sidebar-divider">
+{% if admin_aggregate %}
+<div class="sidebar-section">
+  <div class="sidebar-item">
+    <div class="alert alert-info py-2 mb-0" style="font-size:0.72rem">
+      <i class="bi bi-info-circle me-1"></i>
+      月次確定は各会社ビューで行ってください。左上のドロップダウンから切り替えできます。
+    </div>
+  </div>
+</div>
+<hr class="sidebar-divider">
+{% endif %}
 <div class="sidebar-section">
   <div class="sidebar-item">
     <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
