@@ -260,14 +260,31 @@ async function updateCredentials() {
 }
 
 // ===== トークン失効アラート設定 =====
+function addNotifyEmailRow(value) {
+  const list = document.getElementById('notify-email-list');
+  const row  = document.createElement('div');
+  row.className = 'd-flex gap-2 align-items-center';
+  row.innerHTML =
+    '<input type="email" class="form-control form-control-sm notify-email-input" placeholder="example@gmail.com" value="' + (value || '') + '">' +
+    '<button type="button" class="btn btn-outline-danger btn-sm px-2 flex-shrink-0" onclick="this.parentElement.remove()" title="削除">' +
+    '<i class="bi bi-x-lg"></i></button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
 (async function loadNotifySettings() {
   const res = await fetch('/api/notify-settings').catch(() => null);
   if (!res || !res.ok) return;
   const d = await res.json();
-  document.getElementById('notify-enabled').checked       = !!d.notify_enabled;
-  document.getElementById('notify-emails').value          = (d.notify_emails || []).join('\n');
-  document.getElementById('notify-subject').value         = d.email_subject || '';
-  document.getElementById('notify-body').value            = d.email_body    || '';
+  document.getElementById('notify-enabled').checked = !!d.notify_enabled;
+  document.getElementById('notify-subject').value   = d.email_subject || '';
+  document.getElementById('notify-body').value      = d.email_body    || '';
+  const emails = d.notify_emails || [];
+  if (emails.length === 0) {
+    addNotifyEmailRow('');
+  } else {
+    emails.forEach(e => addNotifyEmailRow(e));
+  }
 })();
 
 async function saveNotifySettings() {
@@ -276,8 +293,8 @@ async function saveNotifySettings() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
   try {
-    const emails = document.getElementById('notify-emails').value
-      .split('\n').map(e => e.trim()).filter(e => e);
+    const emails = Array.from(document.querySelectorAll('.notify-email-input'))
+      .map(i => i.value.trim()).filter(e => e);
     const resp = await fetch('/api/notify-settings', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
