@@ -1846,7 +1846,7 @@ def api_notify_settings_test():
 if __name__ == "__main__":
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
-    init_scheduler(run_func=_run_check)
+    init_scheduler(run_func=_run_check, token_check_func=_check_all_tokens)
     import webbrowser, threading as _th
     _th.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     print(f"\n{'='*50}")
