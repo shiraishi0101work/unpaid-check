@@ -473,7 +473,7 @@ document.getElementById('edit-save-btn').addEventListener('click', function() {
     body: JSON.stringify(body)
   }).then(function(r){ return r.json(); }).then(function(d) {
     if (d.ok) {
-      editModal.hide();
+      getEditModal().hide();
       location.reload();
     } else {
       alert('エラー: ' + (d.error || '不明'));
