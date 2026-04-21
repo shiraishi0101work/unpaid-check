@@ -101,11 +101,12 @@ def _basic_auth_header(client_id: str, client_secret: str) -> dict:
 
 
 def _refresh(service_name: str, token_data: dict, company_id: str = "") -> dict:
-    svc     = _svc(service_name)
-    headers = _basic_auth_header(svc["client_id"], svc["client_secret"])
-    resp    = requests.post(svc["token_url"], headers=headers, data={
+    svc  = _svc(service_name)
+    resp = requests.post(svc["token_url"], data={
         "grant_type":    "refresh_token",
         "refresh_token": token_data["refresh_token"],
+        "client_id":     svc["client_id"],
+        "client_secret": svc["client_secret"],
     })
     resp.raise_for_status()
     new_token = resp.json()
