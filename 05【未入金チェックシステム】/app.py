@@ -1747,12 +1747,11 @@ def _send_token_expired_email(company_name: str, company_email: str, notify: dic
     app_url   = os.getenv("APP_URL", "https://check.coaris-ai.com")
 
     if not all([smtp_host, smtp_user, smtp_pass]):
-        print("[メール通知] SMTP設定が不完全のためスキップ")
-        return
+        raise RuntimeError("SMTP設定が未入力です（SMTP_HOST / SMTP_USER / SMTP_PASSWORD を .env に設定してください）")
 
     recipients = [e.strip() for e in notify.get("notify_emails", []) if e.strip()]
     if not recipients:
-        return
+        raise RuntimeError("通知先メールアドレスが設定されていません。設定画面でアドレスを追加して保存してください。")
 
     subject = notify.get("email_subject", DEFAULT_EMAIL_SUBJECT)
     body    = notify.get("email_body", DEFAULT_EMAIL_BODY)
