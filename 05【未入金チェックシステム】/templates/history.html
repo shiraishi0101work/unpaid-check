@@ -427,7 +427,13 @@ document.querySelectorAll('.hist-delete-row-btn').forEach(function(btn) {
 
 // ===== 行編集モーダル =====
 let _editBtn = null;
-const editModal = new bootstrap.Modal(document.getElementById('histEditModal'));
+let _editModal = null;
+function getEditModal() {
+  if (!_editModal) {
+    _editModal = new bootstrap.Modal(document.getElementById('histEditModal'));
+  }
+  return _editModal;
+}
 
 document.querySelectorAll('.hist-edit-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
@@ -441,7 +447,7 @@ document.querySelectorAll('.hist-edit-btn').forEach(function(btn) {
       document.getElementById('edit-chakkinbi').value   = this.dataset.chakkinbi || '';
       document.getElementById('edit-chakkinamt').value  = this.dataset.chakkinamt || '';
     }
-    editModal.show();
+    getEditModal().show();
   });
 });
 
