@@ -1684,6 +1684,162 @@ def rules_page():
     )
 
 # ========================================
+# メール通知設定（トークン失効アラート）
+# ========================================
+
+NOTIFY_SETTINGS_FILE = os.path.join(DATA_DIR, "notify_settings.json")
+
+DEFAULT_EMAIL_SUBJECT = "【未入金チェックシステム】MFクラウド請求書の再認証が必要です"
+
+DEFAULT_EMAIL_BODY = """\
+{company_name} のMFクラウド請求書との連携トークンが失効しました。
+
+このままでは未入金チェックが実行できません。
+以下のURLにアクセスし、再認証を行ってください。
+
+▼ 再認証URL
+{domain}/oauth/start/invoice
+
+【手順】
+1. 上記URLにアクセスしてログイン（ログインID: {company_email}）
+2. ログイン後、自動的にMFクラウドの認証画面へ移動します
+3. MFクラウドで「許可する」を押して完了です
+
+ご不明な点があればシステム管理者にお問い合わせください。
+
+----
+このメールは未入金チェックシステムから自動送信されています。
+返信は不要です。
+"""
+
+
+def _load_notify_settings() -> dict:
+    if not os.path.exists(NOTIFY_SETTINGS_FILE):
+        return {
+            "notify_enabled": False,
+            "notify_emails":  [],
+            "email_subject":  DEFAULT_EMAIL_SUBJECT,
+            "email_body":     DEFAULT_EMAIL_BODY,
+        }
+    with open(NOTIFY_SETTINGS_FILE, encoding="utf-8") as f:
+        data = json.load(f)
+    data.setdefault("notify_enabled", False)
+    data.setdefault("notify_emails",  [])
+    data.setdefault("email_subject",  DEFAULT_EMAIL_SUBJECT)
+    data.setdefault("email_body",     DEFAULT_EMAIL_BODY)
+    return data
+
+
+def _save_notify_settings(data: dict):
+    with open(NOTIFY_SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _send_token_expired_email(company_name: str, company_email: str, notify: dict):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_host = os.getenv("SMTP_HOST", "")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_pass = os.getenv("SMTP_PASSWORD", "")
+    app_url   = os.getenv("APP_URL", "https://check.coaris-ai.com")
+
+    if not all([smtp_host, smtp_user, smtp_pass]):
+        print("[メール通知] SMTP設定が不完全のためスキップ")
+        return
+
+    recipients = [e.strip() for e in notify.get("notify_emails", []) if e.strip()]
+    if not recipients:
+        return
+
+    subject = notify.get("email_subject", DEFAULT_EMAIL_SUBJECT)
+    body    = notify.get("email_body", DEFAULT_EMAIL_BODY)
+    body    = body.replace("{company_name}",  company_name)
+    body    = body.replace("{company_email}", company_email)
+    body    = body.replace("{domain}",        app_url)
+
+    msg = MIMEMultipart()
+    msg["From"]    = smtp_user
+    msg["To"]      = ", ".join(recipients)
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.ehlo()
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_user, recipients, msg.as_string())
+    print(f"[メール通知] 送信完了 → {company_name}（{recipients}）")
+
+
+def _check_all_tokens():
+    """全会社のMFトークンをチェックし、失効していたらメール通知"""
+    notify = _load_notify_settings()
+    if not notify.get("notify_enabled"):
+        return
+    auth_data = _load_auth_data()
+    for company in auth_data.get("companies", []):
+        if company.get("is_admin"):
+            continue
+        cid = company["id"]
+        if not auth.is_authenticated("invoice", cid):
+            settings_path = os.path.join(DATA_DIR, cid, "settings.json")
+            company_name = company["email"]
+            if os.path.exists(settings_path):
+                try:
+                    with open(settings_path, encoding="utf-8") as f:
+                        s = json.load(f)
+                    company_name = s.get("company_name") or company["email"]
+                except Exception:
+                    pass
+            print(f"[トークンチェック] 失効検出: {company_name}（{cid}）")
+            try:
+                _send_token_expired_email(company_name, company["email"], notify)
+            except Exception as e:
+                print(f"[メール通知] 送信失敗: {e}")
+
+
+@app.route("/api/notify-settings", methods=["GET", "POST"])
+@login_required
+def api_notify_settings():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    if request.method == "GET":
+        return jsonify(_load_notify_settings())
+    data   = request.get_json(force=True, silent=True) or {}
+    notify = _load_notify_settings()
+    if "notify_enabled" in data:
+        notify["notify_enabled"] = bool(data["notify_enabled"])
+    if "notify_emails" in data:
+        notify["notify_emails"] = [e.strip() for e in data["notify_emails"] if e.strip()]
+    if "email_subject" in data:
+        notify["email_subject"] = data["email_subject"].strip() or DEFAULT_EMAIL_SUBJECT
+    if "email_body" in data:
+        notify["email_body"] = data["email_body"] or DEFAULT_EMAIL_BODY
+    _save_notify_settings(notify)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/notify-settings/test", methods=["POST"])
+@login_required
+def api_notify_settings_test():
+    if not session.get("is_admin"):
+        return jsonify({"error": "権限がありません"}), 403
+    notify = _load_notify_settings()
+    try:
+        _send_token_expired_email(
+            company_name="テスト会社（送信テスト）",
+            company_email="test@example.com",
+            notify=notify,
+        )
+        return jsonify({"ok": True, "message": "テストメールを送信しました"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+# ========================================
 # 起動
 # ========================================
 
