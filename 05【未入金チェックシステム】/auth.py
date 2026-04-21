@@ -147,12 +147,13 @@ def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str
     if stored_service != service_name:
         return False, ""
 
-    svc     = _svc(service_name)
-    headers = _basic_auth_header(svc["client_id"], svc["client_secret"])
-    resp    = requests.post(svc["token_url"], headers=headers, data={
-        "grant_type":   "authorization_code",
-        "code":          code,
-        "redirect_uri":  svc["redirect_uri"],
+    svc  = _svc(service_name)
+    resp = requests.post(svc["token_url"], data={
+        "grant_type":    "authorization_code",
+        "code":           code,
+        "redirect_uri":   svc["redirect_uri"],
+        "client_id":      svc["client_id"],
+        "client_secret":  svc["client_secret"],
     })
     resp.raise_for_status()
     save_token(service_name, resp.json(), company_id)
