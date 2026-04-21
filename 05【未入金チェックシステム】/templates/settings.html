@@ -257,6 +257,76 @@ async function updateCredentials() {
   }
 }
 
+// ===== トークン失効アラート設定 =====
+(async function loadNotifySettings() {
+  const res = await fetch('/api/notify-settings').catch(() => null);
+  if (!res || !res.ok) return;
+  const d = await res.json();
+  document.getElementById('notify-enabled').checked       = !!d.notify_enabled;
+  document.getElementById('notify-emails').value          = (d.notify_emails || []).join('\n');
+  document.getElementById('notify-subject').value         = d.email_subject || '';
+  document.getElementById('notify-body').value            = d.email_body    || '';
+})();
+
+async function saveNotifySettings() {
+  const btn = document.getElementById('btn-notify-save');
+  const res = document.getElementById('notify-result');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  try {
+    const emails = document.getElementById('notify-emails').value
+      .split('\n').map(e => e.trim()).filter(e => e);
+    const resp = await fetch('/api/notify-settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        notify_enabled: document.getElementById('notify-enabled').checked,
+        notify_emails:  emails,
+        email_subject:  document.getElementById('notify-subject').value.trim(),
+        email_body:     document.getElementById('notify-body').value,
+      }),
+    });
+    const data = await resp.json();
+    res.classList.remove('d-none', 'alert-success', 'alert-danger');
+    if (data.ok) {
+      res.className = 'alert alert-success py-2 small mb-3';
+      res.textContent = '✅ 保存しました';
+    } else {
+      res.className = 'alert alert-danger py-2 small mb-3';
+      res.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>保存';
+  }
+}
+
+async function testNotifyEmail() {
+  const btn = document.getElementById('btn-notify-test');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>送信中...';
+  try {
+    const resp = await fetch('/api/notify-settings/test', {method: 'POST'});
+    const data = await resp.json();
+    const res  = document.getElementById('notify-result');
+    res.classList.remove('d-none', 'alert-success', 'alert-danger');
+    if (data.ok) {
+      res.className = 'alert alert-success py-2 small mb-3';
+      res.textContent = '✅ ' + data.message;
+    } else {
+      res.className = 'alert alert-danger py-2 small mb-3';
+      res.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send me-1"></i>テスト送信';
+  }
+}
+
 function testConnection() {
   document.getElementById('btn-test').disabled = true;
   document.getElementById('test-result').classList.add('d-none');
