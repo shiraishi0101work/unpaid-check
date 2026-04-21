@@ -171,9 +171,11 @@
         <div id="notify-result" class="d-none mb-3"></div>
 
         <div class="mb-3">
-          <label class="form-label fw-semibold">通知先メールアドレス <span class="text-muted fw-normal small">（1行に1アドレス、複数可）</span></label>
-          <textarea id="notify-emails" class="form-control form-control-sm font-monospace" rows="4"
-                    placeholder="example1@gmail.com&#10;example2@company.com"></textarea>
+          <label class="form-label fw-semibold">通知先メールアドレス</label>
+          <div id="notify-email-list" class="d-flex flex-column gap-2 mb-2"></div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addNotifyEmailRow()">
+            <i class="bi bi-plus-circle me-1"></i>メールアドレスを追加
+          </button>
         </div>
 
         <div class="mb-3">
