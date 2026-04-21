@@ -153,6 +153,57 @@
     </div>
   </div>
 
+  {% if is_admin %}
+  <!-- トークン失効メール通知設定（管理者のみ） -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bell-fill me-2 text-warning"></i>MFトークン失効アラート設定</span>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="notify-enabled" role="switch">
+          <label class="form-check-label small" for="notify-enabled">有効</label>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          MFクラウド請求書のトークンが失効したとき、毎日09:00に自動チェックして指定のメールアドレスに通知します。
+        </p>
+        <div id="notify-result" class="d-none mb-3"></div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">通知先メールアドレス <span class="text-muted fw-normal small">（1行に1アドレス、複数可）</span></label>
+          <textarea id="notify-emails" class="form-control form-control-sm font-monospace" rows="4"
+                    placeholder="example1@gmail.com&#10;example2@company.com"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">メール件名</label>
+          <input type="text" id="notify-subject" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            メール本文
+            <span class="text-muted fw-normal small ms-2">
+              使用できる変数：<code>{company_name}</code> 会社名　<code>{company_email}</code> ログインID　<code>{domain}</code> サイトURL
+            </span>
+          </label>
+          <textarea id="notify-body" class="form-control form-control-sm font-monospace" rows="14"></textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" id="btn-notify-save" onclick="saveNotifySettings()">
+            <i class="bi bi-save me-1"></i>保存
+          </button>
+          <button class="btn btn-outline-secondary" id="btn-notify-test" onclick="testNotifyEmail()">
+            <i class="bi bi-send me-1"></i>テスト送信
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
