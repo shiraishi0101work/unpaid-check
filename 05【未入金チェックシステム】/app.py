@@ -2318,7 +2318,7 @@ def api_recheck_link(record_id):
             meta[invoice_id].pop(k, None)
     save_meta(meta)
 
-    # 請求書番号を取得（表示用）
+    # 請求書番号を取得（表示用）& 部分入金時は paid→overdue に移動
     result = _load_result()
     invoice_num = invoice_id
     if result:
@@ -2327,6 +2327,29 @@ def api_recheck_link(record_id):
                 if b.get("請求書ID") == invoice_id:
                     invoice_num = b.get("請求番号", invoice_id)
                     break
+
+        # 部分入金の場合: paid に入っていれば overdue に戻す
+        if samediff and samediff > 0:
+            _META_KEYS = ["着金日_手動", "着金金額_手動", "部分入金", "残額", "入金済金額"]
+            moved = False
+            for lst_key in ["paid", "unpaid"]:
+                lst = result.get(lst_key, [])
+                for i, b in enumerate(lst):
+                    if b.get("請求書ID") == invoice_id:
+                        item = lst.pop(i)
+                        for k in _META_KEYS:
+                            item.pop(k, None)
+                        item["着金日_手動"]   = ""
+                        item["着金金額_手動"] = 0
+                        result.setdefault("overdue", []).append(item)
+                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        moved = True
+                        break
+                if moved:
+                    break
+            result_path = os.path.join(_cdir(), "last_result.json")
+            with open(result_path, "w", encoding="utf-8") as f:
+                json.dump(result, f, ensure_ascii=False, indent=2)
 
     # レコードを照合済みにマーク
     record["linked_invoice_id"]  = invoice_id

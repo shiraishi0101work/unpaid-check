@@ -16,3 +16,10 @@ Press CTRL+C to quit
 127.0.0.1 - - [22/Apr/2026 14:25:22] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [22/Apr/2026 14:25:22] "GET /static/style.css HTTP/1.1" 304 -
 127.0.0.1 - - [22/Apr/2026 14:25:25] "GET / HTTP/1.1" 302 -
+127.0.0.1 - - [22/Apr/2026 14:25:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:25:43] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:25:44] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [22/Apr/2026 14:26:07] "POST /api/recheck/0db1f151-65c9-4e2d-bd8c-38af3e1816f0/link HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:26:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:26:17] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:26:17] "GET /favicon.ico HTTP/1.1" 404 -
