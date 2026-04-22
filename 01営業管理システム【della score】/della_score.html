@@ -3493,12 +3493,15 @@ function toggleMpurSel(id,cb){
 }
 
 function toggleMpurSelectAll(masterCb){
-  const cm=curYM();
-  const cands=D.purchases.filter(p=>p.monthly&&!(p.dup_months||[]).includes(cm));
   if(masterCb.checked){
     _mpurSel.clear();
-    cands.slice(0,20).forEach(p=>_mpurSel.add(p.id));
-    if(cands.length>20) alert('20件を超えるため先頭20件を選択しました');
+    const cm=curYM();
+    const all=D.purchases.filter(p=>p.monthly);
+    const list=_mpurFilter==='undone'?all.filter(p=>!(p.dup_months||[]).includes(cm))
+              :_mpurFilter==='done'  ?all.filter(p=> (p.dup_months||[]).includes(cm))
+              :all;
+    list.slice(0,20).forEach(p=>_mpurSel.add(p.id));
+    if(list.length>20) alert('20件を超えるため先頭20件を選択しました');
   } else { _mpurSel.clear(); }
   renderMpurList();
 }
