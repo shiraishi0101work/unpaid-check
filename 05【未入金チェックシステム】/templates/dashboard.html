@@ -419,7 +419,7 @@
         <tbody>
           {% for b in overdue %}
           {% set has_note = b.メモ_手動 or b.入金予定日_手動 %}
-          <tr {% if has_note %}class="row-noted"{% endif %} id="overdue-row-{{ b.請求書ID }}">
+          <tr {% if b.部分入金 %}class="table-warning"{% elif has_note %}class="row-noted"{% endif %} id="overdue-row-{{ b.請求書ID }}">
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
@@ -431,7 +431,15 @@
               {% endif %}
             </td>
             <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
-            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="text-end fw-bold">
+              {% if b.部分入金 %}
+                <span class="badge bg-warning text-dark d-block mb-1" style="font-size:0.65rem">部分入金済</span>
+                <span class="text-danger">¥{{ "{:,.0f}".format(b.残額) }}</span>
+                <small class="text-muted d-block" style="font-size:0.7rem">請求: ¥{{ "{:,.0f}".format(b.請求金額) }}</small>
+              {% else %}
+                ¥{{ "{:,.0f}".format(b.請求金額) }}
+              {% endif %}
+            </td>
             <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
               {{ b.入金予定日_手動 or '—' }}
             </td>
