@@ -1649,7 +1649,7 @@ function renderProspects(){
       <td>${fmtD(p.deadline)}</td>
       <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
       <td>${p.mf_quote_id?'<span class="badge bo" style="font-size:10px;margin-right:3px">MF</span>':''}${SB[p.status]||SB.prospect}</td>
-      <td style="display:flex;gap:3px">
+      <td style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost" onclick="editProspect('${p.id}')">編集</button>
         ${p.status!=='ordered'?`<button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="openOrderFromProspect('${p.id}')">→ 受注</button>`:''}
         ${p.status!=='canceled'?`<button class="btn btn-sm" style="color:#8892B0;border-color:#DDE2EF" onclick="lostProspect('${p.id}')">失注</button>`:''}
