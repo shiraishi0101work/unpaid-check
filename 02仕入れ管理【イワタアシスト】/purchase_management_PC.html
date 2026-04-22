@@ -676,7 +676,16 @@ function guessShop(url) {
   } catch(e) { return ''; }
 }
 
+function getApiKey() { return localStorage.getItem('sf_apikey') || ''; }
+function apiHeaders() {
+  const k = getApiKey();
+  if (!k) { alert('APIキーが未設定です。\nDella ScoreのAPIキー設定から登録してください。'); return null; }
+  return { 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+}
+
 async function callAI(text, url, shopGuess) {
+  const headers = apiHeaders();
+  if (!headers) throw new Error('no api key');
   const prompt = `あなたは通販サイトの商品情報抽出の専門家です。以下のテキストから商品情報を正確に抽出してJSONのみで返してください。
 
 抽出フィールド（不明は空文字か0）:
@@ -700,11 +709,12 @@ ${text.slice(0, 8000)}
 JSONのみ。マークダウン不要。`;
 
   const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700,
+    method: 'POST', headers,
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
       messages: [{ role: 'user', content: prompt }] })
   });
   const d = await r.json();
+  if (d.error) throw new Error(d.error.message || 'api error');
   const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
   const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
   if (!m) throw new Error('parse failed');
