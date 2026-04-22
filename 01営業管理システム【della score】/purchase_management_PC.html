@@ -791,10 +791,11 @@ function sw(page, el) {
   if (el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('p-' + page).classList.add('active');
-  if (page === 'list')   { rmets(); updFilters(); rt(); }
-  if (page === 'add')    { today(); updCCSel(); updClSug(); }
-  if (page === 'cards')  { renderCC(); }
-  if (page === 'export') { showPayload(); updSyncBtn(); }
+  if (page === 'list')    { rmets(); updFilters(); rt(); }
+  if (page === 'add')     { today(); updCCSel(); updClSug(); }
+  if (page === 'cards')   { renderCC(); }
+  if (page === 'export')  { showPayload(); updSyncBtn(); }
+  if (page === 'monthly') { renderMonthly(); }
 }
 
 function scls(s) {
