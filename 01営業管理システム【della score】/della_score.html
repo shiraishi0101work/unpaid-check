@@ -2430,6 +2430,7 @@ function renderPurchases(){
     <td title="${p.bank||''}" style="font-size:12px;color:var(--text2)">${p.bank||'-'}</td>
     <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
     <td>${p.status==='paid'?'<span class="badge bpd">支払済み</span>':'<span class="badge bpu">未払い</span>'}</td>
+    <td><button class="btn btn-sm${p.monthly?' mpur-btn-on':''}" onclick="togglePurMonthly('${p.id}')" title="毎月複製対象に設定/解除">${p.monthly?'毎月':'—'}</button></td>
     <td style="display:flex;gap:3px">
       ${p.status==='unpaid'?`<button class="btn btn-sm btn-ghost" onclick="markPaid('${p.id}')">支払済</button>`:''}
       <button class="btn btn-sm btn-ghost" onclick="editPurchase('${p.id}')">編集</button>
