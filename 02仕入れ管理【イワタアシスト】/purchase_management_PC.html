@@ -1072,7 +1072,7 @@ async function parseStmtCSV() {
     document.getElementById('stmt-csv-file').value = '';
   } catch(e) {
     document.getElementById('stmt-erb').textContent = 'CSVを解析できませんでした。ETC以外の明細行が見つかりませんでした。';
-    document.getElementById('stmt-erb').style.display = '';
+    document.getElementById('stmt-erb').style.display = 'block';
   } finally {
     stmtShowLoading(false);
   }
