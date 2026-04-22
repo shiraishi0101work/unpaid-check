@@ -931,7 +931,9 @@ function addOrd() {
     client: document.getElementById('fcl2').value.trim(),
     ccId: parseInt(document.getElementById('fcd').value) || null,
     status: document.getElementById('fss').value,
-    memo: document.getElementById('fm').value.trim()
+    memo: document.getElementById('fm').value.trim(),
+    monthly: false,
+    dup_months: []
   });
   save(); clrF(); toast('登録しました');
   sw('list', document.querySelector('[data-page=list]'));
