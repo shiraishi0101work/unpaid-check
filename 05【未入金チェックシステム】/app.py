@@ -28,6 +28,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "mf-unpaid-check-secret-2026")
 
+@app.errorhandler(500)
+def handle_500(e):
+    return jsonify({"error": f"内部エラー: {e}"}), 500
+
 DATA_DIR  = os.path.join(os.path.dirname(__file__), "data")
 AUTH_FILE = os.path.join(DATA_DIR, "auth.json")
 os.makedirs(DATA_DIR, exist_ok=True)
