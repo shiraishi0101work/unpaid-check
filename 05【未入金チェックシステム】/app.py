@@ -933,6 +933,7 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
             b["メモ_手動"]     = m.get("メモ", "")
             b["着金日_手動"]   = m.get("着金日_手動", "")
             b["着金金額_手動"] = m.get("着金金額_手動", 0)
+            b["解消済み"]      = m.get("解消済み", False)
 
         all_billings = apply_auto_tantou(all_billings, meta)
 
