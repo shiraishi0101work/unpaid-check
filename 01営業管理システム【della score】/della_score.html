@@ -619,10 +619,10 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <div class="sec-hdr" style="margin-bottom:10px">
         <span class="sec-title" style="display:none"></span>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%">
-          <input id="search-purchases" placeholder="🔍 検索..." oninput="renderPurchases()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
-          <select id="month-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
-          <select id="owner-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-purchases" onchange="renderPurchases()"> 担当者未入力のみ</label>
+          <input id="search-purchases" placeholder="🔍 検索..." oninput="_purPage=0;renderPurchases()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
+          <select id="month-purchases" onchange="_purPage=0;renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
+          <select id="owner-purchases" onchange="_purPage=0;renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-purchases" onchange="_purPage=0;renderPurchases()"> 担当者未入力のみ</label>
           <button class="btn btn-sm" id="mpur-open-btn" onclick="openMpurModal()" style="border-color:var(--navy);color:var(--navy)">↻ 毎月複製</button>
           <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 登録</button>
         </div>
