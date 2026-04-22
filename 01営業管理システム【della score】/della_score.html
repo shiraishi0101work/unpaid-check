@@ -2514,7 +2514,15 @@ function renderPurchases(){
   if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')+(p.invoice_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')===ow);
   if(document.getElementById('filter-no-owner-purchases')?.checked) list=list.filter(p=>!(p.owner||'').trim());
-  if(!list.length){tb.innerHTML='';em.style.display='';renderPurPagination(0,0);return;}
+  if(!list.length){
+    tb.innerHTML='';em.style.display='';renderPurPagination(0,0);
+    const _psStatList0=mpf?D.purchases.filter(p=>(p.issued||'').slice(0,7)===mpf):D.purchases.filter(p=>(p.issued||'').startsWith(thisMonth()));
+    const _psLbl0=mpf?mpf.replace('-','年')+'月 仕入れ':'今月 仕入れ';
+    const _psLblEl0=document.getElementById('ps-label');if(_psLblEl0)_psLblEl0.textContent=_psLbl0;
+    document.getElementById('ps-month').textContent=fmt(_psStatList0.reduce((s,p)=>s+(p.amount||0),0));
+    document.getElementById('ps-mc').textContent=_psStatList0.length+'件';
+    return;
+  }
   em.style.display='none';
   // ページネーション
   const total=list.length;
