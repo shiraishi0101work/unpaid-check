@@ -633,9 +633,9 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
         <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerPurchases()">選択した仕入れに担当者を設定</button>
         <button class="btn btn-sm btn-ghost" onclick="clearPurSelection()">選択解除</button>
       </div>
-      <table><colgroup><col style="width:28px"><col style="width:12%"><col style="width:14%"><col style="width:11%"><col style="width:7%"><col style="width:7%"><col style="width:10%"><col style="width:7%"><col style="width:7%"><col style="width:5%"><col style="width:auto"></colgroup>
+      <table><colgroup><col style="width:44px"><col style="width:12%"><col style="width:14%"><col style="width:11%"><col style="width:7%"><col style="width:7%"><col style="width:10%"><col style="width:7%"><col style="width:7%"><col style="width:5%"><col style="width:auto"></colgroup>
         <thead><tr>
-          <th><input type="checkbox" id="pur-chk-all" onchange="document.querySelectorAll('.pur-row-chk').forEach(c=>c.checked=this.checked);updatePurBulkBar()" style="cursor:pointer"></th>
+          <th><input type="checkbox" id="pur-chk-all" onchange="document.querySelectorAll('.pur-row-chk').forEach(c=>c.checked=this.checked);updatePurBulkBar()" style="width:16px;height:16px;cursor:pointer"></th>
           <th>仕入れ先</th><th>内容</th><th>金額（税抜/税込）</th><th>発行日</th><th>支払期限</th><th>振込先</th><th>担当者</th><th>ステータス</th><th>毎月</th><th></th>
         </tr></thead>
         <tbody id="pu-tbody"></tbody>
