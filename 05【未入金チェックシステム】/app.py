@@ -1249,7 +1249,8 @@ def dashboard():
     else:
         overdue = seikyu_kakunin = draft_overdue = ichiji_hokan = upcoming = paid_fy = []
 
-    recheck_records = [r for r in load_recheck_records() if not r.get("deleted")]
+    recheck_records       = [r for r in load_recheck_records() if not r.get("deleted")]
+    furikomi_unconfirmed  = [r for r in load_furikomi_unconfirmed() if not r.get("deleted")]
 
     return render_template(
         "dashboard.html",
