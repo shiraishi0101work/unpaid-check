@@ -736,6 +736,7 @@ function switchImport(mode, el) {
   el.classList.add('on');
   document.getElementById('im-url').style.display = mode === 'url' ? '' : 'none';
   document.getElementById('im-paste').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('im-image').style.display = mode === 'image' ? '' : 'none';
   ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
   document.getElementById('ldb').style.display = 'none';
   document.getElementById('ldt').style.display = 'none';
