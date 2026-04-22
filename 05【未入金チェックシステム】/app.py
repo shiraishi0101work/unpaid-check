@@ -1735,6 +1735,184 @@ def mark_unmade():
     return jsonify({"ok": True, "count": len(invoice_ids)})
 
 
+# ========================================
+# 未収再確認 API
+# ========================================
+
+@app.route("/api/overdue/<invoice_id>/recheck", methods=["POST"])
+@login_required
+def api_overdue_recheck(invoice_id):
+    """
+    未収請求書の取引先の入金履歴を MFクラウド会計から取得し、
+    recheck_records.json に保存する。抽出期間: 今日から2ヶ月前まで。
+    """
+    try:
+        from mf_accounting import get_deals
+    except ImportError as e:
+        return jsonify({"error": f"会計モジュールエラー: {e}"}), 500
+
+    cid = get_company_id()
+    if not auth.is_authenticated("accounting", cid):
+        return jsonify({"error": "MFクラウド会計の連携が必要です。設定画面から連携してください。"}), 401
+
+    result = _load_result()
+    if not result:
+        return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
+
+    # 請求書IDから取引先名を取得
+    partner_name = ""
+    invoice_amt  = 0
+    for cat in ["overdue", "seikyu_kakunin", "upcoming", "unpaid", "ichiji_hokan"]:
+        for b in result.get(cat, []):
+            if b.get("請求書ID") == invoice_id:
+                partner_name = b.get("取引先名", "")
+                invoice_amt  = b.get("請求金額", 0)
+                break
+        if partner_name:
+            break
+
+    if not partner_name:
+        return jsonify({"error": "請求書が見つかりません"}), 404
+
+    # 抽出期間: 今日から2ヶ月前の1日まで
+    today = date.today()
+    m2 = today.month - 2
+    y2 = today.year
+    if m2 <= 0:
+        m2 += 12
+        y2 -= 1
+    from_date = f"{y2}-{m2:02d}-01"
+    to_date   = today.strftime("%Y-%m-%d")
+
+    try:
+        deals = get_deals(from_date, to_date, company_id=cid)
+    except Exception as e:
+        return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
+
+    # 取引先名でフィルタ（完全一致 → 部分一致の順）
+    from name_utils import similarity as name_similarity
+    THRESHOLD = 0.55
+    matched_deals = []
+    for d in deals:
+        acc_name = d.get("取引先名", "")
+        if not acc_name:
+            continue
+        score = name_similarity(acc_name, partner_name)
+        if score >= THRESHOLD:
+            matched_deals.append((score, d))
+    matched_deals.sort(key=lambda x: x[0], reverse=True)
+    matched_deals = [d for _, d in matched_deals]
+
+    # recheck_records に追加（取引IDで重複除去）
+    records     = load_recheck_records()
+    existing_ids = {r["id"] for r in records}
+    new_count   = 0
+    for d in matched_deals:
+        deal_id = str(d.get("取引ID", ""))
+        if not deal_id or deal_id in existing_ids:
+            continue
+        records.append({
+            "id":                    deal_id,
+            "fetched_at":            datetime.now().isoformat(),
+            "fetched_for_invoice_id": invoice_id,
+            "取引先名":              d.get("取引先名", ""),
+            "着金日":                d.get("着金日", ""),
+            "入金金額":              d.get("入金金額", 0),
+            "備考":                  d.get("備考", ""),
+            "科目":                  d.get("科目", ""),
+            "memo":                  "",
+            "deleted":               False,
+            "linked_invoice_id":     None,
+            "linked_invoice_num":    None,
+            "linked_at":             None,
+        })
+        existing_ids.add(deal_id)
+        new_count += 1
+
+    save_recheck_records(records)
+
+    visible = [r for r in records if not r.get("deleted")]
+    return jsonify({
+        "ok":          True,
+        "new_count":   new_count,
+        "total_count": len(visible),
+        "partner_name": partner_name,
+        "from_date":   from_date,
+        "to_date":     to_date,
+    })
+
+
+@app.route("/api/recheck/<record_id>/link", methods=["POST"])
+@login_required
+def api_recheck_link(record_id):
+    """
+    入金履歴レコードを請求書に照合する。
+    invoice_id に 着金日_手動・着金金額_手動 をセットし、未収から消す。
+    """
+    data       = request.get_json(force=True, silent=True) or {}
+    invoice_id = data.get("invoice_id", "").strip()
+    if not invoice_id:
+        return jsonify({"error": "invoice_id が必要です"}), 400
+
+    records = load_recheck_records()
+    record  = next((r for r in records if r["id"] == record_id), None)
+    if not record:
+        return jsonify({"error": "レコードが見つかりません"}), 404
+
+    # 請求書のメタに着金情報をセット
+    meta = load_meta()
+    meta.setdefault(invoice_id, {})
+    meta[invoice_id]["着金日_手動"]   = record.get("着金日", "")
+    meta[invoice_id]["着金金額_手動"] = record.get("入金金額", 0)
+    save_meta(meta)
+
+    # 請求書番号を取得（表示用）
+    result = _load_result()
+    invoice_num = invoice_id
+    if result:
+        for cat in ["overdue", "seikyu_kakunin", "upcoming", "unpaid", "ichiji_hokan", "paid"]:
+            for b in result.get(cat, []):
+                if b.get("請求書ID") == invoice_id:
+                    invoice_num = b.get("請求番号", invoice_id)
+                    break
+
+    # レコードを照合済みにマーク
+    record["linked_invoice_id"]  = invoice_id
+    record["linked_invoice_num"] = invoice_num
+    record["linked_at"]          = datetime.now().isoformat()
+    save_recheck_records(records)
+
+    return jsonify({"ok": True, "invoice_num": invoice_num})
+
+
+@app.route("/api/recheck/<record_id>/edit", methods=["POST"])
+@login_required
+def api_recheck_edit(record_id):
+    """入金履歴レコードのメモを更新する"""
+    data    = request.get_json(force=True, silent=True) or {}
+    memo    = data.get("memo", "")
+    records = load_recheck_records()
+    record  = next((r for r in records if r["id"] == record_id), None)
+    if not record:
+        return jsonify({"error": "レコードが見つかりません"}), 404
+    record["memo"] = memo
+    save_recheck_records(records)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/recheck/<record_id>/delete", methods=["POST"])
+@login_required
+def api_recheck_delete(record_id):
+    """入金履歴レコードを未収再確認リストから削除（ソフトデリート）"""
+    records = load_recheck_records()
+    record  = next((r for r in records if r["id"] == record_id), None)
+    if not record:
+        return jsonify({"error": "レコードが見つかりません"}), 404
+    record["deleted"] = True
+    save_recheck_records(records)
+    return jsonify({"ok": True})
+
+
 @app.route("/api/debug-billing-raw")
 def debug_billing_raw():
     """請求書APIの実際のフィールド一覧を確認するデバッグエンドポイント"""
