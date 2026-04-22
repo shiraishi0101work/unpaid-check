@@ -1597,13 +1597,19 @@ def api_overdue_recheck_all():
     except Exception as e:
         return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
 
-    overdue_list   = result.get("overdue", [])
-    meta_all       = load_meta()
-    company_tantou = load_company_tantou()
+    try:
+        overdue_list   = result.get("overdue", [])
+        meta_all       = load_meta()
+        company_tantou = load_company_tantou()
+    except Exception as e:
+        return jsonify({"error": f"データ読み込みエラー: {e}"}), 500
 
-    import re as _re
-    import jaconv as _jc
-    import uuid as _uuid
+    try:
+        import re as _re
+        import jaconv as _jc
+        import uuid as _uuid
+    except ImportError as e:
+        return jsonify({"error": f"モジュールエラー: {e}"}), 500
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
@@ -1620,8 +1626,11 @@ def api_overdue_recheck_all():
         unclassified_deals = []
 
     # 既存レコード
-    recheck_records      = load_recheck_records()
-    furikomi_unconf      = load_furikomi_unconfirmed()
+    try:
+        recheck_records      = load_recheck_records()
+        furikomi_unconf      = load_furikomi_unconfirmed()
+    except Exception as e:
+        return jsonify({"error": f"レコード読み込みエラー: {e}"}), 500
     existing_jids_rchk   = {r.get("journal_id", r["id"]) for r in recheck_records}
     existing_jids_furik  = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
 
