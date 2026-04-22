@@ -1850,7 +1850,7 @@ def api_accounting_debug():
 
     for key, hdrs, url, params in test_urls:
         try:
-            resp = _req.get(url, headers=headers, params=params, timeout=10)
+            resp = _req.get(url, headers=hdrs, params=params, timeout=10)
             results[key] = {"status": resp.status_code, "body": resp.text[:300]}
         except Exception as e:
             results[key] = {"error": str(e)}
