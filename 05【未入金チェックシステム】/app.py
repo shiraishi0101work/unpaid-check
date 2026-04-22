@@ -1102,6 +1102,7 @@ def dashboard():
     return render_template(
         "dashboard.html",
         auth_invoice=auth_invoice,
+        auth_accounting=auth_accounting,
         result=result,
         overdue=overdue,
         seikyu_kakunin=seikyu_kakunin,
