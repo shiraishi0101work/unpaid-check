@@ -368,5 +368,23 @@ if ($action === 'skip_statement') {
     exit;
 }
 
+// ── カード明細：個別削除 ──
+if ($action === 'delete_statement') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $db->prepare('DELETE FROM card_statements WHERE id=?')->execute([(int)$body['id']]);
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
+// ── カード明細：一括削除 ──
+if ($action === 'clear_statements') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $db->exec("DELETE FROM card_statements WHERE status='pending'");
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['error'=>'unknown action']);
