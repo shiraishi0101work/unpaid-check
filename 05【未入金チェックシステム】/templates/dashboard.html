@@ -1122,6 +1122,14 @@
           </select>
           <div class="form-text">同じ取引先の未収請求書が上に表示されます</div>
         </div>
+        <div class="mb-2">
+          <label class="form-label fw-semibold small">差額（未入金が残る場合）</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">¥</span>
+            <input type="number" id="rlink-diff-input" class="form-control" placeholder="0" min="0">
+          </div>
+          <div class="form-text" id="rlink-diff-hint">請求書を選択すると自動計算されます</div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
