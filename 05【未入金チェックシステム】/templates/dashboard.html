@@ -1498,61 +1498,109 @@ const recheckLinkModal = new bootstrap.Modal(document.getElementById('recheckLin
 let _rlinkRecordId = null;
 let _rlinkDealAmt  = 0;
 
-document.querySelectorAll('.recheck-link-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    _rlinkRecordId = this.dataset.id;
-    _rlinkDealAmt  = parseInt(this.dataset.amt) || 0;
-    const partnerName = this.dataset.name;
-    const dealDate    = this.dataset.date;
+function _openRecheckModal(btn) {
+  _rlinkRecordId         = btn.dataset.id;
+  _rlinkDealAmt          = parseInt(btn.dataset.amt) || 0;
+  const partnerName      = btn.dataset.name       || '';
+  const dealDate         = btn.dataset.date        || '';
+  const linkedInvoiceId  = btn.dataset.linkedInvoice    || '';
+  const linkedInvoiceNum = btn.dataset.linkedInvoiceNum || '';
+  const savedDiff        = parseInt(btn.dataset.samediff) || 0;
 
-    document.getElementById('rlink-deal-info').textContent =
-      `${partnerName} / 着金日: ${dealDate} / ¥${Number(_rlinkDealAmt).toLocaleString()}`;
+  document.getElementById('rlink-deal-info').textContent =
+    `${partnerName} / 着金日: ${dealDate} / ¥${Number(_rlinkDealAmt).toLocaleString()}`;
 
-    // 取引先名でフィルタしてドロップダウン生成
-    const select   = document.getElementById('rlink-invoice-select');
-    select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
+  // ドロップダウン生成
+  const select = document.getElementById('rlink-invoice-select');
+  select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
 
-    const matching = _overdueList.filter(b => b['取引先名'] === partnerName);
-    const others   = _overdueList.filter(b => b['取引先名'] !== partnerName);
+  // 再編集時: 紐づけ済み請求書が未収リストにない場合はオプション追加
+  if (linkedInvoiceId && !_overdueList.find(b => b['請求書ID'] === linkedInvoiceId)) {
+    const opt = document.createElement('option');
+    opt.value = linkedInvoiceId;
+    opt.textContent = `[現在の紐づけ] ${linkedInvoiceNum}`;
+    select.appendChild(opt);
+  }
 
-    if (matching.length > 0) {
-      const grp  = document.createElement('optgroup');
-      grp.label  = `${partnerName} の未収請求書`;
-      matching.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b['請求書ID'];
-        opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限'] || '—'}`;
-        grp.appendChild(opt);
-      });
-      select.appendChild(grp);
+  const matching = _overdueList.filter(b => b['取引先名'] === partnerName);
+  const others   = _overdueList.filter(b => b['取引先名'] !== partnerName);
+
+  if (matching.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = `${partnerName} の未収請求書`;
+    matching.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b['請求書ID'];
+      opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限'] || '—'}`;
+      grp.appendChild(opt);
+    });
+    select.appendChild(grp);
+  }
+
+  if (others.length > 0) {
+    const grp2 = document.createElement('optgroup');
+    grp2.label = 'その他の未収請求書';
+    others.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b['請求書ID'];
+      opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
+      grp2.appendChild(opt);
+    });
+    select.appendChild(grp2);
+  }
+
+  // 差額フィールド初期化
+  const diffInput = document.getElementById('rlink-diff-input');
+  document.getElementById('rlink-diff-hint').textContent = '請求書を選択すると自動計算されます';
+  diffInput.value = savedDiff || '';
+
+  // 請求書を選択済みにしてから差額を自動計算
+  if (linkedInvoiceId) {
+    select.value = linkedInvoiceId;
+    select.dispatchEvent(new Event('change'));
+    if (savedDiff) diffInput.value = savedDiff; // 保存済み差額を優先
+  } else if (matching.length === 1) {
+    select.value = matching[0]['請求書ID'];
+    select.dispatchEvent(new Event('change'));
+  }
+
+  recheckLinkModal.show();
+}
+
+// 請求書選択時に差額を自動計算
+document.getElementById('rlink-invoice-select')?.addEventListener('change', function() {
+  const inv = _overdueList.find(b => b['請求書ID'] === this.value);
+  const diffHint  = document.getElementById('rlink-diff-hint');
+  const diffInput = document.getElementById('rlink-diff-input');
+  if (inv) {
+    const invAmt = parseInt(inv['請求金額']) || 0;
+    const diff   = invAmt - _rlinkDealAmt;
+    if (diff > 0) {
+      diffHint.textContent = `自動計算: 請求 ¥${invAmt.toLocaleString()} − 入金 ¥${_rlinkDealAmt.toLocaleString()} = ¥${diff.toLocaleString()}`;
+      if (!diffInput.value) diffInput.value = diff;
+    } else if (diff < 0) {
+      diffHint.textContent = `過払い: 入金 ¥${_rlinkDealAmt.toLocaleString()} > 請求 ¥${invAmt.toLocaleString()}`;
+      diffInput.value = '';
+    } else {
+      diffHint.textContent = '請求金額と入金金額が一致しています';
+      diffInput.value = '';
     }
+  } else {
+    diffHint.textContent = '請求書を選択すると自動計算されます';
+  }
+});
 
-    if (others.length > 0) {
-      const grp2 = document.createElement('optgroup');
-      grp2.label = 'その他の未収請求書';
-      others.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b['請求書ID'];
-        opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
-        grp2.appendChild(opt);
-      });
-      select.appendChild(grp2);
-    }
-
-    if (matching.length === 1) {
-      select.value = matching[0]['請求書ID'];
-    }
-
-    recheckLinkModal.show();
-  });
+// イベント委任: 請求書照合・再編集ボタン
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.recheck-link-btn');
+  if (btn) { _openRecheckModal(btn); return; }
 });
 
 document.getElementById('rlink-confirm-btn')?.addEventListener('click', async function() {
   const invoiceId = document.getElementById('rlink-invoice-select').value;
-  if (!invoiceId) {
-    alert('請求書を選択してください');
-    return;
-  }
+  if (!invoiceId) { alert('請求書を選択してください'); return; }
+
+  const diffAmt = parseInt(document.getElementById('rlink-diff-input').value) || 0;
 
   this.disabled = true;
   this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
@@ -1561,24 +1609,50 @@ document.getElementById('rlink-confirm-btn')?.addEventListener('click', async fu
     const resp = await fetch(`/api/recheck/${_rlinkRecordId}/link`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({invoice_id: invoiceId}),
+      body: JSON.stringify({invoice_id: invoiceId, 差額: diffAmt || null}),
     });
     const data = await resp.json();
     if (resp.ok && data.ok) {
       recheckLinkModal.hide();
-      // 未収行を即時非表示
       const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
       if (overdueRow) overdueRow.style.display = 'none';
-      // 再確認行を照合済み表示に更新
       const recheckRow = document.getElementById(`recheck-row-${_rlinkRecordId}`);
       if (recheckRow) {
         recheckRow.classList.add('table-success');
-        const opCell = recheckRow.querySelector('td:last-child');
-        if (opCell) opCell.innerHTML = `<span class="text-muted small">${new Date().toLocaleDateString('ja-JP')}</span>`;
-        const statusCell = recheckRow.querySelectorAll('td')[6];
+        // 状態セル更新
+        const statusCell = recheckRow.querySelector('.recheck-status-cell');
         if (statusCell) statusCell.innerHTML =
           `<span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>照合済</span>
            <div class="text-muted" style="font-size:0.7rem">${escHtml(data.invoice_num)}</div>`;
+        // 差額セル更新
+        const diffCell = recheckRow.querySelector('.recheck-diff-cell');
+        if (diffCell) {
+          if (data.差額) {
+            diffCell.textContent = `¥${Number(data.差額).toLocaleString()}`;
+            diffCell.className = 'text-end small recheck-diff-cell text-danger fw-semibold';
+          } else {
+            diffCell.textContent = '';
+            diffCell.className = 'text-end small recheck-diff-cell text-muted';
+          }
+        }
+        // 操作セル更新（再編集ボタンに切り替え）
+        const opCell = recheckRow.querySelector('td:last-child');
+        if (opCell) opCell.innerHTML =
+          `<div class="d-flex gap-1 justify-content-center flex-wrap">
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 recheck-link-btn"
+              data-id="${escHtml(_rlinkRecordId)}"
+              data-name="${escHtml(recheckRow.querySelector('td').textContent.trim())}"
+              data-date="${escHtml(recheckRow.querySelectorAll('td')[1].textContent.trim())}"
+              data-amt="${_rlinkDealAmt}"
+              data-linked-invoice="${escHtml(invoiceId)}"
+              data-linked-invoice-num="${escHtml(data.invoice_num)}"
+              data-samediff="${data.差額 || ''}">
+              <i class="bi bi-pencil-fill"></i> 再編集
+            </button>
+            <button class="btn btn-outline-danger btn-sm py-0 px-1 recheck-delete-btn" data-id="${escHtml(_rlinkRecordId)}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>`;
       }
     } else {
       alert('エラー: ' + (data.error || ''));
@@ -1603,25 +1677,24 @@ document.querySelectorAll('.recheck-memo-input').forEach(input => {
   });
 });
 
-// 削除ボタン
-document.querySelectorAll('.recheck-delete-btn').forEach(btn => {
-  btn.addEventListener('click', async function() {
-    if (!confirm('この入金履歴を未収再確認リストから削除しますか？')) return;
-    const recordId = this.dataset.id;
-    try {
-      const resp = await fetch(`/api/recheck/${recordId}/delete`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-      });
-      const data = await resp.json();
-      if (resp.ok && data.ok) {
-        const row = document.getElementById(`recheck-row-${recordId}`);
-        if (row) row.remove();
-      }
-    } catch(e) {
-      alert('エラー: ' + e.message);
+// イベント委任: 削除ボタン
+document.addEventListener('click', async function(e) {
+  const btn = e.target.closest('.recheck-delete-btn');
+  if (!btn) return;
+  if (!confirm('この入金履歴を未収再確認リストから削除しますか？')) return;
+  const recordId = btn.dataset.id;
+  try {
+    const resp = await fetch(`/api/recheck/${recordId}/delete`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      const row = document.getElementById(`recheck-row-${recordId}`);
+      if (row) row.remove();
     }
-  });
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
 });
 
 // ===== まとめて再確認ボタン =====
