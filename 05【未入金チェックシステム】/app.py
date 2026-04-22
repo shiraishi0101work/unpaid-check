@@ -1789,19 +1789,44 @@ def api_overdue_recheck(invoice_id):
     except Exception as e:
         return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
 
-    # 取引先名でフィルタ（完全一致 → 部分一致の順）
-    from name_utils import similarity as name_similarity
-    THRESHOLD = 0.55
+    # 振込名義リストを取得（顧客リスト + 請求書メタ）
+    company_tantou = load_company_tantou()
+    meta_all       = load_meta()
+    furikomi_meta  = meta_all.get(invoice_id, {}).get("個人名", "")
+    furikomi_list  = _get_furikomi_list(company_tantou, partner_name)
+    if furikomi_meta and furikomi_meta not in furikomi_list:
+        furikomi_list = [furikomi_meta] + furikomi_list
+
+    if not furikomi_list:
+        return jsonify({
+            "ok":          False,
+            "error":       f"「{partner_name}」の振込名義が登録されていません。顧客リストまたは編集ボタンから振込名義を登録してください。",
+            "new_count":   0,
+            "total_count": 0,
+        }), 400
+
+    # 振込名義が会計の適用（備考）に含まれているかで照合
+    import re as _re
+    import jaconv as _jc
+
+    def _norm(s: str) -> str:
+        s = _jc.hira2kata(s.strip())
+        s = _jc.h2z(s, kana=True, ascii=False, digit=False)
+        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        return s
+
     matched_deals = []
     for d in deals:
-        acc_name = d.get("取引先名", "")
-        if not acc_name:
-            continue
-        score = name_similarity(acc_name, partner_name)
-        if score >= THRESHOLD:
-            matched_deals.append((score, d))
-    matched_deals.sort(key=lambda x: x[0], reverse=True)
-    matched_deals = [d for _, d in matched_deals]
+        remark   = d.get("備考", "") or ""
+        remark_n = _norm(remark)
+        for name in furikomi_list:
+            if not name or len(name) < 2:
+                continue
+            name_n = _norm(name)
+            # 正規化後の名前が適用に含まれるか、または元テキストで含まれるか
+            if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+                matched_deals.append(d)
+                break
 
     # recheck_records に追加（取引IDで重複除去）
     records     = load_recheck_records()
