@@ -2291,10 +2291,20 @@ def api_recheck_link(record_id):
     # 請求書のメタに着金情報をセット
     meta = load_meta()
     meta.setdefault(invoice_id, {})
-    meta[invoice_id]["着金日_手動"]   = record.get("着金日", "")
-    meta[invoice_id]["着金金額_手動"] = record.get("入金金額", 0)
-    if samediff:
-        meta[invoice_id]["差額"] = samediff
+    if samediff and samediff > 0:
+        # 部分入金: 未収に残したまま残額を記録（着金日_手動はセットしない）
+        meta[invoice_id]["部分入金"]   = True
+        meta[invoice_id]["残額"]       = samediff
+        meta[invoice_id]["入金済金額"] = record.get("入金金額", 0)
+        meta[invoice_id]["差額"]       = samediff
+        # 着金日_手動は設定しない → overdue_moved に移動しない
+    else:
+        # 全額入金: 未収から消す
+        meta[invoice_id]["着金日_手動"]   = record.get("着金日", "")
+        meta[invoice_id]["着金金額_手動"] = record.get("入金金額", 0)
+        # 部分入金フラグをクリア
+        for k in ["部分入金", "残額", "入金済金額", "差額"]:
+            meta[invoice_id].pop(k, None)
     save_meta(meta)
 
     # 請求書番号を取得（表示用）
