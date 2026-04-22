@@ -391,6 +391,12 @@
       </svg>
       パスワード変更
     </div>
+    <div class="nav-item" onclick="openApiKeyModal()" id="apikey-nav">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M11 1a4 4 0 110 8 4 4 0 010-8zM7.5 8.5l-6 6M3 11l2 2"/>
+      </svg>
+      <span id="apikey-nav-label">APIキー未設定</span>
+    </div>
     <div class="nav-item" onclick="doLogout()">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
@@ -399,6 +405,21 @@
     </div>
   </nav>
 </aside>
+
+<!-- APIキー設定モーダル -->
+<div id="apikey-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:8000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:32px;width:400px;box-shadow:0 8px 32px rgba(0,0,0,.15)">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Anthropic APIキー設定</div>
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:16px">AIテキスト解析・画像読み取りに使用します。<br>Della Scoreと共通のキーです。</div>
+    <input type="password" id="apikey-input" class="login-input" placeholder="sk-ant-..." style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--text-hint);margin-bottom:16px">キーはブラウザのlocalStorageにのみ保存されます。</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-danger" onclick="clearApiKey()" style="margin-right:auto">削除</button>
+      <button class="btn" onclick="closeApiKeyModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+</div>
 
 <!-- パスワード変更モーダル -->
 <div id="pw-change-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:8000;align-items:center;justify-content:center">
