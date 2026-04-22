@@ -895,7 +895,45 @@ function guessShop(url) {
   } catch(e) { return ''; }
 }
 
+// ── APIキー ──
+function getApiKey() { return localStorage.getItem('sf_apikey') || ''; }
+function apiHeaders() {
+  const k = getApiKey();
+  if (!k) {
+    alert('APIキーが未設定です。\nサイドバーの「APIキー」から設定してください。\n（Della Scoreで設定済みの場合は自動で共有されます）');
+    return null;
+  }
+  return { 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+}
+function openApiKeyModal() {
+  const cur = getApiKey();
+  document.getElementById('apikey-input').value = cur ? '（設定済み）' : '';
+  document.getElementById('apikey-modal').style.display = 'flex';
+}
+function closeApiKeyModal() { document.getElementById('apikey-modal').style.display = 'none'; }
+function saveApiKey() {
+  const v = document.getElementById('apikey-input').value.trim();
+  if (!v || v.startsWith('（')) { closeApiKeyModal(); return; }
+  if (!v.startsWith('sk-ant-')) { alert('APIキーは sk-ant- で始まります。'); return; }
+  localStorage.setItem('sf_apikey', v);
+  updateApiKeyNav(); closeApiKeyModal(); toast('APIキーを保存しました');
+}
+function clearApiKey() {
+  if (!confirm('APIキーを削除しますか？')) return;
+  localStorage.removeItem('sf_apikey');
+  updateApiKeyNav(); closeApiKeyModal();
+}
+function updateApiKeyNav() {
+  const lbl = document.getElementById('apikey-nav-label');
+  const nav = document.getElementById('apikey-nav');
+  const has = !!getApiKey();
+  if (lbl) lbl.textContent = has ? 'APIキー設定済み' : 'APIキー未設定';
+  if (nav) nav.style.color = has ? '#22c55e' : '';
+}
+
 async function callAI(text, url, shopGuess) {
+  const headers = apiHeaders();
+  if (!headers) throw new Error('no api key');
   const prompt = `あなたは通販サイトの商品情報抽出の専門家です。以下のテキストから商品情報を正確に抽出してJSONのみで返してください。
 
 抽出フィールド（不明は空文字か0）:
@@ -919,15 +957,96 @@ ${text.slice(0, 8000)}
 JSONのみ。マークダウン不要。`;
 
   const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700,
+    method: 'POST', headers,
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
       messages: [{ role: 'user', content: prompt }] })
   });
   const d = await r.json();
+  if (d.error) throw new Error(d.error.message || 'api error');
   const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
   const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
   if (!m) throw new Error('parse failed');
   return JSON.parse(m[0]);
+}
+
+// ── 画像読み取り ──
+let _imgBase64 = '', _imgType = 'image/jpeg';
+
+function onImgFileChange(input) {
+  const file = input.files[0]; if (!file) return;
+  _imgType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    _imgBase64 = e.target.result.split(',')[1];
+    document.getElementById('img-preview').src = e.target.result;
+    document.getElementById('img-preview-wrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function imgDragOver(e) { e.preventDefault(); document.getElementById('img-drop-area').classList.add('drag-over'); }
+function imgDragLeave(e) { document.getElementById('img-drop-area').classList.remove('drag-over'); }
+function imgDrop(e) {
+  e.preventDefault(); imgDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  _imgType = file.type;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _imgBase64 = ev.target.result.split(',')[1];
+    document.getElementById('img-preview').src = ev.target.result;
+    document.getElementById('img-preview-wrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+async function analyzeImage() {
+  if (!_imgBase64) { alert('画像を選択してください'); return; }
+  const headers = apiHeaders(); if (!headers) return;
+  const btn = document.getElementById('img-parse-btn');
+  ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
+  showLoading(true); btn.disabled = true; btn.textContent = '解析中...';
+  try {
+    const prompt = `この画像から商品情報または仕入れ請求書の内容を抽出してJSONのみで返してください。
+
+抽出フィールド（不明は空文字か0）:
+{
+  "name": "商品名・品名（型番・モデル名を含む完全な名称）",
+  "shop": "販売店・仕入れ先名",
+  "brand": "ブランド・メーカー名",
+  "price": 税込価格の数値（不明は0）,
+  "model": "型番・品番",
+  "color": "カラー・色",
+  "spec": "主要スペック概要",
+  "memo": "その他の重要仕様・特記事項（数量・納期など）"
+}
+
+複数商品が含まれる場合は最も主要な1点を抽出してください。
+JSONのみ。マークダウン不要。`;
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: _imgType, data: _imgBase64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'api error');
+    const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
+    const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('parse failed');
+    const parsed = JSON.parse(match[0]);
+    if (parsed.name || parsed.shop || parsed.price > 0) {
+      applyParsed(parsed, '', '', '画像');
+    } else { throw new Error('no data'); }
+  } catch(e) {
+    document.getElementById('erb').textContent = '解析できませんでした。別の画像をお試しください。';
+    document.getElementById('erb').style.display = '';
+  } finally {
+    showLoading(false); btn.disabled = false; btn.textContent = '解析する';
+  }
 }
 
 let _scrapedPrice = 0; // 読み込んだ元の価格
