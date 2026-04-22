@@ -3413,6 +3413,144 @@ function delItem(key,id){
 }
 function markPaid(id){const p=D.purchases.find(x=>x.id===id);if(p){p.status='paid';save();renderPurchases();}}
 
+// ===== 毎月複製（仕入れ請求書）=====
+let _mpurFilter='all';
+let _mpurSel=new Set();
+
+function curYM(){ return new Date().toISOString().slice(0,7); }
+
+function togglePurMonthly(id){
+  const p=D.purchases.find(x=>x.id===id); if(!p) return;
+  p.monthly=!p.monthly;
+  if(!p.dup_months) p.dup_months=[];
+  save(); renderPurchases(); updMpurOpenBtn();
+}
+
+function updMpurOpenBtn(){
+  const cm=curYM();
+  const undone=D.purchases.filter(p=>p.monthly&&!(p.dup_months||[]).includes(cm)).length;
+  const btn=document.getElementById('mpur-open-btn');
+  if(!btn) return;
+  btn.textContent=undone>0?`↻ 毎月複製（未複製${undone}件）`:'↻ 毎月複製';
+  btn.style.color=undone>0?'var(--red)':'var(--navy)';
+  btn.style.borderColor=undone>0?'var(--red)':'var(--navy)';
+}
+
+function openMpurModal(){
+  _mpurFilter='all'; _mpurSel.clear();
+  showMpurStep1();
+  renderMpurList();
+  openModal('mpur-modal');
+}
+
+function showMpurStep1(){
+  document.getElementById('mpur-step1').style.display='';
+  document.getElementById('mpur-step2').style.display='none';
+}
+
+function setMpurFilter(mode,el){
+  _mpurFilter=mode; _mpurSel.clear();
+  document.querySelectorAll('.mpur-filter').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderMpurList();
+}
+
+function renderMpurList(){
+  const cm=curYM();
+  const [y,m]=cm.split('-');
+  document.getElementById('mpur-month-label').textContent=`${y}年${parseInt(m)}月`;
+
+  const all=D.purchases.filter(p=>p.monthly);
+  const list=_mpurFilter==='undone'?all.filter(p=>!(p.dup_months||[]).includes(cm))
+            :_mpurFilter==='done'  ?all.filter(p=> (p.dup_months||[]).includes(cm))
+            :all;
+
+  const el=document.getElementById('mpur-list');
+  if(!list.length){
+    const msg=_mpurFilter==='undone'?'未複製の仕入れ請求書はありません。'
+             :_mpurFilter==='done'  ?'今月複製済みの仕入れ請求書はありません。'
+             :'「毎月」に設定された仕入れ請求書がありません。\n一覧の「—」ボタンをクリックして毎月に設定してください。';
+    el.innerHTML=`<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;white-space:pre-line">${msg}</div>`;
+    updMpurBtn(); return;
+  }
+
+  el.innerHTML=list.map(p=>{
+    const done=(p.dup_months||[]).includes(cm);
+    const sel=_mpurSel.has(p.id);
+    return `<div class="mpur-item">
+      <input type="checkbox" ${sel?'checked':''} ${done?'disabled':''} onchange="toggleMpurSel('${p.id}',this)" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
+      <div class="mpur-info">
+        <div class="mpur-name">${p.supplier}</div>
+        <div class="mpur-sub">${p.desc||'—'} &nbsp;|&nbsp; ¥${fmt(p.amount+（p.tax||0))}（税込）</div>
+      </div>
+      ${done?'<span class="mdup-done-badge">今月複製済み</span>':'<span style="font-size:11px;color:var(--text3)">未複製</span>'}
+    </div>`;
+  }).join('');
+  updMpurBtn();
+}
+
+function toggleMpurSel(id,cb){
+  if(cb.checked){
+    if(_mpurSel.size>=20){cb.checked=false;alert('一度に選択できるのは20件までです');return;}
+    _mpurSel.add(id);
+  } else { _mpurSel.delete(id); }
+  updMpurBtn();
+}
+
+function toggleMpurSelectAll(masterCb){
+  const cm=curYM();
+  const cands=D.purchases.filter(p=>p.monthly&&!(p.dup_months||[]).includes(cm));
+  if(masterCb.checked){
+    _mpurSel.clear();
+    cands.slice(0,20).forEach(p=>_mpurSel.add(p.id));
+    if(cands.length>20) alert('20件を超えるため先頭20件を選択しました');
+  } else { _mpurSel.clear(); }
+  renderMpurList();
+}
+
+function updMpurBtn(){
+  const n=_mpurSel.size;
+  const btn=document.getElementById('mpur-next-btn');
+  const cnt=document.getElementById('mpur-sel-count');
+  if(btn){btn.disabled=n===0; btn.textContent=n>0?`選択した ${n} 件を複製`:'選択した件を複製';}
+  if(cnt) cnt.textContent=n>0?`${n}/20件選択中`:'';
+}
+
+function openMpurStep2(){
+  if(_mpurSel.size===0) return;
+  const td=today();
+  document.getElementById('mpur-date-all').value=td;
+  const items=D.purchases.filter(p=>_mpurSel.has(p.id));
+  document.getElementById('mpur-conf-items').innerHTML=items.map(p=>`<div class="mconf-row">
+    <div>
+      <div class="mconf-name">${p.supplier}</div>
+      <div class="mconf-sub">${p.desc||'—'} &nbsp;¥${fmt(p.amount+(p.tax||0))}（税込）</div>
+    </div>
+    <div><input type="date" id="mpd-${p.id}" value="${td}" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit"></div>
+  </div>`).join('');
+  document.getElementById('mpur-step1').style.display='none';
+  document.getElementById('mpur-step2').style.display='';
+}
+
+function applyMpurDateAll(){
+  const d=document.getElementById('mpur-date-all').value; if(!d) return;
+  _mpurSel.forEach(id=>{const inp=document.getElementById('mpd-'+id);if(inp)inp.value=d;});
+}
+
+function execMpurDup(){
+  const cm=curYM();
+  const items=D.purchases.filter(p=>_mpurSel.has(p.id));
+  items.forEach(p=>{
+    const issued=document.getElementById('mpd-'+p.id)?.value||today();
+    D.purchases.push({...p, id:uid(), issued, status:'unpaid', monthly:false, dup_months:[]});
+    if(!p.dup_months) p.dup_months=[];
+    if(!p.dup_months.includes(cm)) p.dup_months.push(cm);
+  });
+  save(); closeModal('mpur-modal');
+  _mpurSel.clear(); renderPurchases(); updMpurOpenBtn();
+  alert(`${items.length}件を複製・登録しました。`);
+}
+
 // ── モーダルタブ切替 ─────────────────────────────
 function switchProspectTab(t){
   document.querySelectorAll('#add-modal .tab').forEach((el,i)=>el.classList.toggle('active',['manual','pdf','bulk'][i]===t));
