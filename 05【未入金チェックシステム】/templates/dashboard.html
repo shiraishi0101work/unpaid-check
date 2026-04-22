@@ -1814,6 +1814,11 @@ document.getElementById('recheck-all-btn')?.addEventListener('click', async func
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
     });
+    const ct = resp.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      alert(`診断情報\nステータス: ${resp.status}\nURL: ${resp.url}\nContent-Type: ${ct}`);
+      return;
+    }
     const data = await resp.json();
     if (!resp.ok) {
       alert('エラー: ' + (data.error || ''));
