@@ -131,6 +131,44 @@ def _to_deal_dict(j: dict) -> list[dict]:
     return results
 
 
+def get_unclassified_deals(from_date: str, to_date: str, company_id: str = "") -> list[dict]:
+    """
+    未仕分け（is_realized=false）の仕訳のみを取得して照合用フォーマットで返す。
+    振込名義確認タブ用。
+    """
+    print(f"[会計API] 未仕分け仕訳取得: {from_date} 〜 {to_date}", flush=True)
+
+    try:
+        raw_journals = _get_all_journal_pages(from_date, to_date, company_id=company_id,
+                                              is_realized=False)
+    except RuntimeError:
+        raise
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 401:
+            raise RuntimeError(
+                "MFクラウド会計の認証が切れています。設定画面から再連携してください。"
+            ) from e
+        raise
+
+    print(f"[会計API] 未仕分け取得完了: {len(raw_journals)}件", flush=True)
+
+    deals = []
+    for j in raw_journals:
+        deals.extend(_to_deal_dict(j))
+
+    seen = set()
+    deduped = []
+    for d in deals:
+        tid = d.get("取引ID", "")
+        if tid and tid in seen:
+            continue
+        if tid:
+            seen.add(tid)
+        deduped.append(d)
+
+    return deduped
+
+
 def get_deals(from_date: str, to_date: str, company_id: str = "",
               fiscal_start_month: int = 4) -> list[dict]:
     """
