@@ -343,7 +343,27 @@ document.getElementById('customers-tbody').addEventListener('click', function(e)
     openEditTantou(editBtn.dataset.company, editBtn.dataset.tantou);
     return;
   }
+  const delBtn = e.target.closest('.btn-delete-customer');
+  if (delBtn) {
+    deleteCustomer(delBtn.dataset.company);
+    return;
+  }
 });
+
+async function deleteCustomer(company) {
+  if (!confirm(`「${company}」を顧客リストから削除しますか？\n※振込名義の登録情報もすべて削除されます。`)) return;
+  const resp = await fetch('/api/customers/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({company}),
+  });
+  const data = await resp.json();
+  if (data.ok) {
+    await loadCustomers();
+  } else {
+    alert('削除エラー: ' + (data.error || ''));
+  }
+}
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
