@@ -2419,6 +2419,17 @@ function renderInvoices(){
     <span style="font-size:12px;color:var(--text3)">消費税：${fmt(totalTax)}</span>
     ${noDateCount?`<span style="color:var(--red);font-size:12px">⚠ 発行日なし ${noDateCount}件（月次管理に反映されません）</span>`:''}
   </div>`;
+  // stat カード更新（選択期間連動）
+  const _isStatList=mf
+    ?D.invoices.filter(i=>(i.issued||'').slice(0,7)===mf)
+    :D.invoices.filter(i=>(i.issued||'').startsWith(thisMonth()));
+  const _isLbl=mf?mf.replace('-','年')+'月 売上':'今月 売上';
+  const _isLblEl=document.getElementById('is-label');
+  if(_isLblEl)_isLblEl.textContent=_isLbl;
+  const _isMonthEl=document.getElementById('is-month');
+  const _isMcEl=document.getElementById('is-mc');
+  if(_isMonthEl)_isMonthEl.textContent=fmt(_isStatList.reduce((s,i)=>s+(i.amount||0),0));
+  if(_isMcEl)_isMcEl.textContent=_isStatList.length+'件';
 }
 
 // ── 仕入れビュー切り替え ──────────────────────────
