@@ -2339,11 +2339,46 @@ def api_recheck_unlink(record_id):
 
     invoice_id = record.get("linked_invoice_id")
     if invoice_id:
+        # ① invoice_meta をクリア
         meta = load_meta()
         if invoice_id in meta:
             for k in ["着金日_手動", "着金金額_手動", "差額", "部分入金", "残額", "入金済金額"]:
                 meta[invoice_id].pop(k, None)
         save_meta(meta)
+
+        # ② last_result.json 内の請求書を paid→overdue に移動し、焼き込みフィールドをクリア
+        result = _load_result()
+        if result:
+            _META_KEYS = ["着金日_手動", "着金金額_手動", "部分入金", "残額", "入金済金額"]
+            moved = False
+            # paid リストから探して overdue へ移動
+            for lst_key in ["paid", "unpaid"]:
+                lst = result.get(lst_key, [])
+                for i, b in enumerate(lst):
+                    if b.get("請求書ID") == invoice_id:
+                        item = lst.pop(i)
+                        for k in _META_KEYS:
+                            item.pop(k, None)
+                        item["着金日_手動"]   = ""
+                        item["着金金額_手動"] = 0
+                        result.setdefault("overdue", []).append(item)
+                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        moved = True
+                        break
+                if moved:
+                    break
+            # overdue リストにある場合は焼き込みフィールドだけクリア
+            if not moved:
+                for b in result.get("overdue", []):
+                    if b.get("請求書ID") == invoice_id:
+                        for k in _META_KEYS:
+                            b.pop(k, None)
+                        b["着金日_手動"]   = ""
+                        b["着金金額_手動"] = 0
+                        break
+            result_path = os.path.join(_cdir(), "last_result.json")
+            with open(result_path, "w", encoding="utf-8") as f:
+                json.dump(result, f, ensure_ascii=False, indent=2)
 
     record["linked_invoice_id"]  = None
     record["linked_invoice_num"] = None
