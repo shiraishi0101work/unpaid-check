@@ -1306,12 +1306,15 @@ document.querySelectorAll('.sidebar-stat-item[data-tab]').forEach(el => {
 // 編集モーダル
 const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
+let _editIsKaisho = false;
+
 document.querySelectorAll('.edit-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     const id    = this.dataset.id;
     const name  = this.dataset.name;
     const num   = this.dataset.num;
     const amt   = this.dataset.kikinAmt;
+    _editIsKaisho = this.dataset.kaisho === 'true';
 
     document.getElementById('edit-invoice-id').value    = id;
     document.getElementById('edit-invoice-info').textContent = `${num} / ${name}`;
@@ -1322,9 +1325,47 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
     document.getElementById('edit-kikin-amt').value      = amt || '';
     document.getElementById('edit-kojinmei').value       = this.dataset.kojinmei || '';
 
+    // 解消済みボタン切り替え
+    document.getElementById('edit-kaisho-btn').style.display = _editIsKaisho ? 'none' : '';
+    document.getElementById('edit-modoru-btn').style.display = _editIsKaisho ? '' : 'none';
+
     updateDiffDisplay();
     editModal.show();
   });
+});
+
+// 解消済みにする
+document.getElementById('edit-kaisho-btn')?.addEventListener('click', async function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/invoice/${id}/meta`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({解消済み: true}),
+    });
+    const data = await resp.json();
+    if (data.ok) { editModal.hide(); window.location.reload(); }
+    else alert('エラー: ' + (data.error || ''));
+  } catch(e) { alert('エラー: ' + e); }
+  finally { this.disabled = false; }
+});
+
+// 未収に戻す
+document.getElementById('edit-modoru-btn')?.addEventListener('click', async function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/invoice/${id}/meta`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({解消済み: false}),
+    });
+    const data = await resp.json();
+    if (data.ok) { editModal.hide(); window.location.reload(); }
+    else alert('エラー: ' + (data.error || ''));
+  } catch(e) { alert('エラー: ' + e); }
+  finally { this.disabled = false; }
 });
 
 function updateDiffDisplay() {
