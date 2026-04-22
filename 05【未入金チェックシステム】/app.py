@@ -800,6 +800,20 @@ def save_recheck_records(records: list):
         json.dump(records, f, ensure_ascii=False, indent=2)
 
 
+def load_furikomi_unconfirmed() -> list:
+    """振込名義未確認リスト（振込名義未登録顧客の候補入金データ）"""
+    path = os.path.join(_cdir(), "furikomi_unconfirmed.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_furikomi_unconfirmed(records: list):
+    with open(os.path.join(_cdir(), "furikomi_unconfirmed.json"), "w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, indent=2)
+
+
 def load_accounting_deals() -> list:
     """アップロードされたMF会計CSVの仕訳データを読み込む"""
     path = os.path.join(_cdir(), "accounting_deals.json")
