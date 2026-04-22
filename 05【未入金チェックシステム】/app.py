@@ -1830,12 +1830,22 @@ def api_accounting_debug():
     results = {}
 
     # 試すURL一覧
+    # 請求書APIトークンも取得して試す
+    inv_headers = {}
+    try:
+        inv_token = auth.get_access_token("invoice", cid)
+        inv_headers = {"Authorization": f"Bearer {inv_token}", "Accept": "application/json"}
+    except Exception:
+        pass
+
     test_urls = [
-        ("me_v1",        "GET", "https://accounting.moneyforward.com/api/v1/me",        {}),
-        ("journals_v1",  "GET", "https://accounting.moneyforward.com/api/v1/journals",  {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
-        ("journals_v3",  "GET", "https://accounting.moneyforward.com/api/v3/journals",  {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
-        ("biz_me",       "GET", "https://api.biz.moneyforward.com/api/v1/me",           {}),
-        ("invoice_me",   "GET", "https://invoice.moneyforward.com/api/v3/me",           {}),
+        ("journals_v1",        headers,     "https://accounting.moneyforward.com/api/v1/journals",           {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
+        ("invoice_billings",   inv_headers, "https://invoice.moneyforward.com/api/v3/billings",              {"per_page": 1}),
+        ("invoice_receipts",   inv_headers, "https://invoice.moneyforward.com/api/v3/receipts",              {"per_page": 1}),
+        ("invoice_payments",   inv_headers, "https://invoice.moneyforward.com/api/v3/payments",              {"per_page": 1}),
+        ("invoice_transfers",  inv_headers, "https://invoice.moneyforward.com/api/v3/transfers",             {"per_page": 1}),
+        ("invoice_deposits",   inv_headers, "https://invoice.moneyforward.com/api/v3/deposits",              {"per_page": 1}),
+        ("invoice_histories",  inv_headers, "https://invoice.moneyforward.com/api/v3/payment_histories",     {"per_page": 1}),
     ]
 
     for key, method, url, params in test_urls:
