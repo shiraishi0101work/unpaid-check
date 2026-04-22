@@ -1815,6 +1815,32 @@ def mark_unmade():
 # 未収再確認 API
 # ========================================
 
+@app.route("/api/accounting/debug", methods=["GET"])
+@login_required
+def api_accounting_debug():
+    """会計APIの接続状況をデバッグする"""
+    import requests as _req
+    cid = get_company_id()
+    try:
+        token = auth.get_access_token("accounting", cid)
+    except Exception as e:
+        return jsonify({"step": "get_token", "error": str(e)})
+
+    url = "https://accounting.moneyforward.com/api/v1/journals"
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    params  = {"fiscal_year": 2025, "half_year": 2, "per_page": 1}
+    try:
+        resp = _req.get(url, headers=headers, params=params, timeout=15)
+        return jsonify({
+            "step":   "api_call",
+            "status": resp.status_code,
+            "body":   resp.text[:1000],
+            "token_prefix": token[:10] + "...",
+        })
+    except Exception as e:
+        return jsonify({"step": "request", "error": str(e)})
+
+
 @app.route("/api/accounting/upload_csv", methods=["POST"])
 @login_required
 def api_accounting_upload_csv():
