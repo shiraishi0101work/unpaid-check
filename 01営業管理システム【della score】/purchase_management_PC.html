@@ -1556,7 +1556,7 @@ function execMonthlyDup() {
     if (d.auth) {
       document.getElementById('login-screen').style.display = 'none';
       await loadData();
-      rmets(); rt(); updFilters(); today();
+      rmets(); rt(); updFilters(); today(); updMonthlyBadge();
     } else {
       document.getElementById('login-screen').style.display = 'flex';
     }
