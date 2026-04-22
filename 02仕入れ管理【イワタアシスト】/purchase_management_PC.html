@@ -528,7 +528,7 @@
 
       <!-- CSVアップロード -->
       <div id="si-csv" style="display:none">
-        <p class="paste-hint">カード会社からダウンロードしたCSVをアップロードしてください。<br>列の順番：<code>日付, 店名, 金額</code>（ヘッダー行は自動スキップ）</p>
+        <p class="paste-hint">カード会社からダウンロードしたCSVをアップロードしてください。<br>Shift-JIS・UTF-8自動判別。ＥＴＣ利用分は自動除外します。</p>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <input type="file" id="stmt-csv-file" accept=".csv" style="font-size:13px;flex:1">
           <div class="fg" style="min-width:180px;flex:1">
