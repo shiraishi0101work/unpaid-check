@@ -39,7 +39,8 @@ def _request_with_retry(url: str, headers: dict, params: dict) -> requests.Respo
     return resp
 
 
-def _get_all_journal_pages(from_date: str, to_date: str, company_id: str = "") -> list:
+def _get_all_journal_pages(from_date: str, to_date: str, company_id: str = "",
+                           is_realized: bool | None = None) -> list:
     """ページネーションを処理して全仕訳を取得"""
     results = []
     page = 1
@@ -50,6 +51,8 @@ def _get_all_journal_pages(from_date: str, to_date: str, company_id: str = "") -
             "per_page":   10000,
             "page":       page,
         }
+        if is_realized is not None:
+            params["is_realized"] = str(is_realized).lower()
         resp = _request_with_retry(
             f"{BASE_URL}/api/v3/journals",
             headers=_headers(company_id),
