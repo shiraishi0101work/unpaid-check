@@ -936,6 +936,7 @@ async function loadURL() {
   const btn = document.getElementById('load-btn');
   ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
   showLoading(true); btn.disabled = true; btn.textContent = '取得中...';
+  const shopGuess = guessShop(url);
   try {
     const res = await Promise.race([
       fetch('/product_fetch.php?url=' + encodeURIComponent(url)),
@@ -944,15 +945,35 @@ async function loadURL() {
     if (!res.ok) throw new Error('fetch failed');
     const d = await res.json();
     if (d.error) throw new Error(d.error);
-    if (!d.name && !d.shop && !d.price) throw new Error('no data');
-    applyParsed(d, url, d.shop || guessShop(url), 'ページ');
+    if (d.name && d.price > 0) {
+      applyParsed(d, url, d.shop || shopGuess, 'ページ');
+    } else if (d.raw_text && d.raw_text.length > 100 && getApiKey()) {
+      document.getElementById('ldt').textContent = 'AIで補完中...';
+      const aiResult = await callAI(d.raw_text, url, d.shop || shopGuess);
+      const merged = { ...aiResult };
+      if (d.name) merged.name = d.name;
+      if (d.price > 0) { merged.price = d.price; merged.price_type = d.price_type; }
+      if (d.shop) merged.shop = d.shop;
+      applyParsed(merged, url, merged.shop || shopGuess, 'ページ+AI');
+    } else if (d.name || d.shop) {
+      applyParsed(d, url, d.shop || shopGuess, 'ページ');
+    } else {
+      throw new Error('no data');
+    }
   } catch(e) {
-    const shopGuess = guessShop(url);
-    if (shopGuess) document.getElementById('fs').value = shopGuess;
-    document.getElementById('fu').value = url;
-    const erb = document.getElementById('erb');
-    erb.textContent = 'ページを取得できませんでした。「テキストを貼り付ける」タブをお試しください。';
-    erb.style.display = '';
+    try {
+      if (!getApiKey()) throw new Error('no key');
+      document.getElementById('ldt').textContent = 'AIで解析中...';
+      const parsed = await callAI('URLから商品情報を推測してください。', url, shopGuess);
+      if (parsed.name || parsed.shop) {
+        applyParsed(parsed, url, parsed.shop || shopGuess, 'AI');
+      } else { throw new Error('no data'); }
+    } catch(e2) {
+      if (shopGuess) document.getElementById('fs').value = shopGuess;
+      document.getElementById('fu').value = url;
+      document.getElementById('erb').textContent = 'ページを取得できませんでした。「テキスト」または「画像」タブをお試しください。';
+      document.getElementById('erb').style.display = '';
+    }
   } finally {
     showLoading(false); btn.disabled = false; btn.textContent = '読み込む';
   }
