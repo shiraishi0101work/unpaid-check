@@ -173,7 +173,8 @@ def get_unclassified_deals(from_date: str, to_date: str, company_id: str = "") -
 
 
 def get_deals(from_date: str, to_date: str, company_id: str = "",
-              fiscal_start_month: int = 4) -> list[dict]:
+              fiscal_start_month: int = 4,
+              is_realized: bool | None = None) -> list[dict]:
     """
     指定期間の仕訳一覧を取得して照合用フォーマットで返す。
 
