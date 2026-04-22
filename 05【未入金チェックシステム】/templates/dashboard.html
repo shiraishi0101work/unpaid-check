@@ -19,6 +19,18 @@
     {% endif %}
   </div>
 
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-bank{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド会計</span>
+    </span>
+    {% if auth_accounting %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
+
   {% if auth_invoice %}
   <div class="sidebar-item">
     <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}">
@@ -31,6 +43,24 @@
 </div>
 
 <hr class="sidebar-divider">
+
+<!-- 個人名チェック -->
+{% if result %}
+<div class="sidebar-section">
+  <div class="sidebar-label">MF会計 個人名チェック</div>
+  <div class="sidebar-item">
+    <button class="btn btn-sm w-100 {% if auth_accounting %}btn-outline-info{% else %}btn-outline-secondary{% endif %}"
+            {% if not auth_accounting %}disabled{% endif %}
+            data-bs-toggle="modal" data-bs-target="#kojinmeiCheckModal">
+      <i class="bi bi-person-check me-1"></i>個人名で再チェック
+    </button>
+    {% if not auth_accounting %}
+    <div class="form-text" style="font-size:0.68rem">MFクラウド会計を連携してください</div>
+    {% endif %}
+  </div>
+</div>
+<hr class="sidebar-divider">
+{% endif %}
 
 <!-- 照合実行 -->
 <div class="sidebar-section">
