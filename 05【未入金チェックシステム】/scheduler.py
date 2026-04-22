@@ -52,7 +52,7 @@ def init_scheduler(run_func, token_check_func=None):
                 name="未入金チェック自動実行",
                 replace_existing=True,
             )
-            print(f"[スケジューラー] 有効 — {SCHEDULE_CRON}（Asia/Tokyo）")
+            print(f"[スケジューラー] 有効 {SCHEDULE_CRON}（Asia/Tokyo）")
         else:
             print(f"[スケジューラー] SCHEDULE_CRONの形式が不正: {SCHEDULE_CRON}")
     else:
