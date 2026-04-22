@@ -43,7 +43,7 @@ _SERVICE_DEFS = {
         "env_id":      "MF_ACCOUNTING_CLIENT_ID",
         "env_secret":  "MF_ACCOUNTING_CLIENT_SECRET",
         "env_uri":     "MF_ACCOUNTING_REDIRECT_URI",
-        "default_uri": f"http://localhost:{PORT}/oauth/callback/accounting",
+        "default_uri": f"http://localhost:{PORT}/oauth/callback/invoice",
         "token_file":  "token_accounting.json",
     },
 }
