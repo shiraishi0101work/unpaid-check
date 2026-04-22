@@ -786,6 +786,19 @@ def save_deleted_seikyu(ids: set):
     with open(os.path.join(_cdir(), "deleted_seikyu.json"), "w", encoding="utf-8") as f:
         json.dump(list(ids), f, ensure_ascii=False)
 
+
+def load_recheck_records() -> list:
+    path = os.path.join(_cdir(), "recheck_records.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_recheck_records(records: list):
+    with open(os.path.join(_cdir(), "recheck_records.json"), "w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, indent=2)
+
 def _is_delivered(b: dict) -> bool:
     """顧客への送付が確認されている（DL・メール・郵送のいずれか）"""
     return (
