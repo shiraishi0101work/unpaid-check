@@ -1276,6 +1276,7 @@ def dashboard():
         current_ym=get_current_year_month(),
         history_list=load_history_list(),
         recheck_records=recheck_records,
+        furikomi_unconfirmed=furikomi_unconfirmed,
     )
 
 
