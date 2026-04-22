@@ -3509,20 +3509,46 @@ function updMpurBtn(){
   if(cnt) cnt.textContent=n>0?`${n}/20件選択中`:'';
 }
 
+const inp_s='font-size:13px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit;width:100%';
+
 function openMpurStep2(){
   if(_mpurSel.size===0) return;
   const td=today();
   document.getElementById('mpur-date-all').value=td;
   const items=D.purchases.filter(p=>_mpurSel.has(p.id));
-  document.getElementById('mpur-conf-items').innerHTML=items.map(p=>`<div class="mconf-row">
-    <div>
-      <div class="mconf-name">${p.supplier}</div>
-      <div class="mconf-sub">${p.desc||'—'} &nbsp;¥${fmt(p.amount+(p.tax||0))}（税込）</div>
-    </div>
-    <div><input type="date" id="mpd-${p.id}" value="${td}" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit"></div>
-  </div>`).join('');
+  document.getElementById('mpur-conf-items').innerHTML=items.map(p=>`
+    <div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div style="padding:7px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--navy)">
+        ${p.supplier}${p.desc?` — ${p.desc}`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 12px">
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">仕入れ先</label>
+          <input id="mpe-sup-${p.id}" value="${p.supplier||''}" style="${inp_s}"></div>
+        <div style="grid-column:span 2"><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">内容（件名）</label>
+          <input id="mpe-desc-${p.id}" value="${p.desc||''}" style="${inp_s}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">金額（税抜）</label>
+          <input type="number" id="mpe-amt-${p.id}" value="${p.amount||0}" oninput="calcMpurTax('${p.id}')" style="${inp_s}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">消費税</label>
+          <input type="number" id="mpe-tax-${p.id}" value="${p.tax||0}" style="${inp_s}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">税込合計</label>
+          <div id="mpe-total-${p.id}" style="font-size:13px;font-weight:700;color:var(--navy);padding:6px 0">¥${fmt((p.amount||0)+(p.tax||0))}</div></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">発行日 *</label>
+          <input type="date" id="mpd-${p.id}" value="${td}" style="${inp_s}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">支払期限</label>
+          <input type="date" id="mpe-due-${p.id}" value="${p.due||''}" style="${inp_s}"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">振込先</label>
+          <input id="mpe-bank-${p.id}" value="${p.bank||''}" style="${inp_s}"></div>
+      </div>
+    </div>`).join('');
   document.getElementById('mpur-step1').style.display='none';
   document.getElementById('mpur-step2').style.display='';
+}
+
+function calcMpurTax(id){
+  const amt=parseInt(document.getElementById('mpe-amt-'+id)?.value)||0;
+  const tax=parseInt(document.getElementById('mpe-tax-'+id)?.value)||0;
+  const tot=document.getElementById('mpe-total-'+id);
+  if(tot) tot.textContent='¥'+fmt(amt+tax);
 }
 
 function applyMpurDateAll(){
@@ -3535,7 +3561,18 @@ function execMpurDup(){
   const items=D.purchases.filter(p=>_mpurSel.has(p.id));
   items.forEach(p=>{
     const issued=document.getElementById('mpd-'+p.id)?.value||today();
-    D.purchases.push({...p, id:uid(), issued, status:'unpaid', monthly:false, dup_months:[]});
+    D.purchases.push({
+      ...p,
+      id:uid(),
+      supplier:(document.getElementById('mpe-sup-'+p.id)?.value||p.supplier).trim(),
+      desc:(document.getElementById('mpe-desc-'+p.id)?.value||p.desc||'').trim(),
+      amount:parseInt(document.getElementById('mpe-amt-'+p.id)?.value)||p.amount||0,
+      tax:parseInt(document.getElementById('mpe-tax-'+p.id)?.value)||p.tax||0,
+      issued,
+      due:document.getElementById('mpe-due-'+p.id)?.value||p.due||'',
+      bank:(document.getElementById('mpe-bank-'+p.id)?.value||p.bank||'').trim(),
+      status:'unpaid', monthly:false, dup_months:[]
+    });
     if(!p.dup_months) p.dup_months=[];
     if(!p.dup_months.includes(cm)) p.dup_months.push(cm);
   });
