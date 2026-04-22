@@ -800,8 +800,11 @@ def load_recheck_records() -> list:
     path = os.path.join(_cdir(), "recheck_records.json")
     if not os.path.exists(path):
         return []
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
 
 
 def save_recheck_records(records: list):
