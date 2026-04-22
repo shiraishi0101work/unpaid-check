@@ -829,6 +829,64 @@ async function delOrd(id) {
   rt(); rmets(); toast('削除しました');
 }
 
+function editOrd(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('edit-id').value    = o.id;
+  document.getElementById('edit-name').value  = o.name  || '';
+  document.getElementById('edit-shop').value  = o.shop  || '';
+  document.getElementById('edit-brand').value = o.brand || '';
+  document.getElementById('edit-qty').value   = o.qty   || 1;
+  document.getElementById('edit-price').value = o.price || 0;
+  document.getElementById('edit-date').value  = o.date  || '';
+  document.getElementById('edit-client').value= o.client|| '';
+  document.getElementById('edit-url').value   = o.url   || '';
+  document.getElementById('edit-memo').value  = o.memo  || '';
+  document.getElementById('edit-status').value= o.status|| '未発注';
+  // カード選択肢を更新
+  document.getElementById('edit-card').innerHTML =
+    '<option value="">カードを選択</option>' +
+    cards.map(c => `<option value="${c.id}" ${c.id === o.ccId ? 'selected' : ''}>${c.name}${c.last4?' ···'+c.last4:''}</option>`).join('');
+  // 納品先サジェスト
+  document.getElementById('edit-cldl').innerHTML =
+    [...new Set(orders.map(x => x.client).filter(Boolean))].map(c => `<option value="${c}">`).join('');
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+async function saveEdit() {
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { alert('商品名を入力してください'); return; }
+  const id = parseInt(document.getElementById('edit-id').value);
+  const data = {
+    id,
+    date:   document.getElementById('edit-date').value,
+    name,
+    shop:   document.getElementById('edit-shop').value.trim(),
+    brand:  document.getElementById('edit-brand').value.trim(),
+    url:    document.getElementById('edit-url').value.trim(),
+    qty:    parseInt(document.getElementById('edit-qty').value)   || 1,
+    price:  parseInt(document.getElementById('edit-price').value) || 0,
+    client: document.getElementById('edit-client').value.trim(),
+    ccId:   parseInt(document.getElementById('edit-card').value)  || null,
+    status: document.getElementById('edit-status').value,
+    memo:   document.getElementById('edit-memo').value.trim()
+  };
+  const res = await apiFetch('update_order', data);
+  if (!res?.ok) { alert('保存に失敗しました'); return; }
+  const idx = orders.findIndex(o => o.id === id);
+  if (idx !== -1) orders[idx] = { ...orders[idx], ...data };
+  closeEdit();
+  rt(); rmets(); updFilters();
+  toast('更新しました');
+}
+
+// ESCキーでモーダルを閉じる
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
+
 function today() { const e = document.getElementById('fd'); if (e) e.value = new Date().toISOString().split('T')[0]; }
 
 function updCCSel() {
