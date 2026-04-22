@@ -1062,28 +1062,62 @@ async function parseStmtCSV() {
   ['stmt-okb','stmt-erb'].forEach(id => document.getElementById(id).style.display = 'none');
   stmtShowLoading(true);
   try {
-    const text = await file.text();
+    // Shift-JIS・UTF-8 自動判別
+    const buf = await file.arrayBuffer();
+    let text;
+    try { text = new TextDecoder('shift-jis').decode(buf); } catch(e) { text = new TextDecoder('utf-8').decode(buf); }
     const items = parseCSVStatements(text);
     if (!items.length) throw new Error('no data');
     await submitStatements(items, cardId);
+    document.getElementById('stmt-csv-file').value = '';
   } catch(e) {
-    document.getElementById('stmt-erb').textContent = 'CSVを解析できませんでした。日付・店名・金額の列が必要です。';
+    document.getElementById('stmt-erb').textContent = 'CSVを解析できませんでした。ETC以外の明細行が見つかりませんでした。';
     document.getElementById('stmt-erb').style.display = '';
   } finally {
     stmtShowLoading(false);
   }
 }
 
+// カード明細CSV専用パーサー
+// 形式: 日付,店名,金額,＊,＊,金額[,備考]
+// ・1行目はヘッダー（ご請求カード情報）→ スキップ
+// ・日付が空の行はセクション区切り → ETC判定して追跡
+// ・ＥＴＣセクションおよびＥＴＣ店名は除外
 function parseCSVStatements(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const lines = text.split(/\r?\n/);
   const items = [];
+  let isEtcSection = false;
+  let firstLine = true;
+
   for (const line of lines) {
+    if (!line.trim()) continue;
     const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-    if (cols.length < 3) continue;
-    const date   = parseStmtDate(cols[0]);
-    const shop   = cols[1];
-    const amount = parseInt(cols[2].replace(/[^\d]/g, ''));
-    if (!date || !shop || isNaN(amount) || amount <= 0) continue;
+
+    // 1行目（ご請求カード情報ヘッダー）をスキップ
+    if (firstLine) { firstLine = false; continue; }
+
+    const dateStr = cols[0] || '';
+    const date = parseStmtDate(dateStr);
+
+    // 日付が空 → セクション区切り行
+    if (!date) {
+      const lineText = cols.join('');
+      // ＥＴＣ or ETC を含む行ならＥＴＣセクション開始
+      if (/ＥＴＣ|ETC/i.test(lineText)) { isEtcSection = true; }
+      // 日付空・カード番号パターン（数字-数字）があれば新カードセクション
+      else if (cols.some(c => /\d{4}-\d{2}/.test(c))) { isEtcSection = false; }
+      continue;
+    }
+
+    if (isEtcSection) continue;
+
+    const shop   = cols[1] || '';
+    const amount = parseInt((cols[2] || '').replace(/[^\d]/g, ''));
+
+    if (!shop || isNaN(amount) || amount <= 0) continue;
+    // ショップ名にＥＴＣを含む場合も除外（念のため）
+    if (/ＥＴＣ|ETC/i.test(shop)) continue;
+
     items.push({ date, shop, amount });
   }
   return items;
