@@ -1656,6 +1656,18 @@ def api_customers_tantou_update():
     return jsonify({"ok": True})
 
 
+@app.route("/api/customers/delete", methods=["POST"])
+@login_required
+def api_customers_delete():
+    """顧客をマスタから削除する"""
+    data    = request.get_json(force=True, silent=True) or {}
+    company = data.get("company", "").strip()
+    if not company:
+        return jsonify({"error": "company は必須です"}), 400
+    mapping = load_company_tantou()
+    mapping.pop(company, None)
+    save_company_tantou(mapping)
+    return jsonify({"ok": True})
 
 
 
