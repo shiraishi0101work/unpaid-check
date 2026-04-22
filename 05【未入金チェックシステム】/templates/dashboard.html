@@ -40,6 +40,15 @@
     </form>
   </div>
   {% endif %}
+  {% if auth_accounting %}
+  <div class="sidebar-item">
+    <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}">
+      <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="会計連携解除">
+        <i class="bi bi-x-circle"></i> 会計解除
+      </button>
+    </form>
+  </div>
+  {% endif %}
 </div>
 
 <hr class="sidebar-divider">
