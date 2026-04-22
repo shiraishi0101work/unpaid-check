@@ -1242,27 +1242,32 @@ def invoice_meta(invoice_id):
     if request.method == "POST":
         data = request.get_json() or {}
         meta.setdefault(invoice_id, {})
-        for key in ["担当者", "メモ", "着金日_手動", "着金金額_手動", "入金予定日_手動"]:
+        for key in ["担当者", "メモ", "着金日_手動", "着金金額_手動", "入金予定日_手動", "個人名"]:
             if key in data:
                 meta[invoice_id][key] = data[key]
         save_meta(meta)
 
-        # 担当者が設定された場合、取引先名→担当者マップも更新
-        tantou = data.get("担当者", "").strip()
-        if tantou:
+        # 担当者 or 個人名が設定された場合、取引先名マスタも更新
+        tantou    = data.get("担当者", "").strip()
+        kojinmei  = data.get("個人名", "").strip()
+        if tantou or ("個人名" in data):
             # 請求書IDから取引先名を逆引き
             result = _load_result()
             company_name = ""
             if result:
                 all_b = (result.get("unpaid", []) + result.get("paid", [])
-                         + result.get("diff", []))
+                         + result.get("diff", []) + result.get("overdue", [])
+                         + result.get("seikyu_kakunin", []) + result.get("upcoming", []))
                 for b in all_b:
                     if b.get("請求書ID") == invoice_id:
                         company_name = b.get("取引先名", "").strip()
                         break
             if company_name:
                 mapping = load_company_tantou()
-                mapping[company_name] = tantou
+                if tantou:
+                    _set_tantou(mapping, company_name, tantou)
+                if "個人名" in data:
+                    _set_kojinmei(mapping, company_name, kojinmei)
                 save_company_tantou(mapping)
 
         return jsonify({"ok": True})
