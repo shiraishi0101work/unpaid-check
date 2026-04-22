@@ -1886,7 +1886,6 @@ document.querySelectorAll('.furikomi-link-btn').forEach(btn => {
 document.getElementById('furikomi-confirm-btn')?.addEventListener('click', async function() {
   const invoiceId    = document.getElementById('furikomi-invoice-select').value;
   const furikomiName = document.getElementById('furikomi-name-input').value.trim();
-  if (!invoiceId) { alert('請求書を選択してください'); return; }
   if (!furikomiName) { alert('振込名義を入力してください'); return; }
 
   // 選択した請求書の番号
