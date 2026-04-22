@@ -1635,8 +1635,11 @@ def api_overdue_recheck_all():
         furikomi_unconf      = load_furikomi_unconfirmed()
     except Exception as e:
         return jsonify({"error": f"レコード読み込みエラー: {e}"}), 500
-    existing_jids_rchk   = {r.get("journal_id", r["id"]) for r in recheck_records}
-    existing_jids_furik  = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
+    try:
+        existing_jids_rchk   = {r.get("journal_id", r["id"]) for r in recheck_records}
+        existing_jids_furik  = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
+    except Exception as e:
+        return jsonify({"error": f"既存レコード処理エラー: {e}"}), 500
 
     # ── 振込名義確認: 未仕分け銀行振込を全件ピックアップ（重複除外） ──
     # 銀行口座科目（普通預金・当座預金）の未仕分け仕訳を全て対象とする
