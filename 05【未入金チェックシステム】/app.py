@@ -608,14 +608,37 @@ def save_meta(meta: dict):
 def load_company_tantou() -> dict:
     """
     取引先マスタを読み込む。
-    新形式: {"会社名": {"担当者": "...", "個人名": "..."}}
-    旧形式（文字列値）: {"会社名": "担当者名"} → 自動的に新形式として扱う
+    現行形式: {"会社名": {"担当者": "...", "振込名義": ["name1", "name2"]}}
+    旧形式（文字列）: {"会社名": "担当者名"} → 自動的に担当者として扱う
+    旧形式（個人名）: {"会社名": {"担当者": "...", "個人名": "..."}} → 振込名義に移行
     """
     path = os.path.join(_cdir(), "company_tantou.json")
     if not os.path.exists(path):
         return {}
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def _ensure_dict(mapping: dict, company: str) -> dict:
+    """取引先エントリを dict 形式に統一して返す（破壊的変更）"""
+    val = mapping.get(company)
+    if isinstance(val, dict):
+        # 旧形式 "個人名" (str) → "振込名義" (list) に移行
+        if "個人名" in val and "振込名義" not in val:
+            old_name = val.pop("個人名", "")
+            val["振込名義"] = [old_name] if old_name else []
+        val.setdefault("振込名義", [])
+        val.setdefault("担当者", "")
+        return val
+    elif isinstance(val, str):
+        # 旧形式: 文字列 = 担当者
+        entry = {"担当者": val, "振込名義": []}
+        mapping[company] = entry
+        return entry
+    else:
+        entry = {"担当者": "", "振込名義": []}
+        mapping[company] = entry
+        return entry
 
 
 def _get_tantou(mapping: dict, company: str) -> str:
@@ -630,36 +653,55 @@ def _get_tantou(mapping: dict, company: str) -> str:
     return ""
 
 
-def _get_kojinmei(mapping: dict, company: str) -> str:
-    """取引先マスタから個人名（振込人名）を返す"""
+def _get_furikomi_list(mapping: dict, company: str) -> list:
+    """取引先マスタから振込名義リストを返す"""
     val = mapping.get(company)
-    if isinstance(val, dict):
-        return val.get("個人名", "")
-    return ""
+    if not isinstance(val, dict):
+        return []
+    # 旧 "個人名" (str) も含める
+    names = list(val.get("振込名義", []))
+    old = val.get("個人名", "")
+    if old and old not in names:
+        names.insert(0, old)
+    return names
+
+
+def _get_kojinmei(mapping: dict, company: str) -> str:
+    """後方互換: 振込名義の先頭を返す（matcher.py用）"""
+    lst = _get_furikomi_list(mapping, company)
+    return lst[0] if lst else ""
 
 
 def _set_tantou(mapping: dict, company: str, tantou: str):
-    """取引先マスタの担当者をセット（新形式を維持）"""
-    val = mapping.get(company)
-    if isinstance(val, dict):
-        val["担当者"] = tantou
-    else:
-        # 旧形式 or 未登録 → 新形式に移行
-        kojinmei = val if isinstance(val, str) else ""
-        mapping[company] = {"担当者": tantou, "個人名": ""}
-        # 旧形式は担当者文字列だったので個人名は空にする（後から入力）
+    """取引先マスタの担当者をセット"""
+    entry = _ensure_dict(mapping, company)
+    entry["担当者"] = tantou
 
 
 def _set_kojinmei(mapping: dict, company: str, kojinmei: str):
-    """取引先マスタの個人名をセット（新形式を維持）"""
+    """後方互換: 振込名義の先頭をセット"""
+    entry = _ensure_dict(mapping, company)
+    lst = entry["振込名義"]
+    if kojinmei and kojinmei not in lst:
+        lst.insert(0, kojinmei)
+    elif not kojinmei and lst:
+        lst.pop(0)
+
+
+def _add_furikomi(mapping: dict, company: str, name: str):
+    """振込名義を追加（重複は無視）"""
+    if not name:
+        return
+    entry = _ensure_dict(mapping, company)
+    if name not in entry["振込名義"]:
+        entry["振込名義"].append(name)
+
+
+def _remove_furikomi(mapping: dict, company: str, name: str):
+    """振込名義を削除"""
     val = mapping.get(company)
-    if isinstance(val, dict):
-        val["個人名"] = kojinmei
-    elif isinstance(val, str):
-        # 旧形式 → 新形式に移行
-        mapping[company] = {"担当者": val, "個人名": kojinmei}
-    else:
-        mapping[company] = {"担当者": "", "個人名": kojinmei}
+    if isinstance(val, dict) and name in val.get("振込名義", []):
+        val["振込名義"].remove(name)
 
 
 def save_company_tantou(mapping: dict):
