@@ -2273,6 +2273,13 @@ def api_recheck_link(record_id):
     if not invoice_id:
         return jsonify({"error": "invoice_id が必要です"}), 400
 
+    samediff = data.get("差額")
+    if samediff is not None:
+        try:
+            samediff = int(samediff)
+        except (TypeError, ValueError):
+            samediff = None
+
     records = load_recheck_records()
     record  = next((r for r in records if r["id"] == record_id), None)
     if not record:
@@ -2283,6 +2290,8 @@ def api_recheck_link(record_id):
     meta.setdefault(invoice_id, {})
     meta[invoice_id]["着金日_手動"]   = record.get("着金日", "")
     meta[invoice_id]["着金金額_手動"] = record.get("入金金額", 0)
+    if samediff:
+        meta[invoice_id]["差額"] = samediff
     save_meta(meta)
 
     # 請求書番号を取得（表示用）
@@ -2299,9 +2308,10 @@ def api_recheck_link(record_id):
     record["linked_invoice_id"]  = invoice_id
     record["linked_invoice_num"] = invoice_num
     record["linked_at"]          = datetime.now().isoformat()
+    record["差額"]               = samediff
     save_recheck_records(records)
 
-    return jsonify({"ok": True, "invoice_num": invoice_num})
+    return jsonify({"ok": True, "invoice_num": invoice_num, "差額": samediff})
 
 
 @app.route("/api/recheck/<record_id>/edit", methods=["POST"])
