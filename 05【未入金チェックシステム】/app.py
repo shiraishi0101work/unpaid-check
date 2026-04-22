@@ -1220,6 +1220,9 @@ def dashboard():
                 b["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動",""))
                 b["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
                 b["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
+                b["部分入金"]        = m.get("部分入金", False)
+                b["残額"]            = m.get("残額", 0)
+                b["入金済金額"]      = m.get("入金済金額", 0)
                 company = b.get("取引先名", "").strip()
                 if not b.get("担当者") and company:
                     tantou = _get_tantou(company_tantou, company)
