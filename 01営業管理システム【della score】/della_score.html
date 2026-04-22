@@ -2500,7 +2500,7 @@ function renderPurchases(){
   if(_purPage<0) _purPage=0;
   const page=list.slice(_purPage*PUR_PER_PAGE, (_purPage+1)*PUR_PER_PAGE);
   tb.innerHTML=page.map(p=>`<tr>
-    <td><input type="checkbox" class="pur-row-chk" value="${p.id}" onchange="updatePurBulkBar()" style="cursor:pointer"></td>
+    <td><input type="checkbox" class="pur-row-chk" value="${p.id}" onchange="updatePurBulkBar()" style="width:16px;height:16px;cursor:pointer"></td>
     <td title="${p.supplier}" style="font-weight:600">${p.supplier}</td>
     <td title="${p.desc||''}">${p.desc||'-'}</td>
     <td class="amount">${fmtTax(p.amount,p.tax)}</td>
