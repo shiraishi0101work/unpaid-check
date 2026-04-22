@@ -1534,6 +1534,216 @@ def oauth_revoke(service_name):
 # MFクラウド会計 — 個人名チェック
 # ========================================
 
+@app.route("/api/overdue/recheck_all", methods=["POST"])
+@login_required
+def api_overdue_recheck_all():
+    """
+    未収リストの全件をまとめてMFクラウド会計と照合する。
+    - 振込名義あり → recheck_records（未収再確認タブ）
+    - 振込名義なし → furikomi_unconfirmed（振込名義確認タブ）
+    """
+    try:
+        from mf_accounting import get_deals
+    except ImportError as e:
+        return jsonify({"error": f"会計モジュールエラー: {e}"}), 500
+
+    cid = get_company_id()
+    if not auth.is_authenticated("accounting", cid):
+        return jsonify({"error": "MFクラウド会計の連携が必要です。"}), 401
+
+    result = _load_result()
+    if not result:
+        return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
+
+    # 抽出期間: 今日から2ヶ月前
+    today = date.today()
+    m2 = today.month - 2
+    y2 = today.year
+    if m2 <= 0:
+        m2 += 12
+        y2 -= 1
+    from_date = f"{y2}-{m2:02d}-01"
+    to_date   = today.strftime("%Y-%m-%d")
+
+    try:
+        deals = get_deals(from_date, to_date, company_id=cid)
+    except Exception as e:
+        return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
+
+    overdue_list   = result.get("overdue", [])
+    meta_all       = load_meta()
+    company_tantou = load_company_tantou()
+
+    import re as _re
+    import jaconv as _jc
+    import uuid as _uuid
+
+    def _norm(s: str) -> str:
+        s = _jc.hira2kata(s.strip())
+        s = _jc.h2z(s, kana=True, ascii=False, digit=False)
+        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        return s
+
+    # 既存レコード
+    recheck_records      = load_recheck_records()
+    furikomi_unconf      = load_furikomi_unconfirmed()
+    existing_jids_rchk   = {r.get("journal_id", r["id"]) for r in recheck_records}
+    existing_jids_furik  = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
+
+    new_recheck  = 0
+    new_furikomi = 0
+
+    for billing in overdue_list:
+        bid          = billing.get("請求書ID", "")
+        partner_name = billing.get("取引先名", "").strip()
+        furikomi_meta = meta_all.get(bid, {}).get("個人名", "")
+        furikomi_list = _get_furikomi_list(company_tantou, partner_name)
+        if furikomi_meta and furikomi_meta not in furikomi_list:
+            furikomi_list = [furikomi_meta] + furikomi_list
+
+        if furikomi_list:
+            # ── 振込名義あり: 備考に振込名義が含まれる入金を recheck へ ──
+            for d in deals:
+                journal_id = str(d.get("取引ID", ""))
+                if journal_id in existing_jids_rchk:
+                    continue
+                remark   = d.get("備考", "") or ""
+                remark_n = _norm(remark)
+                matched  = False
+                for name in furikomi_list:
+                    if not name or len(name) < 2:
+                        continue
+                    name_n = _norm(name)
+                    if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+                        matched = True
+                        break
+                if matched:
+                    recheck_records.append({
+                        "id":                     str(_uuid.uuid4()),
+                        "journal_id":             journal_id,
+                        "fetched_at":             datetime.now().isoformat(),
+                        "fetched_for_invoice_id": bid,
+                        "取引先名":               d.get("取引先名", ""),
+                        "着金日":                 d.get("着金日", ""),
+                        "入金金額":               d.get("入金金額", 0),
+                        "備考":                   d.get("備考", ""),
+                        "科目":                   d.get("科目", ""),
+                        "memo":                   "",
+                        "deleted":                False,
+                        "linked_invoice_id":      None,
+                        "linked_invoice_num":     None,
+                        "linked_at":              None,
+                    })
+                    existing_jids_rchk.add(journal_id)
+                    new_recheck += 1
+        else:
+            # ── 振込名義なし: 取引先名・金額で候補を furikomi_unconfirmed へ ──
+            partner_n = _norm(partner_name)
+            for d in deals:
+                journal_id = str(d.get("取引ID", ""))
+                if journal_id in existing_jids_furik:
+                    continue
+                deal_partner   = d.get("取引先名", "") or ""
+                deal_remark    = d.get("備考", "") or ""
+                deal_partner_n = _norm(deal_partner)
+                deal_remark_n  = _norm(deal_remark)
+                # 取引先名または備考に顧客名が含まれる
+                name_hit = (
+                    (len(partner_n) >= 2 and (partner_n in deal_partner_n or deal_partner_n in partner_n))
+                    or (len(partner_n) >= 2 and partner_n in deal_remark_n)
+                )
+                if not name_hit:
+                    continue
+                furikomi_unconf.append({
+                    "id":                str(_uuid.uuid4()),
+                    "journal_id":        journal_id,
+                    "fetched_at":        datetime.now().isoformat(),
+                    "suggested_partner": partner_name,
+                    "candidate_invoice_id": bid,
+                    "取引先名":          deal_partner,
+                    "着金日":            d.get("着金日", ""),
+                    "入金金額":          d.get("入金金額", 0),
+                    "備考":              deal_remark,
+                    "科目":              d.get("科目", ""),
+                    "furikomi_to_register": "",
+                    "linked_invoice_id":    None,
+                    "linked_invoice_num":   None,
+                    "linked_at":            None,
+                    "deleted":              False,
+                })
+                existing_jids_furik.add(journal_id)
+                new_furikomi += 1
+
+    save_recheck_records(recheck_records)
+    save_furikomi_unconfirmed(furikomi_unconf)
+
+    return jsonify({
+        "ok":              True,
+        "new_recheck":     new_recheck,
+        "new_furikomi":    new_furikomi,
+        "total_recheck":   len([r for r in recheck_records if not r.get("deleted")]),
+        "total_furikomi":  len([r for r in furikomi_unconf  if not r.get("deleted")]),
+        "from_date":       from_date,
+        "to_date":         to_date,
+    })
+
+
+@app.route("/api/furikomi_confirm/<record_id>/link", methods=["POST"])
+@login_required
+def api_furikomi_confirm_link(record_id):
+    """
+    振込名義確認タブの候補を確定する:
+    1. 指定請求書に着金日/金額をセット（着金日_手動）
+    2. 入力した振込名義を顧客リスト（company_tantou）に追加
+    """
+    data           = request.get_json(force=True, silent=True) or {}
+    invoice_id     = data.get("invoice_id", "")
+    invoice_num    = data.get("invoice_num", "")
+    furikomi_name  = data.get("furikomi_name", "").strip()
+
+    records = load_furikomi_unconfirmed()
+    rec = next((r for r in records if r["id"] == record_id), None)
+    if not rec:
+        return jsonify({"error": "レコードが見つかりません"}), 404
+
+    # 1. 請求書メタに着金情報を保存
+    if invoice_id:
+        meta = load_meta()
+        if invoice_id not in meta:
+            meta[invoice_id] = {}
+        meta[invoice_id]["着金日_手動"]    = rec.get("着金日", "")
+        meta[invoice_id]["着金金額_手動"]  = rec.get("入金金額", 0)
+        save_meta(meta)
+
+    # 2. 振込名義を顧客リストに追加
+    if furikomi_name:
+        partner = rec.get("suggested_partner", "")
+        company_tantou = load_company_tantou()
+        _set_kojinmei(company_tantou, partner, furikomi_name)
+        save_company_tantou(company_tantou)
+
+    # 3. レコードを確定済みにする
+    rec["linked_invoice_id"]  = invoice_id
+    rec["linked_invoice_num"] = invoice_num
+    rec["linked_at"]          = datetime.now().isoformat()
+    rec["furikomi_to_register"] = furikomi_name
+    save_furikomi_unconfirmed(records)
+
+    return jsonify({"ok": True})
+
+
+@app.route("/api/furikomi_confirm/<record_id>/delete", methods=["POST"])
+@login_required
+def api_furikomi_confirm_delete(record_id):
+    records = load_furikomi_unconfirmed()
+    for r in records:
+        if r["id"] == record_id:
+            r["deleted"] = True
+            break
+    save_furikomi_unconfirmed(records)
+    return jsonify({"ok": True})
+
+
 @app.route("/api/accounting-kojinmei-check", methods=["POST"])
 @login_required
 def api_accounting_kojinmei_check():
