@@ -1540,6 +1540,122 @@ def api_accounting_kojinmei_check():
     })
 
 
+# ========================================
+# 顧客リスト（振込名義管理）
+# ========================================
+
+@app.route("/customers")
+@login_required
+def customers_page():
+    """顧客リスト＋振込名義管理ページ"""
+    return render_template(
+        "customers.html",
+        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
+        settings=load_settings(),
+    )
+
+
+@app.route("/api/customers", methods=["GET"])
+@login_required
+def api_customers_list():
+    """
+    顧客リストを返す。
+    MF請求書の last_result と company_tantou をマージして全顧客を返す。
+    """
+    company_tantou = load_company_tantou()
+
+    # MF請求書から顧客名一覧を収集
+    invoice_companies: set[str] = set()
+    result = _load_result()
+    if result:
+        for cat in ["unpaid", "overdue", "seikyu_kakunin", "upcoming", "paid",
+                    "ichiji_hokan", "draft_overdue"]:
+            for b in result.get(cat, []):
+                c = b.get("取引先名", "").strip()
+                if c:
+                    invoice_companies.add(c)
+
+    # company_tantou の顧客も追加
+    all_companies = invoice_companies | set(company_tantou.keys())
+
+    customers = []
+    for name in sorted(all_companies):
+        entry = _ensure_dict(company_tantou, name) if name in company_tantou else {"担当者": "", "振込名義": []}
+        customers.append({
+            "name":          name,
+            "tantou":        entry.get("担当者", ""),
+            "furikomi_list": entry.get("振込名義", []),
+            "has_invoices":  name in invoice_companies,
+        })
+
+    return jsonify(customers)
+
+
+@app.route("/api/customers/furikomi/add", methods=["POST"])
+@login_required
+def api_customers_furikomi_add():
+    """振込名義を顧客に追加する（複数可）"""
+    data    = request.get_json(force=True, silent=True) or {}
+    company = data.get("company", "").strip()
+    name    = data.get("furikomi_name", "").strip()
+    if not company or not name:
+        return jsonify({"error": "company と furikomi_name は必須です"}), 400
+    mapping = load_company_tantou()
+    _add_furikomi(mapping, company, name)
+    save_company_tantou(mapping)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/customers/furikomi/remove", methods=["POST"])
+@login_required
+def api_customers_furikomi_remove():
+    """振込名義を顧客から削除する"""
+    data    = request.get_json(force=True, silent=True) or {}
+    company = data.get("company", "").strip()
+    name    = data.get("furikomi_name", "").strip()
+    if not company or not name:
+        return jsonify({"error": "company と furikomi_name は必須です"}), 400
+    mapping = load_company_tantou()
+    _remove_furikomi(mapping, company, name)
+    save_company_tantou(mapping)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/customers/furikomi/bulk-add", methods=["POST"])
+@login_required
+def api_customers_furikomi_bulk_add():
+    """振込名義を複数顧客に一括追加する（CSVインポート用）"""
+    data  = request.get_json(force=True, silent=True) or {}
+    items = data.get("items", [])  # [{company, furikomi_name}, ...]
+    if not items:
+        return jsonify({"error": "items は必須です"}), 400
+    mapping = load_company_tantou()
+    added = 0
+    for item in items:
+        company = item.get("company", "").strip()
+        name    = item.get("furikomi_name", "").strip()
+        if company and name:
+            _add_furikomi(mapping, company, name)
+            added += 1
+    save_company_tantou(mapping)
+    return jsonify({"ok": True, "added": added})
+
+
+@app.route("/api/customers/tantou/update", methods=["POST"])
+@login_required
+def api_customers_tantou_update():
+    """担当者を更新する"""
+    data    = request.get_json(force=True, silent=True) or {}
+    company = data.get("company", "").strip()
+    tantou  = data.get("tantou", "").strip()
+    if not company:
+        return jsonify({"error": "company は必須です"}), 400
+    mapping = load_company_tantou()
+    _set_tantou(mapping, company, tantou)
+    save_company_tantou(mapping)
+    return jsonify({"ok": True})
+
+
 
 
 
