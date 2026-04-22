@@ -1646,9 +1646,9 @@ def api_overdue_recheck_all():
                     existing_jids_rchk.add(journal_id)
                     new_recheck += 1
         else:
-            # ── 振込名義なし: 取引先名・金額で候補を furikomi_unconfirmed へ ──
+            # ── 振込名義なし: 未仕分け仕訳から取引先名で候補を furikomi_unconfirmed へ ──
             partner_n = _norm(partner_name)
-            for d in deals:
+            for d in unclassified_deals:
                 journal_id = str(d.get("取引ID", ""))
                 if journal_id in existing_jids_furik:
                     continue
