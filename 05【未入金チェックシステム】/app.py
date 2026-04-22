@@ -2463,9 +2463,14 @@ def debug_billing_raw():
 
 @app.route("/api/clear-data", methods=["POST"])
 def clear_data():
-    path = os.path.join(_cdir(), "last_result.json")
-    if os.path.exists(path):
-        os.remove(path)
+    cdir = _cdir()
+    # 請求書照合結果
+    p = os.path.join(cdir, "last_result.json")
+    if os.path.exists(p):
+        os.remove(p)
+    # 未収再確認・振込名義確認をリセット
+    save_recheck_records([])
+    save_furikomi_unconfirmed([])
     flash("表示データをクリアしました", "success")
     return redirect(url_for("dashboard"))
 
