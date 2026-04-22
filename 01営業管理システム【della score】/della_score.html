@@ -1586,10 +1586,11 @@ function renderStats(){
   const profit=ps.reduce((s,p)=>(p.amount!=null&&p.cost!=null)?s+(p.amount-p.cost):s,0);
   const inv=ps.filter(p=>p.status==='invoiced');
   const ord=ps.filter(p=>p.status==='ordered');
-  sv('s-total',fmt(total)); sv('s-count',ps.length+'件');
-  sv('s-profit',fmt(profit)); sv('s-margin','利益率 '+(total?Math.round(profit/total*100):0)+'%');
-  sv('s-invoiced',fmt(inv.reduce((s,p)=>s+(p.amount||0),0))); sv('s-ic',inv.length+'件');
-  sv('s-ordered',fmt(ord.reduce((s,p)=>s+(p.amount||0),0))); sv('s-oc',ord.length+'件');
+  function st(id,v){const el=document.getElementById(id);if(el&&v!=null)el.textContent=v;}
+  st('s-total',fmt(total)); st('s-count',ps.length+'件');
+  st('s-profit',fmt(profit)); st('s-margin','利益率 '+(total?Math.round(profit/total*100):0)+'%');
+  st('s-invoiced',fmt(inv.reduce((s,p)=>s+(p.amount||0),0))); st('s-ic',inv.length+'件');
+  st('s-ordered',fmt(ord.reduce((s,p)=>s+(p.amount||0),0))); st('s-oc',ord.length+'件');
 }
 
 const SB={prospect:'<span class="badge bp">見込み</span>',invoiced:'<span class="badge bi">請求済み</span>',ordered:'<span class="badge bo">受注</span>',canceled:'<span class="badge bc">失注</span>'};
