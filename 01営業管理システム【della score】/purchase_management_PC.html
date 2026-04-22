@@ -652,6 +652,28 @@
     </div>
   </div>
 
+  <!-- 毎月複製 -->
+  <div id="p-monthly" class="page">
+    <div class="page-header">
+      <div class="page-title">毎月複製 <small id="monthly-month-label"></small></div>
+      <button class="btn btn-primary" id="monthly-dup-btn" onclick="openMdupModal()" disabled>選択した件を複製</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="mf-btn active" id="mf-all"   onclick="setMFilter('all',this)">全て</button>
+        <button class="mf-btn"        id="mf-undone" onclick="setMFilter('undone',this)">未複製のみ</button>
+        <button class="mf-btn"        id="mf-done"   onclick="setMFilter('done',this)">複製済み</button>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-sub);font-weight:600">
+          <input type="checkbox" id="monthly-selall" onchange="toggleMSelectAll(this)"> 全選択
+        </label>
+        <span id="monthly-sel-count" style="font-size:12px;color:var(--text-hint)"></span>
+      </div>
+      <div id="monthly-list">
+        <div style="text-align:center;color:var(--text-hint);padding:32px;font-size:13px">「毎月」に設定された発注がありません。<br>発注一覧の各行にある「毎月」ボタンで設定してください。</div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <div class="toast" id="tst"></div>
