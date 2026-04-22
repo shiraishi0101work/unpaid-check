@@ -1839,13 +1839,12 @@ def api_accounting_debug():
         pass
 
     test_urls = [
-        ("journals_v1",        headers,     "https://accounting.moneyforward.com/api/v1/journals",           {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
-        ("invoice_billings",   inv_headers, "https://invoice.moneyforward.com/api/v3/billings",              {"per_page": 1}),
-        ("invoice_receipts",   inv_headers, "https://invoice.moneyforward.com/api/v3/receipts",              {"per_page": 1}),
-        ("invoice_payments",   inv_headers, "https://invoice.moneyforward.com/api/v3/payments",              {"per_page": 1}),
-        ("invoice_transfers",  inv_headers, "https://invoice.moneyforward.com/api/v3/transfers",             {"per_page": 1}),
-        ("invoice_deposits",   inv_headers, "https://invoice.moneyforward.com/api/v3/deposits",              {"per_page": 1}),
-        ("invoice_histories",  inv_headers, "https://invoice.moneyforward.com/api/v3/payment_histories",     {"per_page": 1}),
+        ("journals_v1",       headers,     "https://accounting.moneyforward.com/api/v1/journals",       {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
+        ("acct_companies",    headers,     "https://accounting.moneyforward.com/api/v1/companies",      {}),
+        ("acct_offices",      headers,     "https://accounting.moneyforward.com/api/v1/offices",        {}),
+        ("acct_me",           headers,     "https://accounting.moneyforward.com/api/v1/me",             {}),
+        ("acct_user",         headers,     "https://accounting.moneyforward.com/api/v1/user",           {}),
+        ("invoice_billings",  inv_headers, "https://invoice.moneyforward.com/api/v3/billings",          {"per_page": 1}),
     ]
 
     for key, hdrs, url, params in test_urls:
