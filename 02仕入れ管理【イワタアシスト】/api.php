@@ -250,5 +250,123 @@ if ($action === 'update_status') {
     exit;
 }
 
+// ── カード明細一覧 ──
+if ($action === 'card_statements') {
+    $db = getDb();
+    $rows = $db->query("SELECT * FROM card_statements WHERE status='pending' ORDER BY date DESC, id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $out = array_map(function($r) {
+        return [
+            'id'     => (int)$r['id'],
+            'date'   => $r['date'],
+            'shop'   => $r['shop'],
+            'amount' => (int)$r['amount'],
+            'cardId' => $r['card_id'] ? (int)$r['card_id'] : null,
+            'memo'   => $r['memo'],
+        ];
+    }, $rows);
+    echo json_encode($out);
+    exit;
+}
+
+// ── カード明細一括追加（重複判定あり）──
+if ($action === 'add_statements') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $items  = $body['items'] ?? [];
+    $cardId = $body['cardId'] ? (int)$body['cardId'] : null;
+
+    // 既存発注の小計リストを取得
+    $existingOrders = $db->query('SELECT price, qty FROM orders')->fetchAll(PDO::FETCH_ASSOC);
+    $subtotals = array_map(fn($o) => (int)$o['price'] * (int)$o['qty'], $existingOrders);
+
+    $pending = 0;
+    $added   = 0;
+    foreach ($items as $item) {
+        $amount = (int)($item['amount'] ?? 0);
+        $date   = $item['date'] ?? date('Y-m-d');
+        $shop   = $item['shop'] ?? '';
+        $memo   = $item['memo'] ?? '';
+        if ($amount <= 0) continue;
+
+        // 重複判定：税込み一致 or 税抜き一致
+        $isDup = false;
+        foreach ($subtotals as $sub) {
+            $subTax = (int)round($sub * 1.1);
+            if ($amount === $sub || $amount === $subTax) { $isDup = true; break; }
+        }
+
+        if ($isDup) {
+            // 確認タブへ
+            $s = $db->prepare('INSERT INTO card_statements (date,shop,amount,card_id,memo,status) VALUES (?,?,?,?,?,?)');
+            $s->execute([$date, $shop, $amount, $cardId, $memo, 'pending']);
+            $pending++;
+        } else {
+            // 即発注一覧へ
+            $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,client,cc_id,status,memo)
+                                VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:client,:cc_id,:status,:memo)');
+            $s->execute([
+                ':date'   => $date,
+                ':name'   => $shop ?: '（店名不明）',
+                ':shop'   => $shop,
+                ':brand'  => '',
+                ':url'    => '',
+                ':qty'    => 1,
+                ':price'  => $amount,
+                ':client' => '',
+                ':cc_id'  => $cardId,
+                ':status' => '発注済',
+                ':memo'   => $memo,
+            ]);
+            $newId = (int)$db->lastInsertId();
+            dsSyncAdd(['id'=>$newId,'date'=>$date,'name'=>$shop?:'（店名不明）','shop'=>$shop,'price'=>$amount,'qty'=>1]);
+            $added++;
+        }
+    }
+    echo json_encode(['ok'=>true, 'added'=>$added, 'pending'=>$pending]);
+    exit;
+}
+
+// ── カード明細：「発注一覧にない」→ 発注一覧に追加して削除 ──
+if ($action === 'approve_statement') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $id = (int)$body['id'];
+    $st = $db->prepare('SELECT * FROM card_statements WHERE id=?');
+    $st->execute([$id]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$row) { echo json_encode(['error'=>'not found']); exit; }
+
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,client,cc_id,status,memo)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:client,:cc_id,:status,:memo)');
+    $s->execute([
+        ':date'   => $row['date'],
+        ':name'   => $row['shop'] ?: '（店名不明）',
+        ':shop'   => $row['shop'],
+        ':brand'  => '',
+        ':url'    => '',
+        ':qty'    => 1,
+        ':price'  => (int)$row['amount'],
+        ':client' => $body['client'] ?? '',
+        ':cc_id'  => $row['card_id'] ?: null,
+        ':status' => '発注済',
+        ':memo'   => $row['memo'],
+    ]);
+    $newId = (int)$db->lastInsertId();
+    dsSyncAdd(['id'=>$newId,'date'=>$row['date'],'name'=>$row['shop']?:'（店名不明）','shop'=>$row['shop'],'price'=>(int)$row['amount'],'qty'=>1]);
+
+    $db->prepare('DELETE FROM card_statements WHERE id=?')->execute([$id]);
+    echo json_encode(['ok'=>true, 'orderId'=>$newId]);
+    exit;
+}
+
+// ── カード明細：「発注一覧にある」→ 削除のみ ──
+if ($action === 'skip_statement') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $db->prepare('DELETE FROM card_statements WHERE id=?')->execute([(int)$body['id']]);
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['error'=>'unknown action']);
