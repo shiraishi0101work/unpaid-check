@@ -2520,10 +2520,15 @@ function renderPurchases(){
     </td>
   </tr>`).join('');
   renderPurPagination(totalPages, total);
-  const mn=thisMonth();
-  const mo=D.purchases.filter(p=>(p.issued||'').startsWith(mn));
-  document.getElementById('ps-month').textContent=fmt(mo.reduce((s,p)=>s+(p.amount||0),0));
-  document.getElementById('ps-mc').textContent=mo.length+'件';
+  const _psMpf=document.getElementById('month-purchases')?.value||'';
+  const _psStatList=_psMpf
+    ?D.purchases.filter(p=>(p.issued||'').slice(0,7)===_psMpf)
+    :D.purchases.filter(p=>(p.issued||'').startsWith(thisMonth()));
+  const _psLbl=_psMpf?_psMpf.replace('-','年')+'月 仕入れ':'今月 仕入れ';
+  const _psLblEl=document.getElementById('ps-label');
+  if(_psLblEl)_psLblEl.textContent=_psLbl;
+  document.getElementById('ps-month').textContent=fmt(_psStatList.reduce((s,p)=>s+(p.amount||0),0));
+  document.getElementById('ps-mc').textContent=_psStatList.length+'件';
   updatePurBulkBar(); updMpurOpenBtn();
 }
 
