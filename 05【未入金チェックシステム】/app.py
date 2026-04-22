@@ -1599,8 +1599,39 @@ def api_overdue_recheck_all():
     existing_jids_rchk   = {r.get("journal_id", r["id"]) for r in recheck_records}
     existing_jids_furik  = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
 
-    new_recheck  = 0
+    # ── 振込名義確認: 未仕分け銀行振込を全件ピックアップ（重複除外） ──
+    # 銀行口座科目（普通預金・当座預金）の未仕分け仕訳を全て対象とする
+    _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
     new_furikomi = 0
+    for d in unclassified_deals:
+        journal_id = str(d.get("取引ID", ""))
+        if journal_id in existing_jids_furik:
+            continue
+        account = d.get("科目", "") or ""
+        # 銀行口座科目のみ対象
+        if not any(ba in account for ba in _BANK_ACCOUNTS):
+            continue
+        furikomi_unconf.append({
+            "id":                   str(_uuid.uuid4()),
+            "journal_id":           journal_id,
+            "fetched_at":           datetime.now().isoformat(),
+            "suggested_partner":    "",           # ユーザーが選ぶ
+            "candidate_invoice_id": "",
+            "取引先名":             d.get("取引先名", ""),
+            "着金日":               d.get("着金日", ""),
+            "入金金額":             d.get("入金金額", 0),
+            "備考":                 d.get("備考", ""),
+            "科目":                 account,
+            "furikomi_to_register": "",
+            "linked_invoice_id":    None,
+            "linked_invoice_num":   None,
+            "linked_at":            None,
+            "deleted":              False,
+        })
+        existing_jids_furik.add(journal_id)
+        new_furikomi += 1
+
+    new_recheck  = 0
 
     for billing in overdue_list:
         bid          = billing.get("請求書ID", "")
@@ -1645,33 +1676,19 @@ def api_overdue_recheck_all():
                     })
                     existing_jids_rchk.add(journal_id)
                     new_recheck += 1
-        else:
-            # ── 振込名義なし: 未仕分け仕訳から取引先名で候補を furikomi_unconfirmed へ ──
-            partner_n = _norm(partner_name)
-            for d in unclassified_deals:
-                journal_id = str(d.get("取引ID", ""))
-                if journal_id in existing_jids_furik:
-                    continue
-                deal_partner   = d.get("取引先名", "") or ""
-                deal_remark    = d.get("備考", "") or ""
-                deal_partner_n = _norm(deal_partner)
-                deal_remark_n  = _norm(deal_remark)
-                # 取引先名または備考に顧客名が含まれる
-                name_hit = (
-                    (len(partner_n) >= 2 and (partner_n in deal_partner_n or deal_partner_n in partner_n))
-                    or (len(partner_n) >= 2 and partner_n in deal_remark_n)
-                )
-                if not name_hit:
-                    continue
-                furikomi_unconf.append({
-                    "id":                str(_uuid.uuid4()),
-                    "journal_id":        journal_id,
-                    "fetched_at":        datetime.now().isoformat(),
-                    "suggested_partner": partner_name,
-                    "candidate_invoice_id": bid,
-                    "取引先名":          deal_partner,
-                    "着金日":            d.get("着金日", ""),
-                    "入金金額":          d.get("入金金額", 0),
+
+        if False:  # (旧ロジック削除済み - 振込名義なし側は上の未仕分け全件取得に統合)
+            pass
+        if False:
+            furikomi_unconf.append({
+                "id":                str(_uuid.uuid4()),
+                "journal_id":        "",
+                "fetched_at":        datetime.now().isoformat(),
+                "suggested_partner": partner_name,
+                "candidate_invoice_id": bid,
+                "取引先名":          "",
+                "着金日":            "",
+                "入金金額":          0,
                     "備考":              deal_remark,
                     "科目":              d.get("科目", ""),
                     "furikomi_to_register": "",
