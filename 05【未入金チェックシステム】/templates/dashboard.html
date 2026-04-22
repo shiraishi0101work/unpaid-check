@@ -889,6 +889,16 @@
           <div class="form-text">このシステム内のみで管理します</div>
         </div>
         <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="bi bi-person-fill me-1 text-info"></i>個人名（振込人名）
+          </label>
+          <input type="text" id="edit-kojinmei" class="form-control" placeholder="例: ヤマダタロウ">
+          <div class="form-text">
+            銀行振込の送金者名が会社名でなく個人名の場合に入力。
+            <strong>MF会計の個人名チェック</strong>で使用します。同じ取引先の全請求書に適用されます。
+          </div>
+        </div>
+        <div class="mb-3">
           <label class="form-label fw-semibold">社内メモ <span class="badge bg-light text-muted border" style="font-size:0.65rem">MFとは別</span></label>
           <textarea id="edit-memo" class="form-control" rows="2" placeholder="社内用の備考・連絡事項など"></textarea>
           <div class="form-text">マネーフォワードのメモとは別に、このシステム内で保存されます</div>
