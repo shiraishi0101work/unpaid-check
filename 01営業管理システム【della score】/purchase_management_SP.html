@@ -813,52 +813,57 @@ JSONのみ。マークダウン不要。`;
   return JSON.parse(m[0]);
 }
 
-// ── 画像読み取り ──
+// ── 画像・PDF読み取り ──
 let _imgBase64 = '', _imgType = 'image/jpeg';
-function onImgFileChange(input) {
-  const file = input.files[0]; if (!file) return;
-  _imgType = file.type || 'image/jpeg';
+function loadFile(file) {
+  if (!file) return;
+  const isPdf = file.type === 'application/pdf';
+  _imgType = isPdf ? 'application/pdf' : (file.type || 'image/jpeg');
   const reader = new FileReader();
   reader.onload = e => {
     _imgBase64 = e.target.result.split(',')[1];
-    document.getElementById('img-preview').src = e.target.result;
+    const preview = document.getElementById('img-preview');
+    const pdfLabel = document.getElementById('pdf-label');
+    if (isPdf) {
+      preview.style.display = 'none';
+      pdfLabel.textContent = '📄 ' + file.name + '（PDFとして読み込み済み）';
+      pdfLabel.style.display = '';
+    } else {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      pdfLabel.style.display = 'none';
+    }
     document.getElementById('img-preview-wrap').style.display = '';
   };
   reader.readAsDataURL(file);
 }
+function onImgFileChange(input) { loadFile(input.files[0]); }
 function imgDragOver(e) { e.preventDefault(); document.getElementById('img-drop-area').classList.add('drag-over'); }
 function imgDragLeave(e) { document.getElementById('img-drop-area').classList.remove('drag-over'); }
 function imgDrop(e) {
   e.preventDefault(); imgDragLeave(e);
   const file = e.dataTransfer.files[0];
-  if (!file || !file.type.startsWith('image/')) return;
-  _imgType = file.type;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _imgBase64 = ev.target.result.split(',')[1];
-    document.getElementById('img-preview').src = ev.target.result;
-    document.getElementById('img-preview-wrap').style.display = '';
-  };
-  reader.readAsDataURL(file);
+  if (!file || (!file.type.startsWith('image/') && file.type !== 'application/pdf')) return;
+  loadFile(file);
 }
 async function analyzeImage() {
-  if (!_imgBase64) { alert('画像を選択してください'); return; }
+  if (!_imgBase64) { alert('ファイルを選択してください'); return; }
   const headers = apiHeaders(); if (!headers) return;
   const btn = document.getElementById('img-parse-btn');
   ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
   showLoading(true); btn.disabled = true; btn.textContent = '解析中...';
   try {
-    const prompt = `この画像から商品情報または仕入れ請求書の内容を抽出してJSONのみで返してください。
+    const prompt = `この${_imgType === 'application/pdf' ? 'PDF（紙請求書のスキャン）' : '画像'}から商品情報または仕入れ請求書の内容を抽出してJSONのみで返してください。
 抽出フィールド（不明は空文字か0）:
-{"name":"商品名・品名","shop":"販売店・仕入れ先","brand":"ブランド・メーカー","price":税込価格の数値,"model":"型番・品番","color":"色","spec":"主要スペック","memo":"その他特記事項"}
+{"name":"商品名・品名","shop":"販売店・仕入れ先","brand":"ブランド・メーカー","price":税込価格の数値,"model":"型番・品番","color":"色","spec":"主要スペック","memo":"その他特記事項（数量・納期・請求日など）"}
 JSONのみ。マークダウン不要。`;
+    const contentBlock = _imgType === 'application/pdf'
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: _imgBase64 } }
+      : { type: 'image', source: { type: 'base64', media_type: _imgType, data: _imgBase64 } };
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers,
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
-        messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: _imgType, data: _imgBase64 } },
-          { type: 'text', text: prompt }
-        ]}]
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        messages: [{ role: 'user', content: [contentBlock, { type: 'text', text: prompt }] }]
       })
     });
     const d = await r.json();
@@ -867,10 +872,11 @@ JSONのみ。マークダウン不要。`;
     const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
     if (!match) throw new Error('parse failed');
     const parsed = JSON.parse(match[0]);
-    if (parsed.name || parsed.shop || parsed.price > 0) { applyParsed(parsed, '', '', '画像'); }
+    const srcLabel = _imgType === 'application/pdf' ? 'PDF' : '画像';
+    if (parsed.name || parsed.shop || parsed.price > 0) { applyParsed(parsed, '', '', srcLabel); }
     else { throw new Error('no data'); }
   } catch(e) {
-    document.getElementById('erb').textContent = '解析できませんでした。別の画像をお試しください。';
+    document.getElementById('erb').textContent = '解析できませんでした。別のファイルをお試しください。';
     document.getElementById('erb').style.display = '';
   } finally {
     showLoading(false); btn.disabled = false; btn.textContent = '解析する';
