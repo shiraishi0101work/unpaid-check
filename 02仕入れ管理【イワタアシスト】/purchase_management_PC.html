@@ -676,24 +676,47 @@ function chip(ccId) {
   return `<span class="cc-chip"><span class="cc-dot" style="background:${col}"></span>${c.name}${c.last4 ? ' ···' + c.last4 : ''}</span>`;
 }
 
-function rt() {
-  const srch = document.getElementById('srch').value.toLowerCase();
-  const fs = document.getElementById('fst').value;
-  const fc = document.getElementById('fcl').value;
-  const fca = document.getElementById('fca').value;
-  const data = orders.filter(o => {
-    if (fs && o.status !== fs) return false;
-    if (fc && o.client !== fc) return false;
-    if (fca && o.ccId != fca) return false;
+function getFiltered() {
+  const srch = (document.getElementById('srch')?.value || '').toLowerCase();
+  const fs  = document.getElementById('fst')?.value  || '';
+  const fc  = document.getElementById('fcl')?.value  || '';
+  const fca = document.getElementById('fca')?.value  || '';
+  const fdf = document.getElementById('fdf')?.value  || '';
+  const fdt = document.getElementById('fdt')?.value  || '';
+  return orders.filter(o => {
+    if (fs  && o.status !== fs) return false;
+    if (fc  && o.client !== fc) return false;
+    if (fca && o.ccId != fca)   return false;
     if (srch && !o.name.toLowerCase().includes(srch) && !(o.shop||'').toLowerCase().includes(srch)) return false;
+    if (fdf && o.date < fdf)    return false;
+    if (fdt && o.date > fdt)    return false;
     return true;
   });
+}
+
+function rt() {
+  const filtered = getFiltered();
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
   const tb = document.getElementById('tbd');
-  if (!data.length) {
+  const pager = document.getElementById('pager');
+
+  if (!total) {
     tb.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-hint);padding:32px">データがありません</td></tr>';
+    if (pager) pager.innerHTML = '';
+    document.getElementById('order-count').textContent = '0件';
     return;
   }
-  tb.innerHTML = data.map(o => `<tr>
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filtered.slice(start, start + PAGE_SIZE);
+  const dispEnd = Math.min(start + PAGE_SIZE, total);
+  document.getElementById('order-count').textContent =
+    total <= PAGE_SIZE ? `全${total}件` : `${start+1}〜${dispEnd}件 / 全${total}件`;
+
+  tb.innerHTML = pageData.map(o => `<tr>
     <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
     <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
     <td style="white-space:nowrap">${o.shop||'—'}</td>
@@ -706,6 +729,45 @@ function rt() {
     <td style="color:var(--text-sub);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.memo||''}</td>
     <td><button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})">削除</button></td>
   </tr>`).join('');
+
+  if (pager) renderPager(total, totalPages);
+}
+
+function renderPager(total, totalPages) {
+  const el = document.getElementById('pager');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = `<span class="pager-info">1ページ${PAGE_SIZE}件表示</span>`;
+  html += `<button class="btn btn-sm" onclick="currentPage--;rt()" ${currentPage===1?'disabled':''}>‹ 前</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+      html += `<button class="btn btn-sm ${i===currentPage?'btn-primary':''}" onclick="currentPage=${i};rt()">${i}</button>`;
+    } else if (i === currentPage - 3 || i === currentPage + 3) {
+      html += `<span class="pager-ellipsis">…</span>`;
+    }
+  }
+  html += `<button class="btn btn-sm" onclick="currentPage++;rt()" ${currentPage===totalPages?'disabled':''}>次 ›</button>`;
+  el.innerHTML = html;
+}
+
+function dlCSVFiltered() {
+  const filtered = getFiltered();
+  if (!filtered.length) { alert('対象データがありません'); return; }
+  const h = 'id,発注日,商品名,仕入れ先,ブランド,数量,単価,小計,納品先,カード,ステータス,メモ';
+  const rows = filtered.map(o => {
+    const c = ccBy(o.ccId);
+    return [o.id, o.date, `"${(o.name||'').replace(/"/g,'""')}"`,
+      `"${(o.shop||'').replace(/"/g,'""')}"`, `"${(o.brand||'').replace(/"/g,'""')}"`,
+      o.qty, o.price, o.qty*o.price, `"${(o.client||'').replace(/"/g,'""')}"`,
+      c ? `"${c.name}"` : '', o.status, `"${(o.memo||'').replace(/"/g,'""')}"`].join(',');
+  });
+  const fdf = document.getElementById('fdf')?.value || '';
+  const fdt = document.getElementById('fdt')?.value || '';
+  const suffix = fdf && fdt ? `_${fdf}_${fdt}` : fdf ? `_${fdf}以降` : fdt ? `_${fdt}まで` : `_${new Date().toISOString().split('T')[0]}`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + [h,...rows].join('\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = `発注一覧${suffix}.csv`;
+  a.click();
+  toast(`CSVをダウンロードしました（${filtered.length}件）`);
 }
 
 async function delOrd(id) {
