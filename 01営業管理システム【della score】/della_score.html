@@ -608,31 +608,57 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     <div class="stat-card"><div class="stat-label">今月 仕入れ</div><div class="stat-value" id="ps-month">¥0</div><div class="stat-sub" id="ps-mc">0件</div></div>
   </div>
   <div class="section">
-    <div class="sec-hdr">
-      <span class="sec-title">仕入れ請求書一覧</span>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <input id="search-purchases" placeholder="🔍 検索..." oninput="renderPurchases()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
-        <select id="month-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
-        <select id="owner-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
-        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-purchases" onchange="renderPurchases()"> 担当者未入力のみ</label>
-        <button class="btn btn-sm" id="mpur-open-btn" onclick="openMpurModal()" style="border-color:var(--navy);color:var(--navy)">↻ 毎月複製</button>
-        <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 登録</button>
+    <!-- タブ切り替え -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px">
+      <button id="pur-tab-list" onclick="switchPurView('list')" style="padding:8px 18px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--navy);margin-bottom:-2px;color:var(--navy);font-family:inherit">仕入れ請求書一覧</button>
+      <button id="pur-tab-monthly" onclick="switchPurView('monthly')" style="padding:8px 18px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text3);font-family:inherit">↻ 毎月仕入れ先リスト</button>
+    </div>
+
+    <!-- ビュー1: 仕入れ請求書一覧 -->
+    <div id="pur-view-list">
+      <div class="sec-hdr" style="margin-bottom:10px">
+        <span class="sec-title" style="display:none"></span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%">
+          <input id="search-purchases" placeholder="🔍 検索..." oninput="renderPurchases()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
+          <select id="month-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
+          <select id="owner-purchases" onchange="renderPurchases()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-purchases" onchange="renderPurchases()"> 担当者未入力のみ</label>
+          <button class="btn btn-sm" id="mpur-open-btn" onclick="openMpurModal()" style="border-color:var(--navy);color:var(--navy)">↻ 毎月複製</button>
+          <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 登録</button>
+        </div>
       </div>
+      <div id="pur-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin-bottom:8px;align-items:center;gap:10px;flex-wrap:wrap">
+        <span id="pur-bulk-sel-count" style="font-size:13px;font-weight:600;color:#1D4ED8"></span>
+        <input id="pur-bulk-owner-input" list="owners-dl" placeholder="担当者名を入力..." style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:160px">
+        <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerPurchases()">選択した仕入れに担当者を設定</button>
+        <button class="btn btn-sm btn-ghost" onclick="clearPurSelection()">選択解除</button>
+      </div>
+      <table><colgroup><col style="width:28px"><col style="width:11%"><col style="width:13%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:8%"><col style="width:7%"><col style="width:5%"><col style="width:6%"></colgroup>
+        <thead><tr>
+          <th><input type="checkbox" id="pur-chk-all" onchange="document.querySelectorAll('.pur-row-chk').forEach(c=>c.checked=this.checked);updatePurBulkBar()" style="cursor:pointer"></th>
+          <th>仕入れ先</th><th>内容</th><th>金額（税抜/税込）</th><th>発行日</th><th>支払期限</th><th>振込先</th><th>担当者</th><th>ステータス</th><th>毎月</th><th></th>
+        </tr></thead>
+        <tbody id="pu-tbody"></tbody>
+      </table>
+      <div class="empty" id="pu-empty">仕入れ請求書がありません。</div>
     </div>
-    <div id="pur-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin-bottom:8px;align-items:center;gap:10px;flex-wrap:wrap">
-      <span id="pur-bulk-sel-count" style="font-size:13px;font-weight:600;color:#1D4ED8"></span>
-      <input id="pur-bulk-owner-input" list="owners-dl" placeholder="担当者名を入力..." style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:160px">
-      <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerPurchases()">選択した仕入れに担当者を設定</button>
-      <button class="btn btn-sm btn-ghost" onclick="clearPurSelection()">選択解除</button>
+
+    <!-- ビュー2: 毎月仕入れ先リスト -->
+    <div id="pur-view-monthly" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <input id="search-monthly-pur" placeholder="🔍 検索..." oninput="renderMonthlyPurList()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
+        <select id="owner-monthly-pur" onchange="renderMonthlyPurList()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
+        <button class="btn btn-sm" id="mpur-open-btn2" onclick="openMpurModal()" style="border-color:var(--navy);color:var(--navy)">↻ 毎月複製を実行</button>
+      </div>
+      <table>
+        <colgroup><col style="width:14%"><col style="width:18%"><col style="width:11%"><col style="width:9%"><col style="width:13%"><col style="width:10%"><col style="width:13%"><col style="width:12%"></colgroup>
+        <thead><tr>
+          <th>仕入れ先</th><th>内容</th><th>金額（税込）</th><th>担当者</th><th>振込先</th><th>今月の複製</th><th>最終発行日</th><th></th>
+        </tr></thead>
+        <tbody id="pu-monthly-tbody"></tbody>
+      </table>
+      <div class="empty" id="pu-monthly-empty">毎月に設定された仕入れ先がありません。<br><small style="color:var(--text3)">一覧の「—」ボタンをクリックして「毎月」に設定してください。</small></div>
     </div>
-    <table><colgroup><col style="width:28px"><col style="width:11%"><col style="width:13%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:8%"><col style="width:7%"><col style="width:5%"><col style="width:6%"></colgroup>
-      <thead><tr>
-        <th><input type="checkbox" id="pur-chk-all" onchange="document.querySelectorAll('.pur-row-chk').forEach(c=>c.checked=this.checked);updatePurBulkBar()" style="cursor:pointer"></th>
-        <th>仕入れ先</th><th>内容</th><th>金額（税抜/税込）</th><th>発行日</th><th>支払期限</th><th>振込先</th><th>担当者</th><th>ステータス</th><th>毎月</th><th></th>
-      </tr></thead>
-      <tbody id="pu-tbody"></tbody>
-    </table>
-    <div class="empty" id="pu-empty">仕入れ請求書がありません。</div>
   </div>
 </div>
 
