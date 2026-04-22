@@ -1818,7 +1818,7 @@ def mark_unmade():
 @app.route("/api/accounting/debug", methods=["GET"])
 @login_required
 def api_accounting_debug():
-    """会計APIの接続状況をデバッグする"""
+    """会計APIの接続状況をデバッグする（複数URLを試す）"""
     import requests as _req
     cid = get_company_id()
     try:
@@ -1826,19 +1826,26 @@ def api_accounting_debug():
     except Exception as e:
         return jsonify({"step": "get_token", "error": str(e)})
 
-    url = "https://accounting.moneyforward.com/api/v1/journals"
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-    params  = {"fiscal_year": 2025, "half_year": 2, "per_page": 1}
-    try:
-        resp = _req.get(url, headers=headers, params=params, timeout=15)
-        return jsonify({
-            "step":   "api_call",
-            "status": resp.status_code,
-            "body":   resp.text[:1000],
-            "token_prefix": token[:10] + "...",
-        })
-    except Exception as e:
-        return jsonify({"step": "request", "error": str(e)})
+    results = {}
+
+    # 試すURL一覧
+    test_urls = [
+        ("me_v1",        "GET", "https://accounting.moneyforward.com/api/v1/me",        {}),
+        ("journals_v1",  "GET", "https://accounting.moneyforward.com/api/v1/journals",  {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
+        ("journals_v3",  "GET", "https://accounting.moneyforward.com/api/v3/journals",  {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
+        ("biz_me",       "GET", "https://api.biz.moneyforward.com/api/v1/me",           {}),
+        ("invoice_me",   "GET", "https://invoice.moneyforward.com/api/v3/me",           {}),
+    ]
+
+    for key, method, url, params in test_urls:
+        try:
+            resp = _req.get(url, headers=headers, params=params, timeout=10)
+            results[key] = {"status": resp.status_code, "body": resp.text[:300]}
+        except Exception as e:
+            results[key] = {"error": str(e)}
+
+    return jsonify({"token_prefix": token[:10] + "...", "results": results})
 
 
 @app.route("/api/accounting/upload_csv", methods=["POST"])
