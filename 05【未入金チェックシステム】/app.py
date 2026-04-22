@@ -1585,6 +1585,14 @@ def api_overdue_recheck_all():
         s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
         return s
 
+    # 振込名義なし用: 未仕分け仕訳のみ（is_realized=false）
+    try:
+        unclassified_deals = get_unclassified_deals(from_date, to_date, company_id=cid)
+        print(f"[再確認] 未仕分け仕訳: {len(unclassified_deals)}件", flush=True)
+    except Exception as e:
+        print(f"[再確認] 未仕分け仕訳取得失敗: {e}", flush=True)
+        unclassified_deals = []
+
     # 既存レコード
     recheck_records      = load_recheck_records()
     furikomi_unconf      = load_furikomi_unconfirmed()
