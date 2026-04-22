@@ -1839,12 +1839,9 @@ def api_accounting_debug():
         pass
 
     test_urls = [
-        ("journals_v1",       headers,     "https://accounting.moneyforward.com/api/v1/journals",       {"fiscal_year": 2025, "half_year": 2, "per_page": 1}),
-        ("acct_companies",    headers,     "https://accounting.moneyforward.com/api/v1/companies",      {}),
-        ("acct_offices",      headers,     "https://accounting.moneyforward.com/api/v1/offices",        {}),
-        ("acct_me",           headers,     "https://accounting.moneyforward.com/api/v1/me",             {}),
-        ("acct_user",         headers,     "https://accounting.moneyforward.com/api/v1/user",           {}),
-        ("invoice_billings",  inv_headers, "https://invoice.moneyforward.com/api/v3/billings",          {"per_page": 1}),
+        ("journals_v3_new",  headers,     "https://api-accounting.moneyforward.com/api/v3/journals",   {"start_date": "2026-02-01", "end_date": "2026-04-22", "per_page": 1}),
+        ("offices_v3_new",   headers,     "https://api-accounting.moneyforward.com/api/v3/offices",    {}),
+        ("invoice_billings", inv_headers, "https://invoice.moneyforward.com/api/v3/billings",          {"per_page": 1}),
     ]
 
     for key, hdrs, url, params in test_urls:
