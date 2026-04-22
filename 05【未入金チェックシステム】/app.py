@@ -606,11 +606,60 @@ def save_meta(meta: dict):
 
 
 def load_company_tantou() -> dict:
+    """
+    取引先マスタを読み込む。
+    新形式: {"会社名": {"担当者": "...", "個人名": "..."}}
+    旧形式（文字列値）: {"会社名": "担当者名"} → 自動的に新形式として扱う
+    """
     path = os.path.join(_cdir(), "company_tantou.json")
     if not os.path.exists(path):
         return {}
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def _get_tantou(mapping: dict, company: str) -> str:
+    """取引先マスタから担当者名を返す（旧形式・新形式両対応）"""
+    val = mapping.get(company)
+    if val is None:
+        return ""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return val.get("担当者", "")
+    return ""
+
+
+def _get_kojinmei(mapping: dict, company: str) -> str:
+    """取引先マスタから個人名（振込人名）を返す"""
+    val = mapping.get(company)
+    if isinstance(val, dict):
+        return val.get("個人名", "")
+    return ""
+
+
+def _set_tantou(mapping: dict, company: str, tantou: str):
+    """取引先マスタの担当者をセット（新形式を維持）"""
+    val = mapping.get(company)
+    if isinstance(val, dict):
+        val["担当者"] = tantou
+    else:
+        # 旧形式 or 未登録 → 新形式に移行
+        kojinmei = val if isinstance(val, str) else ""
+        mapping[company] = {"担当者": tantou, "個人名": ""}
+        # 旧形式は担当者文字列だったので個人名は空にする（後から入力）
+
+
+def _set_kojinmei(mapping: dict, company: str, kojinmei: str):
+    """取引先マスタの個人名をセット（新形式を維持）"""
+    val = mapping.get(company)
+    if isinstance(val, dict):
+        val["個人名"] = kojinmei
+    elif isinstance(val, str):
+        # 旧形式 → 新形式に移行
+        mapping[company] = {"担当者": val, "個人名": kojinmei}
+    else:
+        mapping[company] = {"担当者": "", "個人名": kojinmei}
 
 
 def save_company_tantou(mapping: dict):
@@ -630,8 +679,7 @@ def apply_auto_tantou(billings: list, meta: dict) -> list:
         company = b.get("取引先名", "").strip()
         if not company:
             continue
-        # 取引先名マップから自動セット
-        tantou = company_tantou.get(company, "")
+        tantou = _get_tantou(company_tantou, company)
         if tantou:
             b["担当者"] = tantou
     return billings
