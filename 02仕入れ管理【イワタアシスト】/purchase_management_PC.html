@@ -996,12 +996,15 @@ function updStmtBadge() {
 function renderStmt() {
   const el = document.getElementById('stmt-list');
   const cnt = document.getElementById('stmt-count');
+  const clearBtn = document.getElementById('stmt-clear-btn');
   if (!statements.length) {
     el.innerHTML = '<p style="text-align:center;color:var(--text-hint);padding:32px;font-size:13px">確認待ちの明細はありません</p>';
     if (cnt) cnt.textContent = '';
+    if (clearBtn) clearBtn.style.display = 'none';
     return;
   }
   if (cnt) cnt.textContent = `確認待ち ${statements.length}件`;
+  if (clearBtn) clearBtn.style.display = '';
   el.innerHTML = statements.map(st => {
     const card = cards.find(c => c.id === st.cardId);
     const cardChip = card ? `<span class="cc-chip" style="margin-left:4px"><span class="cc-dot" style="background:${BCOL[card.brand]||'#888'}"></span>${card.name}</span>` : '';
@@ -1013,6 +1016,7 @@ function renderStmt() {
       <div class="stmt-actions">
         <button class="btn btn-exists btn-sm" onclick="stmtSkip(${st.id})">発注一覧にある</button>
         <button class="btn btn-new btn-sm" onclick="stmtApprove(${st.id})">発注一覧にない</button>
+        <button class="btn btn-sm btn-danger" onclick="stmtDelete(${st.id})">削除</button>
       </div>
     </div>`;
   }).join('');
