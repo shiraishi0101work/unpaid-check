@@ -3498,11 +3498,12 @@ function togglePurMonthly(id){
 function updMpurOpenBtn(){
   const cm=curYM();
   const undone=D.purchases.filter(p=>p.monthly&&!(p.dup_months||[]).includes(cm)).length;
-  const btn=document.getElementById('mpur-open-btn');
-  if(!btn) return;
-  btn.textContent=undone>0?`↻ 毎月複製（未複製${undone}件）`:'↻ 毎月複製';
-  btn.style.color=undone>0?'var(--red)':'var(--navy)';
-  btn.style.borderColor=undone>0?'var(--red)':'var(--navy)';
+  ['mpur-open-btn','mpur-open-btn2'].forEach(bid=>{
+    const btn=document.getElementById(bid); if(!btn) return;
+    btn.textContent=undone>0?`↻ 毎月複製（未複製${undone}件）`:'↻ 毎月複製を実行';
+    btn.style.color=undone>0?'var(--red)':'var(--navy)';
+    btn.style.borderColor=undone>0?'var(--red)':'var(--navy)';
+  });
 }
 
 function openMpurModal(){
