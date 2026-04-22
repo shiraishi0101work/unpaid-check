@@ -1848,7 +1848,7 @@ def api_accounting_debug():
         ("invoice_histories",  inv_headers, "https://invoice.moneyforward.com/api/v3/payment_histories",     {"per_page": 1}),
     ]
 
-    for key, method, url, params in test_urls:
+    for key, hdrs, url, params in test_urls:
         try:
             resp = _req.get(url, headers=headers, params=params, timeout=10)
             results[key] = {"status": resp.status_code, "body": resp.text[:300]}
