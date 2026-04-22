@@ -1052,6 +1052,58 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
 </div>
 
 <!-- 仕入れモーダル -->
+<!-- 毎月複製モーダル -->
+<div class="modal-bg" id="mpur-modal">
+  <div class="modal modal-wide">
+    <!-- Step1: 選択 -->
+    <div id="mpur-step1">
+      <div class="modal-hdr">
+        <span>毎月複製 — <span id="mpur-month-label"></span></span>
+        <button class="close-btn" onclick="closeModal('mpur-modal')">✕</button>
+      </div>
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="mpur-filter on" id="mpf-all"    onclick="setMpurFilter('all',this)">全て</button>
+        <button class="mpur-filter"    id="mpf-undone" onclick="setMpurFilter('undone',this)">未複製のみ</button>
+        <button class="mpur-filter"    id="mpf-done"   onclick="setMpurFilter('done',this)">複製済み</button>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;color:var(--text2);font-weight:600">
+          <input type="checkbox" id="mpur-selall" onchange="toggleMpurSelectAll(this)"> 全選択
+        </label>
+        <span id="mpur-sel-count" style="font-size:12px;color:var(--text3)"></span>
+      </div>
+      <div id="mpur-list" style="padding:0 18px;max-height:380px;overflow-y:auto"></div>
+      <div class="form-actions" style="padding:14px 18px">
+        <button class="btn" onclick="closeModal('mpur-modal')">閉じる</button>
+        <button class="btn btn-primary" id="mpur-next-btn" onclick="openMpurStep2()" disabled>選択した件を複製</button>
+      </div>
+    </div>
+    <!-- Step2: 確認・登録 -->
+    <div id="mpur-step2" style="display:none">
+      <div class="modal-hdr">
+        <span>複製内容の確認</span>
+        <button class="close-btn" onclick="closeModal('mpur-modal')">✕</button>
+      </div>
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-radius:var(--r)">
+          <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">全件の発行日</label>
+          <input type="date" id="mpur-date-all" style="font-size:13px;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit">
+          <button class="btn btn-sm" onclick="applyMpurDateAll()">全件に適用</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">各行の発行日は個別に変更できます。</div>
+      </div>
+      <div style="padding:0 18px;max-height:360px;overflow-y:auto">
+        <div style="display:grid;grid-template-columns:1fr 145px;gap:8px;padding:7px 0 8px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3)">
+          <span>仕入れ先 / 内容</span><span>発行日</span>
+        </div>
+        <div id="mpur-conf-items"></div>
+      </div>
+      <div class="form-actions" style="padding:14px 18px">
+        <button class="btn" onclick="showMpurStep1()">← 戻る</button>
+        <button class="btn btn-primary" onclick="execMpurDup()">一括登録する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="purchase-modal">
   <div class="modal modal-wide">
     <div class="modal-hdr"><span id="pur-modal-title">仕入れ請求書を登録</span><button class="close-btn" onclick="closeModal('purchase-modal')">✕</button></div>
