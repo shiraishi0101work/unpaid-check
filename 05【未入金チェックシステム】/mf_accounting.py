@@ -65,8 +65,11 @@ def _get_all_journal_pages(from_date: str, to_date: str, company_id: str = "",
                 "MFクラウド会計の認証が切れています。設定画面から再連携してください。"
             )
         if resp.status_code != 200:
-            print(f"[会計API] エラー: {resp.text[:400]}", flush=True)
-            resp.raise_for_status()
+            detail = resp.text[:400]
+            print(f"[会計API] エラー: {detail}", flush=True)
+            raise RuntimeError(
+                f"MFクラウド会計APIエラー: {resp.status_code} {detail}"
+            )
 
         data = resp.json()
         items = data.get("journals") or []
