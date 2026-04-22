@@ -978,10 +978,182 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('on'), 2500);
 }
 
+// ===== CARD STATEMENT FUNCTIONS =====
+
+function updStmtCardSel() {
+  const opts = '<option value="">カードを選択</option>' + cards.map(c => `<option value="${c.id}">${c.name}${c.last4?' ···'+c.last4:''}</option>`).join('');
+  const s1 = document.getElementById('stmt-card-sel'); if (s1) s1.innerHTML = opts;
+  const s2 = document.getElementById('stmt-card-sel2'); if (s2) s2.innerHTML = opts;
+}
+
+function updStmtBadge() {
+  const b = document.getElementById('stmt-badge');
+  if (statements.length > 0) { b.textContent = statements.length; b.style.display = ''; }
+  else b.style.display = 'none';
+}
+
+function renderStmt() {
+  const el = document.getElementById('stmt-list');
+  const cnt = document.getElementById('stmt-count');
+  if (!statements.length) {
+    el.innerHTML = '<p style="text-align:center;color:var(--text-hint);padding:32px;font-size:13px">確認待ちの明細はありません</p>';
+    if (cnt) cnt.textContent = '';
+    return;
+  }
+  if (cnt) cnt.textContent = `確認待ち ${statements.length}件`;
+  el.innerHTML = statements.map(st => {
+    const card = cards.find(c => c.id === st.cardId);
+    const cardChip = card ? `<span class="cc-chip" style="margin-left:4px"><span class="cc-dot" style="background:${BCOL[card.brand]||'#888'}"></span>${card.name}</span>` : '';
+    return `<div class="stmt-row" id="stmt-row-${st.id}">
+      <span class="stmt-date">${st.date}</span>
+      <span class="stmt-shop">${st.shop||'（店名不明）'}${cardChip}</span>
+      <span class="stmt-amount">¥${st.amount.toLocaleString()}</span>
+      <span class="stmt-dup-tag">金額一致の可能性</span>
+      <div class="stmt-actions">
+        <button class="btn btn-exists btn-sm" onclick="stmtSkip(${st.id})">発注一覧にある</button>
+        <button class="btn btn-new btn-sm" onclick="stmtApprove(${st.id})">発注一覧にない</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchStmtImport(mode, el) {
+  document.querySelectorAll('.itab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('si-paste').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('si-csv').style.display   = mode === 'csv'   ? '' : 'none';
+  ['stmt-okb','stmt-erb'].forEach(id => document.getElementById(id).style.display = 'none');
+}
+
+function stmtShowLoading(show) {
+  document.getElementById('stmt-ldb').style.display = show ? '' : 'none';
+  document.getElementById('stmt-ldt').style.display = show ? '' : 'none';
+}
+
+async function parseStmtText() {
+  const text = document.getElementById('stmt-text').value.trim();
+  if (!text || text.length < 10) { alert('明細テキストを貼り付けてください'); return; }
+  const cardId = parseInt(document.getElementById('stmt-card-sel').value) || null;
+  const btn = document.getElementById('stmt-parse-btn');
+  ['stmt-okb','stmt-erb'].forEach(id => document.getElementById(id).style.display = 'none');
+  stmtShowLoading(true); btn.disabled = true; btn.textContent = '解析中...';
+  try {
+    const items = await callStmtAI(text);
+    if (!items.length) throw new Error('no data');
+    await submitStatements(items, cardId);
+  } catch(e) {
+    const erb = document.getElementById('stmt-erb');
+    erb.textContent = '解析できませんでした。日付・店名・金額が含まれる明細テキストを貼り付けてください。';
+    erb.style.display = '';
+  } finally {
+    stmtShowLoading(false); btn.disabled = false; btn.textContent = 'AI解析する';
+  }
+}
+
+async function parseStmtCSV() {
+  const file = document.getElementById('stmt-csv-file').files[0];
+  if (!file) { alert('CSVファイルを選択してください'); return; }
+  const cardId = parseInt(document.getElementById('stmt-card-sel2').value) || null;
+  ['stmt-okb','stmt-erb'].forEach(id => document.getElementById(id).style.display = 'none');
+  stmtShowLoading(true);
+  try {
+    const text = await file.text();
+    const items = parseCSVStatements(text);
+    if (!items.length) throw new Error('no data');
+    await submitStatements(items, cardId);
+  } catch(e) {
+    document.getElementById('stmt-erb').textContent = 'CSVを解析できませんでした。日付・店名・金額の列が必要です。';
+    document.getElementById('stmt-erb').style.display = '';
+  } finally {
+    stmtShowLoading(false);
+  }
+}
+
+function parseCSVStatements(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const items = [];
+  for (const line of lines) {
+    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+    if (cols.length < 3) continue;
+    const date   = parseStmtDate(cols[0]);
+    const shop   = cols[1];
+    const amount = parseInt(cols[2].replace(/[^\d]/g, ''));
+    if (!date || !shop || isNaN(amount) || amount <= 0) continue;
+    items.push({ date, shop, amount });
+  }
+  return items;
+}
+
+function parseStmtDate(str) {
+  str = str.trim();
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // YYYY/MM/DD
+  if (/^\d{4}\/\d{2}\/\d{2}$/.test(str)) return str.replace(/\//g, '-');
+  // MM/DD or MM-DD → 今年
+  const m1 = str.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+  if (m1) return new Date().getFullYear() + '-' + m1[1].padStart(2,'0') + '-' + m1[2].padStart(2,'0');
+  return null;
+}
+
+async function callStmtAI(text) {
+  const headers = apiHeaders();
+  if (!headers) throw new Error('no api key');
+  const prompt = `以下はクレジットカードの利用明細テキストです。各行から「利用日」「店名/利用先」「金額（円）」を抽出してJSON配列で返してください。
+金額は数値のみ（カンマ・円記号・税表記を除く）。日付はYYYY-MM-DD形式。抽出できない行はスキップ。
+
+出力形式（JSONのみ・マークダウン不要）:
+[{"date":"2024-04-01","shop":"Amazon.co.jp","amount":3980}, ...]
+
+テキスト:
+${text.slice(0, 6000)}`;
+
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST', headers,
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2000,
+      messages:[{ role:'user', content:prompt }] })
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  const txt = d.content.filter(c => c.type==='text').map(c => c.text).join('');
+  const m = txt.replace(/```json|```/g,'').trim().match(/\[[\s\S]*\]/);
+  if (!m) throw new Error('parse failed');
+  return JSON.parse(m[0]);
+}
+
+async function submitStatements(items, cardId) {
+  const res = await apiFetch('add_statements', { items, cardId });
+  // 即反映分は orders を再取得
+  if (res.added > 0) { orders = await apiFetch('orders'); rmets(); rt(); updFilters(); }
+  // pending分は statements を再取得
+  if (res.pending > 0) { statements = await apiFetch('card_statements'); updStmtBadge(); renderStmt(); }
+  const okb = document.getElementById('stmt-okb');
+  const parts = [];
+  if (res.added > 0)   parts.push(`${res.added}件を発注一覧に追加しました`);
+  if (res.pending > 0) parts.push(`${res.pending}件は金額が一致する発注があるため確認が必要です`);
+  okb.textContent = parts.join('。');
+  okb.style.display = '';
+  document.getElementById('stmt-text').value = '';
+}
+
+async function stmtSkip(id) {
+  await apiFetch('skip_statement', {id});
+  statements = statements.filter(s => s.id !== id);
+  updStmtBadge(); renderStmt(); toast('確認済みとして削除しました');
+}
+
+async function stmtApprove(id) {
+  await apiFetch('approve_statement', {id});
+  orders = await apiFetch('orders');
+  statements = statements.filter(s => s.id !== id);
+  rmets(); rt(); updFilters(); updStmtBadge(); renderStmt();
+  toast('発注一覧に追加しました');
+}
+
 // Init
 (async () => {
-  [orders, cards] = await Promise.all([apiFetch('orders'), apiFetch('cards')]);
-  rmets(); rt(); updFilters(); today();
+  [orders, cards, statements] = await Promise.all([apiFetch('orders'), apiFetch('cards'), apiFetch('card_statements')]);
+  rmets(); rt(); updFilters(); today(); updStmtBadge();
 })();
 </script>
 </body>
