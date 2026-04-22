@@ -226,6 +226,12 @@ if (strlen($memo) > 120) {
     $memo = ($mm[0] ?? substr($memo, 0, 120)) . '…';
 }
 
+// rawテキスト（AI補完フォールバック用）
+$rawText = strip_tags($html);
+$rawText = preg_replace('/\s+/', ' ', $rawText);
+preg_match('/^.{0,8000}/u', trim($rawText), $rtm);
+$rawText = $rtm[0] ?? substr($rawText, 0, 8000);
+
 // JSON_INVALID_UTF8_IGNOREで不正UTF-8も安全に出力
 echo json_encode([
     'name'       => $name,
@@ -234,4 +240,5 @@ echo json_encode([
     'price'      => $price,
     'price_type' => $priceType,  // 'inclusive'=税込, 'exclusive'=税抜
     'memo'       => $memo,
+    'raw_text'   => ($name && $price > 0) ? '' : $rawText, // 完全取得済みなら不要
 ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
