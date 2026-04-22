@@ -65,7 +65,9 @@ def _svc(service_name: str) -> dict:
 TOKEN_DIR = os.path.join(os.path.dirname(__file__), "tokens")
 
 # OAuth stateパラメータを一時保存（CSRF対策）
-_pending_states: dict[str, str] = {}  # state -> (service_name, company_id)
+# ※ Gunicorn複数ワーカー対応のため、stateの保存・検証はapp.py側のFlask sessionで行う
+# 後方互換用に残すが、Webモードでは使用しない
+_pending_states: dict[str, str] = {}
 
 
 def _token_path(service_name: str, company_id: str = "") -> str:
