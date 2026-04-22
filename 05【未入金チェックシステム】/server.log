@@ -145,3 +145,82 @@ Press CTRL+C to quit
 [請求書API] page=7 items=100 keys=['data', 'pagination']
 127.0.0.1 - - [22/Apr/2026 14:48:59] "GET /api/status HTTP/1.1" 200 -
 [請求書API] page=8 status=200
+[請求書API] page=8 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:01] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=9 status=200
+[請求書API] page=9 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:03] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:04] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=10 status=200
+[請求書API] page=10 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:06] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=11 status=200
+[請求書API] page=11 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:08] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=12 status=200
+[請求書API] page=12 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:09] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:11] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=13 status=200
+[請求書API] page=13 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:13] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=14 status=200
+[請求書API] page=14 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:14] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=15 status=200
+[請求書API] page=15 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:16] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=16 status=200
+[請求書API] page=16 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:18] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:19] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=17 status=200
+[請求書API] page=17 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:21] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=18 status=200
+[請求書API] page=18 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:23] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=19 status=200
+[請求書API] page=19 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:24] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=20 status=200
+[請求書API] page=20 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:26] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:28] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=21 status=200
+[請求書API] page=21 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:29] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=22 status=200
+[請求書API] page=22 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:31] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=23 status=200
+[請求書API] page=23 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:33] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:34] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=24 status=200
+[請求書API] page=24 items=100 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:36] "GET /api/status HTTP/1.1" 200 -
+[請求書API] page=25 status=200
+[請求書API] page=25 items=84 keys=['data', 'pagination']
+127.0.0.1 - - [22/Apr/2026 14:49:38] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:38] "GET /?year=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:38] "GET /static/style.css HTTP/1.1" 304 -
+[請求書] API取得: 2484件
+[取得] 請求書 2484件
+[分類] 未入金=3件（未収:3 請求済確認:0 下書き:0 一時保管:0 期日前:0） 入金済み=98件（MF:98 手動:0）
+[レポート] 保存完了: C:\Users\shira_k13727w\OneDrive\Desktop\クロード保管用\05【未入金チェックシステム】\output\未入金チェック_20260422_144937.xlsx
+[会計API] 仕訳取得: 2026-02-01 ～ 2026-04-22
+[会計API] page=1 status=200
+[会計API] 取得完了（合計）: 1745件
+[会計API] 未仕分け仕訳取得: 2026-02-01 ～ 2026-04-22
+[会計API] page=1 status=200
+[会計API] 未仕分け取得完了: 4件
+[再確認] 未仕分け仕訳: 4件
+127.0.0.1 - - [22/Apr/2026 14:49:52] "POST /api/overdue/recheck_all HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:55] "GET /?year=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:49:55] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [22/Apr/2026 14:52:25] "GET /customers HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:52:25] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [22/Apr/2026 14:52:25] "GET /api/customers HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:52:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 14:52:43] "GET /static/style.css HTTP/1.1" 304 -
