@@ -1083,8 +1083,11 @@ def _load_result() -> dict | None:
     path = os.path.join(_cdir(), "last_result.json")
     if not os.path.exists(path):
         return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 # ========================================
 # ルーティング — ダッシュボード
