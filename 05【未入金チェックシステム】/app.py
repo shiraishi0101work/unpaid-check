@@ -1677,29 +1677,6 @@ def api_overdue_recheck_all():
                     existing_jids_rchk.add(journal_id)
                     new_recheck += 1
 
-        if False:  # (旧ロジック削除済み - 振込名義なし側は上の未仕分け全件取得に統合)
-            pass
-        if False:
-            furikomi_unconf.append({
-                "id":                str(_uuid.uuid4()),
-                "journal_id":        "",
-                "fetched_at":        datetime.now().isoformat(),
-                "suggested_partner": partner_name,
-                "candidate_invoice_id": bid,
-                "取引先名":          "",
-                "着金日":            "",
-                "入金金額":          0,
-                    "備考":              deal_remark,
-                    "科目":              d.get("科目", ""),
-                    "furikomi_to_register": "",
-                    "linked_invoice_id":    None,
-                    "linked_invoice_num":   None,
-                    "linked_at":            None,
-                    "deleted":              False,
-                })
-                existing_jids_furik.add(journal_id)
-                new_furikomi += 1
-
     save_recheck_records(recheck_records)
     save_furikomi_unconfirmed(furikomi_unconf)
 
