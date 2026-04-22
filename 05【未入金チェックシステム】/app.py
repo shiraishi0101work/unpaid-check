@@ -2202,6 +2202,12 @@ def api_notify_settings_test():
 if __name__ == "__main__":
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    # 同じポートを使っている既存プロセスを終了
+    import subprocess as _sp
+    _sp.run(
+        f'powershell -Command "Get-NetTCPConnection -LocalPort {port} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Where-Object {{$_ -ne {os.getpid()}}} | ForEach-Object {{Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue}}"',
+        shell=True, capture_output=True
+    )
     init_scheduler(run_func=_run_check, token_check_func=_check_all_tokens)
     import webbrowser, threading as _th
     _th.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{port}")).start()
