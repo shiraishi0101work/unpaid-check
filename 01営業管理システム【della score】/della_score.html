@@ -3431,6 +3431,8 @@ function updMpurOpenBtn(){
 
 function openMpurModal(){
   _mpurFilter='all'; _mpurSel.clear();
+  document.querySelectorAll('.mpur-filter').forEach(b=>b.classList.remove('on'));
+  document.getElementById('mpf-all')?.classList.add('on');
   showMpurStep1();
   renderMpurList();
   openModal('mpur-modal');
