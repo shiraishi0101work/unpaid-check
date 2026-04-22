@@ -627,8 +627,11 @@ def load_company_tantou() -> dict:  # noqa
     path = os.path.join(_cdir(), "company_tantou.json")
     if not os.path.exists(path):
         return {}
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 
 def _ensure_dict(mapping: dict, company: str) -> dict:
