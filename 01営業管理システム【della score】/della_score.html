@@ -3473,7 +3473,7 @@ function renderMpurList(){
     const done=(p.dup_months||[]).includes(cm);
     const sel=_mpurSel.has(p.id);
     return `<div class="mpur-item">
-      <input type="checkbox" ${sel?'checked':''} ${done?'disabled':''} onchange="toggleMpurSel('${p.id}',this)" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
+      <input type="checkbox" ${sel?'checked':''} onchange="toggleMpurSel('${p.id}',this)" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
       <div class="mpur-info">
         <div class="mpur-name">${p.supplier}</div>
         <div class="mpur-sub">${p.desc||'—'} &nbsp;|&nbsp; ${fmt((p.amount||0)+(p.tax||0))}（税込）</div>
