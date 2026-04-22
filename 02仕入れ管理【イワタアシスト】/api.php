@@ -240,6 +240,39 @@ if ($action === 'del_card') {
     exit;
 }
 
+// ── 発注更新 ──
+if ($action === 'update_order') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $id = (int)$body['id'];
+    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,client=:client,cc_id=:cc_id,status=:status,memo=:memo WHERE id=:id');
+    $s->execute([
+        ':date'   => $body['date']   ?? date('Y-m-d'),
+        ':name'   => $body['name']   ?? '',
+        ':shop'   => $body['shop']   ?? '',
+        ':brand'  => $body['brand']  ?? '',
+        ':url'    => $body['url']    ?? '',
+        ':qty'    => (int)($body['qty']   ?? 1),
+        ':price'  => (int)($body['price'] ?? 0),
+        ':client' => $body['client'] ?? '',
+        ':cc_id'  => $body['ccId']   ? (int)$body['ccId'] : null,
+        ':status' => $body['status'] ?? '未発注',
+        ':memo'   => $body['memo']   ?? '',
+        ':id'     => $id,
+    ]);
+    // DellaScore仕入れも更新
+    dsSyncAdd([
+        'id'    => $id,
+        'date'  => $body['date']   ?? date('Y-m-d'),
+        'name'  => $body['name']   ?? '',
+        'shop'  => $body['shop']   ?? '',
+        'price' => (int)($body['price'] ?? 0),
+        'qty'   => (int)($body['qty']   ?? 1),
+    ]);
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // ── ステータス更新 ──
 if ($action === 'update_status') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
