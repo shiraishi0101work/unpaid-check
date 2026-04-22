@@ -3531,7 +3531,7 @@ function openMpurStep2(){
         <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">消費税</label>
           <input type="number" id="mpe-tax-${p.id}" value="${p.tax||0}" style="${inp_s}"></div>
         <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">税込合計</label>
-          <div id="mpe-total-${p.id}" style="font-size:13px;font-weight:700;color:var(--navy);padding:6px 0">¥${fmt((p.amount||0)+(p.tax||0))}</div></div>
+          <div id="mpe-total-${p.id}" style="font-size:13px;font-weight:700;color:var(--navy);padding:6px 0">${fmt((p.amount||0)+(p.tax||0))}</div></div>
         <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">発行日 *</label>
           <input type="date" id="mpd-${p.id}" value="${td}" style="${inp_s}"></div>
         <div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px">支払期限</label>
