@@ -114,6 +114,15 @@ function getDb() {
         closing TEXT DEFAULT "",
         payment TEXT DEFAULT ""
     )');
+    $db->exec('CREATE TABLE IF NOT EXISTS card_statements (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        date    TEXT NOT NULL,
+        shop    TEXT DEFAULT "",
+        amount  INTEGER NOT NULL,
+        card_id INTEGER DEFAULT NULL,
+        memo    TEXT DEFAULT "",
+        status  TEXT DEFAULT "pending"
+    )');
     return $db;
 }
 
