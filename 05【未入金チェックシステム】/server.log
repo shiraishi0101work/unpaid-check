@@ -132,3 +132,10 @@ Press CTRL+C to quit
 127.0.0.1 - - [22/Apr/2026 15:04:10] "POST /api/clear-data HTTP/1.1" 302 -
 127.0.0.1 - - [22/Apr/2026 15:04:10] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [22/Apr/2026 15:04:11] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [22/Apr/2026 15:47:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 15:47:51] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [22/Apr/2026 15:47:53] "GET /customers HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 15:47:53] "GET /static/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [22/Apr/2026 15:47:53] "GET /api/customers HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 15:48:38] "GET /rules HTTP/1.1" 200 -
+127.0.0.1 - - [22/Apr/2026 15:48:38] "GET /static/style.css HTTP/1.1" 304 -
