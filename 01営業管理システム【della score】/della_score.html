@@ -2388,8 +2388,17 @@ function renderInvoices(){
   if(q) list=list.filter(i=>(i.client+i.name+(i.owner||'')+(i.items||'')+(i.billing_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(i=>(i.owner||'')===ow);
   if(document.getElementById('filter-no-owner-invoices')?.checked) list=list.filter(i=>!(i.owner||'').trim());
-  if(!list.length){tb.innerHTML='';em.style.display='';
-    document.getElementById('i-footer').style.display='none'; return;}
+  if(!list.length){
+    tb.innerHTML='';em.style.display='';
+    document.getElementById('i-footer').style.display='none';
+    // stat カードは期間フィルターで更新（検索・担当者フィルターによらず）
+    const _isStatList0=mf?D.invoices.filter(i=>(i.issued||'').slice(0,7)===mf):D.invoices.filter(i=>(i.issued||'').startsWith(thisMonth()));
+    const _isLbl0=mf?mf.replace('-','年')+'月 売上':'今月 売上';
+    const _isLblEl0=document.getElementById('is-label');if(_isLblEl0)_isLblEl0.textContent=_isLbl0;
+    const _isMonthEl0=document.getElementById('is-month');if(_isMonthEl0)_isMonthEl0.textContent=fmt(_isStatList0.reduce((s,i)=>s+(i.amount||0),0));
+    const _isMcEl0=document.getElementById('is-mc');if(_isMcEl0)_isMcEl0.textContent=_isStatList0.length+'件';
+    return;
+  }
   em.style.display='none';
   const totalAmt=list.reduce((s,i)=>s+(i.amount||0),0);
   const totalTax=list.reduce((s,i)=>s+calcTax(i.amount,i.tax),0);
