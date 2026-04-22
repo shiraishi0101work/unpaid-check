@@ -1309,6 +1309,7 @@ function toast(msg) {
 
 // Init
 (async () => {
+  updateApiKeyNav();
   try {
     const res = await fetch('/pm_api.php?action=check');
     const d = await res.json();
