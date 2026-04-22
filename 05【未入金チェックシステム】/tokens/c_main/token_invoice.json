@@ -1,8 +1,8 @@
 {
-  "access_token": "8xQjjmapvdA1uCH8aGpcq5FV53PoaAXgrrPnwAaGDag",
-  "refresh_token": "WEU9Px2JnAwYwhcVLcS1S3qf6DoOrk0rmwAS_2128y8",
+  "access_token": "-_8wtESsCJ7sRyZbNwXbc8gUDNEzlMSoy2JofIXfABY",
+  "refresh_token": "xly-kTm8rKGqzHOK0HUKG2sXttkgXgEzMe219U8Sjn8",
   "scope": "mfc/invoice/data.read mfc/invoice/data.write",
   "token_type": "Bearer",
   "expires_in": 3600,
-  "saved_at": 1776668924.284934
+  "saved_at": 1776822444.3682253
 }
