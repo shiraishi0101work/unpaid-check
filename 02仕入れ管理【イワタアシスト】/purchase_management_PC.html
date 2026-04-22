@@ -302,6 +302,31 @@
   /* ===== DATE ROW ===== */
   .date-row { display: flex; gap: 6px; }
   .date-row input { flex: 1; }
+
+  /* ===== STMT ===== */
+  .stmt-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .stmt-row:last-child { border-bottom: none; }
+  .stmt-row:hover { background: var(--brand-light); }
+  .stmt-date { font-size: 12px; color: var(--text-sub); white-space: nowrap; min-width: 80px; }
+  .stmt-shop { flex: 1; font-weight: 500; color: var(--text); word-break: break-all; }
+  .stmt-amount { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; min-width: 90px; text-align: right; }
+  .stmt-dup-tag {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--warn-bg); color: var(--warn-tx); white-space: nowrap;
+  }
+  .stmt-actions { display: flex; gap: 6px; }
+  .btn-exists { background: #F0F0F0; color: var(--text-sub); border-color: #D0D0D0; font-size: 12px; padding: 5px 12px; }
+  .btn-exists:hover { background: #E0E0E0; border-color: #AAA; color: var(--text); }
+  .btn-new { background: var(--brand); color: #fff; border-color: var(--brand); font-size: 12px; padding: 5px 12px; }
+  .btn-new:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .stmt-input-area {
+    background: var(--brand-light); border: 1.5px solid var(--brand);
+    border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px;
+  }
 </style>
 </head>
 <body>
