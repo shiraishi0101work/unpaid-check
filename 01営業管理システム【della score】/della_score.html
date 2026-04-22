@@ -3481,7 +3481,7 @@ function renderMpurList(){
       <input type="checkbox" ${sel?'checked':''} ${done?'disabled':''} onchange="toggleMpurSel('${p.id}',this)" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
       <div class="mpur-info">
         <div class="mpur-name">${p.supplier}</div>
-        <div class="mpur-sub">${p.desc||'—'} &nbsp;|&nbsp; ¥${fmt(p.amount+（p.tax||0))}（税込）</div>
+        <div class="mpur-sub">${p.desc||'—'} &nbsp;|&nbsp; ¥${fmt((p.amount||0)+(p.tax||0))}（税込）</div>
       </div>
       ${done?'<span class="mdup-done-badge">今月複製済み</span>':'<span style="font-size:11px;color:var(--text3)">未複製</span>'}
     </div>`;
