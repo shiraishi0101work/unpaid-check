@@ -497,6 +497,20 @@
           <button class="btn btn-primary" id="parse-btn" onclick="parseText()">解析する</button>
         </div>
       </div>
+      <div id="im-image" style="display:none">
+        <div class="img-drop" id="img-drop-area" onclick="document.getElementById('img-file').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
+          <div class="img-drop-icon">📷</div>
+          <div class="img-drop-main">クリックまたはドラッグ＆ドロップ</div>
+          <div class="img-drop-sub">JPG・PNG・WebP・GIF対応｜請求書・商品ページのスクリーンショットなど</div>
+          <input type="file" id="img-file" accept="image/*" style="display:none" onchange="onImgFileChange(this)">
+        </div>
+        <div id="img-preview-wrap" style="display:none;margin-top:12px">
+          <img id="img-preview" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border);display:block">
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-primary" id="img-parse-btn" onclick="analyzeImage()">解析する</button>
+          </div>
+        </div>
+      </div>
       <div class="ld-bar" id="ldb"><div class="ld-inner"></div></div>
       <div class="ld-txt" id="ldt">AIが解析中...</div>
       <div class="banner banner-ok" id="okb"></div>
