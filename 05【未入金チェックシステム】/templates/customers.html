@@ -314,6 +314,11 @@ function renderTable(list) {
                   title="担当者を編集">
             <i class="bi bi-pencil"></i>
           </button>
+          <button class="btn btn-outline-danger btn-sm py-0 px-2 btn-delete-customer"
+                  data-company="${escHtml(c.name)}"
+                  title="顧客を削除">
+            <i class="bi bi-trash"></i>
+          </button>
         </div>
       </td>
     </tr>`;
