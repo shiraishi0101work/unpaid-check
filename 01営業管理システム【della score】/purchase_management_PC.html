@@ -1391,6 +1391,162 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('on'), 2500);
 }
 
+// ===== 毎月複製 =====
+let _mFilter = 'all';
+let _mSelected = new Set(); // 選択中の order.id
+
+function curMonth() { return new Date().toISOString().slice(0, 7); } // YYYY-MM
+
+function toggleMonthly(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  o.monthly = !o.monthly;
+  if (!o.dup_months) o.dup_months = [];
+  save(); rt(); updMonthlyBadge();
+  toast(o.monthly ? '毎月複製に設定しました' : '毎月複製を解除しました');
+}
+
+function updMonthlyBadge() {
+  const cm = curMonth();
+  const undone = orders.filter(o => o.monthly && !(o.dup_months||[]).includes(cm)).length;
+  const badge = document.getElementById('monthly-undone-badge');
+  if (badge) { badge.textContent = undone; badge.style.display = undone > 0 ? '' : 'none'; }
+}
+
+function setMFilter(mode, el) {
+  _mFilter = mode;
+  document.querySelectorAll('.mf-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  _mSelected.clear();
+  renderMonthly();
+}
+
+function renderMonthly() {
+  const cm = curMonth();
+  const [y, m] = cm.split('-');
+  document.getElementById('monthly-month-label').textContent = `${y}年${parseInt(m)}月`;
+
+  const all = orders.filter(o => o.monthly);
+  const list = _mFilter === 'undone' ? all.filter(o => !(o.dup_months||[]).includes(cm))
+             : _mFilter === 'done'   ? all.filter(o =>  (o.dup_months||[]).includes(cm))
+             : all;
+
+  const el = document.getElementById('monthly-list');
+  if (!list.length) {
+    const msg = _mFilter === 'undone' ? '未複製の発注はありません。'
+              : _mFilter === 'done'   ? '今月複製済みの発注はありません。'
+              : '「毎月」に設定された発注がありません。\n発注一覧の各行「毎月」ボタンで設定してください。';
+    el.innerHTML = `<div style="text-align:center;color:var(--text-hint);padding:32px;font-size:13px;white-space:pre-line">${msg}</div>`;
+    updMdupBtn();
+    return;
+  }
+
+  el.innerHTML = list.map(o => {
+    const done = (o.dup_months||[]).includes(cm);
+    const sel  = _mSelected.has(o.id);
+    const pIn  = getPriceIn(o);
+    return `<div class="monthly-item">
+      <input type="checkbox" ${sel?'checked':''} ${done?'disabled':''} onchange="toggleMSelect(${o.id},this)" style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+      <div class="monthly-item-info">
+        <div class="monthly-item-name">${o.name}</div>
+        <div class="monthly-item-sub">${o.shop||'—'} &nbsp;|&nbsp; ¥${pIn.toLocaleString()}（税込）× ${o.qty}個</div>
+      </div>
+      ${done
+        ? '<span class="monthly-done">今月複製済み</span>'
+        : '<span style="font-size:11px;color:var(--text-hint)">未複製</span>'}
+    </div>`;
+  }).join('');
+
+  updMdupBtn();
+}
+
+function toggleMSelect(id, cb) {
+  if (cb.checked) {
+    if (_mSelected.size >= 20) { cb.checked = false; toast('一度に選択できるのは20件までです'); return; }
+    _mSelected.add(id);
+  } else {
+    _mSelected.delete(id);
+  }
+  updMdupBtn();
+}
+
+function toggleMSelectAll(masterCb) {
+  const cm = curMonth();
+  const candidates = orders.filter(o => o.monthly && !(o.dup_months||[]).includes(cm));
+  if (masterCb.checked) {
+    _mSelected.clear();
+    candidates.slice(0, 20).forEach(o => _mSelected.add(o.id));
+    if (candidates.length > 20) toast('20件を超えるため先頭20件を選択しました');
+  } else {
+    _mSelected.clear();
+  }
+  renderMonthly();
+}
+
+function updMdupBtn() {
+  const n = _mSelected.size;
+  const btn = document.getElementById('monthly-dup-btn');
+  const cnt = document.getElementById('monthly-sel-count');
+  btn.disabled = n === 0;
+  btn.textContent = n > 0 ? `選択した ${n} 件を複製` : '選択した件を複製';
+  if (cnt) cnt.textContent = n > 0 ? `${n}/20件選択中` : '';
+}
+
+function openMdupModal() {
+  if (_mSelected.size === 0) return;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mdup-date-all').value = today;
+
+  const items = orders.filter(o => _mSelected.has(o.id));
+  document.getElementById('mdup-items').innerHTML = items.map((o, i) => {
+    const pIn = getPriceIn(o);
+    return `<div class="mdup-row">
+      <div>
+        <div class="mdup-name">${o.name}</div>
+        <div class="mdup-sub">${o.shop||'—'} &nbsp;¥${pIn.toLocaleString()}（税込）× ${o.qty}個</div>
+      </div>
+      <div><input type="date" id="mdup-d-${o.id}" value="${today}" style="width:100%;font-size:13px;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);outline:none"></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('mdup-modal').style.display = 'flex';
+}
+
+function closeMdupModal() { document.getElementById('mdup-modal').style.display = 'none'; }
+
+function applyMdupDateAll() {
+  const d = document.getElementById('mdup-date-all').value; if (!d) return;
+  _mSelected.forEach(id => {
+    const inp = document.getElementById('mdup-d-' + id);
+    if (inp) inp.value = d;
+  });
+}
+
+function execMonthlyDup() {
+  const cm = curMonth();
+  const items = orders.filter(o => _mSelected.has(o.id));
+  items.forEach(o => {
+    const date = document.getElementById('mdup-d-' + o.id)?.value || new Date().toISOString().split('T')[0];
+    // 複製を作成（monthlyフラグなし）
+    orders.push({
+      ...o,
+      id: nid(orders),
+      date,
+      monthly: false,
+      dup_months: [],
+      synced: false
+    });
+    // 元テンプレートに今月複製済みを記録
+    if (!o.dup_months) o.dup_months = [];
+    if (!o.dup_months.includes(cm)) o.dup_months.push(cm);
+  });
+  save();
+  closeMdupModal();
+  _mSelected.clear();
+  renderMonthly();
+  updMonthlyBadge();
+  toast(`${items.length}件を複製・登録しました`);
+}
+
 // Init
 (async () => {
   updateApiKeyNav();
