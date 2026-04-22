@@ -1504,7 +1504,12 @@ def debug_check():
 def oauth_start(service_name):
     if service_name not in ("invoice", "accounting"):
         return "不正なサービス名", 400
-    return redirect(auth.get_auth_url(service_name, get_company_id()))
+    url, state = auth.get_auth_url(service_name, get_company_id())
+    # Gunicorn複数ワーカー対応: stateをFlask sessionに保存
+    session["oauth_state"]   = state
+    session["oauth_service"] = service_name
+    session["oauth_cid"]     = get_company_id()
+    return redirect(url)
 
 
 @app.route("/oauth/callback/<service_name>")
@@ -1520,8 +1525,16 @@ def oauth_callback(service_name):
     if not code:
         flash("認可コードが取得できませんでした")
         return redirect(url_for("settings_page"))
+    # Gunicorn複数ワーカー対応: Flask sessionからstate・service・company_idを取得
+    expected_state   = session.pop("oauth_state",   "")
+    stored_service   = session.pop("oauth_service", service_name)
+    stored_cid       = session.pop("oauth_cid",     get_company_id())
     try:
-        ok, _cid, actual_service = auth.handle_callback(service_name, code, state)
+        ok, _cid, actual_service = auth.handle_callback(
+            stored_service, code, state,
+            expected_state=expected_state,
+            company_id=stored_cid,
+        )
         if ok:
             name = "MFクラウド会計" if actual_service == "accounting" else "MFクラウド請求書"
             flash(f"{name}の認証が完了しました", "success")
