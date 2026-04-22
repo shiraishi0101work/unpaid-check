@@ -1181,6 +1181,20 @@ async function stmtSkip(id) {
   updStmtBadge(); renderStmt(); toast('確認済みとして削除しました');
 }
 
+async function stmtDelete(id) {
+  if (!confirm('この明細を削除しますか？')) return;
+  await apiFetch('delete_statement', {id});
+  statements = statements.filter(s => s.id !== id);
+  updStmtBadge(); renderStmt(); toast('削除しました');
+}
+
+async function stmtClearAll() {
+  if (!confirm(`確認待ちの明細 ${statements.length}件をすべて削除しますか？`)) return;
+  await apiFetch('clear_statements', {});
+  statements = [];
+  updStmtBadge(); renderStmt(); toast('すべて削除しました');
+}
+
 async function stmtApprove(id) {
   await apiFetch('approve_statement', {id});
   orders = await apiFetch('orders');
