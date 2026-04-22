@@ -1147,8 +1147,10 @@ def dashboard():
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
         seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
 
-        paid_all      = result.get("paid", []) + seikyu_moved
-        overdue       = result.get("overdue", [])
+        overdue_raw    = result.get("overdue", [])
+        overdue_moved  = [b for b in overdue_raw if b.get("着金日_手動")]
+        overdue        = [b for b in overdue_raw if not b.get("着金日_手動")]
+        paid_all       = result.get("paid", []) + seikyu_moved + overdue_moved
         draft_overdue = result.get("draft_overdue", [])
         ichiji_hokan  = result.get("ichiji_hokan", [])
         upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
