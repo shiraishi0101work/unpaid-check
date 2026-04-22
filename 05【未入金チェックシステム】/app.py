@@ -1399,9 +1399,9 @@ def oauth_callback(service_name):
         flash("認可コードが取得できませんでした")
         return redirect(url_for("settings_page"))
     try:
-        ok, _cid = auth.handle_callback(service_name, code, state)
+        ok, _cid, actual_service = auth.handle_callback(service_name, code, state)
         if ok:
-            name = "MFクラウド会計" if service_name == "accounting" else "MFクラウド請求書"
+            name = "MFクラウド会計" if actual_service == "accounting" else "MFクラウド請求書"
             flash(f"{name}の認証が完了しました", "success")
         else:
             flash("認証に失敗しました（stateが一致しません）", "error")
