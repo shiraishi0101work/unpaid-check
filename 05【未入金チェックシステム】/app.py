@@ -1046,9 +1046,10 @@ def dashboard():
         )
 
     # ── 通常ビュー（個別会社） ──
-    auth_invoice = auth.is_authenticated("invoice", get_company_id())
-    result       = _load_result()
-    meta         = load_meta()
+    auth_invoice     = auth.is_authenticated("invoice", get_company_id())
+    auth_accounting  = auth.is_authenticated("accounting", get_company_id())
+    result           = _load_result()
+    meta             = load_meta()
 
     show_history_popup = (
         date.today().day <= 7 and
@@ -1074,10 +1075,15 @@ def dashboard():
                 b["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動",""))
                 b["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
                 b["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
-                if not b.get("担当者"):
-                    company = b.get("取引先名", "").strip()
-                    if company and company in company_tantou:
-                        b["担当者"] = company_tantou[company]
+                b["個人名"]          = m.get("個人名", "")
+                company = b.get("取引先名", "").strip()
+                if not b.get("担当者") and company:
+                    tantou = _get_tantou(company_tantou, company)
+                    if tantou:
+                        b["担当者"] = tantou
+                # 個人名がmetaにない場合、会社マスタから補完
+                if not b["個人名"] and company:
+                    b["個人名"] = _get_kojinmei(company_tantou, company)
 
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
