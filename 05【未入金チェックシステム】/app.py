@@ -1543,7 +1543,7 @@ def api_overdue_recheck_all():
     - 振込名義なし → furikomi_unconfirmed（振込名義確認タブ）
     """
     try:
-        from mf_accounting import get_deals
+        from mf_accounting import get_deals, get_unclassified_deals
     except ImportError as e:
         return jsonify({"error": f"会計モジュールエラー: {e}"}), 500
 
@@ -1565,6 +1565,7 @@ def api_overdue_recheck_all():
     from_date = f"{y2}-{m2:02d}-01"
     to_date   = today.strftime("%Y-%m-%d")
 
+    # 振込名義あり用: 全仕訳
     try:
         deals = get_deals(from_date, to_date, company_id=cid)
     except Exception as e:
