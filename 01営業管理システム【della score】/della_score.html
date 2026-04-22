@@ -2468,6 +2468,9 @@ function renderMonthlyPurList(){
   </tr>`).join('');
 }
 
+let _purPage=0;
+const PUR_PER_PAGE=50;
+
 function renderPurchases(){
   const tb=document.getElementById('pu-tbody');
   const em=document.getElementById('pu-empty');
@@ -2488,9 +2491,15 @@ function renderPurchases(){
   if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')+(p.invoice_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')===ow);
   if(document.getElementById('filter-no-owner-purchases')?.checked) list=list.filter(p=>!(p.owner||'').trim());
-  if(!list.length){tb.innerHTML='';em.style.display='';return;}
+  if(!list.length){tb.innerHTML='';em.style.display='';renderPurPagination(0,0);return;}
   em.style.display='none';
-  tb.innerHTML=list.map(p=>`<tr>
+  // ページネーション
+  const total=list.length;
+  const totalPages=Math.ceil(total/PUR_PER_PAGE);
+  if(_purPage>=totalPages) _purPage=totalPages-1;
+  if(_purPage<0) _purPage=0;
+  const page=list.slice(_purPage*PUR_PER_PAGE, (_purPage+1)*PUR_PER_PAGE);
+  tb.innerHTML=page.map(p=>`<tr>
     <td><input type="checkbox" class="pur-row-chk" value="${p.id}" onchange="updatePurBulkBar()" style="cursor:pointer"></td>
     <td title="${p.supplier}" style="font-weight:600">${p.supplier}</td>
     <td title="${p.desc||''}">${p.desc||'-'}</td>
@@ -2500,18 +2509,47 @@ function renderPurchases(){
     <td title="${p.bank||''}" style="font-size:12px;color:var(--text2)">${p.bank||'-'}</td>
     <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
     <td>${p.status==='paid'?'<span class="badge bpd">支払済み</span>':'<span class="badge bpu">未払い</span>'}</td>
-    <td><button class="btn btn-sm${p.monthly?' mpur-btn-on':''}" onclick="togglePurMonthly('${p.id}')" title="毎月複製対象に設定/解除">${p.monthly?'毎月':'—'}</button></td>
-    <td style="display:flex;gap:3px">
-      ${p.status==='unpaid'?`<button class="btn btn-sm btn-ghost" onclick="markPaid('${p.id}')">支払済</button>`:''}
+    <td><button class="btn btn-sm${p.monthly?' mpur-btn-on':''}" onclick="togglePurMonthly('${p.id}')" title="毎月複製対象に設定/解除" style="white-space:nowrap">${p.monthly?'毎月':'—'}</button></td>
+    <td style="white-space:nowrap">
+      ${p.status==='unpaid'?`<button class="btn btn-sm btn-ghost" onclick="markPaid('${p.id}')">支払済</button> `:''}
       <button class="btn btn-sm btn-ghost" onclick="editPurchase('${p.id}')">編集</button>
       <button class="btn btn-sm btn-danger" onclick="delItem('purchases','${p.id}')">削除</button>
     </td>
   </tr>`).join('');
+  renderPurPagination(totalPages, total);
   const mn=thisMonth();
   const mo=D.purchases.filter(p=>(p.issued||'').startsWith(mn));
   document.getElementById('ps-month').textContent=fmt(mo.reduce((s,p)=>s+(p.amount||0),0));
   document.getElementById('ps-mc').textContent=mo.length+'件';
   updatePurBulkBar(); updMpurOpenBtn();
+}
+
+function renderPurPagination(totalPages, total){
+  const el=document.getElementById('pur-pagination');
+  if(!el) return;
+  if(totalPages<=1){el.style.display='none';return;}
+  el.style.display='flex';
+  const btnStyle='padding:4px 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);cursor:pointer;font-family:inherit;';
+  const activStyle='padding:4px 10px;font-size:12px;border:1px solid var(--navy);border-radius:var(--r);background:var(--navy);color:#fff;cursor:pointer;font-family:inherit;font-weight:700;';
+  let html=`<span style="font-size:12px;color:var(--text3);margin-right:4px">全${total}件</span>`;
+  html+=`<button style="${btnStyle}" onclick="goPurPage(0)" ${_purPage===0?'disabled':''}>«</button>`;
+  html+=`<button style="${btnStyle}" onclick="goPurPage(${_purPage-1})" ${_purPage===0?'disabled':''}>‹</button>`;
+  for(let i=0;i<totalPages;i++){
+    if(totalPages>7&&Math.abs(i-_purPage)>2&&i!==0&&i!==totalPages-1){
+      if(i===1||i===totalPages-2) html+=`<span style="padding:4px 2px;color:var(--text3)">…</span>`;
+      continue;
+    }
+    html+=`<button style="${i===_purPage?activStyle:btnStyle}" onclick="goPurPage(${i})">${i+1}</button>`;
+  }
+  html+=`<button style="${btnStyle}" onclick="goPurPage(${_purPage+1})" ${_purPage===totalPages-1?'disabled':''}>›</button>`;
+  html+=`<button style="${btnStyle}" onclick="goPurPage(${totalPages-1})" ${_purPage===totalPages-1?'disabled':''}>»</button>`;
+  el.innerHTML=html;
+}
+
+function goPurPage(p){
+  _purPage=p;
+  renderPurchases();
+  document.getElementById('page-purchases')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderOrders(){
