@@ -1675,48 +1675,48 @@ def api_overdue_recheck_all():
             new_furikomi += 1
 
         for billing in overdue_list:
-        bid          = billing.get("請求書ID", "")
-        partner_name = billing.get("取引先名", "").strip()
-        furikomi_meta = meta_all.get(bid, {}).get("個人名", "")
-        furikomi_list = _get_furikomi_list(company_tantou, partner_name)
-        if furikomi_meta and furikomi_meta not in furikomi_list:
-            furikomi_list = [furikomi_meta] + furikomi_list
-
-        if furikomi_list:
-            # ── 振込名義あり: 備考に振込名義が含まれる入金を recheck へ ──
-            for d in deals:
-                journal_id = str(d.get("取引ID", ""))
-                if journal_id in existing_jids_rchk:
-                    continue
-                remark   = d.get("備考", "") or ""
-                remark_n = _norm(remark)
-                matched  = False
-                for name in furikomi_list:
-                    if not name or len(name) < 2:
+            bid           = billing.get("請求書ID", "")
+            partner_name  = billing.get("取引先名", "").strip()
+            furikomi_meta = meta_all.get(bid, {}).get("個人名", "")
+            furikomi_list = _get_furikomi_list(company_tantou, partner_name)
+            if furikomi_meta and furikomi_meta not in furikomi_list:
+                furikomi_list = [furikomi_meta] + furikomi_list
+            if furikomi_list:
+                for d in deals:
+                    journal_id = str(d.get("取引ID", ""))
+                    if journal_id in existing_jids_rchk:
                         continue
-                    name_n = _norm(name)
-                    if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
-                        matched = True
-                        break
-                if matched:
-                    recheck_records.append({
-                        "id":                     str(_uuid.uuid4()),
-                        "journal_id":             journal_id,
-                        "fetched_at":             datetime.now().isoformat(),
-                        "fetched_for_invoice_id": bid,
-                        "取引先名":               d.get("取引先名", ""),
-                        "着金日":                 d.get("着金日", ""),
-                        "入金金額":               d.get("入金金額", 0),
-                        "備考":                   d.get("備考", ""),
-                        "科目":                   d.get("科目", ""),
-                        "memo":                   "",
-                        "deleted":                False,
-                        "linked_invoice_id":      None,
-                        "linked_invoice_num":     None,
-                        "linked_at":              None,
-                    })
-                    existing_jids_rchk.add(journal_id)
-                    new_recheck += 1
+                    remark   = d.get("備考", "") or ""
+                    remark_n = _norm(remark)
+                    matched  = False
+                    for name in furikomi_list:
+                        if not name or len(name) < 2:
+                            continue
+                        name_n = _norm(name)
+                        if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+                            matched = True
+                            break
+                    if matched:
+                        recheck_records.append({
+                            "id":                     str(_uuid.uuid4()),
+                            "journal_id":             journal_id,
+                            "fetched_at":             datetime.now().isoformat(),
+                            "fetched_for_invoice_id": bid,
+                            "取引先名":               d.get("取引先名", ""),
+                            "着金日":                 d.get("着金日", ""),
+                            "入金金額":               d.get("入金金額", 0),
+                            "備考":                   d.get("備考", ""),
+                            "科目":                   d.get("科目", ""),
+                            "memo":                   "",
+                            "deleted":                False,
+                            "linked_invoice_id":      None,
+                            "linked_invoice_num":     None,
+                            "linked_at":              None,
+                        })
+                        existing_jids_rchk.add(journal_id)
+                        new_recheck += 1
+    except Exception as e:
+        return jsonify({"error": f"照合処理エラー: {e}"}), 500
 
     try:
         save_recheck_records(recheck_records)
