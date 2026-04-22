@@ -717,12 +717,12 @@
     {% endif %}
   </div>
 
-  {# --- 一時保管（毎月要確認） --- #}
+  {# --- 未収解消済み --- #}
   {% if ichiji_hokan %}
   <div class="tab-pane fade" id="tab-ichiji">
     <div class="alert d-flex align-items-center gap-2 py-2 mb-3" style="background:#f3eeff;border-color:#c9b8f0;font-size:0.82rem">
-      <i class="bi bi-archive-fill flex-shrink-0" style="color:#6f42c1"></i>
-      <span>社内メモが記入されている未収請求書です。次回の照合実行後も<strong>未収タブには表示されません</strong>。メモを削除すると未収に戻ります。</span>
+      <i class="bi bi-check2-square flex-shrink-0" style="color:#6f42c1"></i>
+      <span>未収解消済みとしてマークした請求書です。編集ボタンから<strong>未収に戻す</strong>ことができます。</span>
     </div>
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
