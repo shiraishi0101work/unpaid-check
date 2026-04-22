@@ -1380,33 +1380,34 @@ def debug_check():
 
 @app.route("/oauth/start/<service_name>")
 def oauth_start(service_name):
-    if service_name != "invoice":
+    if service_name not in ("invoice", "accounting"):
         return "不正なサービス名", 400
     return redirect(auth.get_auth_url(service_name, get_company_id()))
 
 
 @app.route("/oauth/callback/<service_name>")
 def oauth_callback(service_name):
-    if service_name != "invoice":
+    if service_name not in ("invoice", "accounting"):
         return "不正なサービス名", 400
     code  = request.args.get("code")
     state = request.args.get("state", "")
     error = request.args.get("error")
     if error:
         flash(f"認証がキャンセルされました: {error}")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("settings_page"))
     if not code:
         flash("認可コードが取得できませんでした")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("settings_page"))
     try:
         ok, _cid = auth.handle_callback(service_name, code, state)
         if ok:
-            flash("MFクラウド請求書の認証が完了しました", "success")
+            name = "MFクラウド会計" if service_name == "accounting" else "MFクラウド請求書"
+            flash(f"{name}の認証が完了しました", "success")
         else:
             flash("認証に失敗しました（stateが一致しません）", "error")
     except Exception as e:
         flash(f"認証エラー: {e}", "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("settings_page"))
 
 
 @app.route("/oauth/revoke/<service_name>", methods=["POST"])
