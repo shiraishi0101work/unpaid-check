@@ -157,6 +157,22 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
 .mini-prog{height:2px;background:var(--border);overflow:hidden}
 .mini-prog-fill{height:100%;background:#2563EB;transition:width .3s}
 
+/* ── 毎月複製 ── */
+.mpur-btn-on{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important}
+.mpur-filter{padding:4px 11px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit;font-weight:500;transition:all .12s}
+.mpur-filter.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
+.mpur-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mpur-item:last-child{border-bottom:none}
+.mpur-info{flex:1;min-width:0}
+.mpur-name{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mpur-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.mdup-done-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--gbg);color:var(--green);white-space:nowrap}
+/* 複製確認ステップ */
+.mconf-row{display:grid;grid-template-columns:1fr 145px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)}
+.mconf-row:last-child{border-bottom:none}
+.mconf-name{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mconf-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
 /* ── チャート・月次 ── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .month-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
