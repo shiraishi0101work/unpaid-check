@@ -120,11 +120,14 @@ def _refresh(service_name: str, token_data: dict, company_id: str = "") -> dict:
 # Webモード用: app.pyから呼び出す
 # ========================================
 
-def get_auth_url(service_name: str, company_id: str = "") -> str:
-    """OAuthの認可URLを生成して返す（stateはセッション管理用に保持）"""
-    svc   = _svc(service_name)
-    state = secrets.token_urlsafe(16)
-    _pending_states[state] = (service_name, company_id)
+def get_auth_url(service_name: str, company_id: str = "", state: str = "") -> str:
+    """
+    OAuthの認可URLを生成して返す。
+    stateはapp.py側のFlask sessionで管理する（Gunicorn複数ワーカー対応）。
+    """
+    svc = _svc(service_name)
+    if not state:
+        state = secrets.token_urlsafe(16)
 
     params = {
         "response_type": "code",
@@ -134,32 +137,31 @@ def get_auth_url(service_name: str, company_id: str = "") -> str:
     }
     if svc["scope"]:
         params["scope"] = svc["scope"]
-    return svc["auth_url"] + "?" + urlencode(params)
+    return svc["auth_url"] + "?" + urlencode(params), state
 
 
-def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str, str]:
+def handle_callback(service_name: str, code: str, state: str,
+                    expected_state: str = "", company_id: str = "") -> tuple[bool, str, str]:
     """
-    OAuthコールバックを処理してトークンを保存する
-    stateパラメータから実際のサービスを判定するため、
-    複数サービスが同じリダイレクトURIを共有できる。
+    OAuthコールバックを処理してトークンを保存する。
+    expected_stateはapp.py側のFlask sessionから渡す（Gunicorn複数ワーカー対応）。
     Returns: (成功したらTrue, company_id, actual_service_name)
     """
-    entry = _pending_states.pop(state, None)
-    if entry is None:
+    # stateの検証（Flask sessionから渡された値と比較）
+    if expected_state and state != expected_state:
         return False, "", service_name
-    stored_service, company_id = entry
 
-    svc  = _svc(stored_service)
+    svc = _svc(service_name)
     resp = requests.post(svc["token_url"], data={
         "grant_type":    "authorization_code",
-        "code":           code,
-        "redirect_uri":   svc["redirect_uri"],
-        "client_id":      svc["client_id"],
-        "client_secret":  svc["client_secret"],
+        "code":          code,
+        "redirect_uri":  svc["redirect_uri"],
+        "client_id":     svc["client_id"],
+        "client_secret": svc["client_secret"],
     })
     resp.raise_for_status()
-    save_token(stored_service, resp.json(), company_id)
-    return True, company_id, stored_service
+    save_token(service_name, resp.json(), company_id)
+    return True, company_id, service_name
 
 
 def is_authenticated(service_name: str, company_id: str = "") -> bool:
