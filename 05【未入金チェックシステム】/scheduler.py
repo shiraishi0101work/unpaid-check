@@ -67,6 +67,6 @@ def init_scheduler(run_func, token_check_func=None):
             name="MFトークン失効チェック",
             replace_existing=True,
         )
-        print("[トークンチェッカー] 有効 — 毎日09:00（Asia/Tokyo）")
+        print("[トークンチェッカー] 有効 毎日09:00（Asia/Tokyo）")
 
     scheduler.start()
