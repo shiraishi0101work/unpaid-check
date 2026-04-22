@@ -53,14 +53,14 @@
 <!-- 顧客テーブル -->
 <div class="card shadow-sm">
   <div class="card-body p-0">
-    <div class="table-responsive">
+    <div id="customers-table-wrap" style="max-height:calc(100vh - 230px);overflow-y:auto">
       <table class="table table-sm table-hover align-middle mb-0" id="customers-table">
-        <thead class="table-dark">
-          <tr>
-            <th style="width:28%">顧客名</th>
-            <th style="width:12%">担当者</th>
-            <th>振込名義</th>
-            <th style="width:130px" class="text-center">操作</th>
+        <thead class="table-dark" id="customers-thead">
+          <tr id="customers-thead-row">
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:28%">顧客名</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:10%">担当者</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529" id="th-furikomi-1">振込名義1</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:110px" class="text-center">操作</th>
           </tr>
         </thead>
         <tbody id="customers-tbody">
