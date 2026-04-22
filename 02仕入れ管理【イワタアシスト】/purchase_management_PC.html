@@ -1049,7 +1049,7 @@ async function parseStmtText() {
   } catch(e) {
     const erb = document.getElementById('stmt-erb');
     erb.textContent = '解析できませんでした。日付・店名・金額が含まれる明細テキストを貼り付けてください。';
-    erb.style.display = '';
+    erb.style.display = 'block';
   } finally {
     stmtShowLoading(false); btn.disabled = false; btn.textContent = 'AI解析する';
   }
