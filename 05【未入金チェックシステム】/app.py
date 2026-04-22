@@ -1159,6 +1159,8 @@ def dashboard():
     else:
         overdue = seikyu_kakunin = draft_overdue = ichiji_hokan = upcoming = paid_fy = []
 
+    recheck_records = [r for r in load_recheck_records() if not r.get("deleted")]
+
     return render_template(
         "dashboard.html",
         auth_invoice=auth_invoice,
@@ -1182,6 +1184,7 @@ def dashboard():
         prev_ym=prev_ym,
         current_ym=get_current_year_month(),
         history_list=load_history_list(),
+        recheck_records=recheck_records,
     )
 
 
