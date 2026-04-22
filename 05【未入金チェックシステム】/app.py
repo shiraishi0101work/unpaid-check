@@ -606,8 +606,11 @@ def load_meta() -> dict:
     path = os.path.join(_cdir(), "invoice_meta.json")
     if not os.path.exists(path):
         return {}
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 def save_meta(meta: dict):
     with open(os.path.join(_cdir(), "invoice_meta.json"), "w", encoding="utf-8") as f:
