@@ -1044,6 +1044,36 @@
 </div>
 
 
+{# ===== 未収再確認：請求書照合モーダル ===== #}
+<div class="modal fade" id="recheckLinkModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-link-45deg me-2 text-success"></i>請求書照合</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-bank me-1"></i><span id="rlink-deal-info"></span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">照合する請求書を選択</label>
+          <select id="rlink-invoice-select" class="form-select">
+            <option value="">-- 請求書を選択 --</option>
+          </select>
+          <div class="form-text">同じ取引先の未収請求書が上に表示されます</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-success btn-sm" id="rlink-confirm-btn">
+          <i class="bi bi-check2-circle me-1"></i>照合確定（未収から消す）
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {# ===== MF会計 個人名チェックモーダル ===== #}
 <div class="modal fade" id="kojinmeiCheckModal" tabindex="-1" aria-labelledby="kojinmeiCheckModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
