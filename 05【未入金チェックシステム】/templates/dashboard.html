@@ -1130,50 +1130,33 @@
   </div>
 </div>
 
-{# ===== MF会計 個人名チェックモーダル ===== #}
-<div class="modal fade" id="kojinmeiCheckModal" tabindex="-1" aria-labelledby="kojinmeiCheckModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+{# ===== 振込名義確認：編集モーダル ===== #}
+<div class="modal fade" id="furikomiLinkModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-info-subtle">
-        <h5 class="modal-title fw-bold" id="kojinmeiCheckModalLabel">
-          <i class="bi bi-person-check me-2 text-info"></i>MF会計 個人名チェック
-        </h5>
+      <div class="modal-header bg-warning-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-plus me-2 text-warning"></i>振込名義を登録して紐づけ</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted small mb-3">
-          未入金の取引先に登録された「個人名（振込人名）」を使って、MFクラウド会計の仕訳データを照合します。<br>
-          銀行振込で個人名が送金者名になっているケースを検出できます。
-        </p>
-
-        <div class="row g-2 mb-3" id="kojinmei-date-row">
-          <div class="col-5">
-            <label class="form-label fw-semibold small">照合開始日</label>
-            <input type="date" id="kojinmei-from" class="form-control form-control-sm">
-          </div>
-          <div class="col-5">
-            <label class="form-label fw-semibold small">照合終了日</label>
-            <input type="date" id="kojinmei-to" class="form-control form-control-sm">
-          </div>
-          <div class="col-2 d-flex align-items-end">
-            <button class="btn btn-info btn-sm w-100" id="kojinmei-run-btn" onclick="runKojinmeiCheck()">
-              <i class="bi bi-search"></i> 照合
-            </button>
-          </div>
+        <div class="alert alert-secondary py-2 small mb-3" id="furikomi-deal-info"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">振込名義（MF会計の備考から確認してください）</label>
+          <input type="text" id="furikomi-name-input" class="form-control" placeholder="例: カ) グリ-ナ-">
+          <div class="form-text">入力した名称が顧客「<span id="furikomi-partner-name"></span>」の振込名義に登録されます</div>
         </div>
-
-        <div id="kojinmei-spinner" class="text-center py-3 d-none">
-          <div class="spinner-border text-info"></div>
-          <div class="mt-2 small text-muted">MFクラウド会計から仕訳を取得中...</div>
-        </div>
-
-        <div id="kojinmei-result-area" class="d-none">
-          <div id="kojinmei-summary" class="alert py-2 small mb-3"></div>
-          <div id="kojinmei-matched-area"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">紐づける未収請求書</label>
+          <select id="furikomi-invoice-select" class="form-select">
+            <option value="">-- 請求書を選択 --</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-warning btn-sm" id="furikomi-confirm-btn">
+          <i class="bi bi-check2-circle me-1"></i>確定（振込名義登録＋未収から除去）
+        </button>
       </div>
     </div>
   </div>
