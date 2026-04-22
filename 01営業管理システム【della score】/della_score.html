@@ -3548,7 +3548,7 @@ function calcMpurTax(id){
   const amt=parseInt(document.getElementById('mpe-amt-'+id)?.value)||0;
   const tax=parseInt(document.getElementById('mpe-tax-'+id)?.value)||0;
   const tot=document.getElementById('mpe-total-'+id);
-  if(tot) tot.textContent='¥'+fmt(amt+tax);
+  if(tot) tot.textContent=fmt(amt+tax);
 }
 
 function applyMpurDateAll(){
