@@ -333,6 +333,13 @@
   /* ===== DATE ROW ===== */
   .date-row { display: flex; gap: 6px; }
   .date-row input { flex: 1; }
+
+  /* ===== IMAGE UPLOAD ===== */
+  .img-drop { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 28px 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .img-drop:hover, .img-drop.drag-over { border-color: var(--brand); background: var(--brand-light); }
+  .img-drop-icon { font-size: 28px; margin-bottom: 6px; }
+  .img-drop-main { font-size: 14px; font-weight: 600; color: var(--text); }
+  .img-drop-sub { font-size: 11px; color: var(--text-hint); margin-top: 3px; }
 </style>
 </head>
 <body>
