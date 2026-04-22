@@ -11,9 +11,9 @@
     "科目": "普通預金",
     "memo": "請求書で調整済み",
     "deleted": false,
-    "linked_invoice_id": null,
-    "linked_invoice_num": null,
-    "linked_at": null,
-    "差額": null
+    "linked_invoice_id": "pmwRTjt86hsQ3g8n_GHueQ",
+    "linked_invoice_num": "2451",
+    "linked_at": "2026-04-22T14:26:07.397422",
+    "差額": -10000
   }
 ]

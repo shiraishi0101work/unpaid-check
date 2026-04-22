@@ -2301,12 +2301,14 @@ def api_recheck_link(record_id):
     meta = load_meta()
     meta.setdefault(invoice_id, {})
     if samediff and samediff > 0:
-        # 部分入金: 未収に残したまま残額を記録（着金日_手動はセットしない）
+        # 部分入金: 未収に残したまま残額を記録
         meta[invoice_id]["部分入金"]   = True
         meta[invoice_id]["残額"]       = samediff
         meta[invoice_id]["入金済金額"] = record.get("入金金額", 0)
         meta[invoice_id]["差額"]       = samediff
-        # 着金日_手動は設定しない → overdue_moved に移動しない
+        # 着金日_手動をクリア（以前に全額入金済みとしていた場合に備えて）
+        meta[invoice_id].pop("着金日_手動", None)
+        meta[invoice_id].pop("着金金額_手動", None)
     else:
         # 全額入金: 未収から消す
         meta[invoice_id]["着金日_手動"]   = record.get("着金日", "")
