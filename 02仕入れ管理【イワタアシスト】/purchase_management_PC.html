@@ -590,8 +590,9 @@
 <script>
 const BCOL = { Visa:'#1A1F71', Mastercard:'#EB001B', JCB:'#003087', AmEx:'#007B5E', Diners:'#004A97' };
 
-let orders = [];
-let cards  = [];
+let orders     = [];
+let cards      = [];
+let statements = [];
 
 const API = 'api.php';
 async function apiFetch(action, data) {
