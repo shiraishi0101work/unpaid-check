@@ -190,7 +190,8 @@ def get_deals(from_date: str, to_date: str, company_id: str = "",
     print(f"[会計API] 仕訳取得: {from_date} 〜 {to_date}", flush=True)
 
     try:
-        raw_journals = _get_all_journal_pages(from_date, to_date, company_id=company_id)
+        raw_journals = _get_all_journal_pages(from_date, to_date, company_id=company_id,
+                                              is_realized=is_realized)
     except RuntimeError:
         raise
     except requests.exceptions.HTTPError as e:
