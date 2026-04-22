@@ -1475,23 +1475,25 @@ def api_accounting_kojinmei_check():
         result.get("ichiji_hokan", [])
     )
 
-    # 個人名を持つ請求書のみ絞り込む
+    # 振込名義を持つ請求書のみ絞り込む
     targets = []
     for b in unpaid_all:
         bid      = b.get("請求書ID", "")
         company  = b.get("取引先名", "").strip()
-        # 個人名: invoice_meta優先 → company_tantouで補完
-        kojinmei = (meta.get(bid, {}).get("個人名", "")
-                    or _get_kojinmei(company_tantou, company))
-        if kojinmei:
-            targets.append({**b, "個人名": kojinmei})
+        # 振込名義リスト: invoice_meta + company_tantou
+        furikomi_meta = meta.get(bid, {}).get("個人名", "")
+        furikomi_list = _get_furikomi_list(company_tantou, company)
+        if furikomi_meta and furikomi_meta not in furikomi_list:
+            furikomi_list = [furikomi_meta] + furikomi_list
+        if furikomi_list:
+            targets.append({**b, "振込名義リスト": furikomi_list})
 
     if not targets:
         return jsonify({
             "matched":          [],
             "unmatched_count":  len(unpaid_all),
             "accounting_total": 0,
-            "message":          "個人名が登録されている未入金請求書がありません。編集ボタンから「個人名（振込人名）」を登録してください。",
+            "message":          "振込名義が登録されている未入金請求書がありません。顧客リストまたは編集ボタンから「振込名義」を登録してください。",
         })
 
     # MF会計から仕訳取得
@@ -1500,29 +1502,35 @@ def api_accounting_kojinmei_check():
     except Exception as e:
         return jsonify({"error": f"MFクラウド会計からのデータ取得に失敗しました: {e}"}), 500
 
-    # 個人名でマッチング
+    # 振込名義リストの全名義でマッチング
     matched = []
     for b in targets:
-        kojinmei = b.get("個人名", "")
-        # 既に会社名でマッチ済みの仕訳は除く（_matchedフラグで管理）
-        deal = match_by_kojinmei(b, deals, kojinmei)
-        if deal:
-            deal["_matched"] = True
+        furikomi_list = b.get("振込名義リスト", [])
+        matched_deal = None
+        matched_name = ""
+        for name in furikomi_list:
+            deal = match_by_kojinmei(b, deals, name)
+            if deal:
+                matched_deal = deal
+                matched_name = name
+                deal["_matched"] = True
+                break
+        if matched_deal:
             matched.append({
-                "請求書ID":    b.get("請求書ID", ""),
-                "請求番号":    b.get("請求番号", ""),
-                "取引先名":    b.get("取引先名", ""),
-                "個人名":      kojinmei,
-                "件名":        b.get("件名", ""),
-                "担当者":      b.get("担当者", ""),
-                "請求日":      b.get("請求日", ""),
-                "支払期限":    b.get("支払期限", ""),
-                "請求金額":    b.get("請求金額", 0),
-                "着金日_会計": deal.get("着金日", ""),
-                "着金金額_会計": deal.get("入金金額", 0),
-                "会計取引先名": deal.get("取引先名", ""),
-                "会計備考":    deal.get("備考", ""),
-                "科目":        deal.get("科目", ""),
+                "請求書ID":      b.get("請求書ID", ""),
+                "請求番号":      b.get("請求番号", ""),
+                "取引先名":      b.get("取引先名", ""),
+                "振込名義":      matched_name,
+                "件名":          b.get("件名", ""),
+                "担当者":        b.get("担当者", ""),
+                "請求日":        b.get("請求日", ""),
+                "支払期限":      b.get("支払期限", ""),
+                "請求金額":      b.get("請求金額", 0),
+                "着金日_会計":   matched_deal.get("着金日", ""),
+                "着金金額_会計": matched_deal.get("入金金額", 0),
+                "会計取引先名":  matched_deal.get("取引先名", ""),
+                "会計備考":      matched_deal.get("備考", ""),
+                "科目":          matched_deal.get("科目", ""),
             })
 
     return jsonify({
