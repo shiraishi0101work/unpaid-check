@@ -1205,6 +1205,7 @@ def settings_page():
         return redirect(url_for("settings_page"))
     return render_template("settings.html", settings=settings,
                            auth_invoice=auth.is_authenticated("invoice", get_company_id()),
+                           auth_accounting=auth.is_authenticated("accounting", get_company_id()),
                            current_email=session.get("email", ""))
 
 @app.route("/api/update-credentials", methods=["POST"])
