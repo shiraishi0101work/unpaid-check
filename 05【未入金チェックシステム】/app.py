@@ -1815,22 +1815,34 @@ def mark_unmade():
 # 未収再確認 API
 # ========================================
 
+@app.route("/api/accounting/upload_csv", methods=["POST"])
+@login_required
+def api_accounting_upload_csv():
+    """MFクラウド会計の仕訳帳CSVをアップロードして保存する"""
+    if "file" not in request.files:
+        return jsonify({"error": "ファイルが選択されていません"}), 400
+    f = request.files["file"]
+    if not f.filename:
+        return jsonify({"error": "ファイルが選択されていません"}), 400
+
+    try:
+        content = f.read()
+        deals = parse_mf_accounting_csv(content)
+        save_accounting_deals(deals)
+        print(f"[会計CSV] {len(deals)}件の仕訳を取り込みました", flush=True)
+        return jsonify({"ok": True, "count": len(deals)})
+    except Exception as e:
+        return jsonify({"error": f"CSVの読み込みエラー: {e}"}), 400
+
+
 @app.route("/api/overdue/<invoice_id>/recheck", methods=["POST"])
 @login_required
 def api_overdue_recheck(invoice_id):
     """
-    未収請求書の取引先の入金履歴を MFクラウド会計から取得し、
-    recheck_records.json に保存する。抽出期間: 今日から2ヶ月前まで。
+    未収請求書の取引先の入金履歴を照合する。
+    1. アップロード済みMF会計CSVデータを使用（優先）
+    2. CSVがなければMFクラウド会計APIを試みる
     """
-    try:
-        from mf_accounting import get_deals
-    except ImportError as e:
-        return jsonify({"error": f"会計モジュールエラー: {e}"}), 500
-
-    cid = get_company_id()
-    if not auth.is_authenticated("accounting", cid):
-        return jsonify({"error": "MFクラウド会計の連携が必要です。設定画面から連携してください。"}), 401
-
     result = _load_result()
     if not result:
         return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
@@ -1860,10 +1872,31 @@ def api_overdue_recheck(invoice_id):
     from_date = f"{y2}-{m2:02d}-01"
     to_date   = today.strftime("%Y-%m-%d")
 
-    try:
-        deals = get_deals(from_date, to_date, company_id=cid)
-    except Exception as e:
-        return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
+    # データソース選択: CSVが優先、なければAPI
+    cid = get_company_id()
+    csv_deals = load_accounting_deals()
+    if csv_deals:
+        # CSVデータを日付フィルタして使用
+        deals = [
+            d for d in csv_deals
+            if from_date <= d.get("着金日", "") <= to_date
+        ]
+        data_source = "CSV"
+        print(f"[再確認] CSVデータ使用: {len(deals)}件（全{len(csv_deals)}件中）", flush=True)
+    else:
+        # APIから取得
+        try:
+            from mf_accounting import get_deals
+            if not auth.is_authenticated("accounting", cid):
+                return jsonify({
+                    "error": "MFクラウド会計のデータがありません。サイドバーの「会計CSV取込」からMFクラウド会計の仕訳帳CSVをアップロードしてください。"
+                }), 400
+            deals = get_deals(from_date, to_date, company_id=cid)
+            data_source = "API"
+        except Exception as e:
+            return jsonify({
+                "error": f"MFクラウド会計のデータがありません。サイドバーの「会計CSV取込」からMFクラウド会計の仕訳帳CSVをアップロードしてください。（詳細: {e}）"
+            }), 400
 
     # 振込名義リストを取得（顧客リスト + 請求書メタ）
     company_tantou = load_company_tantou()
