@@ -799,6 +799,82 @@ def save_recheck_records(records: list):
     with open(os.path.join(_cdir(), "recheck_records.json"), "w", encoding="utf-8") as f:
         json.dump(records, f, ensure_ascii=False, indent=2)
 
+
+def load_accounting_deals() -> list:
+    """アップロードされたMF会計CSVの仕訳データを読み込む"""
+    path = os.path.join(_cdir(), "accounting_deals.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_accounting_deals(deals: list):
+    with open(os.path.join(_cdir(), "accounting_deals.json"), "w", encoding="utf-8") as f:
+        json.dump(deals, f, ensure_ascii=False, indent=2)
+
+
+def parse_mf_accounting_csv(file_content: bytes) -> list:
+    """
+    MFクラウド会計の仕訳帳CSVをパースして照合用フォーマットに変換する。
+    対応フォーマット:
+      日付, 借方科目, ..., 借方金額, ..., 摘要, ..., MF仕訳ID
+    """
+    import csv, io, re as _re
+
+    # エンコーディング自動判定（Shift-JIS / UTF-8-BOM）
+    for enc in ("utf-8-sig", "shift_jis", "cp932", "utf-8"):
+        try:
+            text = file_content.decode(enc)
+            break
+        except Exception:
+            text = None
+    if not text:
+        raise ValueError("CSVのエンコーディングを判定できませんでした")
+
+    reader = csv.DictReader(io.StringIO(text))
+    deals = []
+    for i, row in enumerate(reader):
+        # 日付
+        date_raw = row.get("日付", "").strip()
+        date_str = ""
+        if date_raw:
+            date_str = date_raw.replace("/", "-")
+            if len(date_str) == 8 and "-" not in date_str:
+                date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
+
+        # 借方金額（入金額として扱う）
+        amt_str = row.get("借方金額", "0").strip().replace(",", "")
+        try:
+            amount = abs(int(float(amt_str))) if amt_str else 0
+        except Exception:
+            amount = 0
+
+        # 取引先・摘要
+        partner = row.get("取引先", row.get("取引先名", "")).strip()
+        remark  = row.get("摘要", row.get("備考", row.get("description", ""))).strip()
+
+        # 借方科目
+        account = row.get("借方科目", "").strip()
+
+        # 仕訳ID（MF仕訳ID列が無ければ行番号で代替）
+        jid = row.get("MF仕訳ID", row.get("仕訳ID", "")).strip() or f"csv_{i}"
+
+        if not date_str or amount == 0:
+            continue
+
+        deals.append({
+            "取引ID":   jid,
+            "着金日":   date_str,
+            "入金金額": amount,
+            "取引先名": partner,
+            "備考":     remark,
+            "科目":     account,
+            "_matched": False,
+        })
+
+    return deals
+
 def _is_delivered(b: dict) -> bool:
     """顧客への送付が確認されている（DL・メール・郵送のいずれか）"""
     return (
