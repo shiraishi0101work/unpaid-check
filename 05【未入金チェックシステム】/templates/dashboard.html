@@ -1292,6 +1292,154 @@ document.getElementById('edit-save-btn')?.addEventListener('click', function() {
   });
 });
 
+// ===== MF会計 個人名チェック =====
+(function() {
+  // モーダルが開かれたとき、日付に先月〜今月をデフォルトセット
+  const modal = document.getElementById('kojinmeiCheckModal');
+  if (modal) {
+    modal.addEventListener('show.bs.modal', function() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = today.getMonth() + 1;
+      const prevY = m === 1 ? y - 1 : y;
+      const prevM = m === 1 ? 12 : m - 1;
+      const pad = n => String(n).padStart(2, '0');
+      // 先月の1日〜今月の末日
+      document.getElementById('kojinmei-from').value =
+        `${prevY}-${pad(prevM)}-01`;
+      const lastDay = new Date(y, m, 0).getDate();
+      document.getElementById('kojinmei-to').value =
+        `${y}-${pad(m)}-${pad(lastDay)}`;
+      // 結果エリアをリセット
+      document.getElementById('kojinmei-result-area').classList.add('d-none');
+    });
+  }
+})();
+
+async function runKojinmeiCheck() {
+  const fromDate = document.getElementById('kojinmei-from').value;
+  const toDate   = document.getElementById('kojinmei-to').value;
+  if (!fromDate || !toDate) {
+    alert('照合日付を入力してください');
+    return;
+  }
+
+  const btn = document.getElementById('kojinmei-run-btn');
+  btn.disabled = true;
+  document.getElementById('kojinmei-spinner').classList.remove('d-none');
+  document.getElementById('kojinmei-result-area').classList.add('d-none');
+
+  try {
+    const resp = await fetch('/api/accounting-kojinmei-check', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({from_date: fromDate, to_date: toDate}),
+    });
+    const data = await resp.json();
+
+    document.getElementById('kojinmei-spinner').classList.add('d-none');
+    document.getElementById('kojinmei-result-area').classList.remove('d-none');
+
+    const summaryEl = document.getElementById('kojinmei-summary');
+    const matchedEl = document.getElementById('kojinmei-matched-area');
+
+    if (!resp.ok) {
+      summaryEl.className = 'alert alert-danger py-2 small mb-3';
+      summaryEl.textContent = '❌ ' + (data.error || 'エラーが発生しました');
+      matchedEl.innerHTML = '';
+      return;
+    }
+
+    if (data.message) {
+      summaryEl.className = 'alert alert-warning py-2 small mb-3';
+      summaryEl.innerHTML = '⚠️ ' + escHtml(data.message);
+      matchedEl.innerHTML = '';
+      return;
+    }
+
+    const matched = data.matched || [];
+    if (matched.length === 0) {
+      summaryEl.className = 'alert alert-secondary py-2 small mb-3';
+      summaryEl.innerHTML =
+        `MF会計仕訳 <strong>${data.accounting_total}</strong>件 を照合しましたが、個人名での一致はありませんでした。`;
+      matchedEl.innerHTML = '';
+      return;
+    }
+
+    summaryEl.className = 'alert alert-success py-2 small mb-3';
+    summaryEl.innerHTML =
+      `<strong>${matched.length}件</strong>の入金が個人名で一致しました（MF会計仕訳 ${data.accounting_total}件 照合）。` +
+      `<br>MFクラウド請求書の入金ステータスを手動で更新するか、下の「着金日を登録」ボタンで管理してください。`;
+
+    let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle">';
+    html += '<thead class="table-success"><tr>';
+    html += '<th>取引先名</th><th>個人名</th><th>請求番号</th><th>件名</th>';
+    html += '<th class="text-end">請求金額</th><th>着金日（会計）</th>';
+    html += '<th class="text-end">着金金額（会計）</th><th>会計取引先名</th>';
+    html += '<th>操作</th></tr></thead><tbody>';
+
+    matched.forEach((m, i) => {
+      const diff = m['着金金額_会計'] - m['請求金額'];
+      const diffBadge = diff === 0 ? '' :
+        diff > 0
+          ? `<span class="badge bg-warning text-dark ms-1">過払い ¥${diff.toLocaleString()}</span>`
+          : `<span class="badge bg-danger ms-1">不足 ¥${Math.abs(diff).toLocaleString()}</span>`;
+      html += `<tr>
+        <td class="fw-semibold">${escHtml(m['取引先名'])}</td>
+        <td><span class="badge bg-info text-dark">${escHtml(m['個人名'])}</span></td>
+        <td class="small text-muted">${escHtml(m['請求番号'])}</td>
+        <td class="small text-muted">${escHtml(m['件名'])}</td>
+        <td class="text-end fw-bold">¥${Number(m['請求金額']).toLocaleString()}</td>
+        <td class="small text-success fw-bold">${escHtml(m['着金日_会計'])}</td>
+        <td class="text-end">¥${Number(m['着金金額_会計']).toLocaleString()}${diffBadge}</td>
+        <td class="small text-muted">${escHtml(m['会計取引先名'] || '—')}</td>
+        <td>
+          <button class="btn btn-outline-success btn-sm py-0 px-2"
+                  onclick="registerKojinmeiKikin('${escHtml(m['請求書ID'])}','${escHtml(m['着金日_会計'])}',${m['着金金額_会計']})">
+            <i class="bi bi-check2-circle me-1"></i>着金日を登録
+          </button>
+        </td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    matchedEl.innerHTML = html;
+
+  } catch(e) {
+    document.getElementById('kojinmei-spinner').classList.add('d-none');
+    document.getElementById('kojinmei-result-area').classList.remove('d-none');
+    const summaryEl = document.getElementById('kojinmei-summary');
+    summaryEl.className = 'alert alert-danger py-2 small mb-3';
+    summaryEl.textContent = '❌ エラー: ' + e.message;
+    document.getElementById('kojinmei-matched-area').innerHTML = '';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function registerKojinmeiKikin(invoiceId, kikinDate, kikinAmt) {
+  if (!confirm(`着金日: ${kikinDate}\n着金金額: ¥${Number(kikinAmt).toLocaleString()}\n\nこの請求書に着金情報を登録しますか？`)) return;
+  try {
+    const resp = await fetch(`/api/invoice/${invoiceId}/meta`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        着金日_手動:   kikinDate,
+        着金金額_手動: kikinAmt,
+      }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      alert('登録しました。ページを更新してご確認ください。');
+      window.location.reload();
+    } else {
+      alert('登録に失敗しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
+}
+
 // ===== 月次確定モーダル =====
 async function confirmHistory(yearMonth) {
   const btn = document.getElementById('history-confirm-btn');
