@@ -1590,10 +1590,10 @@ def api_overdue_recheck_all():
     from_date = f"{y2}-{m2:02d}-01"
     to_date   = today.strftime("%Y-%m-%d")
 
-    # 未収再確認用: 仕分け済み仕訳のみ（is_realized=true）
+    # 未収再確認用: 全仕訳（is_realized フィルタなし）
     try:
-        deals = get_deals(from_date, to_date, company_id=cid, is_realized=True)
-        print(f"[再確認] 仕分け済み仕訳: {len(deals)}件", flush=True)
+        deals = get_deals(from_date, to_date, company_id=cid)
+        print(f"[再確認] 仕訳取得: {len(deals)}件", flush=True)
     except Exception as e:
         return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
 
