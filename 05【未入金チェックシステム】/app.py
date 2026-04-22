@@ -2501,6 +2501,10 @@ def clear_data():
     p = os.path.join(cdir, "last_result.json")
     if os.path.exists(p):
         os.remove(p)
+    # 手動メタデータ（着金日_手動 等が残ると再照合で入金済みに分類されるため）
+    meta_p = os.path.join(cdir, "invoice_meta.json")
+    if os.path.exists(meta_p):
+        os.remove(meta_p)
     # 未収再確認・振込名義確認をリセット
     save_recheck_records([])
     save_furikomi_unconfirmed([])
