@@ -496,6 +496,69 @@
     <div class="cc-grid" id="cc-list"></div>
   </div>
 
+  <!-- カード明細確認 -->
+  <div id="p-stmt" class="page">
+    <div class="page-header">
+      <div class="page-title">カード明細確認 <small id="stmt-count"></small></div>
+    </div>
+
+    <!-- 明細入力エリア -->
+    <div class="stmt-input-area">
+      <div class="import-box-title">カード明細を読み込む</div>
+      <div class="import-tabs-row">
+        <button class="itab on" onclick="switchStmtImport('paste',this)">テキストを貼り付ける</button>
+        <button class="itab" onclick="switchStmtImport('csv',this)">CSVアップロード</button>
+      </div>
+
+      <!-- テキスト貼り付け -->
+      <div id="si-paste">
+        <p class="paste-hint">カードのWEBサイトや明細メールから利用明細をコピーして貼り付けてください。AIが日付・店名・金額を自動抽出します。</p>
+        <textarea class="paste-ta" id="stmt-text" placeholder="利用日　ご利用店名　利用金額&#10;04/01　Amazon.co.jp　3,980&#10;04/03　楽天市場　12,800&#10;..."></textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+          <div class="fg" style="min-width:180px;flex:1">
+            <label style="font-size:12px;font-weight:600;color:var(--text-sub)">使用カード（任意）</label>
+            <select id="stmt-card-sel" style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;width:100%">
+              <option value="">カードを選択</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="stmt-parse-btn" onclick="parseStmtText()" style="align-self:flex-end">AI解析する</button>
+        </div>
+      </div>
+
+      <!-- CSVアップロード -->
+      <div id="si-csv" style="display:none">
+        <p class="paste-hint">カード会社からダウンロードしたCSVをアップロードしてください。<br>列の順番：<code>日付, 店名, 金額</code>（ヘッダー行は自動スキップ）</p>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="file" id="stmt-csv-file" accept=".csv" style="font-size:13px;flex:1">
+          <div class="fg" style="min-width:180px;flex:1">
+            <label style="font-size:12px;font-weight:600;color:var(--text-sub)">使用カード（任意）</label>
+            <select id="stmt-card-sel2" style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;width:100%">
+              <option value="">カードを選択</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="parseStmtCSV()" style="align-self:flex-end">取り込む</button>
+        </div>
+      </div>
+
+      <div class="ld-bar" id="stmt-ldb"><div class="ld-inner"></div></div>
+      <div class="ld-txt" id="stmt-ldt">AIが解析中...</div>
+      <div class="banner banner-ok" id="stmt-okb"></div>
+      <div class="banner banner-err" id="stmt-erb"></div>
+    </div>
+
+    <!-- 確認リスト -->
+    <div class="card">
+      <div class="card-title">確認待ちの明細</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-bottom:12px;line-height:1.7">
+        以下は既存の発注一覧と<strong>金額が一致する</strong>可能性があるため確認が必要です。<br>
+        「発注一覧にある」→ この明細を削除するだけ　／　「発注一覧にない」→ 発注一覧に追加します
+      </div>
+      <div id="stmt-list">
+        <p style="text-align:center;color:var(--text-hint);padding:32px;font-size:13px">確認待ちの明細はありません</p>
+      </div>
+    </div>
+  </div>
+
   <!-- エクスポート -->
   <div id="p-export" class="page">
     <div class="page-header">
