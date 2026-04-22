@@ -1117,15 +1117,18 @@ def dashboard():
                 b["着金日_手動"]     = m.get("着金日_手動", b.get("着金日_手動",""))
                 b["着金金額_手動"]   = m.get("着金金額_手動", b.get("着金金額_手動", 0))
                 b["入金予定日_手動"] = m.get("入金予定日_手動", b.get("入金予定日_手動", ""))
-                b["個人名"]          = m.get("個人名", "")
                 company = b.get("取引先名", "").strip()
                 if not b.get("担当者") and company:
                     tantou = _get_tantou(company_tantou, company)
                     if tantou:
                         b["担当者"] = tantou
-                # 個人名がmetaにない場合、会社マスタから補完
-                if not b["個人名"] and company:
-                    b["個人名"] = _get_kojinmei(company_tantou, company)
+                # 振込名義リスト（meta の 個人名 + company_tantou の振込名義を合算）
+                furikomi_meta = m.get("個人名", "") or ""
+                furikomi_list = _get_furikomi_list(company_tantou, company)
+                if furikomi_meta and furikomi_meta not in furikomi_list:
+                    furikomi_list = [furikomi_meta] + furikomi_list
+                b["個人名"]         = furikomi_list[0] if furikomi_list else ""
+                b["振込名義リスト"]  = furikomi_list
 
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
