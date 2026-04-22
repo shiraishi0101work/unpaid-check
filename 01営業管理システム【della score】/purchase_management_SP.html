@@ -269,6 +269,13 @@
   }
   .exp-btns { display: flex; flex-direction: column; gap: 8px; }
 
+  /* ===== IMAGE UPLOAD ===== */
+  .img-drop { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 22px 12px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .img-drop:hover, .img-drop.drag-over { border-color: var(--brand); background: var(--brand-light); }
+  .img-drop-icon { font-size: 26px; margin-bottom: 5px; }
+  .img-drop-main { font-size: 13px; font-weight: 600; color: var(--text); }
+  .img-drop-sub { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
