@@ -3493,6 +3493,7 @@ function togglePurMonthly(id){
   p.monthly=!p.monthly;
   if(!p.dup_months) p.dup_months=[];
   save(); renderPurchases(); updMpurOpenBtn();
+  if(_purView==='monthly') renderMonthlyPurList();
 }
 
 function updMpurOpenBtn(){
