@@ -2417,6 +2417,56 @@ function renderInvoices(){
   </div>`;
 }
 
+// ── 仕入れビュー切り替え ──────────────────────────
+let _purView='list';
+function switchPurView(mode){
+  _purView=mode;
+  document.getElementById('pur-view-list').style.display=mode==='list'?'':'none';
+  document.getElementById('pur-view-monthly').style.display=mode==='monthly'?'':'none';
+  const tl=document.getElementById('pur-tab-list');
+  const tm=document.getElementById('pur-tab-monthly');
+  tl.style.borderBottomColor=mode==='list'?'var(--navy)':'transparent';
+  tl.style.color=mode==='list'?'var(--navy)':'var(--text3)';
+  tm.style.borderBottomColor=mode==='monthly'?'var(--navy)':'transparent';
+  tm.style.color=mode==='monthly'?'var(--navy)':'var(--text3)';
+  if(mode==='monthly') renderMonthlyPurList();
+}
+
+function renderMonthlyPurList(){
+  const tb=document.getElementById('pu-monthly-tbody');
+  const em=document.getElementById('pu-monthly-empty');
+  const cm=curYM();
+  const q=(document.getElementById('search-monthly-pur')?.value||'').toLowerCase();
+  const ow=document.getElementById('owner-monthly-pur')?.value||'';
+  syncOwnerSelect('owner-monthly-pur', D.purchases.filter(p=>p.monthly));
+  let list=D.purchases.filter(p=>p.monthly);
+  if(q) list=list.filter(p=>(p.supplier+p.desc+(p.owner||'')).toLowerCase().includes(q));
+  if(ow) list=list.filter(p=>(p.owner||'')===ow);
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  // 仕入れ先+内容でグループ化して最新を代表にする
+  const grouped=new Map();
+  list.forEach(p=>{
+    const key=p.supplier+'__'+(p.desc||'');
+    if(!grouped.has(key)||((p.issued||'')>(grouped.get(key).issued||''))) grouped.set(key,p);
+  });
+  const rows=[...grouped.values()];
+  const done=(p)=>(p.dup_months||[]).includes(cm);
+  tb.innerHTML=rows.map(p=>`<tr>
+    <td style="font-weight:600">${p.supplier}</td>
+    <td style="font-size:12px;color:var(--text2)">${p.desc||'—'}</td>
+    <td class="amount">${fmt((p.amount||0)+(p.tax||0))}</td>
+    <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
+    <td style="font-size:12px;color:var(--text2)">${p.bank||'-'}</td>
+    <td>${done(p)?'<span class="badge" style="background:var(--gbg);color:var(--green)">複製済み</span>':'<span class="badge bpu">未複製</span>'}</td>
+    <td style="color:var(--text3);font-size:12px">${fmtD(p.issued)}</td>
+    <td style="display:flex;gap:3px">
+      <button class="btn btn-sm btn-ghost" onclick="editPurchase('${p.id}')">編集</button>
+      <button class="btn btn-sm${p.monthly?' mpur-btn-on':''}" onclick="togglePurMonthly('${p.id}');renderMonthlyPurList()" title="毎月から外す">毎月解除</button>
+    </td>
+  </tr>`).join('');
+}
+
 function renderPurchases(){
   const tb=document.getElementById('pu-tbody');
   const em=document.getElementById('pu-empty');
