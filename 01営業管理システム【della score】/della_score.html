@@ -3562,6 +3562,10 @@ function execMpurDup(){
   const cm=curYM();
   const items=D.purchases.filter(p=>_mpurSel.has(p.id));
   if(!items.length){alert('複製対象が見つかりませんでした。もう一度お試しください。');return;}
+  const alreadyDone=items.filter(p=>(p.dup_months||[]).includes(cm));
+  if(alreadyDone.length>0){
+    if(!confirm(`${alreadyDone.length}件はすでに今月複製済みです。\n再度複製してよろしいですか？`)) return;
+  }
   items.forEach(p=>{
     const issued=document.getElementById('mpd-'+p.id)?.value||today();
     D.purchases.push({
