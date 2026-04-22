@@ -308,6 +308,28 @@
   .pager-info { font-size: 12px; color: var(--text-sub); margin-right: auto; }
   .pager-ellipsis { font-size: 13px; color: var(--text-hint); padding: 0 2px; }
 
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px 24px;
+    width: 660px; max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .modal-title {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    margin-bottom: 20px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
   /* ===== STMT ===== */
   .stmt-row {
     display: flex; align-items: center; gap: 12px;
