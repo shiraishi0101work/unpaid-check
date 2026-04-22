@@ -14,7 +14,7 @@
     "linked_invoice_id": null,
     "linked_invoice_num": null,
     "linked_at": null,
-    "deleted": false
+    "deleted": true
   },
   {
     "id": "76ac3d97-9df8-4315-b4bc-c14dd63adb4c",
@@ -31,7 +31,7 @@
     "linked_invoice_id": null,
     "linked_invoice_num": null,
     "linked_at": null,
-    "deleted": false
+    "deleted": true
   },
   {
     "id": "b274432e-d89d-4e0d-855a-dee88275c140",
@@ -48,7 +48,7 @@
     "linked_invoice_id": null,
     "linked_invoice_num": null,
     "linked_at": null,
-    "deleted": false
+    "deleted": true
   },
   {
     "id": "2536fac9-5250-49bb-8b5d-96a85e86a5f1",
@@ -65,6 +65,6 @@
     "linked_invoice_id": null,
     "linked_invoice_num": null,
     "linked_at": null,
-    "deleted": false
+    "deleted": true
   }
 ]
