@@ -1656,153 +1656,137 @@ document.querySelectorAll('.recheck-delete-btn').forEach(btn => {
   });
 });
 
-// ===== MF会計 個人名チェック =====
-(function() {
-  // モーダルが開かれたとき、日付に先月〜今月をデフォルトセット
-  const modal = document.getElementById('kojinmeiCheckModal');
-  if (modal) {
-    modal.addEventListener('show.bs.modal', function() {
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = today.getMonth() + 1;
-      const prevY = m === 1 ? y - 1 : y;
-      const prevM = m === 1 ? 12 : m - 1;
-      const pad = n => String(n).padStart(2, '0');
-      // 先月の1日〜今月の末日
-      document.getElementById('kojinmei-from').value =
-        `${prevY}-${pad(prevM)}-01`;
-      const lastDay = new Date(y, m, 0).getDate();
-      document.getElementById('kojinmei-to').value =
-        `${y}-${pad(m)}-${pad(lastDay)}`;
-      // 結果エリアをリセット
-      document.getElementById('kojinmei-result-area').classList.add('d-none');
-    });
-  }
-})();
-
-async function runKojinmeiCheck() {
-  const fromDate = document.getElementById('kojinmei-from').value;
-  const toDate   = document.getElementById('kojinmei-to').value;
-  if (!fromDate || !toDate) {
-    alert('照合日付を入力してください');
-    return;
-  }
-
-  const btn = document.getElementById('kojinmei-run-btn');
-  btn.disabled = true;
-  document.getElementById('kojinmei-spinner').classList.remove('d-none');
-  document.getElementById('kojinmei-result-area').classList.add('d-none');
-
+// ===== まとめて再確認ボタン =====
+document.getElementById('recheck-all-btn')?.addEventListener('click', async function() {
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>MF会計照合中...';
   try {
-    const resp = await fetch('/api/accounting-kojinmei-check', {
+    const resp = await fetch('/api/overdue/recheck_all', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({from_date: fromDate, to_date: toDate}),
     });
     const data = await resp.json();
-
-    document.getElementById('kojinmei-spinner').classList.add('d-none');
-    document.getElementById('kojinmei-result-area').classList.remove('d-none');
-
-    const summaryEl = document.getElementById('kojinmei-summary');
-    const matchedEl = document.getElementById('kojinmei-matched-area');
-
     if (!resp.ok) {
-      summaryEl.className = 'alert alert-danger py-2 small mb-3';
-      summaryEl.textContent = '❌ ' + (data.error || 'エラーが発生しました');
-      matchedEl.innerHTML = '';
+      alert('エラー: ' + (data.error || ''));
       return;
     }
-
-    if (data.message) {
-      summaryEl.className = 'alert alert-warning py-2 small mb-3';
-      summaryEl.innerHTML = '⚠️ ' + escHtml(data.message);
-      matchedEl.innerHTML = '';
-      return;
-    }
-
-    const matched = data.matched || [];
-    if (matched.length === 0) {
-      summaryEl.className = 'alert alert-secondary py-2 small mb-3';
-      summaryEl.innerHTML =
-        `MF会計仕訳 <strong>${data.accounting_total}</strong>件 を照合しましたが、個人名での一致はありませんでした。`;
-      matchedEl.innerHTML = '';
-      return;
-    }
-
-    summaryEl.className = 'alert alert-success py-2 small mb-3';
-    summaryEl.innerHTML =
-      `<strong>${matched.length}件</strong>の入金が個人名で一致しました（MF会計仕訳 ${data.accounting_total}件 照合）。` +
-      `<br>MFクラウド請求書の入金ステータスを手動で更新するか、下の「着金日を登録」ボタンで管理してください。`;
-
-    let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle">';
-    html += '<thead class="table-success"><tr>';
-    html += '<th>取引先名</th><th>個人名</th><th>請求番号</th><th>件名</th>';
-    html += '<th class="text-end">請求金額</th><th>着金日（会計）</th>';
-    html += '<th class="text-end">着金金額（会計）</th><th>会計取引先名</th>';
-    html += '<th>操作</th></tr></thead><tbody>';
-
-    matched.forEach((m, i) => {
-      const diff = m['着金金額_会計'] - m['請求金額'];
-      const diffBadge = diff === 0 ? '' :
-        diff > 0
-          ? `<span class="badge bg-warning text-dark ms-1">過払い ¥${diff.toLocaleString()}</span>`
-          : `<span class="badge bg-danger ms-1">不足 ¥${Math.abs(diff).toLocaleString()}</span>`;
-      html += `<tr>
-        <td class="fw-semibold">${escHtml(m['取引先名'])}</td>
-        <td><span class="badge bg-info text-dark">${escHtml(m['個人名'])}</span></td>
-        <td class="small text-muted">${escHtml(m['請求番号'])}</td>
-        <td class="small text-muted">${escHtml(m['件名'])}</td>
-        <td class="text-end fw-bold">¥${Number(m['請求金額']).toLocaleString()}</td>
-        <td class="small text-success fw-bold">${escHtml(m['着金日_会計'])}</td>
-        <td class="text-end">¥${Number(m['着金金額_会計']).toLocaleString()}${diffBadge}</td>
-        <td class="small text-muted">${escHtml(m['会計取引先名'] || '—')}</td>
-        <td>
-          <button class="btn btn-outline-success btn-sm py-0 px-2"
-                  onclick="registerKojinmeiKikin('${escHtml(m['請求書ID'])}','${escHtml(m['着金日_会計'])}',${m['着金金額_会計']})">
-            <i class="bi bi-check2-circle me-1"></i>着金日を登録
-          </button>
-        </td>
-      </tr>`;
-    });
-
-    html += '</tbody></table></div>';
-    matchedEl.innerHTML = html;
-
+    let msg = `照合完了\n・未収再確認タブ: ${data.new_recheck}件追加（計${data.total_recheck}件）\n・振込名義確認タブ: ${data.new_furikomi}件追加（計${data.total_furikomi}件）`;
+    alert(msg);
+    window.location.reload();
   } catch(e) {
-    document.getElementById('kojinmei-spinner').classList.add('d-none');
-    document.getElementById('kojinmei-result-area').classList.remove('d-none');
-    const summaryEl = document.getElementById('kojinmei-summary');
-    summaryEl.className = 'alert alert-danger py-2 small mb-3';
-    summaryEl.textContent = '❌ エラー: ' + e.message;
-    document.getElementById('kojinmei-matched-area').innerHTML = '';
+    alert('エラー: ' + e.message);
   } finally {
-    btn.disabled = false;
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-search me-1"></i>まとめて再確認（MF会計）';
   }
-}
+});
 
-async function registerKojinmeiKikin(invoiceId, kikinDate, kikinAmt) {
-  if (!confirm(`着金日: ${kikinDate}\n着金金額: ¥${Number(kikinAmt).toLocaleString()}\n\nこの請求書に着金情報を登録しますか？`)) return;
+// ===== 振込名義確認タブ =====
+const furikomiLinkModal = new bootstrap.Modal(document.getElementById('furikomiLinkModal'));
+let _furikomiRecordId = null;
+
+document.querySelectorAll('.furikomi-link-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    _furikomiRecordId = this.dataset.id;
+    const partner    = this.dataset.partner;
+    const candInv    = this.dataset.candidateInvoice;
+    const amt        = parseInt(this.dataset.amt) || 0;
+    const date       = this.dataset.date;
+    const remark     = this.dataset.remark;
+
+    document.getElementById('furikomi-deal-info').textContent =
+      `着金日: ${date} / ¥${amt.toLocaleString()} / 備考: ${remark}`;
+    document.getElementById('furikomi-partner-name').textContent = partner;
+    document.getElementById('furikomi-name-input').value = '';
+
+    // プルダウン: 同取引先の未収を上に
+    const select = document.getElementById('furikomi-invoice-select');
+    select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
+    const matching = _overdueList.filter(b => b['取引先名'] === partner);
+    const others   = _overdueList.filter(b => b['取引先名'] !== partner);
+    if (matching.length > 0) {
+      const grp = document.createElement('optgroup');
+      grp.label = `${partner} の未収請求書`;
+      matching.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限']||'—'}`;
+        grp.appendChild(opt);
+      });
+      select.appendChild(grp);
+    }
+    if (others.length > 0) {
+      const grp2 = document.createElement('optgroup');
+      grp2.label = 'その他';
+      others.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
+        grp2.appendChild(opt);
+      });
+      select.appendChild(grp2);
+    }
+    // 候補請求書が1件なら自動選択
+    if (candInv) select.value = candInv;
+    else if (matching.length === 1) select.value = matching[0]['請求書ID'];
+
+    furikomiLinkModal.show();
+  });
+});
+
+document.getElementById('furikomi-confirm-btn')?.addEventListener('click', async function() {
+  const invoiceId    = document.getElementById('furikomi-invoice-select').value;
+  const furikomiName = document.getElementById('furikomi-name-input').value.trim();
+  if (!invoiceId) { alert('請求書を選択してください'); return; }
+  if (!furikomiName) { alert('振込名義を入力してください'); return; }
+
+  // 選択した請求書の番号
+  const selOpt     = document.getElementById('furikomi-invoice-select').selectedOptions[0];
+  const invoiceNum = selOpt ? selOpt.textContent.split(' / ')[0] : '';
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
   try {
-    const resp = await fetch(`/api/invoice/${invoiceId}/meta`, {
+    const resp = await fetch(`/api/furikomi_confirm/${_furikomiRecordId}/link`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        着金日_手動:   kikinDate,
-        着金金額_手動: kikinAmt,
-      }),
+      body: JSON.stringify({invoice_id: invoiceId, invoice_num: invoiceNum, furikomi_name: furikomiName}),
     });
     const data = await resp.json();
-    if (data.ok) {
-      alert('登録しました。ページを更新してご確認ください。');
-      window.location.reload();
+    if (resp.ok && data.ok) {
+      furikomiLinkModal.hide();
+      // 未収行を即時非表示
+      const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
+      if (overdueRow) overdueRow.style.display = 'none';
+      // 振込名義確認行を非表示
+      const furikomiRow = document.getElementById(`furikomi-row-${_furikomiRecordId}`);
+      if (furikomiRow) furikomiRow.remove();
     } else {
-      alert('登録に失敗しました');
+      alert('エラー: ' + (data.error || ''));
     }
   } catch(e) {
     alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>確定（振込名義登録＋未収から除去）';
   }
-}
+});
+
+// 振込名義確認 削除ボタン
+document.querySelectorAll('.furikomi-delete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    if (!confirm('この候補を削除しますか？')) return;
+    const recordId = this.dataset.id;
+    const resp = await fetch(`/api/furikomi_confirm/${recordId}/delete`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      const row = document.getElementById(`furikomi-row-${recordId}`);
+      if (row) row.remove();
+    }
+  });
+});
 
 // ===== 月次確定モーダル =====
 async function confirmHistory(yearMonth) {
