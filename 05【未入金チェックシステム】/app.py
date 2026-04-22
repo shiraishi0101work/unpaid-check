@@ -1243,12 +1243,18 @@ def dashboard():
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
         seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
 
-        overdue_raw    = result.get("overdue", [])
-        overdue_moved  = [b for b in overdue_raw if b.get("着金日_手動")]
-        overdue        = [b for b in overdue_raw if not b.get("着金日_手動")]
+        # overdue + ichiji_hokan を統合して現在のメタで再分類
+        all_overdue_pool = result.get("overdue", []) + result.get("ichiji_hokan", [])
+        overdue_moved  = [b for b in all_overdue_pool if b.get("着金日_手動")]
+        ichiji_hokan   = sorted([b for b in all_overdue_pool
+                                  if b.get("解消済み") and not b.get("着金日_手動")],
+                                 key=lambda x: x.get("支払期限", ""))
+        ichiji_ids_d   = {b["請求書ID"] for b in ichiji_hokan}
+        overdue        = sorted([b for b in all_overdue_pool
+                                  if not b.get("着金日_手動") and b["請求書ID"] not in ichiji_ids_d],
+                                 key=lambda x: x.get("支払期限", ""))
         paid_all       = result.get("paid", []) + seikyu_moved + overdue_moved
         draft_overdue = result.get("draft_overdue", [])
-        ichiji_hokan  = result.get("ichiji_hokan", [])
         upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
         paid_fy       = [b for b in paid_all if in_fy(b)]
 
