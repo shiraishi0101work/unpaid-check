@@ -1080,23 +1080,16 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     <!-- Step2: 確認・登録 -->
     <div id="mpur-step2" style="display:none">
       <div class="modal-hdr">
-        <span>複製内容の確認</span>
+        <span>登録内容の確認・修正</span>
         <button class="close-btn" onclick="closeModal('mpur-modal')">✕</button>
       </div>
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-radius:var(--r)">
-          <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">全件の発行日</label>
-          <input type="date" id="mpur-date-all" style="font-size:13px;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit">
-          <button class="btn btn-sm" onclick="applyMpurDateAll()">全件に適用</button>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px">各行の発行日は個別に変更できます。</div>
+      <div style="padding:10px 18px;border-bottom:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">全件の発行日を一括変更</label>
+        <input type="date" id="mpur-date-all" style="font-size:13px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r);outline:none;font-family:inherit">
+        <button class="btn btn-sm" onclick="applyMpurDateAll()">全件に適用</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">各項目は個別に修正できます</span>
       </div>
-      <div style="padding:0 18px;max-height:360px;overflow-y:auto">
-        <div style="display:grid;grid-template-columns:1fr 145px;gap:8px;padding:7px 0 8px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3)">
-          <span>仕入れ先 / 内容</span><span>発行日</span>
-        </div>
-        <div id="mpur-conf-items"></div>
-      </div>
+      <div id="mpur-conf-items" style="padding:12px 18px;max-height:440px;overflow-y:auto;display:flex;flex-direction:column;gap:12px"></div>
       <div class="form-actions" style="padding:14px 18px">
         <button class="btn" onclick="showMpurStep1()">← 戻る</button>
         <button class="btn btn-primary" onclick="execMpurDup()">一括登録する</button>
