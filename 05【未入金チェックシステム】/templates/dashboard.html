@@ -1632,7 +1632,23 @@ document.getElementById('rlink-confirm-btn')?.addEventListener('click', async fu
     if (resp.ok && data.ok) {
       recheckLinkModal.hide();
       const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
-      if (overdueRow) overdueRow.style.display = 'none';
+      if (data.差額 && data.差額 > 0) {
+        // 部分入金: 未収に残し、部分入金バッジ＋残額を表示
+        if (overdueRow) {
+          const amtCell = overdueRow.querySelectorAll('td')[5];
+          const inv = _overdueList.find(b => b['請求書ID'] === invoiceId);
+          const invAmt = inv ? Number(inv['請求金額']) : 0;
+          if (amtCell) amtCell.innerHTML =
+            `<span class="badge bg-warning text-dark d-block mb-1" style="font-size:0.65rem">部分入金済</span>
+             <span class="text-danger">¥${Number(data.差額).toLocaleString()}</span>
+             <small class="text-muted d-block" style="font-size:0.7rem">請求: ¥${invAmt.toLocaleString()}</small>`;
+          overdueRow.classList.remove('row-noted');
+          overdueRow.classList.add('table-warning');
+        }
+      } else {
+        // 全額入金: 未収から非表示
+        if (overdueRow) overdueRow.style.display = 'none';
+      }
       const recheckRow = document.getElementById(`recheck-row-${_rlinkRecordId}`);
       if (recheckRow) {
         recheckRow.classList.add('table-success');
@@ -1678,7 +1694,29 @@ document.getElementById('rlink-confirm-btn')?.addEventListener('click', async fu
     alert('エラー: ' + e.message);
   } finally {
     this.disabled = false;
-    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>照合確定（未収から消す）';
+    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>照合確定';
+  }
+});
+
+// 照合解除ボタン
+document.getElementById('rlink-unlink-btn')?.addEventListener('click', async function() {
+  if (!confirm('照合を解除しますか？未収リストへの反映も取り消されます。')) return;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/recheck/${_rlinkRecordId}/unlink`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      recheckLinkModal.hide();
+      window.location.reload();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
   }
 });
 
