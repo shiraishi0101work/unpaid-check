@@ -114,6 +114,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = json_decode(file_get_contents('php://input'), true);
     if (!$body) { http_response_code(400); echo json_encode(['error' => 'invalid json']); exit; }
+
+    // ── イワタアシスト連携：デラスコアで iw_* 仕入れが削除された場合にIW側も削除 ──
+    if (isset($body['purchases'])) {
+        try {
+            $s = $db->prepare('SELECT value FROM store WHERE key=?');
+            $s->execute(['purchases']);
+            $row = $s->fetch(PDO::FETCH_ASSOC);
+            $oldPurchases = $row ? (json_decode($row['value'], true) ?: []) : [];
+
+            // 旧データのiw_*IDセット
+            $oldIwIds = [];
+            foreach ($oldPurchases as $p) {
+                $pid = $p['id'] ?? '';
+                if (substr($pid, 0, 3) === 'iw_') {
+                    $oldIwIds[] = $pid;
+                }
+            }
+            // 新データのiw_*IDセット
+            $newIwIds = [];
+            foreach ($body['purchases'] as $p) {
+                $pid = $p['id'] ?? '';
+                if (substr($pid, 0, 3) === 'iw_') {
+                    $newIwIds[] = $pid;
+                }
+            }
+            // 削除されたiw_*をIWのDBからも削除
+            $deletedIwIds = array_diff($oldIwIds, $newIwIds);
+            if (!empty($deletedIwIds)) {
+                $iwDbPath = __DIR__ . '/../02仕入れ管理【イワタアシスト】/iwata_assist.db';
+                if (file_exists($iwDbPath)) {
+                    $iwDb = new PDO('sqlite:' . $iwDbPath);
+                    $iwDb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $del = $iwDb->prepare('DELETE FROM orders WHERE id=?');
+                    foreach ($deletedIwIds as $iwDsId) {
+                        $iwOrderId = (int)substr($iwDsId, 3);
+                        $del->execute([$iwOrderId]);
+                    }
+                }
+            }
+        } catch (Exception $e) { /* IW未起動・DB不在時は無視 */ }
+    }
+
     $stmt = $db->prepare('INSERT OR REPLACE INTO store (key, value) VALUES (?, ?)');
     foreach ($keys as $k) {
         if (isset($body[$k])) {
