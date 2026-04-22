@@ -936,6 +936,55 @@
 </div>
 
 
+{# ===== MF会計 個人名チェックモーダル ===== #}
+<div class="modal fade" id="kojinmeiCheckModal" tabindex="-1" aria-labelledby="kojinmeiCheckModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-info-subtle">
+        <h5 class="modal-title fw-bold" id="kojinmeiCheckModalLabel">
+          <i class="bi bi-person-check me-2 text-info"></i>MF会計 個人名チェック
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          未入金の取引先に登録された「個人名（振込人名）」を使って、MFクラウド会計の仕訳データを照合します。<br>
+          銀行振込で個人名が送金者名になっているケースを検出できます。
+        </p>
+
+        <div class="row g-2 mb-3" id="kojinmei-date-row">
+          <div class="col-5">
+            <label class="form-label fw-semibold small">照合開始日</label>
+            <input type="date" id="kojinmei-from" class="form-control form-control-sm">
+          </div>
+          <div class="col-5">
+            <label class="form-label fw-semibold small">照合終了日</label>
+            <input type="date" id="kojinmei-to" class="form-control form-control-sm">
+          </div>
+          <div class="col-2 d-flex align-items-end">
+            <button class="btn btn-info btn-sm w-100" id="kojinmei-run-btn" onclick="runKojinmeiCheck()">
+              <i class="bi bi-search"></i> 照合
+            </button>
+          </div>
+        </div>
+
+        <div id="kojinmei-spinner" class="text-center py-3 d-none">
+          <div class="spinner-border text-info"></div>
+          <div class="mt-2 small text-muted">MFクラウド会計から仕訳を取得中...</div>
+        </div>
+
+        <div id="kojinmei-result-area" class="d-none">
+          <div id="kojinmei-summary" class="alert py-2 small mb-3"></div>
+          <div id="kojinmei-matched-area"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {# ===== 月次確定モーダル ===== #}
 <div class="modal fade" id="historyConfirmModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
