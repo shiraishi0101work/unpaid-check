@@ -1162,6 +1162,7 @@ ${text.slice(0, 6000)}`;
 
 async function submitStatements(items, cardId) {
   const res = await apiFetch('add_statements', { items, cardId });
+  if (!res || res.error) throw new Error(res?.error || 'api error');
   // 即反映分は orders を再取得
   if (res.added > 0) { orders = await apiFetch('orders'); rmets(); rt(); updFilters(); }
   // pending分は statements を再取得
@@ -1170,9 +1171,13 @@ async function submitStatements(items, cardId) {
   const parts = [];
   if (res.added > 0)   parts.push(`${res.added}件を発注一覧に追加しました`);
   if (res.pending > 0) parts.push(`${res.pending}件は金額が一致する発注があるため確認が必要です`);
+  if (!res.added && !res.pending) parts.push('有効な明細行が見つかりませんでした');
   okb.textContent = parts.join('。');
-  okb.style.display = '';
+  okb.style.display = 'block';
   document.getElementById('stmt-text').value = '';
+  if (res.added > 0 || res.pending > 0) {
+    toast(`明細を取り込みました（発注追加:${res.added}件 / 確認待ち:${res.pending}件）`);
+  }
 }
 
 async function stmtSkip(id) {
