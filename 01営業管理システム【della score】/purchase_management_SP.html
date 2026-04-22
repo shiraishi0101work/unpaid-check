@@ -341,20 +341,35 @@
       <div class="import-box-title">商品情報の自動読み込み</div>
       <div class="itabs">
         <button class="itab on" onclick="switchImport('url',this)">URLで読み込む</button>
-        <button class="itab" onclick="switchImport('paste',this)">テキストを貼り付ける</button>
+        <button class="itab" onclick="switchImport('paste',this)">テキスト貼り付け</button>
+        <button class="itab" onclick="switchImport('image',this)">画像</button>
       </div>
       <div id="im-url">
         <div class="url-row">
           <input type="url" id="pu" placeholder="https://..." inputmode="url" autocomplete="off">
           <button class="btn btn-primary btn-sm" id="load-btn" onclick="loadURL()">読み込む</button>
         </div>
-        <div style="font-size:11px;color:var(--text-hint);margin-top:5px">読み込めない場合は「テキストを貼り付ける」をお試しください。</div>
+        <div style="font-size:11px;color:var(--text-hint);margin-top:5px">読み込めない場合は「テキスト貼り付け」または「画像」をお試しください。</div>
       </div>
       <div id="im-paste" style="display:none">
         <p class="paste-hint">商品ページを開き、全選択（<code>長押し→全選択</code>）→コピーして貼り付けてください。</p>
         <textarea class="paste-ta" id="paste-text" placeholder="ここに貼り付け..."></textarea>
         <div style="margin-top:8px">
           <button class="btn btn-primary btn-full" id="parse-btn" onclick="parseText()">解析する</button>
+        </div>
+      </div>
+      <div id="im-image" style="display:none">
+        <div class="img-drop" id="img-drop-area" onclick="document.getElementById('img-file').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
+          <div class="img-drop-icon">📷</div>
+          <div class="img-drop-main">タップして画像を選択</div>
+          <div class="img-drop-sub">請求書・商品ページのスクリーンショットなど</div>
+          <input type="file" id="img-file" accept="image/*" capture="environment" style="display:none" onchange="onImgFileChange(this)">
+        </div>
+        <div id="img-preview-wrap" style="display:none;margin-top:10px">
+          <img id="img-preview" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);display:block">
+          <div style="margin-top:8px">
+            <button class="btn btn-primary btn-full" id="img-parse-btn" onclick="analyzeImage()">解析する</button>
+          </div>
         </div>
       </div>
       <div class="ld-bar" id="ldb"><div class="ld-inner"></div></div>
