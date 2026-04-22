@@ -360,13 +360,14 @@
       </div>
       <div id="im-image" style="display:none">
         <div class="img-drop" id="img-drop-area" onclick="document.getElementById('img-file').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
-          <div class="img-drop-icon">📷</div>
-          <div class="img-drop-main">タップして画像を選択</div>
-          <div class="img-drop-sub">請求書・商品ページのスクリーンショットなど</div>
-          <input type="file" id="img-file" accept="image/*" capture="environment" style="display:none" onchange="onImgFileChange(this)">
+          <div class="img-drop-icon">📄</div>
+          <div class="img-drop-main">タップしてファイルを選択</div>
+          <div class="img-drop-sub">PDF・JPG・PNG対応｜紙請求書スキャンも可</div>
+          <input type="file" id="img-file" accept="image/*,application/pdf" style="display:none" onchange="onImgFileChange(this)">
         </div>
         <div id="img-preview-wrap" style="display:none;margin-top:10px">
           <img id="img-preview" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);display:block">
+          <div id="pdf-label" style="display:none;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--text-sub)"></div>
           <div style="margin-top:8px">
             <button class="btn btn-primary btn-full" id="img-parse-btn" onclick="analyzeImage()">解析する</button>
           </div>
