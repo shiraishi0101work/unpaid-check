@@ -1225,6 +1225,7 @@ def dashboard():
                 b["部分入金"]        = m.get("部分入金", False)
                 b["残額"]            = m.get("残額", 0)
                 b["入金済金額"]      = m.get("入金済金額", 0)
+                b["解消済み"]        = m.get("解消済み", False)
                 company = b.get("取引先名", "").strip()
                 if not b.get("担当者") and company:
                     tantou = _get_tantou(company_tantou, company)
