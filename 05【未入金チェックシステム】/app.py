@@ -1645,8 +1645,7 @@ def api_overdue_recheck_all():
     # 銀行口座科目（普通預金・当座預金）の未仕分け仕訳を全て対象とする
     _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
     new_furikomi = 0
-    try:
-     for d in unclassified_deals:
+    for d in unclassified_deals:
         journal_id = str(d.get("取引ID", ""))
         if journal_id in existing_jids_furik:
             continue
