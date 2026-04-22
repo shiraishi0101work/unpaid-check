@@ -3561,6 +3561,7 @@ function applyMpurDateAll(){
 function execMpurDup(){
   const cm=curYM();
   const items=D.purchases.filter(p=>_mpurSel.has(p.id));
+  if(!items.length){alert('複製対象が見つかりませんでした。もう一度お試しください。');return;}
   items.forEach(p=>{
     const issued=document.getElementById('mpd-'+p.id)?.value||today();
     D.purchases.push({
