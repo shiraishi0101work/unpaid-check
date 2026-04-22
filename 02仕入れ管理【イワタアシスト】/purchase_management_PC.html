@@ -391,18 +391,28 @@
   <div id="p-list" class="page active">
     <div class="page-header">
       <div class="page-title">発注一覧 <small id="order-count"></small></div>
-      <button class="btn btn-primary" onclick="sw('add', document.querySelector('[data-page=add]'))">＋ 新規登録</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="dlCSVFiltered()">↓ CSV</button>
+        <button class="btn btn-primary" onclick="sw('add', document.querySelector('[data-page=add]'))">＋ 新規登録</button>
+      </div>
     </div>
     <div class="metrics" id="mets"></div>
     <div class="card">
       <div class="filter-row">
-        <input type="text" id="srch" placeholder="商品名・仕入れ先で検索..." oninput="rt()">
-        <select id="fst" onchange="rt()">
+        <input type="text" id="srch" placeholder="商品名・仕入れ先で検索..." oninput="currentPage=1;rt()">
+        <select id="fst" onchange="currentPage=1;rt()">
           <option value="">すべてのステータス</option>
           <option>未発注</option><option>発注済</option><option>納品済</option><option>キャンセル</option>
         </select>
-        <select id="fcl" onchange="rt()"><option value="">すべての納品先</option></select>
-        <select id="fca" onchange="rt()"><option value="">すべてのカード</option></select>
+        <select id="fcl" onchange="currentPage=1;rt()"><option value="">すべての納品先</option></select>
+        <select id="fca" onchange="currentPage=1;rt()"><option value="">すべてのカード</option></select>
+      </div>
+      <div class="filter-row" style="margin-bottom:8px">
+        <label style="font-size:12px;color:var(--text-sub);white-space:nowrap;align-self:center">発注日</label>
+        <input type="date" id="fdf" onchange="currentPage=1;rt()" style="flex:none;min-width:130px">
+        <span style="color:var(--text-sub);font-size:13px;align-self:center">〜</span>
+        <input type="date" id="fdt" onchange="currentPage=1;rt()" style="flex:none;min-width:130px">
+        <button class="btn btn-sm" onclick="document.getElementById('fdf').value='';document.getElementById('fdt').value='';currentPage=1;rt()">クリア</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -414,6 +424,7 @@
           <tbody id="tbd"></tbody>
         </table>
       </div>
+      <div class="pager" id="pager"></div>
     </div>
   </div>
 
