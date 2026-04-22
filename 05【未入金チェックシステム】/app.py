@@ -1645,38 +1645,36 @@ def api_overdue_recheck_all():
     # 銀行口座科目（普通預金・当座預金）の未仕分け仕訳を全て対象とする
     _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
     new_furikomi = 0
-    try:
-      for d in unclassified_deals:
-        journal_id = str(d.get("取引ID", ""))
-        if journal_id in existing_jids_furik:
-            continue
-        account = d.get("科目", "") or ""
-        # 銀行口座科目のみ対象
-        if not any(ba in account for ba in _BANK_ACCOUNTS):
-            continue
-        furikomi_unconf.append({
-            "id":                   str(_uuid.uuid4()),
-            "journal_id":           journal_id,
-            "fetched_at":           datetime.now().isoformat(),
-            "suggested_partner":    "",           # ユーザーが選ぶ
-            "candidate_invoice_id": "",
-            "取引先名":             d.get("取引先名", ""),
-            "着金日":               d.get("着金日", ""),
-            "入金金額":             d.get("入金金額", 0),
-            "備考":                 d.get("備考", ""),
-            "科目":                 account,
-            "furikomi_to_register": "",
-            "linked_invoice_id":    None,
-            "linked_invoice_num":   None,
-            "linked_at":            None,
-            "deleted":              False,
-        })
-        existing_jids_furik.add(journal_id)
-        new_furikomi += 1
-
     new_recheck  = 0
+    try:
+        for d in unclassified_deals:
+            journal_id = str(d.get("取引ID", ""))
+            if journal_id in existing_jids_furik:
+                continue
+            account = d.get("科目", "") or ""
+            if not any(ba in account for ba in _BANK_ACCOUNTS):
+                continue
+            furikomi_unconf.append({
+                "id":                   str(_uuid.uuid4()),
+                "journal_id":           journal_id,
+                "fetched_at":           datetime.now().isoformat(),
+                "suggested_partner":    "",
+                "candidate_invoice_id": "",
+                "取引先名":             d.get("取引先名", ""),
+                "着金日":               d.get("着金日", ""),
+                "入金金額":             d.get("入金金額", 0),
+                "備考":                 d.get("備考", ""),
+                "科目":                 account,
+                "furikomi_to_register": "",
+                "linked_invoice_id":    None,
+                "linked_invoice_num":   None,
+                "linked_at":            None,
+                "deleted":              False,
+            })
+            existing_jids_furik.add(journal_id)
+            new_furikomi += 1
 
-    for billing in overdue_list:
+        for billing in overdue_list:
         bid          = billing.get("請求書ID", "")
         partner_name = billing.get("取引先名", "").strip()
         furikomi_meta = meta_all.get(bid, {}).get("個人名", "")
