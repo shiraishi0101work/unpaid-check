@@ -1366,11 +1366,125 @@ def oauth_callback(service_name):
 
 @app.route("/oauth/revoke/<service_name>", methods=["POST"])
 def oauth_revoke(service_name):
-    if service_name != "invoice":
+    if service_name not in ("invoice", "accounting"):
         return "不正なサービス名", 400
     auth.revoke_token(service_name, get_company_id())
-    flash("MFクラウド請求書の認証を解除しました")
+    labels = {"invoice": "MFクラウド請求書", "accounting": "MFクラウド会計"}
+    flash(f"{labels[service_name]}の認証を解除しました")
     return redirect(url_for("dashboard"))
+
+
+# ========================================
+# MFクラウド会計 — 個人名チェック
+# ========================================
+
+@app.route("/api/accounting-kojinmei-check", methods=["POST"])
+@login_required
+def api_accounting_kojinmei_check():
+    """
+    未入金請求書の取引先の「個人名（振込人名）」を使って
+    MFクラウド会計の仕訳データと照合する。
+
+    Request JSON:
+        from_date: str  照合開始日 YYYY-MM-DD
+        to_date:   str  照合終了日 YYYY-MM-DD
+
+    Response JSON:
+        {
+          "matched": [{請求書情報 + 会計仕訳情報}],
+          "unmatched_count": int,
+          "accounting_total": int,
+        }
+    """
+    try:
+        from mf_accounting import get_deals
+    except ImportError as e:
+        return jsonify({"error": f"mf_accounting モジュールが見つかりません: {e}"}), 500
+
+    data      = request.get_json(force=True, silent=True) or {}
+    from_date = data.get("from_date", "")
+    to_date   = data.get("to_date", "")
+
+    if not from_date or not to_date:
+        return jsonify({"error": "from_date と to_date は必須です"}), 400
+
+    cid = get_company_id()
+
+    # 会計認証チェック
+    if not auth.is_authenticated("accounting", cid):
+        return jsonify({"error": "MFクラウド会計との連携が必要です。設定画面から連携してください。"}), 401
+
+    # 現在の未入金一覧を取得
+    result = _load_result()
+    if not result:
+        return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
+
+    meta           = load_meta()
+    company_tantou = load_company_tantou()
+
+    # 未入金の請求書を全カテゴリから集める
+    unpaid_all = (
+        result.get("overdue", []) +
+        result.get("seikyu_kakunin", []) +
+        result.get("upcoming", []) +
+        result.get("ichiji_hokan", [])
+    )
+
+    # 個人名を持つ請求書のみ絞り込む
+    targets = []
+    for b in unpaid_all:
+        bid      = b.get("請求書ID", "")
+        company  = b.get("取引先名", "").strip()
+        # 個人名: invoice_meta優先 → company_tantouで補完
+        kojinmei = (meta.get(bid, {}).get("個人名", "")
+                    or _get_kojinmei(company_tantou, company))
+        if kojinmei:
+            targets.append({**b, "個人名": kojinmei})
+
+    if not targets:
+        return jsonify({
+            "matched":          [],
+            "unmatched_count":  len(unpaid_all),
+            "accounting_total": 0,
+            "message":          "個人名が登録されている未入金請求書がありません。編集ボタンから「個人名（振込人名）」を登録してください。",
+        })
+
+    # MF会計から仕訳取得
+    try:
+        deals = get_deals(from_date, to_date, company_id=cid)
+    except Exception as e:
+        return jsonify({"error": f"MFクラウド会計からのデータ取得に失敗しました: {e}"}), 500
+
+    # 個人名でマッチング
+    matched = []
+    for b in targets:
+        kojinmei = b.get("個人名", "")
+        # 既に会社名でマッチ済みの仕訳は除く（_matchedフラグで管理）
+        deal = match_by_kojinmei(b, deals, kojinmei)
+        if deal:
+            deal["_matched"] = True
+            matched.append({
+                "請求書ID":    b.get("請求書ID", ""),
+                "請求番号":    b.get("請求番号", ""),
+                "取引先名":    b.get("取引先名", ""),
+                "個人名":      kojinmei,
+                "件名":        b.get("件名", ""),
+                "担当者":      b.get("担当者", ""),
+                "請求日":      b.get("請求日", ""),
+                "支払期限":    b.get("支払期限", ""),
+                "請求金額":    b.get("請求金額", 0),
+                "着金日_会計": deal.get("着金日", ""),
+                "着金金額_会計": deal.get("入金金額", 0),
+                "会計取引先名": deal.get("取引先名", ""),
+                "会計備考":    deal.get("備考", ""),
+                "科目":        deal.get("科目", ""),
+            })
+
+    return jsonify({
+        "matched":          matched,
+        "unmatched_count":  len(targets) - len(matched),
+        "accounting_total": len(deals),
+    })
 
 
 
