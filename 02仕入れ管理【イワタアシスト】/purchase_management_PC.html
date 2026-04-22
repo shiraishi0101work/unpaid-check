@@ -621,6 +621,7 @@ function sw(page, el) {
   if (page === 'list')   { rmets(); rt(); updFilters(); }
   if (page === 'add')    { today(); updCCSel(); updClSug(); }
   if (page === 'cards')  { renderCC(); }
+  if (page === 'stmt')   { updStmtCardSel(); renderStmt(); }
   if (page === 'export') { showPayload(); }
 }
 
