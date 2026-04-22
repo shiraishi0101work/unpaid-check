@@ -979,9 +979,9 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
         deleted_draft_ids  = load_deleted_drafts()
         deleted_seikyu_ids = load_deleted_seikyu()
 
-        # 一時保管：メモあり（支払済みは除く）
+        # 未収解消済み：解消済みフラグあり（メモは未収タブに残す）
         ichiji_hokan = sorted(
-            [b for b in all_overdue if b.get("メモ_手動")],
+            [b for b in all_overdue if b.get("解消済み")],
             key=lambda x: x.get("支払期限", ""))
         ichiji_ids = {b["請求書ID"] for b in ichiji_hokan}
 
