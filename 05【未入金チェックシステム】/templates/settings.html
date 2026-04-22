@@ -104,8 +104,33 @@
                 {% endif %}
               </td>
             </tr>
+            <tr>
+              <td>
+                MFクラウド会計
+                <div class="text-muted" style="font-size:0.7rem">個人名チェック用</div>
+              </td>
+              <td>
+                {% if auth_accounting %}
+                  <span class="badge bg-success">連携済</span>
+                {% else %}
+                  <span class="badge bg-secondary">未連携</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if auth_accounting %}
+                  <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}" class="d-inline">
+                    <button class="btn btn-outline-danger btn-sm py-0">解除</button>
+                  </form>
+                {% else %}
+                  <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-sm py-0">連携</a>
+                {% endif %}
+              </td>
+            </tr>
           </tbody>
         </table>
+        <div class="form-text mt-2">
+          <i class="bi bi-info-circle me-1"></i>MFクラウド会計は「個人名で再チェック」機能で使用します。振込人名（個人名）をMF会計の仕訳と照合します。
+        </div>
       </div>
     </div>
   </div>
