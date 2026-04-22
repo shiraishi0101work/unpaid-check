@@ -2327,6 +2327,32 @@ def api_recheck_link(record_id):
     return jsonify({"ok": True, "invoice_num": invoice_num, "差額": samediff})
 
 
+@app.route("/api/recheck/<record_id>/unlink", methods=["POST"])
+@login_required
+def api_recheck_unlink(record_id):
+    """照合済みレコードの紐づけを解除する"""
+    records = load_recheck_records()
+    record  = next((r for r in records if r["id"] == record_id), None)
+    if not record:
+        return jsonify({"error": "レコードが見つかりません"}), 404
+
+    invoice_id = record.get("linked_invoice_id")
+    if invoice_id:
+        meta = load_meta()
+        if invoice_id in meta:
+            for k in ["着金日_手動", "着金金額_手動", "差額", "部分入金", "残額", "入金済金額"]:
+                meta[invoice_id].pop(k, None)
+        save_meta(meta)
+
+    record["linked_invoice_id"]  = None
+    record["linked_invoice_num"] = None
+    record["linked_at"]          = None
+    record["差額"]               = None
+    save_recheck_records(records)
+
+    return jsonify({"ok": True, "unlinked_invoice_id": invoice_id})
+
+
 @app.route("/api/recheck/<record_id>/edit", methods=["POST"])
 @login_required
 def api_recheck_edit(record_id):
