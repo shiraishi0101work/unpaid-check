@@ -134,6 +134,47 @@ def _build_paid_entry(billing: dict, deal: dict, status: str) -> dict:
     return entry
 
 
+def match_by_kojinmei(
+    billing: dict,
+    deals: list[dict],
+    kojinmei: str,
+) -> dict | None:
+    """
+    個人名（振込人名）でマッチングを試みる。
+    銀行振込で法人名ではなく個人名が登録されているケース向け。
+
+    Args:
+        billing:  照合対象の請求書dict
+        deals:    MF会計から取得した入金データリスト
+        kojinmei: 振込人の個人名（カタカナ/漢字など）
+
+    Returns:
+        マッチした deal dict（金額・日付が一致）、マッチなしなら None
+    """
+    if not kojinmei or not kojinmei.strip():
+        return None
+
+    kj_norm = _normalize(kojinmei)
+    if not kj_norm:
+        return None
+
+    for deal in deals:
+        if deal.get("_matched"):
+            continue
+        # 個人名と deal の取引先名 or 備考テキストを照合
+        if not _name_match(kojinmei, deal.get("取引先名", ""), deal.get("備考", "")):
+            continue
+        # 金額チェック（許容誤差あり）
+        if not _amount_match(billing["請求金額"], deal["入金金額"]):
+            continue
+        # 日付チェック
+        if not _date_ok(billing["請求日"], deal["着金日"]):
+            continue
+        return deal
+
+    return None
+
+
 def match(billings: list[dict], deals: list[dict]) -> dict:
     """
     請求書リストと入金データリストを照合する（2パス方式）
