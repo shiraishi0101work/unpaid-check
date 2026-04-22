@@ -135,19 +135,19 @@ def get_auth_url(service_name: str, company_id: str = "") -> str:
     return svc["auth_url"] + "?" + urlencode(params)
 
 
-def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str]:
+def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str, str]:
     """
     OAuthコールバックを処理してトークンを保存する
-    Returns: (成功したらTrue, company_id)
+    stateパラメータから実際のサービスを判定するため、
+    複数サービスが同じリダイレクトURIを共有できる。
+    Returns: (成功したらTrue, company_id, actual_service_name)
     """
     entry = _pending_states.pop(state, None)
     if entry is None:
-        return False, ""
+        return False, "", service_name
     stored_service, company_id = entry
-    if stored_service != service_name:
-        return False, ""
 
-    svc  = _svc(service_name)
+    svc  = _svc(stored_service)
     resp = requests.post(svc["token_url"], data={
         "grant_type":    "authorization_code",
         "code":           code,
@@ -156,8 +156,8 @@ def handle_callback(service_name: str, code: str, state: str) -> tuple[bool, str
         "client_secret":  svc["client_secret"],
     })
     resp.raise_for_status()
-    save_token(service_name, resp.json(), company_id)
-    return True, company_id
+    save_token(stored_service, resp.json(), company_id)
+    return True, company_id, stored_service
 
 
 def is_authenticated(service_name: str, company_id: str = "") -> bool:
