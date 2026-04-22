@@ -617,7 +617,7 @@ def save_meta(meta: dict):
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
-def load_company_tantou() -> dict:
+def load_company_tantou() -> dict:  # noqa
     """
     取引先マスタを読み込む。
     現行形式: {"会社名": {"担当者": "...", "振込名義": ["name1", "name2"]}}
