@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": "6xEjScRCf423Ydv0ouNtgxgkB%2FL0RtqZYs13KnHBYUk%3D",
+    "fetched_at": "2026-04-22T12:46:19.752634",
+    "fetched_for_invoice_id": "pmwRTjt86hsQ3g8n_GHueQ",
+    "取引先名": "",
+    "着金日": "2026-03-10",
+    "入金金額": 163680,
+    "備考": "振込 カ) グリ-ナ-　No.2375　\n未入金42,020円",
+    "科目": "普通預金",
+    "memo": "",
+    "deleted": false,
+    "linked_invoice_id": null,
+    "linked_invoice_num": null,
+    "linked_at": null
+  }
+]

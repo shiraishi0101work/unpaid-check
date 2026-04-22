@@ -1976,30 +1976,32 @@ def api_overdue_recheck(invoice_id):
                 matched_deals.append(d)
                 break
 
-    # recheck_records に追加（取引IDで重複除去）
-    records     = load_recheck_records()
-    existing_ids = {r["id"] for r in records}
-    new_count   = 0
+    # recheck_records に追加（会計取引IDで重複除去、レコードIDはUUID）
+    import uuid as _uuid
+    records      = load_recheck_records()
+    existing_jids = {r.get("journal_id", r["id"]) for r in records}
+    new_count    = 0
     for d in matched_deals:
-        deal_id = str(d.get("取引ID", ""))
-        if not deal_id or deal_id in existing_ids:
+        journal_id = str(d.get("取引ID", ""))
+        if not journal_id or journal_id in existing_jids:
             continue
         records.append({
-            "id":                    deal_id,
-            "fetched_at":            datetime.now().isoformat(),
+            "id":                     str(_uuid.uuid4()),   # URLセーフなUUID
+            "journal_id":             journal_id,           # 元の会計取引ID
+            "fetched_at":             datetime.now().isoformat(),
             "fetched_for_invoice_id": invoice_id,
-            "取引先名":              d.get("取引先名", ""),
-            "着金日":                d.get("着金日", ""),
-            "入金金額":              d.get("入金金額", 0),
-            "備考":                  d.get("備考", ""),
-            "科目":                  d.get("科目", ""),
-            "memo":                  "",
-            "deleted":               False,
-            "linked_invoice_id":     None,
-            "linked_invoice_num":    None,
-            "linked_at":             None,
+            "取引先名":               d.get("取引先名", ""),
+            "着金日":                 d.get("着金日", ""),
+            "入金金額":               d.get("入金金額", 0),
+            "備考":                   d.get("備考", ""),
+            "科目":                   d.get("科目", ""),
+            "memo":                   "",
+            "deleted":                False,
+            "linked_invoice_id":      None,
+            "linked_invoice_num":     None,
+            "linked_at":              None,
         })
-        existing_ids.add(deal_id)
+        existing_jids.add(journal_id)
         new_count += 1
 
     save_recheck_records(records)
