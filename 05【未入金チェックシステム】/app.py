@@ -1856,14 +1856,29 @@ def api_overdue_recheck(invoice_id):
 
     save_recheck_records(records)
 
+    # デバッグ情報
+    print(f"[再確認] 取引先名: {partner_name}", flush=True)
+    print(f"[再確認] 振込名義リスト: {furikomi_list}", flush=True)
+    print(f"[再確認] 会計仕訳件数: {len(deals)}件", flush=True)
+    print(f"[再確認] 照合一致件数: {len(matched_deals)}件", flush=True)
+    # 備考フィールドのサンプルを出力
+    for d in deals[:5]:
+        print(f"[再確認] 備考サンプル: '{d.get('備考', '')}' / 取引先名: '{d.get('取引先名', '')}'", flush=True)
+
     visible = [r for r in records if not r.get("deleted")]
     return jsonify({
-        "ok":          True,
-        "new_count":   new_count,
-        "total_count": len(visible),
+        "ok":           True,
+        "new_count":    new_count,
+        "total_count":  len(visible),
         "partner_name": partner_name,
-        "from_date":   from_date,
-        "to_date":     to_date,
+        "from_date":    from_date,
+        "to_date":      to_date,
+        "debug": {
+            "deals_total":    len(deals),
+            "deals_matched":  len(matched_deals),
+            "furikomi_list":  furikomi_list,
+            "sample_remarks": [d.get("備考", "") for d in deals[:5]],
+        },
     })
 
 
