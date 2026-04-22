@@ -191,6 +191,12 @@ def get_deals(from_date: str, to_date: str, company_id: str = "",
             items = _get_all_journal_pages(params, company_id=company_id)
             all_items.extend(items)
             print(f"[会計API] {fy}年度第{hy}期: {len(items)}件", flush=True)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 401:
+                raise RuntimeError(
+                    "MFクラウド会計の認証が切れています。設定画面から再連携してください。"
+                ) from e
+            print(f"[会計API] {fy}年度第{hy}期 取得失敗: {e}", flush=True)
         except Exception as e:
             print(f"[会計API] {fy}年度第{hy}期 取得失敗: {e}", flush=True)
         time.sleep(_REQUEST_INTERVAL)
