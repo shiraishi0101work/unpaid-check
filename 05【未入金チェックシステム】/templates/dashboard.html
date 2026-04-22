@@ -1648,7 +1648,7 @@ document.querySelectorAll('.furikomi-link-btn').forEach(btn => {
     const remark     = this.dataset.remark;
 
     document.getElementById('furikomi-deal-info').textContent =
-      `着金日: ${date} / ¥${amt.toLocaleString()} / 備考: ${remark}`;
+      `振込名義: ${remark} / 着金日: ${date} / ¥${amt.toLocaleString()}`;
     document.getElementById('furikomi-partner-name').textContent = partner;
     document.getElementById('furikomi-name-input').value = '';
 
