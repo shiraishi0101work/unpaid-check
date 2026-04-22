@@ -1430,6 +1430,193 @@ document.getElementById('edit-save-btn')?.addEventListener('click', function() {
   });
 });
 
+// ===== 未収再確認 =====
+const _overdueList = {{ overdue | tojson }};
+
+// 「再確認」ボタン: 会計データ取得 → 未収再確認タブに切り替え
+document.querySelectorAll('.recheck-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const invoiceId   = this.dataset.id;
+    const partnerName = this.dataset.name;
+
+    // タブ切り替え
+    document.getElementById('btn-tab-recheck')?.click();
+
+    const loadingEl = document.getElementById('recheck-loading');
+    if (loadingEl) loadingEl.classList.remove('d-none');
+
+    try {
+      const resp = await fetch(`/api/overdue/${invoiceId}/recheck`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        alert('エラー: ' + (data.error || 'データ取得に失敗しました'));
+        return;
+      }
+
+      if (data.new_count === 0 && data.total_count === 0) {
+        alert(`${partnerName} の入金履歴が ${data.from_date}〜${data.to_date} の期間で見つかりませんでした。`);
+        return;
+      }
+
+      // ページリロードで未収再確認タブに反映
+      const url = new URL(window.location.href);
+      url.hash = 'tab-recheck';
+      window.location.href = url.toString();
+      window.location.reload();
+
+    } catch(e) {
+      alert('エラー: ' + e.message);
+    } finally {
+      if (loadingEl) loadingEl.classList.add('d-none');
+    }
+  });
+});
+
+// ページロード時、ハッシュが #tab-recheck なら自動でタブ切り替え
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.location.hash === '#tab-recheck') {
+    setTimeout(() => {
+      document.getElementById('btn-tab-recheck')?.click();
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }, 200);
+  }
+});
+
+// 請求書照合モーダル
+const recheckLinkModal = new bootstrap.Modal(document.getElementById('recheckLinkModal'));
+let _rlinkRecordId = null;
+let _rlinkDealAmt  = 0;
+
+document.querySelectorAll('.recheck-link-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    _rlinkRecordId = this.dataset.id;
+    _rlinkDealAmt  = parseInt(this.dataset.amt) || 0;
+    const partnerName = this.dataset.name;
+    const dealDate    = this.dataset.date;
+
+    document.getElementById('rlink-deal-info').textContent =
+      `${partnerName} / 着金日: ${dealDate} / ¥${Number(_rlinkDealAmt).toLocaleString()}`;
+
+    // 取引先名でフィルタしてドロップダウン生成
+    const select   = document.getElementById('rlink-invoice-select');
+    select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
+
+    const matching = _overdueList.filter(b => b['取引先名'] === partnerName);
+    const others   = _overdueList.filter(b => b['取引先名'] !== partnerName);
+
+    if (matching.length > 0) {
+      const grp  = document.createElement('optgroup');
+      grp.label  = `${partnerName} の未収請求書`;
+      matching.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限'] || '—'}`;
+        grp.appendChild(opt);
+      });
+      select.appendChild(grp);
+    }
+
+    if (others.length > 0) {
+      const grp2 = document.createElement('optgroup');
+      grp2.label = 'その他の未収請求書';
+      others.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
+        grp2.appendChild(opt);
+      });
+      select.appendChild(grp2);
+    }
+
+    if (matching.length === 1) {
+      select.value = matching[0]['請求書ID'];
+    }
+
+    recheckLinkModal.show();
+  });
+});
+
+document.getElementById('rlink-confirm-btn')?.addEventListener('click', async function() {
+  const invoiceId = document.getElementById('rlink-invoice-select').value;
+  if (!invoiceId) {
+    alert('請求書を選択してください');
+    return;
+  }
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
+
+  try {
+    const resp = await fetch(`/api/recheck/${_rlinkRecordId}/link`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({invoice_id: invoiceId}),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      recheckLinkModal.hide();
+      // 未収行を即時非表示
+      const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
+      if (overdueRow) overdueRow.style.display = 'none';
+      // 再確認行を照合済み表示に更新
+      const recheckRow = document.getElementById(`recheck-row-${_rlinkRecordId}`);
+      if (recheckRow) {
+        recheckRow.classList.add('table-success');
+        const opCell = recheckRow.querySelector('td:last-child');
+        if (opCell) opCell.innerHTML = `<span class="text-muted small">${new Date().toLocaleDateString('ja-JP')}</span>`;
+        const statusCell = recheckRow.querySelectorAll('td')[6];
+        if (statusCell) statusCell.innerHTML =
+          `<span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>照合済</span>
+           <div class="text-muted" style="font-size:0.7rem">${escHtml(data.invoice_num)}</div>`;
+      }
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>照合確定（未収から消す）';
+  }
+});
+
+// メモ保存（変更時）
+document.querySelectorAll('.recheck-memo-input').forEach(input => {
+  input.addEventListener('change', async function() {
+    const recordId = this.dataset.id;
+    await fetch(`/api/recheck/${recordId}/edit`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({memo: this.value}),
+    });
+  });
+});
+
+// 削除ボタン
+document.querySelectorAll('.recheck-delete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    if (!confirm('この入金履歴を未収再確認リストから削除しますか？')) return;
+    const recordId = this.dataset.id;
+    try {
+      const resp = await fetch(`/api/recheck/${recordId}/delete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok) {
+        const row = document.getElementById(`recheck-row-${recordId}`);
+        if (row) row.remove();
+      }
+    } catch(e) {
+      alert('エラー: ' + e.message);
+    }
+  });
+});
+
 // ===== MF会計 個人名チェック =====
 (function() {
   // モーダルが開かれたとき、日付に先月〜今月をデフォルトセット
