@@ -763,7 +763,20 @@ function guessShop(url) {
   } catch(e) { return ''; }
 }
 
+// ── APIキー ──
+function getApiKey() { return localStorage.getItem('sf_apikey') || ''; }
+function apiHeaders() {
+  const k = getApiKey();
+  if (!k) {
+    alert('APIキーが未設定です。\nDella ScoreのAPIキー設定から登録してください。');
+    return null;
+  }
+  return { 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+}
+
 async function callAI(text, url, shopGuess) {
+  const headers = apiHeaders();
+  if (!headers) throw new Error('no api key');
   const prompt = `あなたは通販サイトの商品情報抽出の専門家です。以下のテキストから商品情報を正確に抽出してJSONのみで返してください。
 
 抽出フィールド（不明は空文字か0）:
@@ -787,15 +800,80 @@ ${text.slice(0, 8000)}
 JSONのみ。マークダウン不要。`;
 
   const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 700,
+    method: 'POST', headers,
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
       messages: [{ role: 'user', content: prompt }] })
   });
   const d = await r.json();
+  if (d.error) throw new Error(d.error.message || 'api error');
   const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
   const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
   if (!m) throw new Error('parse failed');
   return JSON.parse(m[0]);
+}
+
+// ── 画像読み取り ──
+let _imgBase64 = '', _imgType = 'image/jpeg';
+function onImgFileChange(input) {
+  const file = input.files[0]; if (!file) return;
+  _imgType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    _imgBase64 = e.target.result.split(',')[1];
+    document.getElementById('img-preview').src = e.target.result;
+    document.getElementById('img-preview-wrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function imgDragOver(e) { e.preventDefault(); document.getElementById('img-drop-area').classList.add('drag-over'); }
+function imgDragLeave(e) { document.getElementById('img-drop-area').classList.remove('drag-over'); }
+function imgDrop(e) {
+  e.preventDefault(); imgDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  _imgType = file.type;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _imgBase64 = ev.target.result.split(',')[1];
+    document.getElementById('img-preview').src = ev.target.result;
+    document.getElementById('img-preview-wrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+async function analyzeImage() {
+  if (!_imgBase64) { alert('画像を選択してください'); return; }
+  const headers = apiHeaders(); if (!headers) return;
+  const btn = document.getElementById('img-parse-btn');
+  ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
+  showLoading(true); btn.disabled = true; btn.textContent = '解析中...';
+  try {
+    const prompt = `この画像から商品情報または仕入れ請求書の内容を抽出してJSONのみで返してください。
+抽出フィールド（不明は空文字か0）:
+{"name":"商品名・品名","shop":"販売店・仕入れ先","brand":"ブランド・メーカー","price":税込価格の数値,"model":"型番・品番","color":"色","spec":"主要スペック","memo":"その他特記事項"}
+JSONのみ。マークダウン不要。`;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers,
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: _imgType, data: _imgBase64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'api error');
+    const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
+    const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('parse failed');
+    const parsed = JSON.parse(match[0]);
+    if (parsed.name || parsed.shop || parsed.price > 0) { applyParsed(parsed, '', '', '画像'); }
+    else { throw new Error('no data'); }
+  } catch(e) {
+    document.getElementById('erb').textContent = '解析できませんでした。別の画像をお試しください。';
+    document.getElementById('erb').style.display = '';
+  } finally {
+    showLoading(false); btn.disabled = false; btn.textContent = '解析する';
+  }
 }
 
 let _scrapedPrice = 0;
