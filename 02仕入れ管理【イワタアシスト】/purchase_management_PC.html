@@ -624,6 +624,33 @@
 
 </main>
 
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="if(event.target===this)closeEdit()">
+  <div class="modal">
+    <div class="modal-title">発注内容を編集</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-grid">
+      <div class="fg full"><label>商品名 *</label><input type="text" id="edit-name" placeholder="商品名（型番含む）"></div>
+      <div class="fg"><label>仕入れ先</label><input type="text" id="edit-shop" placeholder="Amazon / e-trend など"></div>
+      <div class="fg"><label>ブランド / メーカー</label><input type="text" id="edit-brand" placeholder="Dell / Panasonic など"></div>
+      <div class="fg"><label>数量</label><input type="number" id="edit-qty" min="1" value="1"></div>
+      <div class="fg"><label>単価（円）</label><input type="number" id="edit-price" placeholder="0"></div>
+      <div class="fg"><label>発注日</label><input type="date" id="edit-date"></div>
+      <div class="fg"><label>納品先</label><input type="text" id="edit-client" list="edit-cldl" placeholder="クライアント名"><datalist id="edit-cldl"></datalist></div>
+      <div class="fg"><label>支払いカード</label><select id="edit-card"></select></div>
+      <div class="fg"><label>ステータス</label>
+        <select id="edit-status"><option>未発注</option><option>発注済</option><option>納品済</option><option>キャンセル</option></select>
+      </div>
+      <div class="fg"><label>商品URL</label><input type="url" id="edit-url" placeholder="https://..."></div>
+      <div class="fg full"><label>メモ・仕様</label><textarea id="edit-memo" placeholder="型番・色・スペックなど"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeEdit()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="tst"></div>
 
 <script>
