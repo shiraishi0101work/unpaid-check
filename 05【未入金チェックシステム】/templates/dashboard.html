@@ -1567,6 +1567,10 @@ function _openRecheckModal(btn) {
   document.getElementById('rlink-diff-hint').textContent = '請求書を選択すると自動計算されます';
   diffInput.value = savedDiff || '';
 
+  // 照合解除ボタン: 再編集時のみ表示
+  const unlinkBtn = document.getElementById('rlink-unlink-btn');
+  if (unlinkBtn) unlinkBtn.style.display = linkedInvoiceId ? '' : 'none';
+
   // 請求書を選択済みにしてから差額を自動計算
   if (linkedInvoiceId) {
     select.value = linkedInvoiceId;
