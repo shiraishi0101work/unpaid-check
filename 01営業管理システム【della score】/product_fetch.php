@@ -181,6 +181,52 @@ if ($price > 0 && preg_match('/¥\s*[\d,]+/', $html, $pm0, PREG_OFFSET_CAPTURE))
     }
 }
 
+// ===== ASKUL =====
+if (strpos($host, 'askul') !== false) {
+    $shop = 'ASKUL';
+    $name = $ogTitle;
+    if (preg_match('/"price"\s*:\s*"?([\d]+)"?/', $html, $m)) $price = (int)$m[1];
+    if (!$price && preg_match('/税抜[^\d]{0,10}([\d,]+)/u', strip_tags($html), $m)) {
+        $price = (int)str_replace(',', '', $m[1]);
+        $priceType = 'exclusive';
+    }
+}
+
+// ===== ミスミ =====
+if (strpos($host, 'misumi') !== false) {
+    $shop = 'ミスミ';
+    $name = $ogTitle;
+    if (preg_match('/"price"\s*:\s*"?([\d.]+)"?/', $html, $m)) {
+        $price = (int)$m[1];
+        $priceType = 'exclusive';
+    }
+}
+
+// ===== JSON-LD 汎用補完 =====
+if ((!$name || !$price) && preg_match_all('/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>([\s\S]*?)<\/script>/i', $html, $ldMatches)) {
+    foreach ($ldMatches[1] as $ldJson) {
+        $ld = @json_decode($ldJson, true);
+        if (!$ld) continue;
+        // @graph対応
+        $items = isset($ld['@graph']) ? $ld['@graph'] : [$ld];
+        foreach ($items as $item) {
+            if (!isset($item['@type'])) continue;
+            $types = (array)$item['@type'];
+            if (array_intersect($types, ['Product', 'IndividualProduct'])) {
+                if (!$name && !empty($item['name'])) $name = $item['name'];
+                if (!$brand && !empty($item['brand']['name'])) $brand = $item['brand']['name'];
+                if (!$price && isset($item['offers'])) {
+                    $offers = isset($item['offers']['@type']) ? [$item['offers']] : $item['offers'];
+                    foreach ((array)$offers as $offer) {
+                        if (!empty($offer['price'])) { $price = (int)$offer['price']; break; }
+                    }
+                }
+            }
+        }
+        if ($name && $price) break;
+    }
+}
+
 // ===== 汎用フォールバック =====
 if (!$name) $name = $ogTitle;
 if (!$name && preg_match('/<title[^>]*>([^<]+)<\/title>/i', $html, $m)) {
