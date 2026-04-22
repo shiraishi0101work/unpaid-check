@@ -1773,6 +1773,35 @@ def api_furikomi_confirm_delete(record_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/debug/accounting-test", methods=["GET"])
+@login_required
+def api_debug_accounting_test():
+    """MF会計API疎通テスト（診断用）"""
+    import requests as _req
+    cid = get_company_id()
+    try:
+        token = auth.get_access_token("accounting", cid)
+    except Exception as e:
+        return jsonify({"error": f"トークン取得失敗: {str(e)}"})
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+    }
+    params = {"start_date": "2026-02-01", "end_date": "2026-04-22", "per_page": 1, "page": 1}
+    try:
+        resp = _req.get(
+            "https://api-accounting.moneyforward.com/api/v3/journals",
+            headers=headers, params=params, timeout=30
+        )
+        return jsonify({
+            "status_code": resp.status_code,
+            "request_url":  resp.url,
+            "response_body": resp.text[:1000],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 @app.route("/api/accounting-kojinmei-check", methods=["POST"])
 @login_required
 def api_accounting_kojinmei_check():
