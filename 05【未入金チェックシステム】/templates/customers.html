@@ -261,33 +261,45 @@ function renderTable(list) {
     return;
   }
 
-  tbody.innerHTML = list.map(c => {
-    const furikomiHtml = c.furikomi_list.length > 0
-      ? c.furikomi_list.map(f =>
-          `<span class="badge bg-info text-dark me-1 mb-1" style="font-size:0.78rem">
-            ${escHtml(f)}
-            <button type="button" class="btn-close btn-close-sm ms-1 btn-remove-furikomi"
-                    style="font-size:0.5rem;vertical-align:middle"
-                    data-company="${escHtml(c.name)}"
-                    data-furikomi="${escHtml(f)}"
-                    title="削除"></button>
-          </span>`).join('')
-      : '<span class="text-muted small">—</span>';
+  // 振込名義の最大数を求めてヘッダー列を動的生成
+  const maxFurikomi = Math.max(1, ...list.map(c => c.furikomi_list.length));
+  const theadRow = document.getElementById('customers-thead-row');
+  // 既存ヘッダーを作り直す
+  theadRow.innerHTML =
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:180px">顧客名</th>` +
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:80px">担当者</th>` +
+    Array.from({length: maxFurikomi}, (_, i) =>
+      `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:160px">振込名義${i+1}</th>`
+    ).join('') +
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;width:90px" class="text-center">操作</th>`;
 
+  tbody.innerHTML = list.map(c => {
     const invoiceBadge = c.has_invoices
       ? '<span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size:0.6rem">請求書あり</span>'
       : '';
 
+    // 振込名義列（最大数分）
+    const furikomiCells = Array.from({length: maxFurikomi}, (_, i) => {
+      const f = c.furikomi_list[i];
+      if (!f) return `<td></td>`;
+      return `<td>
+        <span class="badge bg-info text-dark" style="font-size:0.8rem;font-weight:500">
+          ${escHtml(f)}
+          <button type="button" class="btn-close btn-close-sm ms-1 btn-remove-furikomi"
+                  style="font-size:0.45rem;vertical-align:middle"
+                  data-company="${escHtml(c.name)}"
+                  data-furikomi="${escHtml(f)}"
+                  title="削除"></button>
+        </span>
+      </td>`;
+    }).join('');
+
     return `<tr data-company="${escHtml(c.name)}"
                 data-furikomi="${escHtml(c.furikomi_list.join(','))}"
                 data-has-furikomi="${c.furikomi_list.length > 0 ? '1' : '0'}">
-      <td class="fw-semibold">
-        ${escHtml(c.name)}${invoiceBadge}
-      </td>
-      <td>
-        <span class="tantou-display small ${c.tantou ? '' : 'text-muted'}">${escHtml(c.tantou || '—')}</span>
-      </td>
-      <td>${furikomiHtml}</td>
+      <td class="fw-semibold">${escHtml(c.name)}${invoiceBadge}</td>
+      <td><span class="small ${c.tantou ? '' : 'text-muted'}">${escHtml(c.tantou || '—')}</span></td>
+      ${furikomiCells}
       <td class="text-center">
         <div class="d-flex gap-1 justify-content-center">
           <button class="btn btn-outline-info btn-sm py-0 px-2 btn-add-furikomi"
