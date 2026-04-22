@@ -876,6 +876,7 @@ function rt() {
     <td>${chip(o.ccId)}</td>
     <td><span class="badge ${scls(o.status)}">${o.status}</span>${o.synced ? ' <span style="font-size:10px;color:#16a34a;font-weight:600">連携済</span>' : ''}</td>
     <td style="color:var(--text-sub);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.memo||''}</td>
+    <td><button class="btn btn-sm${o.monthly?' btn-primary':''}" onclick="toggleMonthly(${o.id})" title="毎月複製対象に設定/解除">${o.monthly?'毎月':'—'}</button></td>
     <td><button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})">削除</button></td>
   </tr>`;
   }).join('');
