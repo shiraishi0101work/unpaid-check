@@ -406,12 +406,13 @@
             <th>入金予定日</th>
             <th>社内メモ</th>
             <th class="text-center" style="width:70px">編集</th>
+            <th class="text-center" style="width:90px">再確認</th>
           </tr>
         </thead>
         <tbody>
           {% for b in overdue %}
           {% set has_note = b.メモ_手動 or b.入金予定日_手動 %}
-          <tr {% if has_note %}class="row-noted"{% endif %}>
+          <tr {% if has_note %}class="row-noted"{% endif %} id="overdue-row-{{ b.請求書ID }}">
             <td class="fw-semibold">{{ b.取引先名 }}</td>
             <td class="text-muted small">{{ b.請求番号 }}</td>
             <td class="text-muted small">{{ b.件名 }}</td>
@@ -442,6 +443,16 @@
                 <i class="bi bi-pencil-fill"></i> 編集
               </button>
             </td>
+            <td class="text-center">
+              <button class="btn btn-sm py-0 px-2 recheck-btn
+                {% if auth_accounting %}btn-outline-info{% else %}btn-outline-secondary{% endif %}"
+                {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-amt="{{ b.請求金額 }}">
+                <i class="bi bi-search"></i> 再確認
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -450,7 +461,7 @@
             <td colspan="4">合計</td>
             <td></td>
             <td class="text-end">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</td>
-            <td colspan="2"></td>
+            <td colspan="3"></td>
           </tr>
         </tfoot>
       </table>
