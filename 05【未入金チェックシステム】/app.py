@@ -1712,8 +1712,11 @@ def api_overdue_recheck_all():
                     existing_jids_rchk.add(journal_id)
                     new_recheck += 1
 
-    save_recheck_records(recheck_records)
-    save_furikomi_unconfirmed(furikomi_unconf)
+    try:
+        save_recheck_records(recheck_records)
+        save_furikomi_unconfirmed(furikomi_unconf)
+    except Exception as e:
+        return jsonify({"error": f"保存エラー: {e}"}), 500
 
     return jsonify({
         "ok":              True,
