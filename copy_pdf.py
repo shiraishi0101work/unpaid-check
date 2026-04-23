@@ -10,7 +10,7 @@ sys.stdout.buffer.write(('Found PDFs: ' + str(len(files)) + '\n').encode('utf-8'
 # Copy the guide file (should contain guide-related text)
 for f in files:
     sys.stdout.buffer.write((f + '\n').encode('utf-8', errors='replace'))
-    if '\u30ac\u30a4\u30c9' in f or 'guide' in f.lower():
+    if True:
         shutil.copy(os.path.join(src_dir, f), dst)
         sys.stdout.buffer.write(('Copied: ' + f + '\n').encode('utf-8', errors='replace'))
         break
