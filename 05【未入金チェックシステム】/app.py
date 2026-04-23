@@ -1604,14 +1604,12 @@ def api_overdue_recheck_all():
     if not result:
         return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
 
-    # 抽出期間: 今日から2ヶ月前
+    # 抽出期間: 当期開始日から今日まで（会計期間をまたがないよう）
     today = date.today()
-    m2 = today.month - 2
-    y2 = today.year
-    if m2 <= 0:
-        m2 += 12
-        y2 -= 1
-    from_date = f"{y2}-{m2:02d}-01"
+    _s = load_settings()
+    _fstart = _s.get("fiscal_year_start_month", 4)
+    _fy_year = today.year if today.month >= _fstart else today.year - 1
+    from_date = f"{_fy_year}-{_fstart:02d}-01"
     to_date   = today.strftime("%Y-%m-%d")
 
     # 未収再確認用: 全仕訳（is_realized フィルタなし）
