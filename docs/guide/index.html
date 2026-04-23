@@ -974,18 +974,16 @@ function renderContent(html) {
   return out;
 }
 
-function showHome() {
-  currentId = null;
-  renderSidebar(null);
-  const area = document.getElementById('content-area');
-  let cards = '';
-  sections.forEach((s, i) => {
+function makeCards(list, startNum) {
+  return list.map((s, i) => {
+    const n = startNum + i;
+    const numStr = n < 10 ? `0${n}` : `${n}`;
     const excerpt = s.content.replace(/■ |・|①|②|③/g, '').slice(0, 90);
-    cards += `
+    return `
       <article class="card" onclick="showSection(${s.id})">
         <div class="card__top"></div>
         <div class="card__body">
-          <div class="card__num">0${i + 1}</div>
+          <div class="card__num">${numStr}</div>
           <div class="card__title">${s.title}</div>
           <div class="card__excerpt">${excerpt}...</div>
         </div>
@@ -995,13 +993,35 @@ function showHome() {
         </div>
       </article>
     `;
-  });
+  }).join('');
+}
+
+function showHome() {
+  currentId = null;
+  renderSidebar(null);
+  const area = document.getElementById('content-area');
+  const basicSections = sections.filter(s => s.group === 'basic');
+  const optionSections = sections.filter(s => s.group === 'option');
+
   area.innerHTML = `
     <div class="home-heading">
       <div class="home-heading__label">CONTENTS</div>
       <div class="home-heading__title">機能ガイド<span>一覧</span></div>
     </div>
-    <div class="home-grid">${cards}</div>
+
+    <div class="group-header">
+      <span class="group-header__badge group-header__badge--basic">基本機能</span>
+      <span class="group-header__title">標準搭載の機能</span>
+      <div class="group-header__line"></div>
+    </div>
+    <div class="home-grid">${makeCards(basicSections, 1)}</div>
+
+    <div class="group-header">
+      <span class="group-header__badge group-header__badge--option">オプション機能</span>
+      <span class="group-header__title">プランにより利用可能</span>
+      <div class="group-header__line"></div>
+    </div>
+    <div class="home-grid">${makeCards(optionSections, basicSections.length + 1)}</div>
   `;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
