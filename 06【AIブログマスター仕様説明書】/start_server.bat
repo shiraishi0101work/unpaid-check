@@ -8,8 +8,9 @@ if errorlevel 1 (
   timeout /t 2 /nobreak >nul
 )
 
-start http://localhost:8086/admin.php
+start http://localhost:8086/viewer.php
 echo.
-echo サーバー起動中: http://localhost:8086/admin.php
+echo ガイド閲覧: http://localhost:8086/viewer.php
+echo 管理者ページ: http://localhost:8086/admin.php
 echo このウィンドウを閉じるとサーバーが停止します。
 pause
