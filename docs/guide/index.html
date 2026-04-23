@@ -898,6 +898,10 @@ let currentId = null;
 
 function renderSidebar(activeId) {
   const list = document.getElementById('sidebar-list');
+  const basicSections = sections.filter(s => s.group === 'basic');
+  const optionSections = sections.filter(s => s.group === 'option');
+  let num = 0;
+
   let html = `
     <li class="sidebar__item${!activeId ? ' active' : ''}" onclick="showHome()">
       <span class="sidebar__num" style="background:${!activeId ? 'var(--orange)' : ''}; color:${!activeId ? '#fff' : ''};">
@@ -906,18 +910,37 @@ function renderSidebar(activeId) {
       <span class="sidebar__item-label">トップ</span>
       <svg class="arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </li>
-    <li style="height:1px;background:var(--border);margin:0.5rem 0;"></li>
+    <li class="sidebar__group-divider"></li>
+    <li class="sidebar__group-label" style="color:var(--navy);">基本機能</li>
   `;
-  sections.forEach((s, i) => {
+  basicSections.forEach(s => {
+    num++;
     const active = s.id === activeId;
     html += `
       <li class="sidebar__item${active ? ' active' : ''}" onclick="showSection(${s.id})">
-        <span class="sidebar__num" style="${active ? 'background:var(--orange);color:#fff;' : ''}">${i + 1}</span>
+        <span class="sidebar__num" style="${active ? 'background:var(--navy);color:#fff;' : ''}">${num}</span>
         <span class="sidebar__item-label">${s.title}</span>
         <svg class="arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
       </li>
     `;
   });
+
+  html += `
+    <li class="sidebar__group-divider"></li>
+    <li class="sidebar__group-label" style="color:var(--orange);">オプション機能</li>
+  `;
+  optionSections.forEach(s => {
+    num++;
+    const active = s.id === activeId;
+    html += `
+      <li class="sidebar__item${active ? ' active' : ''}" onclick="showSection(${s.id})">
+        <span class="sidebar__num" style="${active ? 'background:var(--orange);color:#fff;' : ''}">${num}</span>
+        <span class="sidebar__item-label">${s.title}</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </li>
+    `;
+  });
+
   list.innerHTML = html;
 }
 
