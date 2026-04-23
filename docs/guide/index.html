@@ -1031,6 +1031,8 @@ function showSection(id) {
   renderSidebar(id);
   const idx = sections.findIndex(s => s.id === id);
   const s = sections[idx];
+  const num = idx + 1;
+  const isOption = s.group === 'option';
   const prev = sections[idx - 1];
   const next = sections[idx + 1];
 
