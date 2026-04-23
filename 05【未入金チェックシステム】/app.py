@@ -1651,13 +1651,19 @@ def api_overdue_recheck_all():
         s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
         return s
 
-    # 振込名義なし用: 未仕分け仕訳のみ（is_realized=false）
+    # 振込名義なし用: 未仕分け仕訳のみ（is_realized=false）前期 + 当期
     try:
-        unclassified_deals = get_unclassified_deals(from_date, to_date, company_id=cid)
-        print(f"[再確認] 未仕分け仕訳: {len(unclassified_deals)}件", flush=True)
+        unc_prev = get_unclassified_deals(prev_from, prev_to, company_id=cid)
+    except Exception as e:
+        print(f"[再確認] 前期未仕分け取得失敗（スキップ）: {e}", flush=True)
+        unc_prev = []
+    try:
+        unc_curr = get_unclassified_deals(curr_from, curr_to, company_id=cid)
     except Exception as e:
         print(f"[再確認] 未仕分け仕訳取得失敗: {e}", flush=True)
-        unclassified_deals = []
+        unc_curr = []
+    unclassified_deals = unc_prev + unc_curr
+    print(f"[再確認] 未仕分け仕訳合計: {len(unclassified_deals)}件", flush=True)
 
     # 既存レコード
     try:
