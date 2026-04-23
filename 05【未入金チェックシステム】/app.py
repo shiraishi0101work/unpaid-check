@@ -1766,8 +1766,8 @@ def api_overdue_recheck_all():
         "new_furikomi":    new_furikomi,
         "total_recheck":   len([r for r in recheck_records if not r.get("deleted")]),
         "total_furikomi":  len([r for r in furikomi_unconf  if not r.get("deleted")]),
-        "from_date":       from_date,
-        "to_date":         to_date,
+        "from_date":       prev_from,
+        "to_date":         curr_to,
     })
 
 
