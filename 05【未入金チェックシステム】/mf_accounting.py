@@ -48,7 +48,7 @@ def _get_all_journal_pages(from_date: str, to_date: str, company_id: str = "",
         params = {
             "start_date": from_date,
             "end_date":   to_date,
-            "per_page":   10000,
+            "per_page":   100,
             "page":       page,
         }
         if is_realized is not None:
