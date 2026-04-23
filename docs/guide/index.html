@@ -1063,11 +1063,12 @@ function showSection(id) {
     </button>
     <div class="section-header">
       <div class="section-header__eyebrow">
-        <span class="section-header__num">${idx + 1}</span>
-        CHAPTER ${idx + 1}
+        <span class="section-header__num" style="${isOption ? 'background:linear-gradient(135deg,var(--orange) 0%,var(--orange-lt) 100%)' : ''}">${num}</span>
+        ${isOption ? 'OPTION' : 'BASIC'} &nbsp;CHAPTER ${num}
+        ${isOption ? `<span style="margin-left:0.8rem;background:rgba(250,103,43,0.12);border:1px solid rgba(250,103,43,0.3);border-radius:100px;padding:0.2rem 1rem;font-size:1.05rem;color:var(--orange);">オプション機能</span>` : `<span style="margin-left:0.8rem;background:rgba(0,64,139,0.08);border:1px solid rgba(0,64,139,0.2);border-radius:100px;padding:0.2rem 1rem;font-size:1.05rem;color:var(--navy);">基本機能</span>`}
       </div>
       <h2 class="section-header__title">${s.title}</h2>
-      <div class="section-header__divider"></div>
+      <div class="section-header__divider" style="${isOption ? 'background:linear-gradient(90deg,var(--orange) 0%,var(--orange-lt) 100%)' : ''}"></div>
     </div>
     <div class="section-strip" style="border-radius:0;margin-top:-2.4rem;margin-bottom:0.4rem;">
       <div class="section-strip__dot"></div>
