@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
-import shutil, os
+import shutil, os, sys
 
-src_dir = 'C:\\Users\\shira_k13727w\\OneDrive\\DF\\アライアンス関連\\AIブログ'
-dst = 'C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\temp_guide.pdf'
+src_dir = 'C:\\Users\\shira_k13727w\\OneDrive\\DF\\\u30a2\u30e9\u30a4\u30a2\u30f3\u30b9\u95a2\u9023\\AI\u30d6\u30ed\u30b0'
+dst = 'C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\\u30af\u30ed\u30fc\u30c9\u4fdd\u7ba1\u7528\\temp_guide.pdf'
 
 files = [f for f in os.listdir(src_dir) if f.endswith('.pdf')]
-print("Found PDFs:", files)
+sys.stdout.buffer.write(('Found PDFs: ' + str(len(files)) + '\n').encode('utf-8'))
 
-# Copy the guide file (should contain 'ガイド')
+# Copy the guide file (should contain guide-related text)
 for f in files:
-    if 'ガイド' in f or 'guide' in f.lower():
+    sys.stdout.buffer.write((f + '\n').encode('utf-8', errors='replace'))
+    if '\u30ac\u30a4\u30c9' in f or 'guide' in f.lower():
         shutil.copy(os.path.join(src_dir, f), dst)
-        print("Copied:", f)
+        sys.stdout.buffer.write(('Copied: ' + f + '\n').encode('utf-8', errors='replace'))
         break
-else:
-    # If not found, copy first PDF
-    shutil.copy(os.path.join(src_dir, files[0]), dst)
-    print("Copied first:", files[0])
