@@ -2239,34 +2239,43 @@ def api_overdue_recheck(invoice_id):
     if not partner_name:
         return jsonify({"error": "請求書が見つかりません"}), 404
 
-    # 抽出期間: 当期開始日から今日まで（会計期間をまたがないよう）
+    # 抽出期間: 前期 + 当期（会計期間をまたがないよう2回に分けて取得）
     today = date.today()
     _s = load_settings()
     _fstart = _s.get("fiscal_year_start_month", 4)
     _fy_year = today.year if today.month >= _fstart else today.year - 1
-    from_date = f"{_fy_year}-{_fstart:02d}-01"
-    to_date   = today.strftime("%Y-%m-%d")
+    curr_from = f"{_fy_year}-{_fstart:02d}-01"
+    curr_to   = today.strftime("%Y-%m-%d")
+    from datetime import timedelta as _td
+    prev_to_dt = date(_fy_year, _fstart, 1) - _td(days=1)
+    prev_from = f"{_fy_year - 1}-{_fstart:02d}-01"
+    prev_to   = prev_to_dt.strftime("%Y-%m-%d")
 
     # データソース選択: CSVが優先、なければAPI
     cid = get_company_id()
     csv_deals = load_accounting_deals()
     if csv_deals:
-        # CSVデータを日付フィルタして使用
+        # CSVデータを日付フィルタして使用（前期 + 当期）
         deals = [
             d for d in csv_deals
-            if from_date <= d.get("着金日", "") <= to_date
+            if prev_from <= d.get("着金日", "") <= curr_to
         ]
         data_source = "CSV"
         print(f"[再確認] CSVデータ使用: {len(deals)}件（全{len(csv_deals)}件中）", flush=True)
     else:
-        # APIから取得
+        # APIから取得（前期 + 当期）
         try:
             from mf_accounting import get_deals
             if not auth.is_authenticated("accounting", cid):
                 return jsonify({
                     "error": "MFクラウド会計のデータがありません。サイドバーの「会計CSV取込」からMFクラウド会計の仕訳帳CSVをアップロードしてください。"
                 }), 400
-            deals = get_deals(from_date, to_date, company_id=cid)
+            try:
+                deals_prev = get_deals(prev_from, prev_to, company_id=cid)
+            except Exception:
+                deals_prev = []
+            deals_curr = get_deals(curr_from, curr_to, company_id=cid)
+            deals = deals_prev + deals_curr
             data_source = "API"
         except Exception as e:
             return jsonify({
