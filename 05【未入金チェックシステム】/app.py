@@ -1604,20 +1604,32 @@ def api_overdue_recheck_all():
     if not result:
         return jsonify({"error": "先に請求書チェックを実行してください。"}), 400
 
-    # 抽出期間: 当期開始日から今日まで（会計期間をまたがないよう）
+    # 抽出期間: 前期 + 当期（会計期間をまたがないよう2回に分けて取得）
     today = date.today()
     _s = load_settings()
     _fstart = _s.get("fiscal_year_start_month", 4)
     _fy_year = today.year if today.month >= _fstart else today.year - 1
-    from_date = f"{_fy_year}-{_fstart:02d}-01"
-    to_date   = today.strftime("%Y-%m-%d")
+    curr_from = f"{_fy_year}-{_fstart:02d}-01"
+    curr_to   = today.strftime("%Y-%m-%d")
+    from datetime import timedelta as _td
+    prev_to_dt = date(_fy_year, _fstart, 1) - _td(days=1)
+    prev_from = f"{_fy_year - 1}-{_fstart:02d}-01"
+    prev_to   = prev_to_dt.strftime("%Y-%m-%d")
 
     # 未収再確認用: 全仕訳（is_realized フィルタなし）
     try:
-        deals = get_deals(from_date, to_date, company_id=cid)
-        print(f"[再確認] 仕訳取得: {len(deals)}件", flush=True)
+        deals_prev = get_deals(prev_from, prev_to, company_id=cid)
+        print(f"[再確認] 前期仕訳取得: {len(deals_prev)}件", flush=True)
+    except Exception as e:
+        print(f"[再確認] 前期仕訳取得失敗（スキップ）: {e}", flush=True)
+        deals_prev = []
+    try:
+        deals_curr = get_deals(curr_from, curr_to, company_id=cid)
+        print(f"[再確認] 当期仕訳取得: {len(deals_curr)}件", flush=True)
     except Exception as e:
         return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
+    deals = deals_prev + deals_curr
+    print(f"[再確認] 仕訳合計: {len(deals)}件", flush=True)
 
     try:
         overdue_list   = result.get("overdue", [])
