@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIブログマスター 利用ガイド | DellaForce</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #00408b;
+      --navy-dk: #002d63;
+      --navy-lt: #1a5aa8;
+      --orange:  #fa672b;
+      --orange-lt: #ff8c5e;
+      --blue-bg: #dcf4fd;
+      --blue-pale: #eef9fe;
+      --text:    #2c2c2c;
+      --text-sub: #666;
+      --white:   #ffffff;
+      --border:  rgba(0,64,139,0.12);
+      --shadow-sm: 0 2px 12px rgba(0,40,100,0.08);
+      --shadow-md: 0 8px 32px rgba(0,40,100,0.14);
+      --shadow-lg: 0 20px 60px rgba(0,40,100,0.18);
+      --radius:  16px;
+      --radius-sm: 10px;
+    }
+
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.5rem;
+      color: var(--text);
+      background: var(--blue-pale);
+      min-height: 100vh;
+      line-height: 1.8;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, var(--navy-dk) 0%, var(--navy) 60%, var(--navy-lt) 100%);
+      box-shadow: 0 4px 24px rgba(0,20,60,0.3);
+    }
+    .header__inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 3.2rem;
+      height: 7rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header__logo {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      text-decoration: none;
+    }
+    .header__logo-icon {
+      width: 3.8rem;
+      height: 3.8rem;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-lt) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(250,103,43,0.4);
+    }
+    .header__logo-icon svg { width: 2.2rem; height: 2.2rem; fill: #fff; }
+    .header__logo-text {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+    .header__logo-text span {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.06em;
+    }
+    .header__badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 100px;
+      padding: 0.5rem 1.6rem;
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(150deg, var(--navy-dk) 0%, var(--navy) 50%, #0056b3 100%);
+      padding: 7rem 3.2rem 6rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 80% 50%, rgba(250,103,43,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 30%, rgba(220,244,253,0.08) 0%, transparent 60%);
+    }
+    .hero__inner { position: relative; max-width: 800px; margin: 0 auto; }
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(250,103,43,0.18);
+      border: 1px solid rgba(250,103,43,0.35);
+      border-radius: 100px;
+      padding: 0.5rem 1.8rem;
+      font-size: 1.2rem;
+      color: var(--orange-lt);
+      letter-spacing: 0.1em;
+      margin-bottom: 2.4rem;
+    }
+    .hero__eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--orange-lt);
+    }
+    .hero__title {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 4.2rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .hero__title span { color: var(--orange-lt); }
+    .hero__sub {
+      font-size: 1.6rem;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.9;
+      max-width: 560px;
+      margin: 0 auto 3.6rem;
+    }
+    .hero__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-lt) 100%);
+      color: #fff;
+      text-decoration: none;
+      padding: 1.4rem 3.2rem;
+      border-radius: 100px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      box-shadow: 0 8px 28px rgba(250,103,43,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .hero__cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(250,103,43,0.55);
+    }
+    .hero__cta svg { width: 1.8rem; height: 1.8rem; fill: currentColor; }
+
+    /* ─── LAYOUT ─── */
+    .layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 5rem 3.2rem 8rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      position: sticky;
+      top: 9rem;
+    }
+    .sidebar__card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .sidebar__head {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-lt) 100%);
+      padding: 1.8rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .sidebar__head svg { width: 1.8rem; height: 1.8rem; fill: rgba(255,255,255,0.7); }
+    .sidebar__head-label {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.06em;
+    }
+    .sidebar__list { padding: 1rem 0; }
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 2rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+      font-size: 1.35rem;
+      color: var(--text-sub);
+    }
+    .sidebar__item:hover { background: var(--blue-pale); }
+    .sidebar__item.active {
+      background: linear-gradient(90deg, rgba(0,64,139,0.06) 0%, transparent 100%);
+      border-left-color: var(--orange);
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .sidebar__num {
+      width: 2.4rem; height: 2.4rem;
+      border-radius: 50%;
+      background: var(--blue-bg);
+      color: var(--navy);
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar__item.active .sidebar__num {
+      background: var(--orange);
+      color: #fff;
+    }
+    .sidebar__item-label { flex: 1; }
+    .sidebar__item svg.arrow {
+      width: 1.4rem; height: 1.4rem;
+      fill: var(--text-sub);
+      opacity: 0.4;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .sidebar__item.active svg.arrow { opacity: 1; fill: var(--navy); transform: translateX(2px); }
+    .sidebar__home {
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .content { min-width: 0; }
+
+    /* HOME CARDS GRID */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 2.4rem;
+    }
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.22s cubic-bezier(.22,.68,0,1.2), box-shadow 0.22s;
+      overflow: hidden;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+    }
+    .card__top {
+      height: 7px;
+      background: linear-gradient(90deg, var(--navy) 0%, var(--navy-lt) 100%);
+    }
+    .card:nth-child(even) .card__top {
+      background: linear-gradient(90deg, var(--orange) 0%, var(--orange-lt) 100%);
+    }
+    .card__body { padding: 2.4rem 2.4rem 2rem; }
+    .card__num {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 3.6rem;
+      font-weight: 700;
+      color: var(--blue-bg);
+      line-height: 1;
+      margin-bottom: 1rem;
+      letter-spacing: -0.03em;
+    }
+    .card:nth-child(even) .card__num { color: rgba(250,103,43,0.15); }
+    .card__title {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+    .card__excerpt {
+      font-size: 1.3rem;
+      color: var(--text-sub);
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card__footer {
+      padding: 1.4rem 2.4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.25rem;
+      color: var(--navy);
+      font-weight: 500;
+    }
+    .card__footer svg { width: 1.4rem; height: 1.4rem; fill: var(--navy); }
+
+    /* SECTION DETAIL */
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+
+    .section-header {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 3.6rem 4rem;
+      margin-bottom: 2.4rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .section-header::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle at 80% 20%, rgba(0,64,139,0.06) 0%, transparent 70%);
+    }
+    .section-header__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.2rem;
+      color: var(--orange);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.4rem;
+    }
+    .section-header__num {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-lt) 100%);
+      color: #fff;
+      width: 2.8rem; height: 2.8rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .section-header__title {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .section-header__divider {
+      width: 5rem;
+      height: 3px;
+      background: linear-gradient(90deg, var(--orange) 0%, var(--orange-lt) 100%);
+      border-radius: 100px;
+      margin: 2rem 0;
+    }
+
+    .section-body {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 3.6rem 4rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-body__content {
+      font-size: 1.5rem;
+      line-height: 2;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    /* Content formatting */
+    .section-body__content .block-heading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 3rem 0 1.2rem;
+      padding: 1.2rem 1.8rem;
+      background: linear-gradient(90deg, rgba(0,64,139,0.06) 0%, transparent 100%);
+      border-left: 4px solid var(--navy);
+      border-radius: 0 8px 8px 0;
+    }
+    .section-body__content .block-heading:first-child { margin-top: 0; }
+    .section-body__content .block-heading::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+    .section-body__content .block-item {
+      display: flex;
+      gap: 1rem;
+      padding: 0.6rem 0 0.6rem 1.6rem;
+      font-size: 1.45rem;
+      color: var(--text);
+      line-height: 1.85;
+    }
+    .section-body__content .block-item::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+      margin-top: 0.85em;
+    }
+    .section-body__content .block-item-sub {
+      display: flex;
+      gap: 1rem;
+      padding: 0.3rem 0 0.3rem 3.2rem;
+      font-size: 1.38rem;
+      color: var(--text-sub);
+      line-height: 1.8;
+    }
+    .section-body__content .block-item-sub::before {
+      content: '–';
+      color: var(--navy);
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+    .section-body__content .block-text {
+      padding: 0.4rem 0;
+      font-size: 1.45rem;
+      line-height: 1.9;
+    }
+    .section-body__content .block-note {
+      background: var(--blue-pale);
+      border: 1px solid rgba(0,64,139,0.15);
+      border-radius: var(--radius-sm);
+      padding: 1.4rem 1.8rem;
+      font-size: 1.3rem;
+      color: var(--text-sub);
+      margin: 1.6rem 0;
+    }
+
+    /* NAV between sections */
+    .section-nav {
+      display: flex;
+      gap: 1.6rem;
+      margin-top: 2.4rem;
+    }
+    .section-nav__btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.6rem 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .section-nav__btn:hover {
+      border-color: var(--navy);
+      box-shadow: var(--shadow-sm);
+    }
+    .section-nav__btn--next { justify-content: flex-end; text-align: right; }
+    .section-nav__btn svg { width: 1.6rem; height: 1.6rem; fill: var(--navy); flex-shrink: 0; }
+    .section-nav__label { font-size: 1.1rem; color: var(--text-sub); display: block; }
+    .section-nav__title { font-size: 1.35rem; font-weight: 700; color: var(--navy); display: block; margin-top: 0.2rem; }
+    .section-nav__btn--next .section-nav__text { order: -1; }
+
+    /* Back button */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 1.35rem;
+      cursor: pointer;
+      padding: 0.8rem 0;
+      margin-bottom: 2.4rem;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--navy); }
+    .back-btn svg { width: 1.6rem; height: 1.6rem; fill: currentColor; }
+
+    /* Section label strip */
+    .section-strip {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-lt) 100%);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 1.4rem 2.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .section-strip__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+    }
+    .section-strip__label {
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    /* Home heading */
+    .home-heading {
+      margin-bottom: 3.2rem;
+    }
+    .home-heading__label {
+      font-size: 1.2rem;
+      color: var(--orange);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.8rem;
+    }
+    .home-heading__title {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.3;
+    }
+    .home-heading__title span { color: var(--orange); }
+
+    /* Footer */
+    .footer {
+      background: var(--navy-dk);
+      padding: 3.2rem;
+      text-align: center;
+    }
+    .footer__text {
+      font-size: 1.25rem;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.04em;
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        padding: 3rem 2rem 6rem;
+      }
+      .sidebar { position: static; }
+      .hero__title { font-size: 3rem; }
+      .section-header { padding: 2.4rem 2.4rem; }
+      .section-header__title { font-size: 2.4rem; }
+      .section-body { padding: 2.4rem 2.4rem; }
+      .home-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header__inner">
+    <a href="#" class="header__logo" onclick="showHome(); return false;">
+      <div class="header__logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="header__logo-text">
+        AIブログマスター
+        <span>UTILIZATION GUIDE</span>
+      </div>
+    </a>
+    <div class="header__badge">利用ガイド</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero__inner">
+    <div class="hero__eyebrow">OFFICIAL USER GUIDE</div>
+    <h1 class="hero__title">
+      AIブログマスター<br><span>利用ガイド</span>
+    </h1>
+    <p class="hero__sub">
+      AIによるWordPress自動投稿システムの<br>各機能の使い方をわかりやすく解説します。
+    </p>
+    <button class="hero__cta" onclick="showHome()">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+      ガイドを見る
+    </button>
+  </div>
+</section>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <nav class="sidebar__card">
+      <div class="sidebar__head">
+        <svg viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+        <span class="sidebar__head-label">目次</span>
+      </div>
+      <ul class="sidebar__list" id="sidebar-list"></ul>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="content" id="content-area"></main>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer__text">&copy; DellaForce Co., Ltd. All rights reserved.</p>
+</footer>
+
+<script>
+const sections = [
+  {
+    id: 1, order_num: 1,
+    title: "画面概要",
+    content: `■ 画面上部
+・「AIで自動投稿」ボタン：AI自動投稿の設定画面へ移動
+・「自分で記事作成」ボタン：手動で記事を生成する画面へ移動
+・プラン・記事生成残数の確認：現在のプランと今月の投稿残数を表示
+
+■ 記事一覧エリア
+・「AI自動投稿記事」タブ：AIが自動生成した記事の一覧
+・「自分で作成した記事」タブ：手動で作成した記事の一覧
+・「投稿スケジュール」タブ：設定済みの投稿スケジュールを確認
+
+■ 各記事の操作ボタン
+・目マーク：投稿履歴を確認
+・…メニュー：記事の内容確認・修正
+
+■ アカウント設定（歯車アイコン）
+・名前・メール・パスワードの変更`
+  },
+  {
+    id: 2, order_num: 2,
+    title: "AIで自動投稿",
+    content: `「AIで自動投稿」機能は、投稿する「トピック」を設定して希望する「曜日」「時間」に自動的に記事が投稿される機能です。
+
+■ 記事作成方法の選択（3モード）
+
+① SEO重視の記事投稿（簡単）
+対策キーワードを入力 → キーワード候補が表示 → 選択 → 記事設定へ
+・管理用タイトル、アイキャッチ画像、画像生成方法を設定
+・「タイトルと見出しの生成スタート」で記事生成開始
+
+② 地域重視の記事投稿（簡単）
+対策キーワード＋都道府県＋詳細地域を入力 → キーワード候補を選択
+・地域SEOに特化した記事を生成
+
+③ 通常の記事投稿（詳細）
+以下の項目を設定：
+・トピック（書きたい内容）
+・セクション（見出し）の数
+・口調（です・ます調など）
+・見出しのテキストの長さ
+・キーワード（SEO対策）
+・参考サイトのURL（任意）
+・ペルソナ設定（任意）
+・コンテンツ業界・業種
+・アイキャッチ画像の設定
+・AI記事の表記（任意）
+・署名設定（任意）
+・見出しのスタイル（H2/H3/H4）
+・カテゴリー選択
+
+■ 投稿スケジュール設定
+曜日・時間・投稿頻度を設定（1日最大2投稿まで）
+→「自動投稿設定を完了する」で完了`
+  },
+  {
+    id: 3, order_num: 3,
+    title: "ペルソナ設定",
+    content: `「ブログを見せたい相手」のペルソナ（人格）を設定することで、ターゲットに合わせた記事が生成されます。
+
+■ 設定できる項目
+・タイトル（管理用）：ペルソナの名前
+・職業：例「経営者」「マーケター」（なければ「全対象」）
+・業種：ペルソナの業種
+・会社の規模：全対象〜大企業まで選択
+・年齢：全対象〜シニアまで選択
+・性別：全対象 / 男性 / 女性
+・関心事：ペルソナが関心を持っていること
+・その他：自由記述
+
+■ ペルソナの登録方法
+記事設定画面の「ペルソナ設定」プルダウンから「新しく設定する」を選択
+→ 入力後、「この設定を保存する」にチェックで次回以降も使用可能
+
+■ 利用上の注意
+ペルソナを設定しない場合は「未設定（おまかせ）」を選択`
+  },
+  {
+    id: 4, order_num: 4,
+    title: "自分で記事生成",
+    content: `「自分で記事生成」機能は、タイトル名やセクション名など細かく設定でき、即時生成が可能な機能です。記事の内容にこだわりたい方・お急ぎの方向けです。
+
+■ 操作手順
+
+① 記事の設定
+「自分で記事作成」ボタンをクリック
+→ 記事内容の入力（AIで自動投稿の「通常の記事投稿」と同じ入力項目）
+
+② タイトル・セクション設定
+AIが複数のタイトル候補を提案
+→ 希望のタイトルを選択（修正も可能）
+→ 選択したタイトルに合ったセクション（見出し）が自動生成
+→ セクションの修正も可能
+
+③ SEOブースター（任意）
+SEO対策ワードを含めたタイトル・セクションに再生成
+
+④ 再生成（任意）
+「タイトルとセクションを再生成」ボタンで別のアイデアを再提案
+
+⑤ 本文生成
+「本文の生成スタート」をクリック
+→ 生成された記事は「自分で生成した記事」タブに格納`
+  },
+  {
+    id: 5, order_num: 5,
+    title: "記事の確認・修正",
+    content: `生成された記事の確認・修正・公開設定の方法を説明します。
+
+■ 投稿履歴の確認（目マーク）
+記事一覧の目マークをクリック
+→ その記事がWordPressに投稿された日時・キーワード・メタディスクリプションを確認可能
+※ 同じトピックを使い続けると似た内容になるため、定期的に確認を推奨
+
+■ 記事の内容確認・修正（…メニュー）
+記事一覧の「…」をクリック
+→ 記事詳細画面へ移動
+
+確認・編集できる項目：
+・タイトル
+・セクション（見出し）一覧
+・本文の要約
+・本文（手打ちで修正可能）
+・アイキャッチ画像
+　- 自動生成：本文に合わせて画像を再生成
+　- 手動生成：フリーテキストで具体的に指定して生成
+
+■ 公開設定
+・プレビュー：記事をプレビュー画面で確認
+・URL共有：ログイン不要のURLで共有可能
+・予約投稿：公開日時を設定（即時公開も可能）
+
+■ その他設定
+・カテゴリー：WordPressの投稿カテゴリーを選択
+・メタディスクリプション：検索結果に表示される概要文の編集`
+  },
+  {
+    id: 6, order_num: 6,
+    title: "学習機能（オプション）",
+    content: `学習機能は、自社の情報・専門知識をAIに学習させることで、より精度の高い記事を生成できるオプション機能です。
+
+■ 利用条件
+メイン画面に「学習機能 解放中」と表示されているプランで使用可能
+（エンタープライズプランなど）
+
+■ アクセス方法
+画面右上の脳マークボタンをクリック
+
+■ 学習データの登録方法
+「＋データ登録」ボタンをクリック
+
+① ファイルアップロード
+対応形式：PDF / DOCX / XLSX / TXT（最大100MB）
+ドラッグ＆ドロップまたはファイル選択でアップロード
+
+② テキスト入力
+テキストエリアに直接入力
+
+「登録する」ボタンで学習データの登録完了
+
+■ 登録済みデータの管理
+学習データ一覧画面で確認
+クリックすることで内容の確認・変更が可能
+ファイル名で検索も可能`
+  },
+  {
+    id: 7, order_num: 7,
+    title: "アナリティクス（オプション）",
+    content: `アナリティクス機能は、WordPressブログのGoogleアナリティクスデータを確認できるオプション機能です。
+
+■ アクセス方法
+画面右上の円グラフマークボタンをクリック
+
+■ 統計グラフ（閲覧数・CV）
+分析期間を選択：
+・日付指定 / 今週 / 先週 / 今月 / 直近30日 / 今年
+
+4種類の折れ線グラフを表示：
+・選択期間のビュー（閲覧数）
+・選択期間のCV（コンバージョン）
+・比較期間のビュー
+・比較期間のCV
+
+■ トラフィックの詳細
+円グラフで以下を確認：
+・流入経路
+・検索キーワード
+・地域
+・デバイス
+
+■ アクセスランキング
+・過去28日間のアクセス数ランキング
+・直近10件の記事別アクセス数（閲覧数・CV数）`
+  }
+];
+
+let currentId = null;
+
+function renderSidebar(activeId) {
+  const list = document.getElementById('sidebar-list');
+  let html = `
+    <li class="sidebar__item${!activeId ? ' active' : ''}" onclick="showHome()">
+      <span class="sidebar__num" style="background:${!activeId ? 'var(--orange)' : ''}; color:${!activeId ? '#fff' : ''};">
+        <svg style="width:1.2rem;height:1.2rem;fill:${!activeId ? '#fff' : 'var(--navy)'};" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </span>
+      <span class="sidebar__item-label">トップ</span>
+      <svg class="arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </li>
+    <li style="height:1px;background:var(--border);margin:0.5rem 0;"></li>
+  `;
+  sections.forEach((s, i) => {
+    const active = s.id === activeId;
+    html += `
+      <li class="sidebar__item${active ? ' active' : ''}" onclick="showSection(${s.id})">
+        <span class="sidebar__num" style="${active ? 'background:var(--orange);color:#fff;' : ''}">${i + 1}</span>
+        <span class="sidebar__item-label">${s.title}</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </li>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+function renderContent(html) {
+  const lines = html.split('\n');
+  let out = '';
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line) { out += '<div style="height:0.5rem"></div>'; continue; }
+    if (line.startsWith('■ ')) {
+      out += `<div class="block-heading">${line.slice(2)}</div>`;
+    } else if (/^[①②③④⑤⑥⑦⑧⑨⑩]/.test(line)) {
+      out += `<div class="block-item"><strong style="color:var(--navy);min-width:2rem">${line[0]}</strong><span>${line.slice(1).trimStart()}</span></div>`;
+    } else if (line.startsWith('・')) {
+      const inner = line.slice(1);
+      if (inner.startsWith('　')) {
+        out += `<div class="block-item-sub">${inner.trim()}</div>`;
+      } else {
+        out += `<div class="block-item">${inner}</div>`;
+      }
+    } else if (line.startsWith('　・') || line.startsWith('　-')) {
+      out += `<div class="block-item-sub">${line.trim().slice(1).trim()}</div>`;
+    } else if (line.startsWith('※')) {
+      out += `<div class="block-note">${line}</div>`;
+    } else if (line.startsWith('→')) {
+      out += `<div class="block-item-sub" style="color:var(--navy);">${line}</div>`;
+    } else {
+      out += `<div class="block-text">${line}</div>`;
+    }
+  }
+  return out;
+}
+
+function showHome() {
+  currentId = null;
+  renderSidebar(null);
+  const area = document.getElementById('content-area');
+  let cards = '';
+  sections.forEach((s, i) => {
+    const excerpt = s.content.replace(/■ |・|①|②|③/g, '').slice(0, 90);
+    cards += `
+      <article class="card" onclick="showSection(${s.id})">
+        <div class="card__top"></div>
+        <div class="card__body">
+          <div class="card__num">0${i + 1}</div>
+          <div class="card__title">${s.title}</div>
+          <div class="card__excerpt">${excerpt}...</div>
+        </div>
+        <div class="card__footer">
+          <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          詳細を見る
+        </div>
+      </article>
+    `;
+  });
+  area.innerHTML = `
+    <div class="home-heading">
+      <div class="home-heading__label">CONTENTS</div>
+      <div class="home-heading__title">機能ガイド<span>一覧</span></div>
+    </div>
+    <div class="home-grid">${cards}</div>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showSection(id) {
+  currentId = id;
+  renderSidebar(id);
+  const idx = sections.findIndex(s => s.id === id);
+  const s = sections[idx];
+  const prev = sections[idx - 1];
+  const next = sections[idx + 1];
+
+  let nav = '<div class="section-nav">';
+  if (prev) {
+    nav += `<button class="section-nav__btn" onclick="showSection(${prev.id})">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      <span><span class="section-nav__label">前のページ</span><span class="section-nav__title">${prev.title}</span></span>
+    </button>`;
+  } else {
+    nav += `<button class="section-nav__btn" onclick="showHome()">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      <span><span class="section-nav__label">戻る</span><span class="section-nav__title">トップ</span></span>
+    </button>`;
+  }
+  if (next) {
+    nav += `<button class="section-nav__btn section-nav__btn--next" onclick="showSection(${next.id})">
+      <span class="section-nav__text"><span class="section-nav__label">次のページ</span><span class="section-nav__title">${next.title}</span></span>
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>`;
+  }
+  nav += '</div>';
+
+  document.getElementById('content-area').innerHTML = `
+    <button class="back-btn" onclick="showHome()">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      一覧に戻る
+    </button>
+    <div class="section-header">
+      <div class="section-header__eyebrow">
+        <span class="section-header__num">${idx + 1}</span>
+        CHAPTER ${idx + 1}
+      </div>
+      <h2 class="section-header__title">${s.title}</h2>
+      <div class="section-header__divider"></div>
+    </div>
+    <div class="section-strip" style="border-radius:0;margin-top:-2.4rem;margin-bottom:0.4rem;">
+      <div class="section-strip__dot"></div>
+      <div class="section-strip__label">機能の詳細説明</div>
+    </div>
+    <div class="section-body" style="border-radius:0 0 var(--radius) var(--radius);">
+      <div class="section-body__content">${renderContent(s.content)}</div>
+    </div>
+    ${nav}
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+showHome();
+</script>
+</body>
+</html>
