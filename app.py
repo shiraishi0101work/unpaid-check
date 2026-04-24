@@ -2117,6 +2117,91 @@ def api_customers_delete():
 
 
 
+@app.route("/api/unclassified/check", methods=["POST"])
+@login_required
+def api_unclassified_check():
+    """会計未仕分けタブ: 今日から2カ月前までの未仕分け仕訳を取得して保存する"""
+    from datetime import timedelta
+    cid = get_company_id()
+    if not auth.is_authenticated("accounting", cid):
+        return jsonify({"error": "MFクラウド会計の連携が必要です。"}), 401
+
+    today = date.today()
+    m = today.month - 2
+    y = today.year
+    if m <= 0:
+        m += 12
+        y -= 1
+    from_dt   = date(y, m, 1)
+    from_date = from_dt.strftime("%Y-%m-%d")
+    to_date   = today.strftime("%Y-%m-%d")
+
+    # 会計期間またぎチェック
+    _s      = load_settings()
+    _fstart = _s.get("fiscal_year_start_month", 4)
+    _fy_year = today.year if today.month >= _fstart else today.year - 1
+    curr_from_dt = date(_fy_year, _fstart, 1)
+    curr_from    = curr_from_dt.strftime("%Y-%m-%d")
+    spans_fiscal = (from_dt < curr_from_dt <= today)
+
+    try:
+        from mf_accounting import get_unclassified_deals
+    except ImportError as e:
+        return jsonify({"error": f"mf_accounting モジュールが見つかりません: {e}"}), 500
+
+    try:
+        raw_deals = get_unclassified_deals(from_date, to_date, company_id=cid)
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # 銀行口座科目のみ（未仕分けらしいものに絞る）
+    BANK_KEYWORDS = ["預金", "当座", "普通", "銀行"]
+    filtered = [
+        d for d in raw_deals
+        if any(kw in (d.get("科目") or "") for kw in BANK_KEYWORDS)
+        or not d.get("科目")
+    ]
+
+    existing = load_furikomi_unconfirmed()
+    existing_ids = {r.get("取引ID") for r in existing}
+
+    import uuid as _uuid
+    new_records = []
+    for d in filtered:
+        tid = d.get("取引ID", "")
+        if tid in existing_ids:
+            continue
+        new_records.append({
+            "id":                  str(_uuid.uuid4()),
+            "取引ID":              tid,
+            "着金日":              d.get("着金日", ""),
+            "入金金額":            d.get("入金金額", 0),
+            "取引先名":            d.get("取引先名", ""),
+            "備考":                d.get("備考", ""),
+            "科目":                d.get("科目", ""),
+            "suggested_partner":   d.get("取引先名", ""),
+            "candidate_invoice_id": None,
+            "linked_invoice_id":   None,
+            "deleted":             False,
+        })
+
+    all_records = existing + new_records
+    save_furikomi_unconfirmed(all_records)
+
+    total = len([r for r in all_records if not r.get("deleted") and not r.get("linked_invoice_id")])
+    return jsonify({
+        "ok":             True,
+        "new_count":      len(new_records),
+        "total":          total,
+        "from_date":      from_date,
+        "to_date":        to_date,
+        "spans_fiscal":   spans_fiscal,
+        "fiscal_boundary": curr_from if spans_fiscal else None,
+    })
+
+
 @app.route("/api/invoice/<invoice_id>/delete-draft", methods=["POST"])
 def delete_draft_invoice(invoice_id):
     """下書き（期限超過）タブから請求書を削除（非表示）する"""
