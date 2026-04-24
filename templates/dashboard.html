@@ -1946,7 +1946,7 @@ document.getElementById('recheck-all-btn')?.addEventListener('click', async func
             alert('照合エラー:\n' + st.error);
           } else if (st.result) {
             const r = st.result;
-            alert(`照合完了\n・未収再確認タブ: ${r.new_recheck}件追加（計${r.total_recheck}件）\n・振込名義確認タブ: ${r.new_furikomi}件追加（計${r.total_furikomi}件）`);
+            alert(`照合完了\n・未収再確認タブ: ${r.new_recheck}件追加（計${r.total_recheck}件）`);
             window.location.reload();
           }
         }, 400);
