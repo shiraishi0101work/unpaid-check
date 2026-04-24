@@ -1653,7 +1653,11 @@ def _run_recheck_all(cid: str):
                         continue
                     remark   = d.get("備考", "") or ""
                     remark_n = _norm(remark)
+                    remark_f = _norm_fuzzy(remark)
                     matched  = False
+                    similarity_flag     = False
+                    similar_matched_name = ""
+                    # 厳密マッチ
                     for name in furikomi_list:
                         if not name or len(name) < 2:
                             continue
@@ -1661,6 +1665,17 @@ def _run_recheck_all(cid: str):
                         if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
                             matched = True
                             break
+                    # 厳密マッチ失敗時: 類似マッチ（長音符無視）
+                    if not matched:
+                        for name in furikomi_list:
+                            if not name or len(name) < 2:
+                                continue
+                            name_f = _norm_fuzzy(name)
+                            if len(name_f) >= 2 and name_f in remark_f:
+                                matched = True
+                                similarity_flag = True
+                                similar_matched_name = name
+                                break
                     if matched:
                         recheck_records.append({
                             "id":                     str(_uuid.uuid4()),
@@ -1677,6 +1692,8 @@ def _run_recheck_all(cid: str):
                             "linked_invoice_id":      None,
                             "linked_invoice_num":     None,
                             "linked_at":              None,
+                            "similarity_flag":        similarity_flag,
+                            "similar_matched_name":   similar_matched_name,
                         })
                         existing_jids_rchk.add(journal_id)
                         new_recheck += 1
