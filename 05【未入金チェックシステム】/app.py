@@ -980,12 +980,10 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
             [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str],
             key=lambda x: x.get("支払期限", ""))
 
-        # 期限超過を4分類
+        # 期限超過を3分類（下書きタブ廃止）
         # ① メモ入力あり → 一時保管（毎月要確認）--- 他のタブには出さない
-        # ② MFで「未入金」明示 → 未収
-        # ③ MFで「未設定」かつ送付済み → 請求済みか確認
-        # ④ MFで「未設定」かつ未送付 → 下書き（期限超過）
-        deleted_draft_ids  = load_deleted_drafts()
+        # ② 未払い（未入金/未設定）かつ送付済み → 請求済みか確認
+        # ③ 未払い（未入金/未設定）かつ未送付 → 未収タブへ
         deleted_seikyu_ids = load_deleted_seikyu()
 
         # 未収解消済み：解消済みフラグあり（メモは未収タブに残す）
@@ -994,22 +992,20 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
             key=lambda x: x.get("支払期限", ""))
         ichiji_ids = {b["請求書ID"] for b in ichiji_hokan}
 
-        overdue = sorted(
-            [b for b in all_overdue
-             if b.get("入金状態") == "未入金" and b["請求書ID"] not in ichiji_ids],
-            key=lambda x: x.get("支払期限", ""))
         seikyu_kakunin = sorted(
             [b for b in all_overdue
-             if b.get("入金状態") == "未設定" and _is_delivered(b)
+             if b.get("入金状態") in UNPAID_STATUSES and _is_delivered(b)
              and b["請求書ID"] not in ichiji_ids
              and b.get("請求書ID") not in deleted_seikyu_ids],
             key=lambda x: x.get("支払期限", ""))
-        draft_overdue = sorted(
+        seikyu_kakunin_ids = {b["請求書ID"] for b in seikyu_kakunin}
+        overdue = sorted(
             [b for b in all_overdue
-             if b.get("入金状態") == "未設定" and _is_draft_invoice(b)
+             if b.get("入金状態") in UNPAID_STATUSES and not _is_delivered(b)
              and b["請求書ID"] not in ichiji_ids
-             and b.get("請求書ID") not in deleted_draft_ids],
+             and b["請求書ID"] not in seikyu_kakunin_ids],
             key=lambda x: x.get("支払期限", ""))
+        draft_overdue = []
 
         result = {
             "paid":            all_paid,
