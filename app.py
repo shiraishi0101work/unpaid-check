@@ -1592,7 +1592,7 @@ def _run_recheck_all(cid: str):
     import uuid as _uuid
     import jaconv as _jc
     import requests
-    from mf_accounting import get_deals, get_unclassified_deals, AccountingPeriodError
+    from mf_accounting import get_deals, AccountingPeriodError
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
@@ -1624,53 +1624,14 @@ def _run_recheck_all(cid: str):
                 raise AccountingPeriodError(str(e)) from e
             raise
 
-        try:
-            unclassified_deals = get_unclassified_deals(fetch_from, fetch_to, company_id=cid)
-            print(f"[再確認] 未仕分け: {len(unclassified_deals)}件", flush=True)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 400:
-                raise AccountingPeriodError(str(e)) from e
-            raise
-
         overdue_list   = result.get("overdue", [])
         meta_all       = load_meta()
         company_tantou = load_company_tantou()
 
         recheck_records = load_recheck_records()
-        furikomi_unconf = load_furikomi_unconfirmed()
-        existing_jids_rchk  = {r.get("journal_id", r["id"]) for r in recheck_records}
-        existing_jids_furik = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
+        existing_jids_rchk = {r.get("journal_id", r["id"]) for r in recheck_records}
 
-        _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
-        new_furikomi = 0
-        new_recheck  = 0
-
-        for d in unclassified_deals:
-            journal_id = str(d.get("取引ID", ""))
-            if journal_id in existing_jids_furik:
-                continue
-            account = d.get("科目", "") or ""
-            if not any(ba in account for ba in _BANK_ACCOUNTS):
-                continue
-            furikomi_unconf.append({
-                "id":                   str(_uuid.uuid4()),
-                "journal_id":           journal_id,
-                "fetched_at":           datetime.now().isoformat(),
-                "suggested_partner":    "",
-                "candidate_invoice_id": "",
-                "取引先名":             d.get("取引先名", ""),
-                "着金日":               d.get("着金日", ""),
-                "入金金額":             d.get("入金金額", 0),
-                "備考":                 d.get("備考", ""),
-                "科目":                 account,
-                "furikomi_to_register": "",
-                "linked_invoice_id":    None,
-                "linked_invoice_num":   None,
-                "linked_at":            None,
-                "deleted":              False,
-            })
-            existing_jids_furik.add(journal_id)
-            new_furikomi += 1
+        new_recheck = 0
 
         for billing in overdue_list:
             bid           = billing.get("請求書ID", "")
