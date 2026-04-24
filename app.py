@@ -2125,7 +2125,7 @@ def api_unclassified_check():
     curr_from    = curr_from_dt.strftime("%Y-%m-%d")
     spans_fiscal = (from_dt < curr_from_dt <= today)
     if spans_fiscal:
-        from_date = curr_from  # 前期分はAPIが受け付けないため今期開始日に切り詰め
+        return jsonify({"error": "過去2カ月間が会計期間をまたいでいるためデータ取得ができません。マネーフォワードクラウド会計でご確認ください。", "error_type": "accounting_period"}), 400
 
     try:
         from mf_accounting import get_unclassified_deals
