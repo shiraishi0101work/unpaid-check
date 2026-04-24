@@ -2156,13 +2156,7 @@ def api_unclassified_check():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # 銀行口座科目のみ（未仕分けらしいものに絞る）
-    BANK_KEYWORDS = ["預金", "当座", "普通", "銀行"]
-    filtered = [
-        d for d in raw_deals
-        if any(kw in (d.get("科目") or "") for kw in BANK_KEYWORDS)
-        or not d.get("科目")
-    ]
+    filtered = raw_deals
 
     existing = load_furikomi_unconfirmed()
     existing_ids = {r.get("取引ID") for r in existing}
