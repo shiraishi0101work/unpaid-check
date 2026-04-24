@@ -1600,6 +1600,12 @@ def _run_recheck_all(cid: str):
         s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
         return s
 
+    def _norm_fuzzy(s: str) -> str:
+        """類似マッチ用: 長音符(ー)も除去して比較"""
+        s = _norm(s)
+        s = s.replace('ー', '')
+        return s
+
     try:
         result = _load_result()
         if not result:
