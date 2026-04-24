@@ -2933,6 +2933,14 @@ def rules_page():
         settings=load_settings(),
     )
 
+@app.route("/howto")
+def howto_page():
+    return render_template(
+        "howto.html",
+        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
+        settings=load_settings(),
+    )
+
 # ========================================
 # メール通知設定（トークン失効アラート）
 # ========================================
