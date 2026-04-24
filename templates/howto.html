@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section">
+  <div class="sidebar-label">ページ内ジャンプ</div>
+  <div class="sidebar-item">
+    <a href="#step1" class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>① 今すぐ実行
+    </a>
+    <a href="#step2" class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>② まとめて再確認
+    </a>
+    <a href="#step3" class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>③ 会計未仕分けチェック
+    </a>
+    <a href="#step4" class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>④ 月次確定
+    </a>
+    <a href="#section-notes" class="sidebar-nav-link text-decoration-none d-block small py-1">
+      <i class="bi bi-circle-fill me-2" style="font-size:0.5rem;color:#6c757d"></i>よくある質問
+    </a>
+  </div>
+</div>
+
+<hr class="sidebar-divider">
+
+<div class="sidebar-section">
+  <div class="sidebar-item">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-speedometer2 me-1"></i>ダッシュボードへ
+    </a>
+  </div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('rules') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-book me-1"></i>チェックルール表
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <i class="bi bi-question-circle fs-4 text-primary"></i>
+  <h5 class="fw-bold mb-0">使い方ガイド</h5>
+  <span class="badge bg-primary ms-1">毎月の作業</span>
+</div>
+
+{# ===== 全体の流れ ===== #}
+<div class="card shadow-sm mb-4 border-primary">
+  <div class="card-header bg-primary text-white fw-bold">
+    <i class="bi bi-map me-2"></i>毎月の作業の流れ（全4ステップ）
+  </div>
+  <div class="card-body py-3">
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center">
+      <div class="text-center px-3 py-2 rounded border border-primary" style="min-width:120px">
+        <div class="fw-bold text-primary small">① 今すぐ実行</div>
+        <div class="text-muted" style="font-size:0.72rem">請求書を取得</div>
+      </div>
+      <div class="text-muted fw-bold">→</div>
+      <div class="text-center px-3 py-2 rounded border border-success" style="min-width:120px">
+        <div class="fw-bold text-success small">② まとめて再確認</div>
+        <div class="text-muted" style="font-size:0.72rem">振込照合</div>
+      </div>
+      <div class="text-muted fw-bold">→</div>
+      <div class="text-center px-3 py-2 rounded border border-warning" style="min-width:120px">
+        <div class="fw-bold text-warning small">③ 未仕分けチェック</div>
+        <div class="text-muted" style="font-size:0.72rem">会計データ確認</div>
+      </div>
+      <div class="text-muted fw-bold">→</div>
+      <div class="text-center px-3 py-2 rounded border border-secondary" style="min-width:120px">
+        <div class="fw-bold text-secondary small">④ 月次確定</div>
+        <div class="text-muted" style="font-size:0.72rem">月次を締める</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== STEP 1 ===== #}
+<div id="step1" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold bg-primary text-white">
+    <i class="bi bi-play-circle me-2"></i>① 今すぐ実行　―　請求書データを取得する
+  </div>
+  <div class="card-body">
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-cursor me-1 text-primary"></i>操作手順</div>
+          <ol class="small text-muted ps-3 mb-0">
+            <li class="mb-1">左サイドバーの <strong>「請求書期日月」</strong> で期間を選択</li>
+            <li class="mb-1"><strong>「今すぐ実行」</strong> ボタンをクリック</li>
+            <li>完了するまで待つ（数秒〜数十秒）</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-lightbulb me-1 text-warning"></i>ポイント</div>
+          <ul class="small text-muted ps-3 mb-0">
+            <li class="mb-1">期日月を <strong>空欄にすると今期が自動で選ばれる</strong></li>
+            <li class="mb-1">前期の未収も確認したい場合は、期日月に前期の期間を入力する</li>
+            <li>実行後、各タブに請求書が振り分けられる</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info py-2 small mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      実行後に表示される主なタブ：
+      <span class="badge bg-danger ms-1">未収</span>
+      <span class="badge bg-warning text-dark ms-1">一時保管</span>
+      <span class="badge bg-warning text-dark ms-1">請求済みか確認</span>
+      <span class="badge bg-warning text-dark ms-1">期日前</span>
+      <span class="badge bg-success ms-1">入金確認済み</span>
+    </div>
+  </div>
+</div>
+
+{# ===== STEP 2 ===== #}
+<div id="step2" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold bg-success text-white">
+    <i class="bi bi-search me-2"></i>② まとめて再確認　―　振込が来ていないか照合する
+  </div>
+  <div class="card-body">
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-cursor me-1 text-primary"></i>操作手順</div>
+          <ol class="small text-muted ps-3 mb-0">
+            <li class="mb-1"><strong>「未収」タブ</strong> を開く</li>
+            <li class="mb-1"><strong>「まとめて再確認（MF会計）」</strong> ボタンをクリック</li>
+            <li class="mb-1">照会が完了したら <strong>「未収再確認」タブ</strong> を確認する</li>
+            <li>振込が見つかった場合は、内容を確認して処理する</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-gear me-1 text-secondary"></i>何をしているか</div>
+          <ul class="small text-muted ps-3 mb-0">
+            <li class="mb-1">MFクラウド会計から <strong>過去2カ月間の仕訳データ</strong> を取得</li>
+            <li class="mb-1">顧客リストに登録済みの <strong>振込名義</strong> と備考を照合</li>
+            <li>名義が一致した振込が「未収再確認」タブに表示される</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-warning py-2 small mb-0">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      <strong>振込名義が顧客リストに未登録の場合は検出されません。</strong>
+      振込名義が不明な取引は ③ の「会計未仕分けチェック」で確認してください。
+    </div>
+  </div>
+</div>
+
+{# ===== STEP 3 ===== #}
+<div id="step3" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold" style="background:#fd7e14;color:white">
+    <i class="bi bi-bank me-2"></i>③ 未仕分けチェック　―　MF会計の未仕分けデータを確認する
+  </div>
+  <div class="card-body">
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-cursor me-1 text-primary"></i>操作手順</div>
+          <ol class="small text-muted ps-3 mb-0">
+            <li class="mb-1"><strong>「会計未仕分け」タブ</strong> を開く</li>
+            <li class="mb-1"><strong>「未仕分けチェック（MF会計）」</strong> ボタンをクリック</li>
+            <li class="mb-1">照会が完了したら一覧を確認する</li>
+            <li>各行を「編集」または「顧客登録」で処理する</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-gear me-1 text-secondary"></i>何をしているか</div>
+          <ul class="small text-muted ps-3 mb-0">
+            <li class="mb-1">MFクラウド会計で <strong>仕訳が完了していない（未仕分け）</strong> 取引を取得</li>
+            <li class="mb-1">取得範囲は <strong>今日から2カ月前まで</strong></li>
+            <li>振込名義が分かったら「顧客登録」で顧客リストに追加できる</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 bg-light p-3 mb-2">
+      <div class="fw-semibold small mb-2">各ボタンの役割</div>
+      <div class="d-flex flex-column gap-2 small">
+        <div>
+          <span class="badge bg-success me-2">編集</span>
+          振込名義を登録して、未収請求書と紐づける。紐づけると未収から消える。
+        </div>
+        <div>
+          <span class="badge bg-info me-2">顧客登録</span>
+          この振込名義を顧客リストに追加する。次回から② の「まとめて再確認」で自動検出されるようになる。
+        </div>
+        <div>
+          <span class="badge bg-danger me-2">削除</span>
+          この行を一覧から消す（入金でない取引など不要な行を消したいとき）。
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info py-2 small mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      ② と ③ は独立しています。②「まとめて再確認」を押しても会計未仕分けタブには影響しません。
+    </div>
+  </div>
+</div>
+
+{# ===== STEP 4 ===== #}
+<div id="step4" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold bg-secondary text-white">
+    <i class="bi bi-calendar-check me-2"></i>④ 月次確定　―　その月の未収状況を記録する
+  </div>
+  <div class="card-body">
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-cursor me-1 text-primary"></i>操作手順</div>
+          <ol class="small text-muted ps-3 mb-0">
+            <li class="mb-1">左サイドバーの <strong>「月次確定」</strong> ボタンをクリック</li>
+            <li class="mb-1">確定したい月を選んで <strong>「確定・保存」</strong> をクリック</li>
+            <li>確定した月は「履歴」タブで振り返れる</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold small mb-2"><i class="bi bi-lightbulb me-1 text-warning"></i>ポイント</div>
+          <ul class="small text-muted ps-3 mb-0">
+            <li class="mb-1">月初になると <strong>先月の確定を促すポップアップ</strong> が表示される</li>
+            <li class="mb-1">確定すると <strong>その時点の未収一覧がスナップショット保存</strong> される</li>
+            <li>過去の月と比較して回収状況を追える</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-secondary py-2 small mb-0">
+      <i class="bi bi-clock-history me-1"></i>
+      月次確定は ①〜③ の作業が一通り終わったあとに行うのがおすすめです。
+    </div>
+  </div>
+</div>
+
+{# ===== よくある質問 ===== #}
+<div id="section-notes" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-patch-question me-2 text-primary"></i>よくある質問
+  </div>
+  <div class="card-body">
+    <div class="d-flex flex-column gap-3">
+
+      <div class="border-bottom pb-3">
+        <div class="fw-semibold small mb-1">
+          <i class="bi bi-question-circle text-primary me-1"></i>
+          ② の「まとめて再確認」で見つからない振込がある
+        </div>
+        <div class="text-muted small">
+          振込名義が顧客リストに未登録の可能性があります。
+          ③ の「会計未仕分けチェック」で該当の取引を探し、「顧客登録」ボタンで振込名義を登録してください。
+          次回から ② で自動検出されるようになります。
+        </div>
+      </div>
+
+      <div class="border-bottom pb-3">
+        <div class="fw-semibold small mb-1">
+          <i class="bi bi-question-circle text-primary me-1"></i>
+          「今すぐ実行」ボタンが押せない（グレーになっている）
+        </div>
+        <div class="text-muted small">
+          MFクラウド請求書の連携が切れています。
+          左サイドバーの「MFクラウド連携」欄で「連携」ボタンを押して再認証してください。
+        </div>
+      </div>
+
+      <div class="border-bottom pb-3">
+        <div class="fw-semibold small mb-1">
+          <i class="bi bi-question-circle text-primary me-1"></i>
+          前期の未収も確認したい
+        </div>
+        <div class="text-muted small">
+          左サイドバーの「請求書期日月」に前期の期間（例：2025-04 〜 2026-03）を入力して「今すぐ実行」を押してください。
+        </div>
+      </div>
+
+      <div>
+        <div class="fw-semibold small mb-1">
+          <i class="bi bi-question-circle text-primary me-1"></i>
+          ③ の「未仕分けチェック」ボタンが押せない
+        </div>
+        <div class="text-muted small">
+          MFクラウド会計の連携が切れています。
+          左サイドバーの「MFクラウド連携」欄で「クラウド会計」の「連携」ボタンを押して再認証してください。
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
