@@ -349,7 +349,7 @@
   </li>
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-furikomi-confirm" id="btn-tab-furikomi-confirm">
-      <i class="bi bi-person-plus text-warning"></i> 振込名義確認
+      <i class="bi bi-bank text-warning"></i> 会計未仕分け
       {% set furikomi_unlinked = furikomi_unconfirmed | selectattr("linked_invoice_id", "none") | list %}
       {% if furikomi_unlinked %}
       <span class="badge bg-warning text-dark ms-1">{{ furikomi_unlinked|length }}</span>

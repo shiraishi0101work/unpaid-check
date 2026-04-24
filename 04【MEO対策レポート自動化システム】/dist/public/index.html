@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEOレポーター</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+    :root {
+      --navy:       #0F1E38;
+      --blue:       #1D6FE8;
+      --blue-hover: #1558C0;
+      --blue-light: #EBF2FD;
+      --green:      #16A34A;
+      --green-light:#DCFCE7;
+      --red:        #DC2626;
+      --red-light:  #FEE2E2;
+      --gray-50:    #F8FAFC;
+      --gray-100:   #F1F5F9;
+      --gray-200:   #E2E8F0;
+      --gray-300:   #CBD5E1;
+      --gray-400:   #94A3B8;
+      --gray-500:   #64748B;
+      --gray-600:   #475569;
+      --gray-700:   #334155;
+      --gray-900:   #0F172A;
+      --white:      #FFFFFF;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:  0 12px 32px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+      --radius:     10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans JP', -apple-system, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      padding: 0 32px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+    .logo-mark { display: flex; gap: 4px; align-items: center; }
+    .logo-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .logo-text { font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
+    .header-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+    .breadcrumb { font-size: 13px; color: rgba(255,255,255,0.5); display: none; }
+    .breadcrumb span { color: rgba(255,255,255,0.85); }
+    .breadcrumb.visible { display: block; }
+    .header-spacer { flex: 1; }
+
+    /* ── Layout ── */
+    .layout { display: flex; height: calc(100vh - 58px); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .sidebar-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+
+    .add-store-form { display: flex; gap: 8px; }
+
+    .add-store-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .add-store-input:focus { border-color: var(--blue); }
+
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 7px;
+      background: var(--blue);
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: var(--blue-hover); }
+
+    .store-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+    .store-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      group: true;
+    }
+    .store-item:hover { background: var(--gray-100); }
+    .store-item.active { background: var(--blue-light); }
+
+    .store-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .store-item.active .store-icon { background: var(--blue); }
+
+    .store-info { flex: 1; min-width: 0; }
+    .store-name { font-size: 13px; font-weight: 500; color: var(--gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .store-meta { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+
+    .store-del {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s, background 0.15s;
+      font-size: 14px;
+    }
+    .store-item:hover .store-del { opacity: 1; }
+    .store-del:hover { color: var(--red); background: var(--red-light); }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; padding: 32px; }
+
+    /* ── Welcome ── */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 16px;
+      color: var(--gray-400);
+      text-align: center;
+    }
+    .welcome-icon { font-size: 56px; }
+    .welcome h2 { font-size: 18px; font-weight: 600; color: var(--gray-600); }
+    .welcome p { font-size: 14px; line-height: 1.6; }
+
+    /* ── Store Detail ── */
+    .store-detail { display: none; }
+    .store-detail.visible { display: block; }
+
+    .store-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .store-detail-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .store-detail-title h1 { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+    .store-detail-title p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Form fields ── */
+    .form-row { display: flex; gap: 16px; margin-bottom: 20px; }
+    .form-group { flex: 1; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--gray-600); display: block; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--white);
+    }
+    .form-input:focus { border-color: var(--blue); }
+
+    /* ── Upload zones ── */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--gray-300);
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      background: var(--gray-50);
+      overflow: hidden;
+      min-height: 130px;
+    }
+    .upload-zone:hover { border-color: var(--blue); background: var(--blue-light); }
+    .upload-zone.has-file { border-color: var(--green); background: transparent; padding: 0; }
+    .upload-zone.drag-over { border-color: var(--blue); background: var(--blue-light); transform: scale(1.01); }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    .upload-inner { position: relative; z-index: 1; }
+    .upload-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 4px;
+    }
+    .upload-sub { font-size: 11px; color: var(--gray-400); }
+    .upload-icon { font-size: 24px; margin-bottom: 6px; }
+    .upload-filename { font-size: 11px; color: var(--green); font-weight: 500; margin-top: 4px; word-break: break-all; }
+
+    /* Image preview */
+    .upload-preview-img {
+      display: none;
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 6px;
+    }
+    .upload-zone.has-file .upload-preview-img { display: block; }
+    .upload-zone.has-file .upload-inner { display: none; }
+
+    /* Overlay badge on preview */
+    .upload-preview-badge {
+      display: none;
+      position: absolute;
+      bottom: 6px;
+      left: 0; right: 0;
+      text-align: center;
+      z-index: 3;
+    }
+    .upload-zone.has-file .upload-preview-badge { display: block; }
+    .upload-preview-badge span {
+      background: rgba(22,163,74,0.88);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+
+    /* ── CSV section ── */
+    .csv-section {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+
+    .csv-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .csv-flow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .csv-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .csv-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .csv-step-label { font-size: 11px; color: var(--gray-500); text-align: center; line-height: 1.3; }
+
+    .csv-arrow { color: var(--gray-300); font-size: 18px; margin-top: -10px; }
+
+    .btn-csv-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-700);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-csv-download:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+    /* ── CSV Upload zone (full width) ── */
+    .upload-zone-csv {
+      border: 2px dashed var(--gray-300);
+      border-radius: 8px;
+      padding: 18px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      background: var(--white);
+      margin-top: 12px;
+    }
+    .upload-zone-csv:hover { border-color: var(--blue); background: var(--blue-light); }
+    .upload-zone-csv.has-file { border-color: var(--green); background: var(--green-light); }
+    .upload-zone-csv input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+    .btn-primary:hover { background: var(--blue-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Report history ── */
+    .report-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .report-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      transition: box-shadow 0.15s;
+    }
+    .report-item:hover { box-shadow: var(--shadow-md); }
+
+    .report-icon { font-size: 22px; flex-shrink: 0; }
+    .report-info { flex: 1; min-width: 0; }
+    .report-name { font-size: 13px; font-weight: 500; color: var(--gray-900); }
+    .report-date { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+    .report-actions { display: flex; gap: 6px; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      color: var(--gray-600);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-sm:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .btn-sm.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+    .empty-reports {
+      text-align: center;
+      padding: 32px;
+      color: var(--gray-400);
+      font-size: 13px;
+    }
+    .empty-reports-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      font-size: 13px;
+      max-width: 380px;
+      animation: slideIn 0.2s ease;
+    }
+    .toast.success { background: var(--green-light); color: #166534; border: 1px solid #86efac; }
+    .toast.error { background: var(--red-light); color: #991b1b; border: 1px solid #fca5a5; }
+    .toast.info { background: var(--blue-light); color: #1e40af; border: 1px solid #93c5fd; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Progress overlay ── */
+    .progress-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,30,56,0.5);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-overlay.visible { display: flex; }
+    .progress-box {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 36px 48px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      min-width: 280px;
+    }
+    .progress-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-title { font-size: 16px; font-weight: 600; color: var(--gray-900); margin-bottom: 6px; }
+    .progress-sub { font-size: 13px; color: var(--gray-500); }
+
+    /* ── Utility ── */
+    .divider { height: 1px; background: var(--gray-200); margin: 20px 0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.blue { background: var(--blue-light); color: var(--blue); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <a class="logo" onclick="goHome()">
+    <div class="logo-mark">
+      <div class="logo-dot" style="background:#4285F4"></div>
+      <div class="logo-dot" style="background:#EA4335"></div>
+      <div class="logo-dot" style="background:#FBBC05"></div>
+      <div class="logo-dot" style="background:#34A853"></div>
+    </div>
+    <div class="logo-text">MEOレポーター</div>
+  </a>
+  <div class="header-sep"></div>
+  <div class="breadcrumb" id="breadcrumb"><span id="breadcrumbStore"></span></div>
+  <div class="header-spacer"></div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">店舗一覧</div>
+      <div class="add-store-form">
+        <input class="add-store-input" type="text" id="newStoreName" placeholder="新しい店舗名を入力" onkeydown="if(event.key==='Enter')addStore()">
+        <button class="btn-icon" onclick="addStore()" title="追加">+</button>
+      </div>
+    </div>
+    <div class="store-list" id="storeList"></div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Welcome -->
+    <div class="welcome" id="welcomeView">
+      <div class="welcome-icon">📊</div>
+      <h2>MEOレポーターへようこそ</h2>
+      <p>左のサイドバーから店舗を選択するか、<br>新しい店舗を追加してください。</p>
+    </div>
+
+    <!-- Store detail -->
+    <div class="store-detail" id="storeDetail">
+
+      <div class="store-detail-header">
+        <div class="store-detail-icon">🏪</div>
+        <div class="store-detail-title">
+          <h1 id="detailStoreName">店舗名</h1>
+          <p id="detailStoreSub">レポートを作成してください</p>
+        </div>
+      </div>
+
+      <!-- Report creation form -->
+      <div class="section">
+        <div class="section-title">新規レポート作成</div>
+        <div class="card">
+
+          <!-- Month / Year -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">対象月</label>
+              <select class="form-input" id="reportMonth"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">対象年</label>
+              <select class="form-input" id="reportYear"></select>
+            </div>
+          </div>
+
+          <!-- Image uploads -->
+          <div class="section-title" style="margin-bottom:12px">📸 スクリーンショット（画像）</div>
+          <div class="upload-grid">
+            <div class="upload-zone" id="zone-keyword" ondragover="handleDragOver(event,'keyword')" ondragleave="handleDragLeave(event,'keyword')" ondrop="handleDrop(event,'keyword')">
+              <input type="file" id="img-keyword" accept="image/*" multiple onchange="handleFileSelect(this,'keyword')">
+              <div class="upload-inner">
+                <div class="upload-icon">🔍</div>
+                <div class="upload-label">キーワード順位</div>
+                <div class="upload-sub">2ページ目（複数枚可）</div>
+              </div>
+              <img class="upload-preview-img" id="preview-keyword" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-keyword"></span></div>
+            </div>
+            <div class="upload-zone" id="zone-views" ondragover="handleDragOver(event,'views')" ondragleave="handleDragLeave(event,'views')" ondrop="handleDrop(event,'views')">
+              <input type="file" id="img-views" accept="image/*" onchange="handleFileSelect(this,'views')">
+              <div class="upload-inner">
+                <div class="upload-icon">👁️</div>
+                <div class="upload-label">閲覧ユーザー数</div>
+                <div class="upload-sub">3ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-views" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-views"></span></div>
+            </div>
+            <div class="upload-zone" id="zone-interactions" ondragover="handleDragOver(event,'interactions')" ondragleave="handleDragLeave(event,'interactions')" ondrop="handleDrop(event,'interactions')">
+              <input type="file" id="img-interactions" accept="image/*" onchange="handleFileSelect(this,'interactions')">
+              <div class="upload-inner">
+                <div class="upload-icon">🔄</div>
+                <div class="upload-label">インタラクション数</div>
+                <div class="upload-sub">4ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-interactions" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-interactions"></span></div>
+            </div>
+            <div class="upload-zone" id="zone-userActions" ondragover="handleDragOver(event,'userActions')" ondragleave="handleDragLeave(event,'userActions')" ondrop="handleDrop(event,'userActions')">
+              <input type="file" id="img-userActions" accept="image/*" onchange="handleFileSelect(this,'userActions')">
+              <div class="upload-inner">
+                <div class="upload-icon">📍</div>
+                <div class="upload-label">ユーザー行動データ</div>
+                <div class="upload-sub">5ページ目</div>
+              </div>
+              <img class="upload-preview-img" id="preview-userActions" src="" alt="">
+              <div class="upload-preview-badge"><span id="fn-userActions"></span></div>
+            </div>
+          </div>
+
+          <!-- CSV section -->
+          <div class="csv-section">
+            <div class="csv-section-title">📝 テキストCSV</div>
+            <div class="csv-flow">
+              <div class="csv-step">
+                <div class="csv-step-num">1</div>
+                <div class="csv-step-label">ひな型を<br>ダウンロード</div>
+              </div>
+              <div class="csv-arrow">→</div>
+              <div class="csv-step">
+                <div class="csv-step-num">2</div>
+                <div class="csv-step-label">ChatGPTで<br>テキストを作成</div>
+              </div>
+              <div class="csv-arrow">→</div>
+              <div class="csv-step">
+                <div class="csv-step-num">3</div>
+                <div class="csv-step-label">CSVを<br>アップロード</div>
+              </div>
+              <div style="flex:1"></div>
+              <button class="btn-csv-download" id="btnCsvDownload" onclick="downloadCsvTemplate()">
+                ⬇️ CSVひな型ダウンロード
+              </button>
+            </div>
+
+            <div class="upload-zone-csv" id="zone-csv" ondragover="handleDragOver(event,'csv')" ondragleave="handleDragLeave(event,'csv')" ondrop="handleDrop(event,'csv')">
+              <input type="file" id="file-csv" accept=".csv,text/csv" onchange="handleFileSelect(this,'csv')">
+              <div style="font-size:22px;margin-bottom:6px">📄</div>
+              <div style="font-size:12px;font-weight:600;color:var(--gray-600)">CSVファイルをドロップ、またはクリックして選択</div>
+              <div class="upload-filename" id="fn-csv"></div>
+            </div>
+          </div>
+
+          <!-- Generate button -->
+          <button class="btn-primary" id="btnGenerate" onclick="generateReport()" style="width:100%">
+            📊 レポートを作成する
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Report history -->
+      <div class="section">
+        <div class="section-title">レポート履歴</div>
+        <div id="reportHistory"></div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Progress overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="progress-spinner"></div>
+    <div class="progress-title">レポートを生成中...</div>
+    <div class="progress-sub">しばらくお待ちください</div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────
+let stores = [];
+let currentStoreId = null;
+let reports = [];
+
+// ── Init ─────────────────────────────────────────────────
+(function init() {
+  // Month selector
+  const monthEl = document.getElementById('reportMonth');
+  for (let m = 1; m <= 12; m++) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = `${m}月`;
+    monthEl.appendChild(opt);
+  }
+  monthEl.value = new Date().getMonth() + 1;
+
+  // Year selector
+  const yearEl = document.getElementById('reportYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear - 1; y <= thisYear + 1; y++) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = `${y}年`;
+    yearEl.appendChild(opt);
+  }
+  yearEl.value = thisYear;
+
+  loadStores();
+})();
+
+// ── Store management ─────────────────────────────────────
+
+async function loadStores() {
+  try {
+    const res = await fetch('/api/stores');
+    stores = await res.json();
+    renderStoreList();
+  } catch (e) {
+    showToast('店舗一覧の読み込みに失敗しました', 'error');
+  }
+}
+
+function renderStoreList() {
+  const el = document.getElementById('storeList');
+  el.innerHTML = '';
+  if (stores.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--gray-400)">店舗を追加してください</div>';
+    return;
+  }
+  stores.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'store-item' + (s.id === currentStoreId ? ' active' : '');
+    div.innerHTML = `
+      <div class="store-icon">${s.id === currentStoreId ? '🏪' : '🏬'}</div>
+      <div class="store-info">
+        <div class="store-name">${esc(s.name)}</div>
+        <div class="store-meta">${s.reportCount || 0}件のレポート</div>
+      </div>
+      <button class="store-del" onclick="deleteStore(event,'${s.id}')" title="削除">✕</button>
+    `;
+    div.onclick = (e) => { if (!e.target.classList.contains('store-del')) selectStore(s.id); };
+    el.appendChild(div);
+  });
+}
+
+async function addStore() {
+  const input = document.getElementById('newStoreName');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    const res = await fetch('/api/stores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const store = await res.json();
+    input.value = '';
+    await loadStores();
+    selectStore(store.id);
+  } catch (e) {
+    showToast('店舗の追加に失敗しました', 'error');
+  }
+}
+
+async function deleteStore(event, storeId) {
+  event.stopPropagation();
+  if (!confirm('この店舗を削除しますか？')) return;
+  try {
+    await fetch(`/api/stores/${storeId}`, { method: 'DELETE' });
+    if (currentStoreId === storeId) { currentStoreId = null; showWelcome(); }
+    await loadStores();
+    showToast('店舗を削除しました', 'success');
+  } catch (e) {
+    showToast('削除に失敗しました', 'error');
+  }
+}
+
+function selectStore(storeId) {
+  currentStoreId = storeId;
+  const store = stores.find(s => s.id === storeId);
+  renderStoreList();
+  showStoreDetail(store);
+}
+
+// ── Views ─────────────────────────────────────────────────
+
+function goHome() {
+  currentStoreId = null;
+  renderStoreList();
+  showWelcome();
+}
+
+function showWelcome() {
+  document.getElementById('welcomeView').style.display = '';
+  document.getElementById('storeDetail').classList.remove('visible');
+  document.getElementById('breadcrumb').classList.remove('visible');
+}
+
+async function showStoreDetail(store) {
+  document.getElementById('welcomeView').style.display = 'none';
+  document.getElementById('storeDetail').classList.add('visible');
+  document.getElementById('detailStoreName').textContent = store.name;
+  document.getElementById('detailStoreSub').textContent = `${store.reportCount || 0}件のレポートがあります`;
+  document.getElementById('breadcrumbStore').textContent = store.name;
+  document.getElementById('breadcrumb').classList.add('visible');
+  await loadReports(store.id);
+}
+
+// ── Report history ─────────────────────────────────────────
+
+async function loadReports(storeId) {
+  try {
+    const res = await fetch(`/api/stores/${storeId}/reports`);
+    reports = await res.json();
+    renderReports();
+  } catch (e) {
+    console.error('レポート読み込みエラー:', e);
+  }
+}
+
+function renderReports() {
+  const el = document.getElementById('reportHistory');
+  if (!reports || reports.length === 0) {
+    el.innerHTML = `<div class="empty-reports"><div class="empty-reports-icon">📂</div>まだレポートがありません</div>`;
+    return;
+  }
+  el.innerHTML = '<div class="report-list">' + reports.map(r => `
+    <div class="report-item">
+      <div class="report-icon">📊</div>
+      <div class="report-info">
+        <div class="report-name">${esc(r.fileName)}</div>
+        <div class="report-date">${formatDate(r.generatedAt)}</div>
+      </div>
+      <div class="report-actions">
+        <button class="btn-sm" onclick="downloadReport('${r.id}')">⬇️ ダウンロード</button>
+        <button class="btn-sm danger" onclick="deleteReport('${r.id}')">削除</button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+async function downloadReport(reportId) {
+  window.location.href = `/api/reports/${reportId}/download`;
+}
+
+async function deleteReport(reportId) {
+  if (!confirm('このレポートを削除しますか？')) return;
+  try {
+    await fetch(`/api/reports/${reportId}`, { method: 'DELETE' });
+    await loadReports(currentStoreId);
+    showToast('レポートを削除しました', 'success');
+  } catch (e) {
+    showToast('削除に失敗しました', 'error');
+  }
+}
+
+// ── File upload handling ──────────────────────────────────
+
+function handleFileSelect(input, field) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  updateUploadZone(field, files);
+}
+
+function handleDragOver(event, field) {
+  event.preventDefault();
+  document.getElementById('zone-' + field)?.classList.add('drag-over');
+}
+
+function handleDragLeave(event, field) {
+  document.getElementById('zone-' + field)?.classList.remove('drag-over');
+}
+
+function handleDrop(event, field) {
+  event.preventDefault();
+  const zone = document.getElementById('zone-' + field);
+  zone?.classList.remove('drag-over');
+  const files = event.dataTransfer.files;
+  if (!files || files.length === 0) return;
+  // Assign to the hidden input
+  const inputId = field === 'csv' ? 'file-csv' : 'img-' + field;
+  const input = document.getElementById(inputId);
+  if (input) {
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    input.files = dt.files;
+  }
+  updateUploadZone(field, files);
+}
+
+function updateUploadZone(field, files) {
+  const zone = document.getElementById('zone-' + field);
+  const fn = document.getElementById('fn-' + field);
+  if (!zone) return;
+  zone.classList.add('has-file');
+
+  const label = files.length === 1 ? '✓ ' + files[0].name : `✓ ${files.length}枚選択済み`;
+  if (fn) fn.textContent = label;
+
+  // Show image preview (first file)
+  const previewImg = document.getElementById('preview-' + field);
+  if (previewImg && files[0] && files[0].type.startsWith('image/')) {
+    const url = URL.createObjectURL(files[0]);
+    previewImg.src = url;
+    previewImg.onload = () => URL.revokeObjectURL(url);
+  }
+}
+
+// ── CSV template download ─────────────────────────────────
+
+function downloadCsvTemplate() {
+  const month = document.getElementById('reportMonth').value;
+  window.location.href = `/api/csv-template?month=${month}`;
+}
+
+// ── Generate report ───────────────────────────────────────
+
+async function generateReport() {
+  if (!currentStoreId) { showToast('店舗を選択してください', 'error'); return; }
+
+  const store = stores.find(s => s.id === currentStoreId);
+  const month = document.getElementById('reportMonth').value;
+  const year = document.getElementById('reportYear').value;
+  const csvInput = document.getElementById('file-csv');
+
+  if (!csvInput.files || csvInput.files.length === 0) {
+    showToast('CSVファイルをアップロードしてください', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('storeName', store.name);
+  formData.append('storeId', currentStoreId);
+  formData.append('month', month);
+  formData.append('year', year);
+  formData.append('csv', csvInput.files[0]);
+
+  // Images
+  const kwInput = document.getElementById('img-keyword');
+  if (kwInput.files && kwInput.files.length > 0) {
+    for (const f of kwInput.files) formData.append('keyword', f);
+  }
+  for (const field of ['views', 'interactions', 'userActions']) {
+    const inp = document.getElementById('img-' + field);
+    if (inp.files && inp.files.length > 0) formData.append(field, inp.files[0]);
+  }
+
+  document.getElementById('progressOverlay').classList.add('visible');
+  document.getElementById('btnGenerate').disabled = true;
+
+  try {
+    const res = await fetch('/api/generate-report', { method: 'POST', body: formData });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'エラーが発生しました' }));
+      showToast(err.error || 'エラーが発生しました', 'error');
+      return;
+    }
+
+    // Download the PPTX
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    let filename = 'report.pptx';
+    const match = disposition.match(/filename\*=UTF-8''(.+)/i);
+    if (match) filename = decodeURIComponent(match[1]);
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('レポートを作成しました！', 'success');
+    await loadStores();
+    await loadReports(currentStoreId);
+
+    // Reset form
+    resetForm();
+
+  } catch (e) {
+    console.error(e);
+    showToast('通信エラーが発生しました', 'error');
+  } finally {
+    document.getElementById('progressOverlay').classList.remove('visible');
+    document.getElementById('btnGenerate').disabled = false;
+  }
+}
+
+function resetForm() {
+  for (const field of ['keyword', 'views', 'interactions', 'userActions']) {
+    const zone = document.getElementById('zone-' + field);
+    const fn = document.getElementById('fn-' + field);
+    const inp = document.getElementById('img-' + field);
+    const prev = document.getElementById('preview-' + field);
+    if (zone) zone.classList.remove('has-file');
+    if (fn) fn.textContent = '';
+    if (inp) inp.value = '';
+    if (prev) prev.src = '';
+  }
+  const csvZone = document.getElementById('zone-csv');
+  const csvFn = document.getElementById('fn-csv');
+  const csvInp = document.getElementById('file-csv');
+  if (csvZone) csvZone.classList.remove('has-file');
+  if (csvFn) csvFn.textContent = '';
+  if (csvInp) csvInp.value = '';
+}
+
+// ── Utilities ─────────────────────────────────────────────
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch { return isoStr; }
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  toast.innerHTML = `<span>${icon}</span><span>${esc(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+}
+</script>
+</body>
+</html>
