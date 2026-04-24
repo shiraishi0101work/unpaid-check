@@ -2103,7 +2103,11 @@ document.getElementById('unclassified-check-btn')?.addEventListener('click', asy
     _unclassifiedLoadingModal.hide();
 
     if (!resp.ok) {
-      alert('エラー: ' + (data.error || ''));
+      if (data.error_type === 'accounting_period') {
+        new bootstrap.Modal(document.getElementById('recheckPeriodErrorModal')).show();
+      } else {
+        alert('エラー: ' + (data.error || ''));
+      }
       return;
     }
 
