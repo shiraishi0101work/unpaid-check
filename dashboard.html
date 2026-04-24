@@ -1894,7 +1894,7 @@ document.getElementById('recheck-all-btn')?.addEventListener('click', async func
       alert('エラー: ' + (data.error || ''));
       return;
     }
-    let msg = `照合完了\n・未収再確認タブ: ${data.new_recheck}件追加（計${data.total_recheck}件）\n・会計未仕分けタブ: ${data.new_furikomi}件追加（計${data.total_furikomi}件）`;
+    let msg = `照合完了\n・未収再確認タブ: ${data.new_recheck}件追加（計${data.total_recheck}件）`;
     alert(msg);
     window.location.reload();
   } catch(e) {
