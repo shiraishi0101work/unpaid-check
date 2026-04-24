@@ -21,5 +21,7 @@ jobs:
             cd ${{ secrets.PROJECT_DIR_REPO }}
             git pull 
             sudo rsync -av --exclude='tokens/' --exclude='data/' --exclude='.env' --exclude='output/' ${{ secrets.PROJECT_DIR_REPO }}/ ${{ secrets.PROJECT_DIR }}/
+            sudo mkdir -p ${{ secrets.PROJECT_DIR }}/output
+            sudo chown -R www-data:www-data ${{ secrets.PROJECT_DIR }}/output
             sudo systemctl restart unpaid_check.service
     
