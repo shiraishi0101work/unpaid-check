@@ -1250,6 +1250,54 @@
   </div>
 </div>
 
+{# ===== 会計未仕分け：顧客リスト登録モーダル ===== #}
+<div class="modal fade" id="unclassifiedRegisterModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-people me-2 text-info"></i>顧客リストに振込名義を登録</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-secondary py-2 small mb-3" id="uc-reg-deal-info"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">顧客名 <span class="text-danger">*</span></label>
+          <input type="text" id="uc-reg-company" class="form-control"
+                 list="uc-reg-company-list"
+                 placeholder="既存顧客を選択、または新規顧客名を入力">
+          <datalist id="uc-reg-company-list"></datalist>
+          <div class="form-text">既存の顧客名を選択するか、新しい顧客名をそのまま入力してください</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">振込名義 <span class="text-danger">*</span></label>
+          <input type="text" id="uc-reg-furikomi" class="form-control"
+                 placeholder="例: カ) サンプルカイシャ">
+          <div class="form-text">MF会計の備考から振込名義を確認・修正してください（カタカナ推奨）</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-info text-white btn-sm" id="uc-reg-confirm-btn">
+          <i class="bi bi-people me-1"></i>顧客リストに登録
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 会計未仕分け：データ照会中モーダル ===== #}
+<div class="modal fade" id="unclassifiedLoadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4">
+        <div class="spinner-border text-warning mb-3" style="width:2.5rem;height:2.5rem"></div>
+        <div class="fw-semibold">データ照会中...</div>
+        <div class="text-muted small mt-1">MFクラウド会計から未仕分けデータを取得しています</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {# ===== 月次確定モーダル ===== #}
 <div class="modal fade" id="historyConfirmModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
