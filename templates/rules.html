@@ -196,7 +196,109 @@
   </div>
 </div>
 
-{# ===== 3. MFステータス定義 ===== #}
+{# ===== 3. 未収再確認ルール ===== #}
+<div id="section-recheck" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-search me-2 text-success"></i>3. 未収再確認ルール
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      「まとめて再確認（MF会計）」ボタンを押したときの動作ルールです。<strong>未収再確認タブにのみ</strong>反映されます。
+    </p>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-success">
+          <tr>
+            <th style="width:140px">項目</th>
+            <th>内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-semibold small">取得元</td>
+            <td class="small">MFクラウド会計の<strong>仕訳データ（仕訳済み・未仕訳両方）</strong></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">取得期間</td>
+            <td class="small">今日から<strong>2カ月前の1日</strong>〜今日</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">照合方法</td>
+            <td class="small">
+              未収請求書の取引先に登録された<strong>振込名義</strong>と、仕訳の備考欄を照合（カタカナ表記で部分一致）
+            </td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">表示条件</td>
+            <td class="small">振込名義と備考が<strong>一致した仕訳</strong>のみ「未収再確認」タブに表示</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">注意</td>
+            <td class="small text-danger fw-semibold">振込名義が顧客リストに未登録の場合は検出されない</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="alert alert-secondary py-2 small mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      このボタンは <strong>会計未仕分けタブには影響しません</strong>。会計未仕分けは「未仕分けチェック（MF会計）」ボタンで独立して取得します。
+    </div>
+  </div>
+</div>
+
+{# ===== 4. 会計未仕分けルール ===== #}
+<div id="section-unclassified" class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">
+    <i class="bi bi-bank me-2 text-warning"></i>4. 会計未仕分けルール
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      「未仕分けチェック（MF会計）」ボタンを押したときの動作ルールです。<strong>会計未仕分けタブにのみ</strong>反映されます。
+    </p>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-warning">
+          <tr>
+            <th style="width:140px">項目</th>
+            <th>内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-semibold small">取得元</td>
+            <td class="small">MFクラウド会計の<strong>未仕分けデータ（is_realized=false）のみ</strong></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">取得期間</td>
+            <td class="small">今日から<strong>2カ月前の1日</strong>〜今日</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">表示条件</td>
+            <td class="small">MFクラウド会計で<strong>まだ仕訳が完了していない取引すべて</strong></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold small">重複除外</td>
+            <td class="small">一度取得した取引IDは2回目以降のチェックで重複追加されない</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card border-0 bg-light p-3 mb-2">
+      <div class="fw-semibold small mb-2">各操作ボタンの動作</div>
+      <div class="d-flex flex-column gap-2 small text-muted">
+        <div><span class="badge bg-success me-1">編集</span> 振込名義を入力して未収請求書と紐づける。紐づけると未収から消える。</div>
+        <div><span class="badge bg-info me-1">顧客登録</span> 振込名義を顧客リストに登録。次回から「まとめて再確認」で自動検出されるようになる。</div>
+        <div><span class="badge bg-danger me-1">削除</span> 一覧から非表示にする（入金でない取引など）。</div>
+      </div>
+    </div>
+    <div class="alert alert-secondary py-2 small mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      このボタンは <strong>未収再確認タブには影響しません</strong>。
+    </div>
+  </div>
+</div>
+
+{# ===== 5. MFステータス定義 ===== #}
 <div id="section-status" class="card shadow-sm mb-4">
   <div class="card-header fw-bold">
     <i class="bi bi-tags me-2 text-primary"></i>3. MFクラウド請求書 入金ステータス定義
