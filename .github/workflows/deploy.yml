@@ -20,6 +20,6 @@ jobs:
           script: |
             cd ${{ secrets.PROJECT_DIR_REPO }}
             git pull 
-            sudo rsync -av --exclude='tokens/' --exclude='data/' --exclude='.env' ${{ secrets.PROJECT_DIR_REPO }}/ ${{ secrets.PROJECT_DIR }}/
+            sudo rsync -av --exclude='tokens/' --exclude='data/' --exclude='.env' --exclude='output/' ${{ secrets.PROJECT_DIR_REPO }}/ ${{ secrets.PROJECT_DIR }}/
             sudo systemctl restart unpaid_check.service
     
