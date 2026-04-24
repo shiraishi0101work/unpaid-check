@@ -1,0 +1,2067 @@
+{% extends "base.html" %}
+
+{# ==================== 左サイドバー ==================== #}
+{% block sidebar %}
+
+<!-- MF連携ステータス -->
+<div class="sidebar-section">
+  <div class="sidebar-label">MFクラウド連携</div>
+
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-text{% if auth_invoice %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド請求書</span>
+    </span>
+    {% if auth_invoice %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='invoice') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
+
+  <div class="sidebar-item d-flex align-items-center justify-content-between">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-bank{% if auth_accounting %} text-success{% else %} text-muted{% endif %}"></i>
+      <span class="small">クラウド会計</span>
+    </span>
+    {% if auth_accounting %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem">連携済</span>
+    {% else %}
+      <a href="{{ url_for('oauth_start', service_name='accounting') }}" class="btn btn-outline-primary btn-xs py-0 px-2" style="font-size:0.7rem">連携</a>
+    {% endif %}
+  </div>
+
+  {% if auth_invoice %}
+  <div class="sidebar-item">
+    <form method="POST" action="{{ url_for('oauth_revoke', service_name='invoice') }}">
+      <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="請求書連携解除">
+        <i class="bi bi-x-circle"></i> 請求書解除
+      </button>
+    </form>
+  </div>
+  {% endif %}
+  {% if auth_accounting %}
+  <div class="sidebar-item">
+    <form method="POST" action="{{ url_for('oauth_revoke', service_name='accounting') }}">
+      <button class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:0.7rem" title="会計連携解除">
+        <i class="bi bi-x-circle"></i> 会計解除
+      </button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<hr class="sidebar-divider">
+
+
+<!-- 照合実行 -->
+<div class="sidebar-section">
+  <div class="sidebar-label">照合実行</div>
+
+  <form method="POST" action="{{ url_for('run') }}" id="run-form">
+    <input type="hidden" name="fiscal_year" value="{{ fiscal_year }}">
+
+    <div class="sidebar-item">
+      <label class="sidebar-sublabel" style="font-weight:600;color:#4a5568;">
+        <i class="bi bi-calendar-check" style="font-size:0.75rem"></i> 請求書期日月
+      </label>
+      <div class="d-flex gap-1 align-items-center">
+        <input type="month" name="invoice_from_ym" class="form-control form-control-sm"
+               placeholder="開始月" style="flex:1; min-width:0;">
+        <span class="text-muted small">〜</span>
+        <input type="month" name="invoice_to_ym" class="form-control form-control-sm"
+               placeholder="終了月" style="flex:1; min-width:0;">
+      </div>
+      <div class="form-text" style="font-size:0.68rem">支払期限で絞り込み。省略で年度自動設定</div>
+    </div>
+
+    <div class="sidebar-item">
+      <button type="submit" class="btn btn-primary btn-sm w-100"
+        id="run-btn"
+        {% if not auth_invoice %}disabled{% endif %}
+        {% if status.running %}disabled{% endif %}>
+        <i class="bi bi-play-fill"></i>
+        <span id="run-label">
+          {% if status.running %}実行中...{% else %}今すぐ実行{% endif %}
+        </span>
+      </button>
+    </div>
+  </form>
+
+  {% if status.running %}
+  <div class="sidebar-item">
+    <div class="progress mb-1" style="height:6px">
+      <div class="progress-bar progress-bar-striped progress-bar-animated"
+           id="progress-bar" style="width: {{ status.progress }}%"></div>
+    </div>
+    <small class="text-muted" id="progress-msg">{{ status.message }}</small>
+  </div>
+  {% elif status.error %}
+  <div class="sidebar-item">
+    <small class="text-danger"><i class="bi bi-x-circle-fill"></i> {{ status.error }}</small>
+  </div>
+  {% elif status.last_run %}
+  <div class="sidebar-item">
+    <small class="text-muted"><i class="bi bi-clock-history"></i> {{ status.last_run }}</small>
+  </div>
+  {% elif result %}
+  <div class="sidebar-item">
+    <small class="text-muted"><i class="bi bi-clock-history"></i> {{ result.saved_at[:19].replace('T',' ') }}</small>
+  </div>
+  {% endif %}
+</div>
+
+<hr class="sidebar-divider">
+
+<!-- レポート -->
+<div class="sidebar-section">
+  <div class="sidebar-label">レポート</div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('download') }}"
+       class="btn btn-outline-success btn-sm w-100 {% if not result %}disabled{% endif %}">
+      <i class="bi bi-file-earmark-excel"></i> Excelダウンロード
+    </a>
+  </div>
+  <div class="sidebar-item">
+    <form method="POST" action="{{ url_for('clear_data') }}"
+          onsubmit="return confirm('表示データをクリアします。よろしいですか？')">
+      <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+              {% if not result %}disabled{% endif %}>
+        <i class="bi bi-trash me-1"></i>データクリア
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- 月次確定セクション -->
+<hr class="sidebar-divider">
+<div class="sidebar-section">
+  <div class="sidebar-label">月次確定</div>
+  <div class="sidebar-item">
+    <button class="btn btn-outline-primary btn-sm w-100"
+            {% if not result %}disabled{% endif %}
+            data-bs-toggle="modal" data-bs-target="#historyConfirmModal">
+      <i class="bi bi-calendar-check me-1"></i>今月を確定する
+    </button>
+  </div>
+  {% if history_list %}
+  <div class="sidebar-item">
+    <a href="{{ url_for('history_list_page') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-clock-history me-1"></i>履歴を見る（{{ history_list|length }}件）
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% if result %}
+<hr class="sidebar-divider">
+
+<!-- 集計サマリー（サイドバー） -->
+<div class="sidebar-section">
+  <div class="sidebar-label">集計（{{ fiscal_year }}年度）</div>
+
+  <a href="#tab-overdue" class="sidebar-stat-item text-decoration-none" data-tab="tab-overdue">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-circle-fill text-danger"></i>
+      <span class="small text-dark">未収</span>
+    </span>
+    <span class="badge bg-danger">{{ overdue|length }}</span>
+  </a>
+
+  <a href="#tab-seikyu-kakunin" class="sidebar-stat-item text-decoration-none" data-tab="tab-seikyu-kakunin">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-question-circle-fill text-info"></i>
+      <span class="small text-dark">請求済みか確認</span>
+    </span>
+    <span class="badge bg-info text-dark">{{ seikyu_kakunin|length }}</span>
+  </a>
+
+  {% if draft_overdue %}
+  <a href="#tab-draft-overdue" class="sidebar-stat-item text-decoration-none" data-tab="tab-draft-overdue">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-text text-secondary"></i>
+      <span class="small text-dark">下書き（期限超過）</span>
+    </span>
+    <span class="badge bg-secondary">{{ draft_overdue|length }}</span>
+  </a>
+  {% endif %}
+
+  <a href="#tab-upcoming" class="sidebar-stat-item text-decoration-none" data-tab="tab-upcoming">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-hourglass-split text-warning"></i>
+      <span class="small text-dark">期日前（未入金）</span>
+    </span>
+    <span class="badge bg-warning text-dark">{{ upcoming|length }}</span>
+  </a>
+
+  <a href="#tab-paid" class="sidebar-stat-item text-decoration-none" data-tab="tab-paid">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-check-circle-fill text-success"></i>
+      <span class="small text-dark">入金確認済み</span>
+    </span>
+    <span class="badge bg-success">{{ paid_fy|length }}</span>
+  </a>
+
+  {% if ichiji_hokan %}
+  <a href="#tab-ichiji" class="sidebar-stat-item text-decoration-none" data-tab="tab-ichiji">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-archive-fill text-purple" style="color:#6f42c1"></i>
+      <span class="small text-dark">未収解消済み</span>
+    </span>
+    <span class="badge" style="background:#6f42c1">{{ ichiji_hokan|length }}</span>
+  </a>
+  {% endif %}
+
+</div>
+{% endif %}
+
+<hr class="sidebar-divider">
+
+<!-- 設定 -->
+<div class="sidebar-section">
+  <div class="sidebar-item">
+    <a href="{{ url_for('settings_page') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-gear me-1"></i>設定
+    </a>
+  </div>
+</div>
+
+{% endblock %}
+
+{# ==================== メインコンテンツ ==================== #}
+{% block content %}
+
+{# ===== 年度ナビゲーション ===== #}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center gap-3">
+    <a href="{{ url_for('dashboard', year=prev_year) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-chevron-left"></i> {{ prev_year }}年度
+    </a>
+    <div class="text-center">
+      <h5 class="fw-bold mb-0">{{ fiscal_year }}年度</h5>
+      <small class="text-muted">{{ fy_from }} 〜 {{ fy_to }}</small>
+    </div>
+    <a href="{{ url_for('dashboard', year=next_year) }}" class="btn btn-outline-secondary btn-sm">
+      {{ next_year }}年度 <i class="bi bi-chevron-right"></i>
+    </a>
+  </div>
+  {% if settings.company_name %}
+  <span class="text-muted small"><i class="bi bi-building me-1"></i>{{ settings.company_name }}</span>
+  {% endif %}
+</div>
+
+{% if not result %}
+{# まだ実行されていない #}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-inbox fs-1"></i>
+  <p class="mt-3">
+    {% if not auth_invoice %}
+      先に左サイドバーからMFクラウド請求書との連携を行ってください。
+    {% else %}
+      「今すぐ実行」ボタンで照合を開始してください。
+    {% endif %}
+  </p>
+</div>
+
+{% else %}
+
+{# ===== サマリーカード ===== #}
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-danger shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-danger fw-bold small mb-1">未収</div>
+            <div class="fs-3 fw-bold text-danger">{{ overdue|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-exclamation-circle-fill text-danger opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-warning shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-warning fw-bold small mb-1">期日前（未入金）</div>
+            <div class="fs-3 fw-bold text-warning">{{ upcoming|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-hourglass-split text-warning opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-success fw-bold small mb-1">入金確認済み</div>
+            <div class="fs-3 fw-bold text-success">{{ paid_fy|length }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-check-circle-fill text-success opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">¥{{ "{:,.0f}".format(paid_fy|sum(attribute='請求金額')) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="text-info fw-bold small mb-1">全請求書（年度計）</div>
+            <div class="fs-3 fw-bold text-info">{{ (overdue|length) + (seikyu_kakunin|length) + (draft_overdue|length) + (upcoming|length) + (paid_fy|length) }}<span class="fs-6 fw-normal ms-1">件</span></div>
+          </div>
+          <i class="bi bi-collection-fill text-info opacity-25" style="font-size:2.5rem"></i>
+        </div>
+        <div class="text-muted small mt-1">合計 {{ (overdue|length) + (seikyu_kakunin|length) + (draft_overdue|length) + (upcoming|length) + (paid_fy|length) }} 件</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# ===== タブテーブル ===== #}
+<ul class="nav nav-tabs mb-0" id="resultTabs">
+  <li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="tab" href="#tab-overdue" id="btn-tab-overdue">
+      <i class="bi bi-exclamation-circle text-danger"></i> 未収
+      <span class="badge bg-danger ms-1">{{ overdue|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-recheck" id="btn-tab-recheck">
+      <i class="bi bi-search text-primary"></i> 未収再確認
+      {% set recheck_visible = recheck_records | selectattr("linked_invoice_id", "none") | list %}
+      {% if recheck_visible %}
+      <span class="badge bg-primary ms-1">{{ recheck_visible|length }}</span>
+      {% endif %}
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-furikomi-confirm" id="btn-tab-furikomi-confirm">
+      <i class="bi bi-person-plus text-warning"></i> 振込名義確認
+      {% set furikomi_unlinked = furikomi_unconfirmed | selectattr("linked_invoice_id", "none") | list %}
+      {% if furikomi_unlinked %}
+      <span class="badge bg-warning text-dark ms-1">{{ furikomi_unlinked|length }}</span>
+      {% endif %}
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-seikyu-kakunin" id="btn-tab-seikyu-kakunin">
+      <i class="bi bi-question-circle text-info"></i> 請求済みか確認
+      <span class="badge bg-info text-dark ms-1">{{ seikyu_kakunin|length }}</span>
+    </a>
+  </li>
+  {% if draft_overdue %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-draft-overdue" id="btn-tab-draft-overdue">
+      <i class="bi bi-file-earmark-text text-secondary"></i> 下書き（期限超過）
+      <span class="badge bg-secondary ms-1">{{ draft_overdue|length }}</span>
+    </a>
+  </li>
+  {% endif %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-upcoming" id="btn-tab-upcoming">
+      <i class="bi bi-hourglass-split text-warning"></i> 期日前
+      <span class="badge bg-warning text-dark ms-1">{{ upcoming|length }}</span>
+    </a>
+  </li>
+  {% if ichiji_hokan %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-ichiji" id="btn-tab-ichiji">
+      <i class="bi bi-check2-square" style="color:#6f42c1"></i> 未収解消済み
+      <span class="badge ms-1" style="background:#6f42c1">{{ ichiji_hokan|length }}</span>
+    </a>
+  </li>
+  {% endif %}
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#tab-paid" id="btn-tab-paid">
+      <i class="bi bi-check-circle text-success"></i> 入金確認済み
+      <span class="badge bg-success ms-1">{{ paid_fy|length }}</span>
+    </a>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-3 bg-white shadow-sm">
+
+  {# --- 支払期限超過 --- #}
+  <div class="tab-pane fade show active" id="tab-overdue">
+    {% if overdue %}
+    <div class="d-flex justify-content-end mb-2">
+      <button id="recheck-all-btn"
+        class="btn btn-sm {% if auth_accounting %}btn-outline-info{% else %}btn-outline-secondary{% endif %}"
+        {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}>
+        <i class="bi bi-search me-1"></i>まとめて再確認（MF会計）
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-danger">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>入金予定日</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:70px">編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in overdue %}
+          {% set has_note = b.メモ_手動 or b.入金予定日_手動 %}
+          <tr {% if b.部分入金 %}class="table-warning"{% elif has_note %}class="row-noted"{% endif %} id="overdue-row-{{ b.請求書ID }}">
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">
+              {% if b.部分入金 %}
+                <span class="badge bg-warning text-dark d-block mb-1" style="font-size:0.65rem">部分入金済</span>
+                <span class="text-danger">¥{{ "{:,.0f}".format(b.残額) }}</span>
+                <small class="text-muted d-block" style="font-size:0.7rem">請求: ¥{{ "{:,.0f}".format(b.請求金額) }}</small>
+              {% else %}
+                ¥{{ "{:,.0f}".format(b.請求金額) }}
+              {% endif %}
+            </td>
+            <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
+              {{ b.入金予定日_手動 or '—' }}
+            </td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                data-yotei-date="{{ b.入金予定日_手動 }}"
+                data-kojinmei="{{ b.個人名 | default('') }}"
+                data-kaisho="false">
+                <i class="bi bi-pencil-fill"></i> 編集
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end">¥{{ "{:,.0f}".format(overdue|sum(attribute='請求金額')) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>未収の請求書はありません
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- 請求済みか確認 --- #}
+  <div class="tab-pane fade" id="tab-seikyu-kakunin">
+    {% if seikyu_kakunin %}
+    <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
+      <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+      <span>請求書をお客様に送付済み（DL・メール・郵送）ですが、MF上の入金ステータスが「未設定」のものです。入金確認済みならMFを更新、未請求なら「未請求」ボタンで除外してください。</span>
+    </div>
+
+    {# 一括操作バー #}
+    <div class="d-flex align-items-center gap-2 mb-2" id="seikyu-bulk-bar">
+      <button class="btn btn-outline-danger btn-sm" id="seikyu-bulk-btn" disabled>
+        <i class="bi bi-x-circle me-1"></i>未請求にする（<span id="seikyu-check-count">0</span>件）
+      </button>
+      <span class="text-muted small" id="seikyu-select-hint">行を選択してまとめて操作できます</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0" id="seikyu-table">
+        <thead class="table-info">
+          <tr>
+            <th style="width:36px">
+              <input type="checkbox" id="seikyu-check-all" class="form-check-input">
+            </th>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>送付方法</th>
+            <th>入金予定日</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:140px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in seikyu_kakunin %}
+          {% set has_note_s = b.メモ_手動 or b.入金予定日_手動 %}
+          <tr id="seikyu-row-{{ b.請求書ID }}" {% if has_note_s %}class="row-noted"{% endif %}>
+            <td>
+              <input type="checkbox" class="form-check-input seikyu-check"
+                value="{{ b.請求書ID }}">
+            </td>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small">
+              {% if b.DL済み %}<span class="badge bg-light text-dark border me-1"><i class="bi bi-download"></i> DL</span>{% endif %}
+              {% if b.メール状態 and b.メール状態 != "未送信" %}<span class="badge bg-light text-dark border me-1"><i class="bi bi-envelope"></i> メール</span>{% endif %}
+              {% if b.送付状態 and b.送付状態 != "未郵送" %}<span class="badge bg-light text-dark border me-1"><i class="bi bi-mailbox"></i> 郵送</span>{% endif %}
+            </td>
+            <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
+              {{ b.入金予定日_手動 or '—' }}
+            </td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}"
+                  data-tantou="{{ b.担当者 }}"
+                  data-memo="{{ b.メモ_手動 }}"
+                  data-kikin-date="{{ b.着金日_手動 }}"
+                  data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                  data-yotei-date="{{ b.入金予定日_手動 }}"
+                  data-kojinmei="{{ b.個人名 | default('') }}">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm py-0 px-2 seikyu-unmade-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}">
+                  未請求
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td></td>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end">¥{{ "{:,.0f}".format(seikyu_kakunin|sum(attribute='請求金額')) }}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>
+      請求済みか確認対象の請求書はありません
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- 下書き（期限超過） --- #}
+  {% if draft_overdue %}
+  <div class="tab-pane fade" id="tab-draft-overdue">
+    <div class="alert alert-secondary d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
+      <i class="bi bi-info-circle-fill"></i>
+      <span>顧客への送付（メール・郵送・PDF共有）が確認できない請求書です。MFクラウド請求書上で下書きのまま期限が過ぎているものが表示されます。不要なものは「削除」で非表示にできます。</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:120px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in draft_overdue %}
+          <tr id="draft-row-{{ b.請求書ID }}">
+            <td class="fw-semibold text-muted">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-secondary fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end text-muted">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}"
+                  data-tantou="{{ b.担当者 }}"
+                  data-memo="{{ b.メモ_手動 }}"
+                  data-kikin-date="{{ b.着金日_手動 }}"
+                  data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                  data-kojinmei="{{ b.個人名 | default('') }}">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm py-0 px-2 draft-delete-btn"
+                  data-id="{{ b.請求書ID }}"
+                  data-name="{{ b.取引先名 }}"
+                  data-num="{{ b.請求番号 }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end text-muted">¥{{ "{:,.0f}".format(draft_overdue|sum(attribute='請求金額')) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {# --- 期日前 --- #}
+  <div class="tab-pane fade" id="tab-upcoming">
+    {% if upcoming %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-warning">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>社内メモ</th>
+            <th class="text-center" style="width:70px">編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in upcoming %}
+          <tr>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small text-muted">{{ b.メモ_手動 }}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                data-kojinmei="{{ b.個人名 | default('') }}">
+                <i class="bi bi-pencil-fill"></i> 編集
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end">¥{{ "{:,.0f}".format(upcoming|sum(attribute='請求金額')) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle-fill text-success fs-3"></i><br>期日前の未入金請求書はありません
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- 未収解消済み --- #}
+  {% if ichiji_hokan %}
+  <div class="tab-pane fade" id="tab-ichiji">
+    <div class="alert d-flex align-items-center gap-2 py-2 mb-3" style="background:#f3eeff;border-color:#c9b8f0;font-size:0.82rem">
+      <i class="bi bi-check2-square flex-shrink-0" style="color:#6f42c1"></i>
+      <span>未収解消済みとしてマークした請求書です。編集ボタンから<strong>未収に戻す</strong>ことができます。</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead style="background:#e8d8ff">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th>理由（社内メモ）</th>
+            <th class="text-center" style="width:70px">編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in ichiji_hokan %}
+          <tr>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">
+              {% if b.担当者 %}
+                <span class="badge bg-secondary">{{ b.担当者 }}</span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-danger fw-bold">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="small">
+              <span class="badge rounded-pill text-bg-light border" style="font-size:0.8rem;white-space:normal;text-align:left">
+                {{ b.メモ_手動 }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                data-kojinmei="{{ b.個人名 | default('') }}"
+                data-kaisho="true">
+                <i class="bi bi-pencil-fill"></i> 編集
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot style="background:#e8d8ff;font-weight:bold">
+          <tr>
+            <td colspan="4">合計</td>
+            <td></td>
+            <td class="text-end">¥{{ "{:,.0f}".format(ichiji_hokan|sum(attribute='請求金額')) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {# --- 未収再確認 --- #}
+  <div class="tab-pane fade" id="tab-recheck">
+    <div class="alert alert-primary d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
+      <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+      <span>未収リストの「再確認」ボタンを押すと、MFクラウド会計からその取引先の入金履歴（2ヶ月前まで）を抽出します。「請求書照合」ボタンで請求書番号と紐付けると未収から消えます。</span>
+    </div>
+
+    <div id="recheck-loading" class="text-center py-4 d-none">
+      <div class="spinner-border text-primary"></div>
+      <div class="mt-2 text-muted small">MFクラウド会計から入金履歴を取得中...</div>
+    </div>
+
+    {% set visible_records = recheck_records | rejectattr("deleted") | list if recheck_records else [] %}
+    {% if visible_records %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-primary">
+          <tr>
+            <th>取引先名（会計）</th>
+            <th>着金日</th>
+            <th class="text-end">入金金額</th>
+            <th class="text-end">差額</th>
+            <th>科目</th>
+            <th>備考</th>
+            <th style="min-width:130px">メモ</th>
+            <th>状態</th>
+            <th class="text-center" style="width:160px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in visible_records %}
+          <tr id="recheck-row-{{ r.id }}" {% if r.linked_invoice_id %}class="table-success"{% endif %}>
+            <td class="fw-semibold small">{{ r.取引先名 }}</td>
+            <td class="small fw-bold {% if not r.linked_invoice_id %}text-primary{% endif %}">{{ r.着金日 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(r.入金金額) }}</td>
+            <td class="text-end small recheck-diff-cell {% if r.差額 %}text-danger fw-semibold{% else %}text-muted{% endif %}">
+              {% if r.差額 %}¥{{ "{:,.0f}".format(r.差額) }}{% endif %}
+            </td>
+            <td class="small text-muted">{{ r.科目 }}</td>
+            <td class="small text-muted">{{ r.備考 }}</td>
+            <td>
+              <input type="text" class="form-control form-control-sm recheck-memo-input"
+                data-id="{{ r.id }}"
+                value="{{ r.memo }}"
+                placeholder="メモ">
+            </td>
+            <td class="small recheck-status-cell">
+              {% if r.linked_invoice_id %}
+                <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>照合済</span>
+                <div class="text-muted" style="font-size:0.7rem">{{ r.linked_invoice_num }}</div>
+              {% else %}
+                <span class="badge bg-warning text-dark">未照合</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center flex-wrap">
+                <button class="btn {% if r.linked_invoice_id %}btn-outline-secondary{% else %}btn-outline-success{% endif %} btn-sm py-0 px-2 recheck-link-btn"
+                  data-id="{{ r.id }}"
+                  data-name="{{ r.取引先名 }}"
+                  data-date="{{ r.着金日 }}"
+                  data-amt="{{ r.入金金額 }}"
+                  data-linked-invoice="{{ r.linked_invoice_id or '' }}"
+                  data-linked-invoice-num="{{ r.linked_invoice_num or '' }}"
+                  data-samediff="{{ r.差額 or '' }}">
+                  {% if r.linked_invoice_id %}
+                  <i class="bi bi-pencil-fill"></i> 再編集
+                  {% else %}
+                  <i class="bi bi-link-45deg"></i> 請求書照合
+                  {% endif %}
+                </button>
+                <button class="btn btn-outline-danger btn-sm py-0 px-1 recheck-delete-btn"
+                  data-id="{{ r.id }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5" id="recheck-empty">
+      <i class="bi bi-search fs-2 d-block mb-2"></i>
+      未収タブの「まとめて再確認」ボタンを押すと<br>MFクラウド会計の入金履歴がここに表示されます
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- 振込名義確認 --- #}
+  <div class="tab-pane fade" id="tab-furikomi-confirm">
+    <div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
+      <i class="bi bi-person-plus-fill flex-shrink-0"></i>
+      <span>振込名義が未登録の取引先について、MF会計の仕訳から候補を抽出しました。「編集」ボタンで請求書と紐づけると、振込名義が顧客リストに登録され、未収から消えます。</span>
+    </div>
+    {% set furikomi_unlinked = furikomi_unconfirmed | selectattr("linked_invoice_id", "none") | selectattr("deleted", "equalto", false) | list %}
+    {% if furikomi_unlinked %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-warning">
+          <tr>
+            <th>振込名義</th>
+            <th>着金日</th>
+            <th class="text-end">入金金額</th>
+            <th class="text-center" style="width:80px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in furikomi_unlinked %}
+          <tr id="furikomi-row-{{ r.id }}">
+            <td class="small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                title="{{ r.備考 }}">{{ r.備考 }}</td>
+            <td class="small">{{ r.着金日 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(r.入金金額) }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center">
+                <button class="btn btn-outline-success btn-sm py-0 px-2 furikomi-link-btn"
+                  data-id="{{ r.id }}"
+                  data-partner="{{ r.suggested_partner }}"
+                  data-candidate-invoice="{{ r.candidate_invoice_id }}"
+                  data-amt="{{ r.入金金額 }}"
+                  data-date="{{ r.着金日 }}"
+                  data-remark="{{ r.備考 }}">
+                  <i class="bi bi-pencil-fill"></i> 編集
+                </button>
+                <button class="btn btn-outline-danger btn-sm py-0 px-1 furikomi-delete-btn"
+                  data-id="{{ r.id }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-person-plus fs-2 d-block mb-2"></i>
+      未収タブの「まとめて再確認」を押すと<br>振込名義未登録の取引先の候補がここに表示されます
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- 入金確認済み --- #}
+  <div class="tab-pane fade" id="tab-paid">
+    {% if paid_fy %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-success">
+          <tr>
+            <th>取引先名</th><th>請求番号</th><th>件名</th>
+            <th>担当者</th><th>請求日</th><th>支払期限</th>
+            <th class="text-end">請求金額</th>
+            <th class="text-end">着金金額</th>
+            <th class="text-end">差額</th>
+            <th>入金状態</th>
+            <th class="text-center">編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in paid_fy %}
+          {% set manual_amt = b.着金金額_手動 | default(0) | int %}
+          {% set diff = manual_amt - b.請求金額 if manual_amt else 0 %}
+          <tr>
+            <td class="fw-semibold">{{ b.取引先名 }}</td>
+            <td class="text-muted small">{{ b.請求番号 }}</td>
+            <td class="text-muted small">{{ b.件名 }}</td>
+            <td class="small">{{ b.担当者 }}</td>
+            <td class="small">{{ b.請求日 }}</td>
+            <td class="small">{{ b.支払期限 }}</td>
+            <td class="text-end fw-bold">¥{{ "{:,.0f}".format(b.請求金額) }}</td>
+            <td class="text-end small">
+              {% if manual_amt %}¥{{ "{:,.0f}".format(manual_amt) }}{% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td class="text-end small {% if manual_amt and diff < 0 %}text-danger fw-bold{% elif manual_amt and diff > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
+              {% if manual_amt %}
+                {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
+            <td class="text-center">
+              <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
+                data-id="{{ b.請求書ID }}"
+                data-name="{{ b.取引先名 }}"
+                data-num="{{ b.請求番号 }}"
+                data-tantou="{{ b.担当者 }}"
+                data-memo="{{ b.メモ_手動 }}"
+                data-kikin-date="{{ b.着金日_手動 }}"
+                data-kikin-amt="{{ b.着金金額_手動 | default('') }}"
+                data-kojinmei="{{ b.個人名 | default('') }}">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+          <tr>
+            <td colspan="6">合計</td>
+            <td class="text-end">¥{{ "{:,.0f}".format(paid_fy|sum(attribute='請求金額')) }}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">入金確認済みの請求書はありません</div>
+    {% endif %}
+  </div>
+
+
+</div>
+{% endif %}
+
+{# ===== 未請求確認モーダル ===== #}
+<div class="modal fade" id="unmadeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>未請求として除外</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2 small">以下の請求書を「未請求」として「請求済みか確認」リストから除外します。</p>
+        <ul class="small mb-2 ps-3" id="um-list" style="max-height:200px;overflow-y:auto"></ul>
+        <p class="small text-muted mb-0">再実行後も表示されません。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger btn-sm" id="um-confirm-btn">
+          <i class="bi bi-x-circle me-1"></i>未請求にする
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 下書き削除確認モーダル ===== #}
+<div class="modal fade" id="deleteDraftModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-trash me-2 text-danger"></i>下書きを削除</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-1">以下の請求書をリストから削除します。</p>
+        <p class="small fw-semibold mb-0" id="dd-info"></p>
+        <p class="small text-muted mt-2 mb-0">再実行しても表示されなくなります。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger btn-sm" id="dd-confirm-btn">
+          <i class="bi bi-trash me-1"></i>削除
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 案件編集モーダル ===== #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel"><i class="bi bi-pencil-square me-2"></i>案件情報編集</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-invoice-id">
+        <div class="mb-2">
+          <span class="text-muted small" id="edit-invoice-info"></span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">担当者</label>
+          <input type="text" id="edit-tantou" class="form-control" placeholder="例: 田中 太郎">
+          <div class="form-text">このシステム内のみで管理します</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="bi bi-person-fill me-1 text-info"></i>個人名（振込人名）
+          </label>
+          <input type="text" id="edit-kojinmei" class="form-control" placeholder="例: ヤマダタロウ">
+          <div class="form-text">
+            銀行振込の送金者名が会社名でなく個人名の場合に入力。
+            <strong>MF会計の個人名チェック</strong>で使用します。同じ取引先の全請求書に適用されます。
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">社内メモ <span class="badge bg-light text-muted border" style="font-size:0.65rem">MFとは別</span></label>
+          <textarea id="edit-memo" class="form-control" rows="2" placeholder="社内用の備考・連絡事項など"></textarea>
+          <div class="form-text">マネーフォワードのメモとは別に、このシステム内で保存されます</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1 text-primary"></i>入金予定日</label>
+          <input type="date" id="edit-yotei-date" class="form-control">
+          <div class="form-text">未収の管理用。設定すると行が緑色になります。</div>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label fw-semibold">着金日（手動）</label>
+            <input type="date" id="edit-kikin-date" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">着金金額（手動）</label>
+            <div class="input-group">
+              <span class="input-group-text">¥</span>
+              <input type="number" id="edit-kikin-amt" class="form-control" placeholder="0">
+            </div>
+          </div>
+        </div>
+        <div class="mt-2" id="edit-diff-display" style="display:none">
+          <span class="badge bg-warning text-dark fs-6" id="edit-diff-badge"></span>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between align-items-center">
+        <div>
+          <button type="button" class="btn btn-outline-success btn-sm" id="edit-kaisho-btn" style="display:none">
+            <i class="bi bi-check2-square me-1"></i>解消済みにする
+          </button>
+          <button type="button" class="btn btn-outline-warning btn-sm" id="edit-modoru-btn" style="display:none">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>未収に戻す
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="button" class="btn btn-primary ms-1" id="edit-save-btn">
+            <i class="bi bi-save me-1"></i>保存
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ===== 未収再確認：請求書照合モーダル ===== #}
+<div class="modal fade" id="recheckLinkModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-link-45deg me-2 text-success"></i>請求書照合</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-bank me-1"></i><span id="rlink-deal-info"></span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">照合する請求書を選択</label>
+          <select id="rlink-invoice-select" class="form-select">
+            <option value="">-- 請求書を選択 --</option>
+          </select>
+          <div class="form-text">同じ取引先の未収請求書が上に表示されます</div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label fw-semibold small">差額（未入金が残る場合）</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">¥</span>
+            <input type="number" id="rlink-diff-input" class="form-control" placeholder="0" min="0">
+          </div>
+          <div class="form-text" id="rlink-diff-hint">請求書を選択すると自動計算されます</div>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between align-items-center">
+        <button type="button" class="btn btn-outline-danger btn-sm" id="rlink-unlink-btn" style="display:none">
+          <i class="bi bi-x-circle me-1"></i>照合解除
+        </button>
+        <div>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+          <button type="button" class="btn btn-success btn-sm ms-1" id="rlink-confirm-btn">
+            <i class="bi bi-check2-circle me-1"></i>照合確定
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== まとめて再確認：会計期間エラーモーダル ===== #}
+<div class="modal fade" id="recheckPeriodErrorModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>注意</h6>
+      </div>
+      <div class="modal-body pt-2">
+        過去2カ月間が、会計期間をまたいでいるためデータ取得ができません。<br>
+        マネーフォワードクラウド会計でご確認ください。
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== まとめて再確認：ローディングモーダル ===== #}
+<div class="modal fade" id="recheckLoadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content text-center py-4 px-3">
+      <div class="mb-3">
+        <div class="spinner-border text-info" role="status" style="width:2.5rem;height:2.5rem;"></div>
+      </div>
+      <div class="fw-bold mb-1">データ照会中です</div>
+      <div class="text-muted small">しばらくお待ちください</div>
+    </div>
+  </div>
+</div>
+
+{# ===== 振込名義確認：編集モーダル ===== #}
+<div class="modal fade" id="furikomiLinkModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-plus me-2 text-warning"></i>振込名義を登録して紐づけ</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-secondary py-2 small mb-3" id="furikomi-deal-info"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">振込名義（MF会計の備考から確認してください）</label>
+          <input type="text" id="furikomi-name-input" class="form-control" placeholder="例: カ) グリ-ナ-">
+          <div class="form-text">入力した名称が顧客「<span id="furikomi-partner-name"></span>」の振込名義に登録されます</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">紐づける未収請求書 <span class="text-muted fw-normal">(任意)</span></label>
+          <select id="furikomi-invoice-select" class="form-select">
+            <option value="">-- 選択しない（未収以外の入金） --</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-warning btn-sm" id="furikomi-confirm-btn">
+          <i class="bi bi-check2-circle me-1"></i>確定（振込名義登録）
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 月次確定モーダル ===== #}
+<div class="modal fade" id="historyConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-calendar-check me-2 text-primary"></i>月次データを確定する</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-3">現在のチェック結果を選択した月の履歴として保存します。</p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">確定する月</label>
+          <select id="history-ym-select" class="form-select">
+            <option value="{{ prev_ym }}">{{ prev_ym }}（先月）</option>
+            <option value="{{ current_ym }}">{{ current_ym }}（今月）</option>
+          </select>
+        </div>
+        <div class="alert alert-info py-2 small mb-0">
+          <i class="bi bi-info-circle me-1"></i>保存後はExcelダウンロードや一覧表示が可能です。上書き保存もできます。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary btn-sm" id="history-confirm-btn">
+          <i class="bi bi-save me-1"></i>確定・保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 先月未確定ポップアップ ===== #}
+{% if show_history_popup %}
+<div class="modal fade" id="historyPopupModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle">
+        <h6 class="modal-title fw-bold"><i class="bi bi-exclamation-circle me-2 text-warning"></i>先月のデータが未確定です</h6>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2"><strong>{{ prev_ym }}</strong> の月次データがまだ保存されていません。</p>
+        <p class="text-muted small mb-0">確定すると月次履歴として保存され、いつでも参照・Excel出力できます。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="popup-no-btn">後で</button>
+        <button class="btn btn-warning btn-sm" id="popup-yes-btn">
+          <i class="bi bi-save me-1"></i>{{ prev_ym }} を確定する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let polling = {{ 'true' if status.running else 'false' }};
+
+function poll() {
+  if (!polling) return;
+  fetch('/api/status')
+    .then(r => r.json())
+    .then(s => {
+      const btn   = document.getElementById('run-btn');
+      const label = document.getElementById('run-label');
+      const bar   = document.getElementById('progress-bar');
+      const msg   = document.getElementById('progress-msg');
+      if (s.running) {
+        if (btn)   btn.disabled = true;
+        if (label) label.textContent = '実行中...';
+        if (bar)   bar.style.width = s.progress + '%';
+        if (msg)   msg.textContent = s.message;
+        setTimeout(poll, 1500);
+      } else {
+        polling = false;
+        window.location.reload();
+      }
+    })
+    .catch(() => setTimeout(poll, 3000));
+}
+
+if (polling) setTimeout(poll, 1500);
+
+document.getElementById('run-form')?.addEventListener('submit', function() {
+  const btn = document.getElementById('run-btn');
+  if (btn) btn.disabled = true;
+  const label = document.getElementById('run-label');
+  if (label) label.textContent = '実行中...';
+  polling = true;
+  setTimeout(poll, 2000);
+});
+
+// サイドバーの集計アイテムからタブ切り替え
+document.querySelectorAll('.sidebar-stat-item[data-tab]').forEach(el => {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    const tabId = this.dataset.tab;
+    const tabBtn = document.getElementById('btn-' + tabId);
+    if (tabBtn) tabBtn.click();
+    document.getElementById(tabId)?.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+// 編集モーダル
+const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+let _editIsKaisho = false;
+
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const id    = this.dataset.id;
+    const name  = this.dataset.name;
+    const num   = this.dataset.num;
+    const amt   = this.dataset.kikinAmt;
+    _editIsKaisho = this.dataset.kaisho === 'true';
+
+    document.getElementById('edit-invoice-id').value    = id;
+    document.getElementById('edit-invoice-info').textContent = `${num} / ${name}`;
+    document.getElementById('edit-tantou').value         = this.dataset.tantou || '';
+    document.getElementById('edit-memo').value           = this.dataset.memo || '';
+    document.getElementById('edit-yotei-date').value     = this.dataset.yoteiDate || '';
+    document.getElementById('edit-kikin-date').value     = this.dataset.kikinDate || '';
+    document.getElementById('edit-kikin-amt').value      = amt || '';
+    document.getElementById('edit-kojinmei').value       = this.dataset.kojinmei || '';
+
+    // 解消済みボタン切り替え
+    document.getElementById('edit-kaisho-btn').style.display = _editIsKaisho ? 'none' : '';
+    document.getElementById('edit-modoru-btn').style.display = _editIsKaisho ? '' : 'none';
+
+    updateDiffDisplay();
+    editModal.show();
+  });
+});
+
+// 解消済みにする
+document.getElementById('edit-kaisho-btn')?.addEventListener('click', async function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/invoice/${id}/meta`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({解消済み: true}),
+    });
+    const data = await resp.json();
+    if (data.ok) { editModal.hide(); window.location.reload(); }
+    else alert('エラー: ' + (data.error || ''));
+  } catch(e) { alert('エラー: ' + e); }
+  finally { this.disabled = false; }
+});
+
+// 未収に戻す
+document.getElementById('edit-modoru-btn')?.addEventListener('click', async function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/invoice/${id}/meta`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({解消済み: false}),
+    });
+    const data = await resp.json();
+    if (data.ok) { editModal.hide(); window.location.reload(); }
+    else alert('エラー: ' + (data.error || ''));
+  } catch(e) { alert('エラー: ' + e); }
+  finally { this.disabled = false; }
+});
+
+function updateDiffDisplay() {
+  // 差額表示はリアルタイムでは計算しない（請求金額がモーダルにないため）
+  document.getElementById('edit-diff-display').style.display = 'none';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== 請求済みか確認タブ：チェックボックス＋未請求操作 =====
+const unmadeModal = new bootstrap.Modal(document.getElementById('unmadeModal'));
+let _umIds = [];
+
+function seikyuUpdateBulkBar() {
+  const checked = document.querySelectorAll('.seikyu-check:checked');
+  const count = checked.length;
+  const btn = document.getElementById('seikyu-bulk-btn');
+  const cntEl = document.getElementById('seikyu-check-count');
+  if (btn) btn.disabled = count === 0;
+  if (cntEl) cntEl.textContent = count;
+}
+
+// 全選択チェックボックス
+document.getElementById('seikyu-check-all')?.addEventListener('change', function() {
+  document.querySelectorAll('.seikyu-check').forEach(cb => {
+    cb.checked = this.checked;
+  });
+  seikyuUpdateBulkBar();
+});
+
+document.querySelectorAll('.seikyu-check').forEach(cb => {
+  cb.addEventListener('change', seikyuUpdateBulkBar);
+});
+
+function openUnmadeModal(ids, labels) {
+  _umIds = ids;
+  const ul = document.getElementById('um-list');
+  if (ul) {
+    ul.innerHTML = labels.map(l => `<li>${escHtml(l)}</li>`).join('');
+  }
+  unmadeModal.show();
+}
+
+// 行ごとの「未請求」ボタン
+document.querySelectorAll('.seikyu-unmade-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const id  = this.dataset.id;
+    const num = this.dataset.num;
+    const nm  = this.dataset.name;
+    openUnmadeModal([id], [`${num} / ${nm}`]);
+  });
+});
+
+// 一括「未請求にする」ボタン
+document.getElementById('seikyu-bulk-btn')?.addEventListener('click', function() {
+  const checked = document.querySelectorAll('.seikyu-check:checked');
+  const ids    = [];
+  const labels = [];
+  checked.forEach(cb => {
+    const row = document.getElementById(`seikyu-row-${cb.value}`);
+    const cells = row ? row.querySelectorAll('td') : [];
+    const num  = cells[2] ? cells[2].textContent.trim() : '';
+    const nm   = cells[1] ? cells[1].textContent.trim() : '';
+    ids.push(cb.value);
+    labels.push(`${num} / ${nm}`);
+  });
+  if (ids.length > 0) openUnmadeModal(ids, labels);
+});
+
+// モーダル確定ボタン
+document.getElementById('um-confirm-btn')?.addEventListener('click', async function() {
+  if (_umIds.length === 0) return;
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
+  try {
+    const resp = await fetch('/api/invoice/mark-unmade', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ invoice_ids: _umIds }),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      unmadeModal.hide();
+      _umIds.forEach(id => {
+        const row = document.getElementById(`seikyu-row-${id}`);
+        if (row) row.remove();
+      });
+      seikyuUpdateBulkBar();
+      // 全選択チェックボックスもリセット
+      const allCb = document.getElementById('seikyu-check-all');
+      if (allCb) allCb.checked = false;
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-x-circle me-1"></i>未請求にする';
+  }
+});
+
+// ===== 下書き削除モーダル =====
+const deleteDraftModal = new bootstrap.Modal(document.getElementById('deleteDraftModal'));
+let _ddInvoiceId = null;
+
+document.querySelectorAll('.draft-delete-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    _ddInvoiceId = this.dataset.id;
+    document.getElementById('dd-info').textContent =
+      `${this.dataset.num} / ${this.dataset.name}`;
+    deleteDraftModal.show();
+  });
+});
+
+document.getElementById('dd-confirm-btn')?.addEventListener('click', async function() {
+  if (!_ddInvoiceId) return;
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>削除中...';
+  try {
+    const resp = await fetch(`/api/invoice/${_ddInvoiceId}/delete-draft`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      deleteDraftModal.hide();
+      const row = document.getElementById(`draft-row-${_ddInvoiceId}`);
+      if (row) row.remove();
+    } else {
+      alert('削除に失敗しました');
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-trash me-1"></i>削除';
+  }
+});
+
+// ===== 案件編集モーダル =====
+document.getElementById('edit-save-btn')?.addEventListener('click', function() {
+  const id = document.getElementById('edit-invoice-id').value;
+  const payload = {
+    担当者:         document.getElementById('edit-tantou').value.trim(),
+    メモ:           document.getElementById('edit-memo').value.trim(),
+    入金予定日_手動: document.getElementById('edit-yotei-date').value,
+    着金日_手動:     document.getElementById('edit-kikin-date').value,
+    着金金額_手動:   parseInt(document.getElementById('edit-kikin-amt').value) || 0,
+    個人名:         document.getElementById('edit-kojinmei').value.trim(),
+  };
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+
+  fetch(`/api/invoice/${id}/meta`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      editModal.hide();
+      window.location.reload();
+    } else {
+      alert('保存に失敗しました');
+    }
+  })
+  .catch(e => {
+    alert('エラー: ' + e);
+  })
+  .finally(() => {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-save me-1"></i>保存';
+  });
+});
+
+// ===== 未収再確認 =====
+const _overdueList = {{ overdue | tojson }};
+
+// ページロード時、ハッシュが #tab-recheck なら自動でタブ切り替え
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.location.hash === '#tab-recheck') {
+    setTimeout(() => {
+      document.getElementById('btn-tab-recheck')?.click();
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }, 200);
+  }
+});
+
+// 請求書照合モーダル
+const recheckLinkModal = new bootstrap.Modal(document.getElementById('recheckLinkModal'));
+let _rlinkRecordId = null;
+let _rlinkDealAmt  = 0;
+
+function _openRecheckModal(btn) {
+  _rlinkRecordId         = btn.dataset.id;
+  _rlinkDealAmt          = parseInt(btn.dataset.amt) || 0;
+  const partnerName      = btn.dataset.name       || '';
+  const dealDate         = btn.dataset.date        || '';
+  const linkedInvoiceId  = btn.dataset.linkedInvoice    || '';
+  const linkedInvoiceNum = btn.dataset.linkedInvoiceNum || '';
+  const savedDiff        = parseInt(btn.dataset.samediff) || 0;
+
+  document.getElementById('rlink-deal-info').textContent =
+    `${partnerName} / 着金日: ${dealDate} / ¥${Number(_rlinkDealAmt).toLocaleString()}`;
+
+  // ドロップダウン生成
+  const select = document.getElementById('rlink-invoice-select');
+  select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
+
+  // 再編集時: 紐づけ済み請求書が未収リストにない場合はオプション追加
+  if (linkedInvoiceId && !_overdueList.find(b => b['請求書ID'] === linkedInvoiceId)) {
+    const opt = document.createElement('option');
+    opt.value = linkedInvoiceId;
+    opt.textContent = `[現在の紐づけ] ${linkedInvoiceNum}`;
+    select.appendChild(opt);
+  }
+
+  const matching = _overdueList.filter(b => b['取引先名'] === partnerName);
+  const others   = _overdueList.filter(b => b['取引先名'] !== partnerName);
+
+  if (matching.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = `${partnerName} の未収請求書`;
+    matching.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b['請求書ID'];
+      opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限'] || '—'}`;
+      grp.appendChild(opt);
+    });
+    select.appendChild(grp);
+  }
+
+  if (others.length > 0) {
+    const grp2 = document.createElement('optgroup');
+    grp2.label = 'その他の未収請求書';
+    others.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b['請求書ID'];
+      opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
+      grp2.appendChild(opt);
+    });
+    select.appendChild(grp2);
+  }
+
+  // 差額フィールド初期化
+  const diffInput = document.getElementById('rlink-diff-input');
+  document.getElementById('rlink-diff-hint').textContent = '請求書を選択すると自動計算されます';
+  diffInput.value = savedDiff || '';
+
+  // 照合解除ボタン: 再編集時のみ表示
+  const unlinkBtn = document.getElementById('rlink-unlink-btn');
+  if (unlinkBtn) unlinkBtn.style.display = linkedInvoiceId ? '' : 'none';
+
+  // 請求書を選択済みにしてから差額を自動計算
+  if (linkedInvoiceId) {
+    select.value = linkedInvoiceId;
+    select.dispatchEvent(new Event('change'));
+    if (savedDiff) diffInput.value = savedDiff; // 保存済み差額を優先
+  } else if (matching.length === 1) {
+    select.value = matching[0]['請求書ID'];
+    select.dispatchEvent(new Event('change'));
+  }
+
+  recheckLinkModal.show();
+}
+
+// 請求書選択時に差額を自動計算
+document.getElementById('rlink-invoice-select')?.addEventListener('change', function() {
+  const inv = _overdueList.find(b => b['請求書ID'] === this.value);
+  const diffHint  = document.getElementById('rlink-diff-hint');
+  const diffInput = document.getElementById('rlink-diff-input');
+  if (inv) {
+    const invAmt = parseInt(inv['請求金額']) || 0;
+    const diff   = invAmt - _rlinkDealAmt;
+    if (diff > 0) {
+      diffHint.textContent = `自動計算: 請求 ¥${invAmt.toLocaleString()} − 入金 ¥${_rlinkDealAmt.toLocaleString()} = ¥${diff.toLocaleString()}`;
+      if (!diffInput.value) diffInput.value = diff;
+    } else if (diff < 0) {
+      diffHint.textContent = `過払い: 入金 ¥${_rlinkDealAmt.toLocaleString()} > 請求 ¥${invAmt.toLocaleString()}`;
+      diffInput.value = '';
+    } else {
+      diffHint.textContent = '請求金額と入金金額が一致しています';
+      diffInput.value = '';
+    }
+  } else {
+    diffHint.textContent = '請求書を選択すると自動計算されます';
+  }
+});
+
+// イベント委任: 請求書照合・再編集ボタン
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.recheck-link-btn');
+  if (btn) { _openRecheckModal(btn); return; }
+});
+
+document.getElementById('rlink-confirm-btn')?.addEventListener('click', async function() {
+  const invoiceId = document.getElementById('rlink-invoice-select').value;
+  if (!invoiceId) { alert('請求書を選択してください'); return; }
+
+  const diffAmt = parseInt(document.getElementById('rlink-diff-input').value) || 0;
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
+
+  try {
+    const resp = await fetch(`/api/recheck/${_rlinkRecordId}/link`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({invoice_id: invoiceId, 差額: diffAmt || null}),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      recheckLinkModal.hide();
+      const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
+      if (data.差額 && data.差額 > 0) {
+        // 部分入金: 未収に残し、部分入金バッジ＋残額を表示
+        if (overdueRow) {
+          const amtCell = overdueRow.querySelectorAll('td')[5];
+          const inv = _overdueList.find(b => b['請求書ID'] === invoiceId);
+          const invAmt = inv ? Number(inv['請求金額']) : 0;
+          if (amtCell) amtCell.innerHTML =
+            `<span class="badge bg-warning text-dark d-block mb-1" style="font-size:0.65rem">部分入金済</span>
+             <span class="text-danger">¥${Number(data.差額).toLocaleString()}</span>
+             <small class="text-muted d-block" style="font-size:0.7rem">請求: ¥${invAmt.toLocaleString()}</small>`;
+          overdueRow.classList.remove('row-noted');
+          overdueRow.classList.add('table-warning');
+        }
+      } else {
+        // 全額入金: 未収から非表示
+        if (overdueRow) overdueRow.style.display = 'none';
+      }
+      const recheckRow = document.getElementById(`recheck-row-${_rlinkRecordId}`);
+      if (recheckRow) {
+        recheckRow.classList.add('table-success');
+        // 状態セル更新
+        const statusCell = recheckRow.querySelector('.recheck-status-cell');
+        if (statusCell) statusCell.innerHTML =
+          `<span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>照合済</span>
+           <div class="text-muted" style="font-size:0.7rem">${escHtml(data.invoice_num)}</div>`;
+        // 差額セル更新
+        const diffCell = recheckRow.querySelector('.recheck-diff-cell');
+        if (diffCell) {
+          if (data.差額) {
+            diffCell.textContent = `¥${Number(data.差額).toLocaleString()}`;
+            diffCell.className = 'text-end small recheck-diff-cell text-danger fw-semibold';
+          } else {
+            diffCell.textContent = '';
+            diffCell.className = 'text-end small recheck-diff-cell text-muted';
+          }
+        }
+        // 操作セル更新（再編集ボタンに切り替え）
+        const opCell = recheckRow.querySelector('td:last-child');
+        if (opCell) opCell.innerHTML =
+          `<div class="d-flex gap-1 justify-content-center flex-wrap">
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 recheck-link-btn"
+              data-id="${escHtml(_rlinkRecordId)}"
+              data-name="${escHtml(recheckRow.querySelector('td').textContent.trim())}"
+              data-date="${escHtml(recheckRow.querySelectorAll('td')[1].textContent.trim())}"
+              data-amt="${_rlinkDealAmt}"
+              data-linked-invoice="${escHtml(invoiceId)}"
+              data-linked-invoice-num="${escHtml(data.invoice_num)}"
+              data-samediff="${data.差額 || ''}">
+              <i class="bi bi-pencil-fill"></i> 再編集
+            </button>
+            <button class="btn btn-outline-danger btn-sm py-0 px-1 recheck-delete-btn" data-id="${escHtml(_rlinkRecordId)}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>`;
+      }
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>照合確定';
+  }
+});
+
+// 照合解除ボタン
+document.getElementById('rlink-unlink-btn')?.addEventListener('click', async function() {
+  if (!confirm('照合を解除しますか？未収リストへの反映も取り消されます。')) return;
+  this.disabled = true;
+  try {
+    const resp = await fetch(`/api/recheck/${_rlinkRecordId}/unlink`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      recheckLinkModal.hide();
+      window.location.reload();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+  }
+});
+
+// メモ保存（変更時）
+document.querySelectorAll('.recheck-memo-input').forEach(input => {
+  input.addEventListener('change', async function() {
+    const recordId = this.dataset.id;
+    await fetch(`/api/recheck/${recordId}/edit`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({memo: this.value}),
+    });
+  });
+});
+
+// イベント委任: 削除ボタン
+document.addEventListener('click', async function(e) {
+  const btn = e.target.closest('.recheck-delete-btn');
+  if (!btn) return;
+  if (!confirm('この入金履歴を未収再確認リストから削除しますか？')) return;
+  const recordId = btn.dataset.id;
+  try {
+    const resp = await fetch(`/api/recheck/${recordId}/delete`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      const row = document.getElementById(`recheck-row-${recordId}`);
+      if (row) row.remove();
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
+});
+
+// ===== まとめて再確認ボタン =====
+document.getElementById('recheck-all-btn')?.addEventListener('click', async function() {
+  const btn = this;
+  const loadingModal    = new bootstrap.Modal(document.getElementById('recheckLoadingModal'));
+  const periodErrModal  = new bootstrap.Modal(document.getElementById('recheckPeriodErrorModal'));
+
+  btn.disabled = true;
+  loadingModal.show();
+
+  const finish = () => {
+    loadingModal.hide();
+    btn.disabled = false;
+  };
+
+  try {
+    const resp = await fetch('/api/overdue/recheck_all', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      finish();
+      alert('エラー: ' + (data.error || ''));
+      return;
+    }
+    // バックグラウンド実行 → ポーリングで完了待ち
+    const poll = setInterval(async () => {
+      try {
+        const sr = await fetch('/api/overdue/recheck_all/status');
+        const st = await sr.json();
+        if (st.running) return; // まだ実行中
+        clearInterval(poll);
+        finish();
+        // モーダルのfadeアニメーション完了を待ってから次の処理
+        setTimeout(() => {
+          if (st.error_type === 'accounting_period') {
+            periodErrModal.show();
+          } else if (st.error) {
+            alert('照合エラー:\n' + st.error);
+          } else if (st.result) {
+            const r = st.result;
+            alert(`照合完了\n・未収再確認タブ: ${r.new_recheck}件追加（計${r.total_recheck}件）\n・振込名義確認タブ: ${r.new_furikomi}件追加（計${r.total_furikomi}件）`);
+            window.location.reload();
+          }
+        }, 400);
+      } catch(e) {
+        clearInterval(poll);
+        finish();
+        alert('ポーリングエラー: ' + e.message);
+      }
+    }, 3000);
+  } catch(e) {
+    finish();
+    alert('エラー: ' + e.message);
+  }
+});
+
+// ===== 振込名義確認タブ =====
+const furikomiLinkModal = new bootstrap.Modal(document.getElementById('furikomiLinkModal'));
+let _furikomiRecordId = null;
+
+document.querySelectorAll('.furikomi-link-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    _furikomiRecordId = this.dataset.id;
+    const partner    = this.dataset.partner;
+    const candInv    = this.dataset.candidateInvoice;
+    const amt        = parseInt(this.dataset.amt) || 0;
+    const date       = this.dataset.date;
+    const remark     = this.dataset.remark;
+
+    document.getElementById('furikomi-deal-info').textContent =
+      `振込名義: ${remark} / 着金日: ${date} / ¥${amt.toLocaleString()}`;
+    document.getElementById('furikomi-partner-name').textContent = partner;
+    document.getElementById('furikomi-name-input').value = '';
+
+    // プルダウン: 同取引先の未収を上に
+    const select = document.getElementById('furikomi-invoice-select');
+    select.innerHTML = '<option value="">-- 請求書を選択 --</option>';
+    const matching = _overdueList.filter(b => b['取引先名'] === partner);
+    const others   = _overdueList.filter(b => b['取引先名'] !== partner);
+    if (matching.length > 0) {
+      const grp = document.createElement('optgroup');
+      grp.label = `${partner} の未収請求書`;
+      matching.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()} / 期限:${b['支払期限']||'—'}`;
+        grp.appendChild(opt);
+      });
+      select.appendChild(grp);
+    }
+    if (others.length > 0) {
+      const grp2 = document.createElement('optgroup');
+      grp2.label = 'その他';
+      others.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b['請求書ID'];
+        opt.textContent = `[${b['取引先名']}] ${b['請求番号']} / ¥${Number(b['請求金額']).toLocaleString()}`;
+        grp2.appendChild(opt);
+      });
+      select.appendChild(grp2);
+    }
+    // 候補請求書が1件なら自動選択
+    if (candInv) select.value = candInv;
+    else if (matching.length === 1) select.value = matching[0]['請求書ID'];
+
+    furikomiLinkModal.show();
+  });
+});
+
+document.getElementById('furikomi-confirm-btn')?.addEventListener('click', async function() {
+  const invoiceId    = document.getElementById('furikomi-invoice-select').value;
+  const furikomiName = document.getElementById('furikomi-name-input').value.trim();
+  if (!furikomiName) { alert('振込名義を入力してください'); return; }
+
+  // 選択した請求書の番号
+  const selOpt     = document.getElementById('furikomi-invoice-select').selectedOptions[0];
+  const invoiceNum = selOpt ? selOpt.textContent.split(' / ')[0] : '';
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>処理中...';
+  try {
+    const resp = await fetch(`/api/furikomi_confirm/${_furikomiRecordId}/link`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({invoice_id: invoiceId, invoice_num: invoiceNum, furikomi_name: furikomiName}),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      furikomiLinkModal.hide();
+      // 未収行を即時非表示
+      const overdueRow = document.getElementById(`overdue-row-${invoiceId}`);
+      if (overdueRow) overdueRow.style.display = 'none';
+      // 振込名義確認行を非表示
+      const furikomiRow = document.getElementById(`furikomi-row-${_furikomiRecordId}`);
+      if (furikomiRow) furikomiRow.remove();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-check2-circle me-1"></i>確定（振込名義登録）';
+  }
+});
+
+// 振込名義確認 削除ボタン
+document.querySelectorAll('.furikomi-delete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    if (!confirm('この候補を削除しますか？')) return;
+    const recordId = this.dataset.id;
+    const resp = await fetch(`/api/furikomi_confirm/${recordId}/delete`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      const row = document.getElementById(`furikomi-row-${recordId}`);
+      if (row) row.remove();
+    }
+  });
+});
+
+// ===== 月次確定モーダル =====
+async function confirmHistory(yearMonth) {
+  const btn = document.getElementById('history-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  try {
+    const resp = await fetch('/api/history/confirm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: yearMonth}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('historyConfirmModal'))?.hide();
+      location.href = '/history/' + yearMonth;
+    } else {
+      alert('エラー: ' + (data.error || '確定に失敗しました'));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>確定・保存';
+  }
+}
+
+document.getElementById('history-confirm-btn')?.addEventListener('click', function() {
+  const ym = document.getElementById('history-ym-select').value;
+  confirmHistory(ym);
+});
+
+// ===== 先月未確定ポップアップ =====
+{% if show_history_popup %}
+document.addEventListener('DOMContentLoaded', function() {
+  new bootstrap.Modal(document.getElementById('historyPopupModal')).show();
+
+  document.getElementById('popup-yes-btn').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+    const resp = await fetch('/api/history/confirm', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: '{{ prev_ym }}'}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      location.href = '/history/{{ prev_ym }}';
+    } else {
+      alert('エラー: ' + (data.error || ''));
+      this.disabled = false;
+      this.innerHTML = '<i class="bi bi-save me-1"></i>{{ prev_ym }} を確定する';
+    }
+  });
+
+  document.getElementById('popup-no-btn').addEventListener('click', function() {
+    fetch('/api/history/dismiss-popup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year_month: '{{ prev_ym }}'}),
+    });
+    bootstrap.Modal.getInstance(document.getElementById('historyPopupModal')).hide();
+  });
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+name: Deploy to Server
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ${{ secrets.PROJECT_DIR_REPO }}
+            git pull 
+            sudo rsync -av --exclude='tokens/' --exclude='data/' --exclude='.env' ${{ secrets.PROJECT_DIR_REPO }}/ ${{ secrets.PROJECT_DIR }}/
+            sudo systemctl restart unpaid_check.service
+    

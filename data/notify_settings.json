@@ -1,0 +1,9 @@
+{
+  "notify_enabled": true,
+  "notify_emails": [
+    "shiraishi@dellaforce.com",
+    "info@dellaforce.com"
+  ],
+  "email_subject": "【未入金チェックシステム】MFクラウド請求書の再認証が必要です",
+  "email_body": "{company_name} のMFクラウド請求書との連携トークンが失効しました。\n\nこのままでは未入金チェックが実行できません。\n以下のURLにアクセスし、再認証を行ってください。\n\n▼ 再認証URL\n{domain}/oauth/start/invoice\n\n【手順】\n1. 上記URLにアクセスしてログイン（ログインID: {company_email}）\n2. ログイン後、自動的にMFクラウドの認証画面へ移動します\n3. MFクラウドで「許可する」を押して完了です\n\nご不明な点があればシステム管理者にお問い合わせください。\n\n----\nこのメールは未入金チェックシステムから自動送信されています。\n返信は不要です。\n"
+}

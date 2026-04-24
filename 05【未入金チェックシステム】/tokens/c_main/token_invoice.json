@@ -1,8 +1,0 @@
-{
-  "access_token": "VWM3nPXK2VNJAvUVGaZsusp7gCJvf_qrCfSKS1Gd_X4",
-  "refresh_token": "gbmSiwO24z3-hMmAWEac5m99aOneFWtQIwOf2kHaS64",
-  "scope": "mfc/invoice/data.read mfc/invoice/data.write",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "saved_at": 1776841552.4313724
-}
