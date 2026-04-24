@@ -875,33 +875,46 @@
     {% endif %}
   </div>
 
-  {# --- 振込名義確認 --- #}
+  {# --- 会計未仕分け --- #}
   <div class="tab-pane fade" id="tab-furikomi-confirm">
     <div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
-      <i class="bi bi-person-plus-fill flex-shrink-0"></i>
-      <span>振込名義が未登録の取引先について、MF会計の仕訳から候補を抽出しました。「編集」ボタンで請求書と紐づけると、振込名義が顧客リストに登録され、未収から消えます。</span>
+      <i class="bi bi-bank flex-shrink-0"></i>
+      <span>MFクラウド会計の未仕分け（銀行振込）データを表示します。「未仕分けチェック」ボタンで最新データを取得し、顧客リストへの振込名義登録や請求書との紐づけができます。</span>
     </div>
+
+    <div class="d-flex justify-content-end mb-2">
+      <button id="unclassified-check-btn"
+        class="btn btn-sm {% if auth_accounting %}btn-outline-warning{% else %}btn-outline-secondary{% endif %}"
+        {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}>
+        <i class="bi bi-bank me-1"></i>未仕分けチェック（MF会計）
+      </button>
+    </div>
+
     {% set furikomi_unlinked = furikomi_unconfirmed | selectattr("linked_invoice_id", "none") | selectattr("deleted", "equalto", false) | list %}
     {% if furikomi_unlinked %}
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-warning">
           <tr>
-            <th>振込名義</th>
+            <th>備考（振込名義候補）</th>
+            <th>取引先名（会計）</th>
             <th>着金日</th>
             <th class="text-end">入金金額</th>
-            <th class="text-center" style="width:80px">操作</th>
+            <th>科目</th>
+            <th class="text-center" style="width:170px">操作</th>
           </tr>
         </thead>
         <tbody>
           {% for r in furikomi_unlinked %}
           <tr id="furikomi-row-{{ r.id }}">
-            <td class="small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+            <td class="small" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="{{ r.備考 }}">{{ r.備考 }}</td>
+            <td class="small text-muted">{{ r.取引先名 or '—' }}</td>
             <td class="small">{{ r.着金日 }}</td>
             <td class="text-end fw-bold">¥{{ "{:,.0f}".format(r.入金金額) }}</td>
+            <td class="small text-muted">{{ r.科目 }}</td>
             <td class="text-center">
-              <div class="d-flex gap-1 justify-content-center">
+              <div class="d-flex gap-1 justify-content-center flex-wrap">
                 <button class="btn btn-outline-success btn-sm py-0 px-2 furikomi-link-btn"
                   data-id="{{ r.id }}"
                   data-partner="{{ r.suggested_partner }}"
@@ -909,7 +922,15 @@
                   data-amt="{{ r.入金金額 }}"
                   data-date="{{ r.着金日 }}"
                   data-remark="{{ r.備考 }}">
-                  <i class="bi bi-pencil-fill"></i> 編集
+                  <i class="bi bi-link-45deg"></i> 編集
+                </button>
+                <button class="btn btn-outline-info btn-sm py-0 px-2 uc-register-btn"
+                  data-id="{{ r.id }}"
+                  data-remark="{{ r.備考 }}"
+                  data-date="{{ r.着金日 }}"
+                  data-amt="{{ r.入金金額 }}"
+                  title="顧客リストに振込名義を登録">
+                  <i class="bi bi-people"></i> 顧客登録
                 </button>
                 <button class="btn btn-outline-danger btn-sm py-0 px-1 furikomi-delete-btn"
                   data-id="{{ r.id }}">
@@ -923,9 +944,9 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center text-muted py-5">
-      <i class="bi bi-person-plus fs-2 d-block mb-2"></i>
-      未収タブの「まとめて再確認」を押すと<br>振込名義未登録の取引先の候補がここに表示されます
+    <div class="text-center text-muted py-5" id="furikomi-empty-msg">
+      <i class="bi bi-bank fs-2 d-block mb-2"></i>
+      「未仕分けチェック」ボタンを押すと<br>MFクラウド会計の未仕分けデータがここに表示されます
     </div>
     {% endif %}
   </div>
