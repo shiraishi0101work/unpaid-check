@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI営業リストマスター｜IT導入補助金対象ツール</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <title>AI営業リストマスター｜営業リストの生成から初回アプローチまですべてをAIが自動化</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --blue:      #139AE2;
       --blue-dark: #0e7abf;
       --blue-light:#e8f5fd;
+      --cyan:      #00c4cc;
+      --green:     #00c896;
       --dark:      #1a1f2b;
       --dark2:     #303042;
       --gray-bg:   #f8f8f8;
       --gray-text: #495057;
       --gray-mid:  #999;
       --white:     #ffffff;
-      --orange:    #ff6b35;
     }
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -31,7 +31,7 @@
       overflow-x: hidden;
     }
 
-    /* ── HEADER ──────────────────────────── */
+    /* ── HEADER ── */
     .site-header {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -46,46 +46,47 @@
       justify-content: space-between;
     }
 
-    .logo {
+    /* ── LOGO ── */
+    .logo-wrap {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
     }
 
-    .logo-mark {
-      width: 36px; height: 36px;
-      background: var(--blue);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-    }
+    /* SVGロゴ（PDF資料のドット＋ライン） */
+    .logo-svg { width: 44px; height: 44px; }
 
-    .logo-mark svg { width: 22px; height: 22px; }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--dark);
-      letter-spacing: -0.3px;
-    }
-
-    .logo-text span { color: var(--blue); }
-
-    .header-right {
+    .logo-text-block {
       display: flex;
-      align-items: center;
-      gap: 16px;
+      flex-direction: column;
+      line-height: 1.1;
     }
 
-    .header-badge {
-      background: #fff3ee;
-      border: 1px solid #ffcfb8;
-      color: var(--orange);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 5px 14px;
-      border-radius: 20px;
+    .logo-main {
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--dark);
     }
+
+    .logo-main .ai-part {
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-sub {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--gray-mid);
+      text-transform: uppercase;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
 
     .btn {
       display: inline-flex;
@@ -101,21 +102,21 @@
     }
 
     .btn-primary {
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       color: #fff;
       padding: 12px 28px;
       font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0,196,204,0.3);
     }
     .btn-primary:hover {
-      background: var(--blue-dark);
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(19,154,226,0.35);
+      box-shadow: 0 8px 24px rgba(0,196,204,0.45);
     }
 
     .btn-dark {
       background: var(--dark);
       color: #fff;
-      padding: 14px 36px;
+      padding: 16px 40px;
       font-size: 16px;
     }
     .btn-dark:hover {
@@ -126,30 +127,18 @@
 
     .btn-outline {
       background: transparent;
-      color: var(--blue);
-      border: 2px solid var(--blue);
-      padding: 12px 32px;
+      color: var(--cyan);
+      border: 2px solid var(--cyan);
+      padding: 14px 36px;
       font-size: 16px;
     }
     .btn-outline:hover {
-      background: var(--blue);
+      background: var(--cyan);
       color: #fff;
       transform: translateY(-2px);
     }
 
-    .btn-white {
-      background: #fff;
-      color: var(--dark);
-      padding: 14px 36px;
-      font-size: 16px;
-      font-weight: 700;
-    }
-    .btn-white:hover {
-      background: #f0f0f0;
-      transform: translateY(-2px);
-    }
-
-    /* ── HERO ──────────────────────────────── */
+    /* ── HERO ── */
     .hero {
       min-height: 100vh;
       padding: 100px 48px 80px;
@@ -160,14 +149,24 @@
       align-items: center;
     }
 
-    /* dotted pattern */
     .hero::before {
       content: '';
       position: absolute;
       inset: 0;
       background-image: radial-gradient(circle, #d0d8e4 1px, transparent 1px);
       background-size: 24px 24px;
-      opacity: 0.5;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* グラデーション装飾 */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -200px; right: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,196,204,0.08), transparent 70%);
+      border-radius: 50%;
       pointer-events: none;
     }
 
@@ -175,33 +174,19 @@
       max-width: 1160px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 460px;
-      gap: 60px;
+      grid-template-columns: 1fr 440px;
+      gap: 64px;
       align-items: center;
       position: relative;
       z-index: 1;
     }
 
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff3ee;
-      border: 1px solid #ffcfb8;
-      color: var(--orange);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 20px;
-      margin-bottom: 24px;
-    }
-
     .hero-kicker {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 500;
       color: var(--gray-text);
       margin-bottom: 12px;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     .hero h1 {
@@ -213,14 +198,18 @@
       letter-spacing: -1.5px;
     }
 
-    .hero h1 .accent { color: var(--blue); }
+    .hero h1 .accent {
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
     .hero-lead {
       font-size: 17px;
       color: var(--gray-text);
       line-height: 1.8;
       margin-bottom: 32px;
-      max-width: 500px;
     }
 
     .hero-checks {
@@ -243,7 +232,7 @@
     .hero-checks li::before {
       content: '✓';
       width: 22px; height: 22px;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       border-radius: 50%;
       color: #fff;
       display: flex; align-items: center; justify-content: center;
@@ -252,164 +241,113 @@
       flex-shrink: 0;
     }
 
-    .hero-btns {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
 
-    /* Hero visual card */
-    .hero-visual {
-      position: relative;
-    }
+    /* Hero card */
+    .hero-visual { position: relative; }
 
-    .hero-stats-card {
+    .hero-card {
       background: #fff;
-      border-radius: 24px;
+      border-radius: 28px;
       padding: 36px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.12);
       position: relative;
     }
 
-    .hero-stats-card::before {
+    .hero-card::before {
       content: '';
       position: absolute;
-      top: -3px; left: -3px; right: -3px; bottom: -3px;
-      border-radius: 27px;
-      background: linear-gradient(135deg, var(--blue), #00c896);
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border-radius: 30px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       z-index: -1;
     }
 
-    .stats-card-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-      text-align: center;
+    .card-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
     }
 
-    .stats-row {
+    .card-logo-text {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--dark);
+      letter-spacing: -0.3px;
+    }
+
+    .card-logo-text .ai { color: var(--cyan); }
+
+    .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
+      gap: 14px;
+      margin-bottom: 20px;
     }
 
     .stat-box {
       background: var(--gray-bg);
       border-radius: 16px;
-      padding: 20px 16px;
+      padding: 20px 14px;
       text-align: center;
     }
 
     .stat-box .num {
-      font-size: 38px;
+      font-size: 36px;
       font-weight: 900;
-      color: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       line-height: 1;
       margin-bottom: 4px;
     }
 
-    .stat-box .num sub {
-      font-size: 18px;
-    }
+    .stat-box .num sub { font-size: 17px; }
 
     .stat-box .lbl {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--gray-mid);
       line-height: 1.4;
     }
 
-    .subsidy-pill {
-      background: linear-gradient(135deg, #fff3ee, #ffe8dc);
-      border: 1px solid #ffcfb8;
-      border-radius: 16px;
-      padding: 18px 20px;
+    .card-tagline {
+      background: linear-gradient(135deg, rgba(0,196,204,0.08), rgba(0,200,150,0.08));
+      border: 1px solid rgba(0,196,204,0.2);
+      border-radius: 14px;
+      padding: 16px 18px;
       text-align: center;
-    }
-
-    .subsidy-pill .sp-label {
-      font-size: 12px;
-      color: var(--orange);
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 4px;
+      color: var(--dark2);
     }
 
-    .subsidy-pill .sp-value {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--dark);
-    }
-
-    .subsidy-pill .sp-value strong {
-      color: var(--orange);
-      font-size: 22px;
-    }
+    .card-tagline span { color: var(--cyan); }
 
     /* floating chips */
     .chip {
       position: absolute;
       background: #fff;
       border-radius: 40px;
-      padding: 10px 18px;
+      padding: 9px 16px;
       font-size: 13px;
       font-weight: 700;
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
       white-space: nowrap;
     }
 
-    .chip-1 { top: -20px; right: -20px; color: var(--blue); border: 1px solid var(--blue-light); }
-    .chip-2 { bottom: 80px; left: -28px; color: var(--dark); border: 1px solid #eee; }
+    .chip-top { top: -18px; right: 20px; color: var(--cyan); border: 1px solid rgba(0,196,204,0.2); }
+    .chip-bot { bottom: 60px; left: -24px; color: var(--dark); border: 1px solid #eee; }
 
-    /* ── ORANGE BAND ─────────────────────── */
-    .subsidy-band {
-      background: linear-gradient(135deg, var(--orange), #e04e1e);
-      padding: 26px 48px;
-    }
-
-    .subsidy-band-inner {
-      max-width: 1160px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .sband-left {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .sband-badge {
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.4);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 20px;
-    }
-
-    .sband-text {
-      color: #fff;
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    /* ── SECTION COMMON ──────────────────── */
+    /* ── SECTION COMMON ── */
     .section { padding: 100px 48px; }
 
-    .section-inner {
-      max-width: 1160px;
-      margin: 0 auto;
-    }
+    .section-inner { max-width: 1160px; margin: 0 auto; }
 
-    .section-eyebrow {
+    .eyebrow {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -417,14 +355,11 @@
       margin-bottom: 16px;
     }
 
-    .eyebrow-line {
-      width: 40px; height: 2px;
-      background: var(--blue);
-    }
+    .eyebrow-line { width: 36px; height: 2px; background: var(--cyan); }
 
     .eyebrow-text {
-      color: var(--blue);
-      font-size: 12px;
+      color: var(--cyan);
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 3px;
       text-transform: uppercase;
@@ -440,7 +375,7 @@
       letter-spacing: -1px;
     }
 
-    .section-title .blue { color: var(--blue); }
+    .section-title .cyan { color: var(--cyan); }
 
     .section-lead {
       text-align: center;
@@ -451,10 +386,12 @@
       margin: 0 auto 64px;
     }
 
-    /* ── PROBLEM ─────────────────────────── */
+    /* ── PROBLEM ── */
     .problem-section { background: var(--dark); }
     .problem-section .section-title { color: #fff; }
     .problem-section .section-lead { color: rgba(255,255,255,0.6); }
+    .problem-section .eyebrow-line { background: rgba(0,196,204,0.5); }
+    .problem-section .eyebrow-text { color: var(--cyan); }
 
     .problem-grid {
       display: grid;
@@ -472,13 +409,13 @@
 
     .problem-card:hover {
       background: rgba(255,255,255,0.09);
-      border-color: rgba(19,154,226,0.3);
+      border-color: rgba(0,196,204,0.3);
       transform: translateY(-4px);
     }
 
     .p-icon {
       width: 52px; height: 52px;
-      background: rgba(19,154,226,0.1);
+      background: rgba(0,196,204,0.1);
       border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
       font-size: 26px;
@@ -486,32 +423,31 @@
     }
 
     .problem-card h3 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #fff;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .problem-quote {
       margin-top: 48px;
       text-align: center;
       padding: 28px;
-      background: rgba(255,107,53,0.1);
-      border: 1px solid rgba(255,107,53,0.25);
+      background: rgba(0,196,204,0.07);
+      border: 1px solid rgba(0,196,204,0.2);
       border-radius: 16px;
-      color: #ff8c5a;
+      color: var(--cyan);
       font-size: 18px;
       font-weight: 700;
     }
 
-    /* ── BEFORE / AFTER ──────────────────── */
+    /* ── BEFORE / AFTER ── */
     .ba-section { background: var(--gray-bg); }
 
     .ba-wrap {
       display: grid;
-      grid-template-columns: 1fr 48px 1fr;
+      grid-template-columns: 1fr 56px 1fr;
       align-items: center;
-      gap: 0;
     }
 
     .ba-card {
@@ -519,52 +455,38 @@
       padding: 44px 40px;
     }
 
-    .ba-card.before {
-      background: var(--dark);
-    }
+    .ba-card.before { background: var(--dark); }
 
     .ba-card.after {
       background: var(--white);
-      border: 2px solid var(--blue);
-      box-shadow: 0 16px 48px rgba(19,154,226,0.15);
+      border: 2px solid var(--cyan);
+      box-shadow: 0 16px 48px rgba(0,196,204,0.15);
     }
 
     .ba-label {
       display: inline-block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 5px 16px;
+      padding: 5px 14px;
       border-radius: 20px;
       margin-bottom: 20px;
       letter-spacing: 1px;
     }
 
-    .before .ba-label {
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.6);
-    }
-
-    .after .ba-label {
-      background: var(--blue);
-      color: #fff;
-    }
+    .before .ba-label { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+    .after .ba-label { background: linear-gradient(135deg, var(--cyan), var(--green)); color: #fff; }
 
     .ba-card h3 {
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 900;
       margin-bottom: 28px;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .before h3 { color: #fff; }
-    .after h3 { color: var(--blue); }
+    .after h3 { color: var(--cyan); }
 
-    .ba-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .ba-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
 
     .ba-list li {
       font-size: 15px;
@@ -573,15 +495,15 @@
       gap: 10px;
     }
 
-    .before .ba-list li { color: rgba(255,255,255,0.7); }
+    .before .ba-list li { color: rgba(255,255,255,0.75); }
     .after .ba-list li { color: var(--dark2); font-weight: 500; }
 
     .ba-arrow {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--blue);
-      font-size: 32px;
+      color: var(--cyan);
+      font-size: 28px;
     }
 
     .ba-metrics {
@@ -595,27 +517,26 @@
     .ba-metric {
       background: #fff;
       border-radius: 20px;
-      padding: 28px 40px;
+      padding: 28px 44px;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.07);
       border: 1px solid #eee;
     }
 
     .ba-metric .m-num {
       font-size: 44px;
       font-weight: 900;
-      color: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       line-height: 1;
       margin-bottom: 6px;
     }
 
-    .ba-metric .m-lbl {
-      font-size: 13px;
-      color: var(--gray-text);
-      font-weight: 500;
-    }
+    .ba-metric .m-lbl { font-size: 13px; color: var(--gray-text); font-weight: 500; }
 
-    /* ── FUNCTIONS (alternating) ─────────── */
+    /* ── FUNCTIONS ── */
     .functions-section { background: #fff; }
 
     .fn-block {
@@ -623,7 +544,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 80px;
       align-items: center;
-      padding: 60px 0;
+      padding: 64px 0;
       border-bottom: 1px solid #eee;
     }
 
@@ -635,9 +556,9 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--blue-light);
-      border: 1px solid rgba(19,154,226,0.2);
-      color: var(--blue);
+      background: rgba(0,196,204,0.07);
+      border: 1px solid rgba(0,196,204,0.2);
+      color: var(--cyan);
       font-size: 11px;
       font-weight: 700;
       padding: 5px 14px;
@@ -649,7 +570,7 @@
     .fn-num {
       font-size: 11px;
       font-weight: 700;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       color: #fff;
       padding: 2px 8px;
       border-radius: 10px;
@@ -660,11 +581,11 @@
       font-weight: 900;
       color: var(--dark);
       line-height: 1.35;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       letter-spacing: -0.5px;
     }
 
-    .fn-block h3 .blue { color: var(--blue); }
+    .fn-block h3 .cyan { color: var(--cyan); }
 
     .fn-desc {
       font-size: 15px;
@@ -673,11 +594,7 @@
       margin-bottom: 28px;
     }
 
-    .fn-items {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .fn-items { display: flex; flex-direction: column; gap: 10px; }
 
     .fn-item {
       display: flex;
@@ -685,7 +602,7 @@
       gap: 12px;
       background: var(--gray-bg);
       border-radius: 12px;
-      padding: 14px 18px;
+      padding: 13px 16px;
       font-size: 14px;
       font-weight: 500;
       color: var(--dark2);
@@ -693,86 +610,70 @@
     }
 
     .fn-item:hover {
-      background: var(--blue-light);
-      color: var(--blue);
+      background: rgba(0,196,204,0.07);
+      color: var(--cyan);
     }
 
-    .fn-item-icon {
-      font-size: 20px;
-      flex-shrink: 0;
-    }
+    .fi-icon { font-size: 20px; flex-shrink: 0; }
 
+    /* mock ui */
     .fn-visual {
       background: var(--gray-bg);
       border-radius: 24px;
-      aspect-ratio: 4/3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
       overflow: hidden;
-      border: 1px solid #eee;
+      border: 1px solid #e8edf2;
     }
 
-    .fn-visual-inner {
-      padding: 32px;
-      width: 100%;
-    }
-
-    /* mock dashboard inside fn-visual */
-    .mock-header {
+    .mv-header {
       background: var(--dark);
-      border-radius: 12px 12px 0 0;
       padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 0;
     }
 
-    .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mv-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    .mock-body {
-      background: #fff;
-      border-radius: 0 0 12px 12px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    .mv-title {
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      margin-left: 8px;
     }
 
-    .mock-row {
+    .mv-body { padding: 20px; background: #fff; }
+
+    .mv-row {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 10px 0;
       border-bottom: 1px solid #f0f0f0;
       font-size: 13px;
+      color: var(--dark2);
     }
 
-    .mock-row:last-child { border-bottom: none; }
+    .mv-row:last-child { border-bottom: none; }
 
-    .mock-score {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--blue);
+    .mv-score {
+      margin-left: auto;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       color: #fff;
       font-size: 11px;
       font-weight: 700;
       padding: 3px 10px;
       border-radius: 10px;
-      margin-left: auto;
     }
 
-    .mock-tag {
-      background: #e8f5fd;
-      color: var(--blue);
+    .mv-tag {
+      background: rgba(0,196,204,0.1);
+      color: var(--cyan);
       font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;
       border-radius: 8px;
     }
 
-    /* ── COMPARISON TABLE ────────────────── */
+    /* ── COMPARISON ── */
     .comparison-section { background: var(--gray-bg); }
 
     .comp-table {
@@ -781,8 +682,7 @@
       border-spacing: 0;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.08);
-      background: #fff;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.07);
     }
 
     .comp-table th {
@@ -796,21 +696,17 @@
       background: var(--dark);
       color: rgba(255,255,255,0.7);
       text-align: left;
-      width: 38%;
+      width: 36%;
     }
 
-    .comp-table th:nth-child(2) {
-      background: #e8edf2;
-      color: var(--gray-text);
-    }
-
+    .comp-table th:nth-child(2) { background: #e8edf2; color: var(--gray-text); }
     .comp-table th:nth-child(3) {
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       color: #fff;
     }
 
     .comp-table td {
-      padding: 18px 28px;
+      padding: 17px 28px;
       font-size: 14px;
       border-bottom: 1px solid #f0f0f0;
       text-align: center;
@@ -824,13 +720,13 @@
     }
 
     .comp-table td:nth-child(2) { background: #fcfcfc; color: var(--gray-text); }
-    .comp-table td:nth-child(3) { background: #f0f9ff; color: var(--dark); font-weight: 600; }
+    .comp-table td:nth-child(3) { background: rgba(0,196,204,0.04); color: var(--dark); font-weight: 600; }
     .comp-table tr:last-child td { border-bottom: none; }
 
-    .c-yes { color: var(--blue); font-size: 18px; font-weight: 900; }
+    .c-yes { color: var(--cyan); font-size: 18px; font-weight: 900; }
     .c-no  { color: #ccc; font-size: 18px; }
 
-    /* ── RESULTS ─────────────────────────── */
+    /* ── RESULTS ── */
     .results-section { background: #fff; }
 
     .results-grid {
@@ -845,18 +741,17 @@
       border-radius: 24px;
       border: 1px solid #eee;
       transition: all 0.25s;
-      background: #fff;
     }
 
     .result-card:hover {
-      border-color: var(--blue);
-      box-shadow: 0 12px 40px rgba(19,154,226,0.12);
+      border-color: var(--cyan);
+      box-shadow: 0 12px 40px rgba(0,196,204,0.12);
       transform: translateY(-4px);
     }
 
     .result-card .r-icon {
       width: 64px; height: 64px;
-      background: var(--blue-light);
+      background: rgba(0,196,204,0.08);
       border-radius: 20px;
       display: flex; align-items: center; justify-content: center;
       font-size: 30px;
@@ -871,131 +766,13 @@
       line-height: 1.4;
     }
 
-    .result-card p {
-      font-size: 14px;
-      color: var(--gray-text);
-      line-height: 1.7;
-    }
+    .result-card p { font-size: 14px; color: var(--gray-text); line-height: 1.7; }
 
-    /* ── SUBSIDY ─────────────────────────── */
-    .subsidy-section { background: var(--dark); padding: 100px 48px; }
-    .subsidy-section .section-title { color: #fff; }
-    .subsidy-section .section-lead { color: rgba(255,255,255,0.6); }
-
-    .subsidy-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      margin-bottom: 40px;
-    }
-
-    .sub-card {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 24px;
-      padding: 36px;
-    }
-
-    .sub-card h3 {
-      color: var(--blue);
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .sub-card ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .sub-card ul li {
-      color: rgba(255,255,255,0.8);
-      font-size: 15px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .sub-card ul li::before {
-      content: '✓';
-      color: var(--blue);
-      font-weight: 900;
-      flex-shrink: 0;
-    }
-
-    .sub-highlight {
-      background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,69,0,0.08));
-      border: 2px solid rgba(255,107,53,0.4);
-      border-radius: 24px;
-      padding: 48px;
-      text-align: center;
-    }
-
-    .sub-highlight h3 {
-      color: var(--orange);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      margin-bottom: 16px;
-    }
-
-    .sub-highlight .big {
-      color: #fff;
-      font-size: 56px;
-      font-weight: 900;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .sub-highlight .big small { font-size: 24px; }
-
-    .sub-highlight p {
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-    }
-
-    /* ── TECH ────────────────────────────── */
-    .tech-section { background: var(--gray-bg); }
-
-    .tech-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 18px;
-    }
-
-    .tech-card {
-      background: #fff;
-      border-radius: 20px;
-      padding: 32px 20px;
-      text-align: center;
-      border: 1px solid #eee;
-      transition: all 0.25s;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-    }
-
-    .tech-card:hover {
-      border-color: var(--blue);
-      transform: translateY(-4px);
-      box-shadow: 0 16px 40px rgba(19,154,226,0.12);
-    }
-
-    .tech-card .t-icon { font-size: 36px; margin-bottom: 14px; }
-
-    .tech-card h4 {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--dark);
-      line-height: 1.5;
-    }
-
-    /* ── PRICING ─────────────────────────── */
+    /* ── PRICING ── */
     .pricing-section { background: var(--dark); padding: 100px 48px; }
     .pricing-section .section-title { color: #fff; }
     .pricing-section .section-lead { color: rgba(255,255,255,0.6); }
+    .pricing-section .eyebrow-line { background: rgba(0,196,204,0.5); }
 
     .pricing-grid {
       display: grid;
@@ -1013,8 +790,8 @@
     .price-card:hover { transform: translateY(-6px); }
 
     .price-card.lite     { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
-    .price-card.standard { background: rgba(255,255,255,0.07); border: 1px solid rgba(19,154,226,0.25); }
-    .price-card.pro      { background: rgba(19,154,226,0.12); border: 2px solid var(--blue); }
+    .price-card.standard { background: rgba(255,255,255,0.07); border: 1px solid rgba(0,196,204,0.25); }
+    .price-card.pro      { background: rgba(0,196,204,0.1); border: 2px solid var(--cyan); }
     .price-card.enterprise { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
 
     .popular-badge {
@@ -1022,7 +799,7 @@
       top: -14px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--orange);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       color: #fff;
       font-size: 11px;
       font-weight: 700;
@@ -1039,23 +816,19 @@
       margin-bottom: 6px;
     }
 
-    .lite .pname, .enterprise .pname { color: rgba(255,255,255,0.5); }
-    .standard .pname, .pro .pname { color: var(--blue); }
+    .lite .pname, .enterprise .pname { color: rgba(255,255,255,0.45); }
+    .standard .pname { color: var(--cyan); }
+    .pro .pname { color: var(--cyan); }
 
     .pdesc {
       font-size: 13px;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.45);
       margin-bottom: 24px;
       padding-bottom: 24px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-    .pfeatures {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .pfeatures { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 
     .pfeatures li {
       font-size: 13px;
@@ -1065,19 +838,12 @@
       gap: 8px;
     }
 
-    .pfeatures li::before {
-      content: '◆';
-      color: var(--blue);
-      font-size: 9px;
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-
+    .pfeatures li::before { content: '◆'; color: var(--cyan); font-size: 9px; flex-shrink: 0; margin-top: 5px; }
     .pro .pfeatures li { color: rgba(255,255,255,0.9); }
 
-    /* ── CTA / FORM ──────────────────────── */
+    /* ── CTA / FORM ── */
     .cta-section {
-      background: linear-gradient(135deg, var(--blue) 0%, #0e9ad0 100%);
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
       padding: 100px 48px;
       text-align: center;
     }
@@ -1087,7 +853,7 @@
       font-weight: 900;
       color: #fff;
       line-height: 1.3;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       letter-spacing: -1px;
     }
 
@@ -1098,7 +864,7 @@
     }
 
     .cta-form-wrap {
-      max-width: 540px;
+      max-width: 520px;
       margin: 0 auto;
       background: #fff;
       border-radius: 28px;
@@ -1125,10 +891,7 @@
       margin-bottom: 6px;
     }
 
-    .form-group label span {
-      color: #e74c3c;
-      margin-left: 4px;
-    }
+    .form-group label span { color: #e74c3c; margin-left: 3px; }
 
     .form-group input,
     .form-group select,
@@ -1147,9 +910,7 @@
 
     .form-group input:focus,
     .form-group select:focus,
-    .form-group textarea:focus {
-      border-color: var(--blue);
-    }
+    .form-group textarea:focus { border-color: var(--cyan); }
 
     .form-group textarea { height: 90px; resize: vertical; }
 
@@ -1169,9 +930,9 @@
     }
 
     .form-submit:hover {
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
       transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(19,154,226,0.4);
+      box-shadow: 0 8px 28px rgba(0,196,204,0.4);
     }
 
     .form-note {
@@ -1182,7 +943,7 @@
       line-height: 1.6;
     }
 
-    /* ── FOOTER ──────────────────────────── */
+    /* ── FOOTER ── */
     .footer {
       background: var(--dark);
       padding: 36px 48px;
@@ -1193,42 +954,18 @@
       gap: 16px;
     }
 
-    .footer-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .footer p { color: rgba(255,255,255,0.3); font-size: 13px; }
 
-    .footer-logo .lm {
-      width: 28px; height: 28px;
-      background: var(--blue);
-      border-radius: 8px;
-    }
-
-    .footer-logo span {
-      color: rgba(255,255,255,0.8);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .footer p {
-      color: rgba(255,255,255,0.35);
-      font-size: 13px;
-    }
-
-    /* ── SCROLL ANIMATION ─────────────────── */
+    /* ── SCROLL ANIMATION ── */
     .reveal {
       opacity: 0;
       transform: translateY(28px);
       transition: opacity 0.65s ease, transform 0.65s ease;
     }
 
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
+    .reveal.visible { opacity: 1; transform: none; }
 
-    /* ── RESPONSIVE ──────────────────────── */
+    /* ── RESPONSIVE ── */
     @media (max-width: 960px) {
       .hero-inner { grid-template-columns: 1fr; }
       .hero-visual { display: none; }
@@ -1240,8 +977,6 @@
       .fn-visual { display: none; }
       .results-grid { grid-template-columns: 1fr 1fr; }
       .pricing-grid { grid-template-columns: 1fr 1fr; }
-      .subsidy-grid { grid-template-columns: 1fr; }
-      .tech-grid { grid-template-columns: repeat(3, 1fr); }
       .section-title { font-size: 28px; }
       .site-header { padding: 0 20px; }
     }
@@ -1253,43 +988,49 @@
       .problem-grid { grid-template-columns: 1fr; }
       .results-grid { grid-template-columns: 1fr; }
       .pricing-grid { grid-template-columns: 1fr; }
-      .tech-grid { grid-template-columns: 1fr 1fr; }
       .cta-form-wrap { padding: 32px 24px; }
       .cta-section h2 { font-size: 30px; }
-      .header-badge { display: none; }
-      .footer { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
 <body>
 
-<!-- ─── HEADER ─────────────────────────────── -->
+<!-- ─── HEADER ─── -->
 <header class="site-header">
-  <a href="#" class="logo">
-    <div class="logo-mark">
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="6" cy="4" r="3.5" fill="white"/>
-        <circle cx="16" cy="8" r="3.5" fill="white" opacity="0.7"/>
-        <circle cx="6" cy="14" r="3.5" fill="white" opacity="0.8"/>
-        <circle cx="16" cy="18" r="2.5" fill="white" opacity="0.6"/>
-        <line x1="6" y1="7.5" x2="12.5" y2="8" stroke="white" stroke-width="1.5"/>
-        <line x1="12.5" y1="8" x2="6" y2="10.5" stroke="white" stroke-width="1.5"/>
-        <line x1="6" y1="10.5" x2="13.5" y2="15.5" stroke="white" stroke-width="1.5"/>
-      </svg>
+  <a href="#" class="logo-wrap">
+    <!-- PDFのロゴを忠実にSVGで再現 -->
+    <svg class="logo-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="7"  r="6.5" fill="url(#g1)"/>
+      <circle cx="30" cy="16" r="6"   fill="url(#g2)" opacity="0.85"/>
+      <circle cx="14" cy="28" r="6"   fill="url(#g3)" opacity="0.9"/>
+      <circle cx="30" cy="37" r="5"   fill="url(#g4)" opacity="0.75"/>
+      <line x1="16" y1="13.5" x2="24" y2="16"   stroke="url(#gs1)" stroke-width="2" stroke-linecap="round"/>
+      <line x1="24" y1="16"   x2="14" y2="22"   stroke="url(#gs2)" stroke-width="2" stroke-linecap="round"/>
+      <line x1="14" y1="22"   x2="25" y2="32"   stroke="url(#gs3)" stroke-width="2" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c4cc"/><stop offset="100%" stop-color="#00d4e0"/></linearGradient>
+        <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c4cc"/><stop offset="100%" stop-color="#00b8d4"/></linearGradient>
+        <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00b8d4"/><stop offset="100%" stop-color="#00c896"/></linearGradient>
+        <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c0a0"/><stop offset="100%" stop-color="#00c896"/></linearGradient>
+        <linearGradient id="gs1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#00c4cc"/><stop offset="100%" stop-color="#00b8d4"/></linearGradient>
+        <linearGradient id="gs2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#00b8d4"/><stop offset="100%" stop-color="#00c0a8"/></linearGradient>
+        <linearGradient id="gs3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#00b8c8"/><stop offset="100%" stop-color="#00c896"/></linearGradient>
+      </defs>
+    </svg>
+    <div class="logo-text-block">
+      <span class="logo-main"><span class="ai-part">AI</span>営業リストマスター</span>
+      <span class="logo-sub">AI Sales List Master</span>
     </div>
-    <span class="logo-text">AI<span>営業</span>リストマスター</span>
   </a>
   <div class="header-right">
-    <div class="header-badge">IT導入補助金 対象ツール</div>
-    <a href="#contact" class="btn btn-primary">無料デモを申し込む</a>
+    <a href="#contact" class="btn btn-primary">お問い合わせ・デモ申込</a>
   </div>
 </header>
 
-<!-- ─── HERO ───────────────────────────────── -->
+<!-- ─── HERO ─── -->
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <div class="hero-tag">🎯 IT導入補助金2025 対象ツール認定</div>
       <p class="hero-kicker">すべてをAIが自動化する時代へ —</p>
       <h1>
         営業リストの生成から<br>
@@ -1313,10 +1054,29 @@
     </div>
 
     <div class="hero-visual">
-      <div class="chip chip-1">🤖 AIが自動でリスト生成中…</div>
-      <div class="hero-stats-card">
-        <p class="stats-card-title">導入効果・実績</p>
-        <div class="stats-row">
+      <div class="chip chip-top">🤖 AIが自動でリスト生成中…</div>
+      <div class="hero-card">
+        <!-- カード内もPDFロゴを使用 -->
+        <div class="card-logo">
+          <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
+            <circle cx="16" cy="7"  r="6.5" fill="url(#cg1)"/>
+            <circle cx="30" cy="16" r="6"   fill="url(#cg2)" opacity="0.85"/>
+            <circle cx="14" cy="28" r="6"   fill="url(#cg3)" opacity="0.9"/>
+            <circle cx="30" cy="37" r="5"   fill="url(#cg4)" opacity="0.75"/>
+            <line x1="16" y1="13.5" x2="24" y2="16" stroke="#00c4cc" stroke-width="2" stroke-linecap="round"/>
+            <line x1="24" y1="16"   x2="14" y2="22" stroke="#00c0a8" stroke-width="2" stroke-linecap="round"/>
+            <line x1="14" y1="22"   x2="25" y2="32" stroke="#00c896" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="cg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c4cc"/><stop offset="100%" stop-color="#00d4e0"/></linearGradient>
+              <linearGradient id="cg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c4cc"/><stop offset="100%" stop-color="#00b8d4"/></linearGradient>
+              <linearGradient id="cg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00b8d4"/><stop offset="100%" stop-color="#00c896"/></linearGradient>
+              <linearGradient id="cg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c0a0"/><stop offset="100%" stop-color="#00c896"/></linearGradient>
+            </defs>
+          </svg>
+          <div class="card-logo-text"><span class="ai">AI</span>営業リストマスター</div>
+        </div>
+
+        <div class="stats-grid">
           <div class="stat-box">
             <div class="num">97<sub>%</sub></div>
             <div class="lbl">作業時間<br>削減</div>
@@ -1334,67 +1094,38 @@
             <div class="lbl">5時間の作業が<br>5分で完了</div>
           </div>
         </div>
-        <div class="subsidy-pill">
-          <div class="sp-label">IT導入補助金活用で</div>
-          <div class="sp-value">導入コストを最大 <strong>1/2</strong> に削減</div>
+
+        <div class="card-tagline">
+          営業担当者は<span>クロージングだけ</span>に集中できる
         </div>
       </div>
-      <div class="chip chip-2">📋 739,313社のデータベース</div>
+      <div class="chip chip-bot">📋 739,313社のデータベース</div>
     </div>
   </div>
 </section>
 
-<!-- ─── SUBSIDY BAND ────────────────────────── -->
-<div class="subsidy-band">
-  <div class="subsidy-band-inner">
-    <div class="sband-left">
-      <div class="sband-badge">IT導入補助金2025</div>
-      <div class="sband-text">補助率 最大 1/2 ・補助上限 450万円</div>
-    </div>
-    <a href="#subsidy" class="btn btn-white" style="padding:10px 24px;font-size:14px;">補助金詳細を確認 →</a>
-  </div>
-</div>
-
-<!-- ─── PROBLEM ─────────────────────────────── -->
+<!-- ─── PROBLEM ─── -->
 <section class="section problem-section">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
-      <span class="eyebrow-text" style="color:rgba(255,255,255,0.5)">PROBLEM</span>
+      <span class="eyebrow-text">PROBLEM</span>
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title" style="color:#fff;">
-      営業リスト作成は、<br>まだ <span style="color:#ff8c5a">"手作業"</span> ですか？
+      営業リスト作成は、<br>まだ <span style="color:#ff8c5a;">"手作業"</span> ですか？
     </h2>
     <p class="section-lead">
-      こんなお悩みを抱えたままでは、<br>営業のスピードも成果も伸び続けません。
+      こんなお悩みを抱えたままでは、営業のスピードも成果も伸び続けません。
     </p>
 
     <div class="problem-grid">
-      <div class="problem-card reveal">
-        <div class="p-icon">⏰</div>
-        <h3>企業を探すのに<br>時間がかかる</h3>
-      </div>
-      <div class="problem-card reveal">
-        <div class="p-icon">📚</div>
-        <h3>リストの情報が古く<br>精度が安定しない</h3>
-      </div>
-      <div class="problem-card reveal">
-        <div class="p-icon">✉️</div>
-        <h3>メール作成が<br>担当者ごとにバラつく</h3>
-      </div>
-      <div class="problem-card reveal">
-        <div class="p-icon">🏢</div>
-        <h3>新設企業・成長企業の<br>動きを追えない</h3>
-      </div>
-      <div class="problem-card reveal">
-        <div class="p-icon">📂</div>
-        <h3>データ整理に追われ<br>営業時間が減る</h3>
-      </div>
-      <div class="problem-card reveal">
-        <div class="p-icon">🔍</div>
-        <h3>優先度が分からず<br>どこからアタックすべきか迷う</h3>
-      </div>
+      <div class="problem-card reveal"><div class="p-icon">⏰</div><h3>企業を探すのに<br>時間がかかる</h3></div>
+      <div class="problem-card reveal"><div class="p-icon">📚</div><h3>リストの情報が古く<br>精度が安定しない</h3></div>
+      <div class="problem-card reveal"><div class="p-icon">✉️</div><h3>メール作成が<br>担当者ごとにバラつく</h3></div>
+      <div class="problem-card reveal"><div class="p-icon">🏢</div><h3>新設企業・成長企業の<br>動きを追えない</h3></div>
+      <div class="problem-card reveal"><div class="p-icon">📂</div><h3>データ整理に追われ<br>肝心の営業時間が減る</h3></div>
+      <div class="problem-card reveal"><div class="p-icon">🔍</div><h3>優先度が分からず<br>どこからアタックすべきか迷う</h3></div>
     </div>
 
     <div class="problem-quote reveal">
@@ -1403,18 +1134,18 @@
   </div>
 </section>
 
-<!-- ─── BEFORE / AFTER ──────────────────────── -->
+<!-- ─── BEFORE / AFTER ─── -->
 <section class="section ba-section">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
       <span class="eyebrow-text">BEFORE / AFTER</span>
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title">
-      営業準備に費やしていた時間を、<br><span class="blue">すべてAIが肩代わり。</span>
+      営業準備に費やしていた時間を、<br><span class="cyan">すべてAIが肩代わり。</span>
     </h2>
-    <p class="section-lead">5時間の作業が、5分で終わる。</p>
+    <p class="section-lead">営業リスト作成・情報整理・初回メール作成など、準備にかかっていた作業をまとめて効率化。5時間の作業が、5分で終わる！</p>
 
     <div class="ba-wrap reveal">
       <div class="ba-card before">
@@ -1428,210 +1159,206 @@
           <li><span>✗</span> 情報更新のやり直し</li>
         </ul>
       </div>
-
       <div class="ba-arrow">▶</div>
-
       <div class="ba-card after">
         <span class="ba-label">After AI営業リストマスター導入後</span>
         <h3>AIが営業前工程を<br>すべて自動化！</h3>
         <ul class="ba-list">
-          <li><span style="color:var(--blue)">✓</span> 営業リストを<strong>毎日自動生成</strong></li>
-          <li><span style="color:var(--blue)">✓</span> 情報は<strong>自動解析・自動更新</strong></li>
-          <li><span style="color:var(--blue)">✓</span> マッチングスコアで<strong>優先企業を自動表示</strong></li>
-          <li><span style="color:var(--blue)">✓</span> AIが初回の<strong>営業メールを即時生成</strong></li>
-          <li><span style="color:var(--blue)">✓</span> 必要なのは「送る」ボタンだけ</li>
+          <li><span style="color:var(--cyan)">✓</span> 営業リストを<strong>毎日自動生成</strong></li>
+          <li><span style="color:var(--cyan)">✓</span> 情報は<strong>自動解析・自動更新</strong></li>
+          <li><span style="color:var(--cyan)">✓</span> マッチングスコアで<strong>優先企業を自動表示</strong></li>
+          <li><span style="color:var(--cyan)">✓</span> AIが初回の<strong>営業メールを即時生成</strong></li>
+          <li><span style="color:var(--cyan)">✓</span> 必要なのは「送る」ボタンだけ</li>
         </ul>
       </div>
     </div>
 
     <div class="ba-metrics reveal">
-      <div class="ba-metric">
-        <div class="m-num">97%</div>
-        <div class="m-lbl">作業時間 最大削減</div>
-      </div>
-      <div class="ba-metric">
-        <div class="m-num">10倍</div>
-        <div class="m-lbl">営業活動量 拡大</div>
-      </div>
-      <div class="ba-metric">
-        <div class="m-num">2〜4倍</div>
-        <div class="m-lbl">初回接触率 向上</div>
-      </div>
+      <div class="ba-metric"><div class="m-num">97%</div><div class="m-lbl">作業時間 最大削減</div></div>
+      <div class="ba-metric"><div class="m-num">10倍</div><div class="m-lbl">営業活動量 拡大</div></div>
+      <div class="ba-metric"><div class="m-num">2〜4倍</div><div class="m-lbl">初回接触率 向上</div></div>
     </div>
   </div>
 </section>
 
-<!-- ─── FUNCTIONS ───────────────────────────── -->
+<!-- ─── FEATURES ─── -->
 <section class="section functions-section" id="features">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
       <span class="eyebrow-text">FEATURES</span>
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title">
-      AIリストマスターが<br><span class="blue">"営業前工程"をすべて自動化</span>します。
+      AIリストマスターが<br><span class="cyan">"営業前工程"をすべて自動化</span>します。
     </h2>
-    <p class="section-lead">
-      4つの強力な機能で、企業情報の収集から初回アプローチまで完全自動化。
-    </p>
+    <p class="section-lead">4つの強力な機能で、企業情報の収集から初回アプローチまで完全自動化。</p>
 
-    <!-- FN 01 -->
+    <!-- 01 -->
     <div class="fn-block reveal">
       <div>
         <div class="fn-badge"><span class="fn-num">FUNCTION 01</span> 企業リスト自動生成</div>
-        <h3>公開情報だけで最新の<br><span class="blue">企業リストを自動生成</span></h3>
-        <p class="fn-desc">
-          法人番号データ・公式サイト・公開情報をAIが自動収集し、毎日最新状態のリストを維持。情報収集にかかっていた時間は、もう不要です。
-        </p>
+        <h3>公開情報だけで最新の<br><span class="cyan">企業リストを自動生成</span></h3>
+        <p class="fn-desc">法人番号データ・公式サイト・公開情報をAIが自動収集し、毎日最新状態のリストを維持。情報収集にかかっていた時間は、もう不要です。</p>
         <div class="fn-items">
-          <div class="fn-item"><span class="fn-item-icon">🏛️</span>法人番号データから新設企業を検出</div>
-          <div class="fn-item"><span class="fn-item-icon">🌐</span>公式サイトや公開情報を自動クロール</div>
-          <div class="fn-item"><span class="fn-item-icon">🤖</span>企業プロフィールをAIが生成</div>
-          <div class="fn-item"><span class="fn-item-icon">🔄</span>情報はすべて自動更新・常に最新状態</div>
+          <div class="fn-item"><span class="fi-icon">🏛️</span>法人番号データから新設企業を検出</div>
+          <div class="fn-item"><span class="fi-icon">🌐</span>公式サイトや公開情報を自動クロール</div>
+          <div class="fn-item"><span class="fi-icon">🤖</span>企業プロフィールをAIが生成</div>
+          <div class="fn-item"><span class="fi-icon">🔄</span>情報はすべて自動更新・常に最新状態</div>
         </div>
       </div>
       <div class="fn-visual">
-        <div class="fn-visual-inner">
-          <div class="mock-header">
-            <div class="mock-dot" style="background:#ff5f57"></div>
-            <div class="mock-dot" style="background:#febc2e"></div>
-            <div class="mock-dot" style="background:#28c840"></div>
-            <span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:10px;">企業リスト管理</span>
+        <div class="mv-header">
+          <div class="mv-dot" style="background:#ff5f57"></div>
+          <div class="mv-dot" style="background:#febc2e"></div>
+          <div class="mv-dot" style="background:#28c840"></div>
+          <span class="mv-title">企業リスト管理</span>
+        </div>
+        <div class="mv-body">
+          <div style="display:flex;gap:12px;margin-bottom:14px;font-size:12px;color:#999;flex-wrap:wrap;">
+            <span>📊 739,313社</span><span>✅ 100%更新</span><span>🔄 本日追加 91件</span>
           </div>
-          <div class="mock-body">
-            <div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:#999;">
-              <span>📊 739,313社</span><span>✅ 100%更新</span><span>🔄 本日追加 91件</span>
-            </div>
-            <div class="mock-row"><span>株式会社ネクサス・テック</span><span class="mock-tag">IT・通信</span><span class="mock-score">★ 94</span></div>
-            <div class="mock-row"><span>グローバル・サプライ株式会社</span><span class="mock-tag">商社</span><span class="mock-score">★ 87</span></div>
-            <div class="mock-row"><span>株式会社未来デザイン研究所</span><span class="mock-tag">コンサル</span><span class="mock-score">★ 82</span></div>
-            <div class="mock-row"><span>イエロースター物流株式会社</span><span class="mock-tag">運輸</span><span class="mock-score">★ 78</span></div>
-          </div>
+          <div class="mv-row"><span>株式会社ネクサス・テック</span><span class="mv-tag">IT・通信</span><span class="mv-score">★ 94</span></div>
+          <div class="mv-row"><span>グローバル・サプライ株式会社</span><span class="mv-tag">商社</span><span class="mv-score">★ 87</span></div>
+          <div class="mv-row"><span>未来デザイン研究所</span><span class="mv-tag">コンサル</span><span class="mv-score">★ 82</span></div>
+          <div class="mv-row"><span>イエロースター物流株式会社</span><span class="mv-tag">運輸</span><span class="mv-score">★ 78</span></div>
         </div>
       </div>
     </div>
 
-    <!-- FN 02 -->
+    <!-- 02 -->
     <div class="fn-block reverse reveal">
       <div>
         <div class="fn-badge"><span class="fn-num">FUNCTION 02</span> AI差分解析</div>
-        <h3>企業の<span class="blue">"変化"</span>を捉える<br>AI差分解析</h3>
-        <p class="fn-desc">
-          AIが変化点を自動要約し、営業機会を逃しません。企業のちょっとした変化こそが、アプローチのベストタイミングです。
-        </p>
+        <h3>企業の<span class="cyan">"変化"</span>を捉える<br>AI差分解析</h3>
+        <p class="fn-desc">AIが変化点を自動要約し、営業機会を逃しません。企業のちょっとした変化こそが、アプローチのベストタイミングです。</p>
         <div class="fn-items">
-          <div class="fn-item"><span class="fn-item-icon">🌍</span>サイト更新 / 新サービス公開を検知</div>
-          <div class="fn-item"><span class="fn-item-icon">📅</span>採用開始 / 締め切りを自動通知</div>
-          <div class="fn-item"><span class="fn-item-icon">💼</span>経営体制の変化をリアルタイム把握</div>
-          <div class="fn-item"><span class="fn-item-icon">📣</span>SNS・ニュースへの露出を追跡</div>
+          <div class="fn-item"><span class="fi-icon">🌍</span>サイト更新 / 新サービス公開を検知</div>
+          <div class="fn-item"><span class="fi-icon">📅</span>採用開始 / 締め切りを自動通知</div>
+          <div class="fn-item"><span class="fi-icon">💼</span>経営体制の変化をリアルタイム把握</div>
+          <div class="fn-item"><span class="fi-icon">📣</span>SNS・ニュースへの露出を追跡</div>
         </div>
       </div>
       <div class="fn-visual">
-        <div class="fn-visual-inner">
-          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;">🔔 本日の変化検知レポート</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="background:#f0f9ff;border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
-                <div style="font-weight:700;color:var(--dark);">株式会社ネクサス・テック</div>
-                <div style="color:#666;font-size:12px;">採用ページ更新を検知 — エンジニア5名募集開始</div>
-              </div>
-              <div style="background:#fff8f0;border-left:3px solid #ff9f43;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
-                <div style="font-weight:700;color:var(--dark);">グローバル・サプライ株式会社</div>
-                <div style="color:#666;font-size:12px;">新サービスページ公開を検知</div>
-              </div>
-              <div style="background:#f0fff4;border-left:3px solid #26de81;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
-                <div style="font-weight:700;color:var(--dark);">未来デザイン研究所</div>
-                <div style="color:#666;font-size:12px;">代表取締役交代をニュースで検知</div>
-              </div>
+        <div class="mv-header">
+          <div class="mv-dot" style="background:#ff5f57"></div>
+          <div class="mv-dot" style="background:#febc2e"></div>
+          <div class="mv-dot" style="background:#28c840"></div>
+          <span class="mv-title">本日の変化検知レポート</span>
+        </div>
+        <div class="mv-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:#f0fffe;border-left:3px solid var(--cyan);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+              <div style="font-weight:700;color:var(--dark);">株式会社ネクサス・テック</div>
+              <div style="color:#666;font-size:12px;">採用ページ更新 — エンジニア5名募集開始</div>
+            </div>
+            <div style="background:#fff8f0;border-left:3px solid #ff9f43;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+              <div style="font-weight:700;color:var(--dark);">グローバル・サプライ株式会社</div>
+              <div style="color:#666;font-size:12px;">新サービスページ公開を検知</div>
+            </div>
+            <div style="background:#f0fff4;border-left:3px solid #26de81;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+              <div style="font-weight:700;color:var(--dark);">未来デザイン研究所</div>
+              <div style="color:#666;font-size:12px;">代表取締役交代をニュースで検知</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- FN 03 -->
+    <!-- 03 -->
     <div class="fn-block reveal">
       <div>
         <div class="fn-badge"><span class="fn-num">FUNCTION 03</span> マッチングスコア</div>
-        <h3>マッチングスコアで<br><span class="blue">"今アタックすべき企業"</span>が分かる</h3>
-        <p class="fn-desc">
-          事業内容・成熟度・更新頻度・類似サービス導入傾向など、複数の指標からAIが優先順位スコアを算出。営業リストの精度が格段に上がります。
-        </p>
+        <h3>マッチングスコアで<br><span class="cyan">"今アタックすべき企業"</span>が分かる</h3>
+        <p class="fn-desc">事業内容・成熟度・更新頻度・類似サービス導入傾向など、複数の指標からAIが優先順位スコアを算出。営業リストの精度が格段に上がります。</p>
         <div class="fn-items">
-          <div class="fn-item"><span class="fn-item-icon">🧭</span>事業内容・業種タグを自動生成</div>
-          <div class="fn-item"><span class="fn-item-icon">📈</span>企業の成熟度・更新頻度を分析</div>
-          <div class="fn-item"><span class="fn-item-icon">📰</span>類似サービス導入傾向をスコア化</div>
-          <div class="fn-item"><span class="fn-item-icon">🎯</span>優先順位スコアで上位企業を自動表示</div>
+          <div class="fn-item"><span class="fi-icon">🧭</span>事業内容・業種タグを自動生成</div>
+          <div class="fn-item"><span class="fi-icon">📈</span>企業の成熟度・更新頻度を分析</div>
+          <div class="fn-item"><span class="fi-icon">📰</span>類似サービス導入傾向をスコア化</div>
+          <div class="fn-item"><span class="fi-icon">🎯</span>優先順位スコアで上位企業を自動表示</div>
         </div>
       </div>
       <div class="fn-visual">
-        <div class="fn-visual-inner">
-          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-            <div style="font-size:12px;font-weight:700;color:var(--gray-text);margin-bottom:14px;">マッチングスコア ランキング</div>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#f0f9ff;border-radius:10px;">
-                <span style="font-size:18px;font-weight:900;color:var(--blue);width:24px;">1</span>
-                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">株式会社ネクサス・テック</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:94%;background:var(--blue);border-radius:3px;"></div></div></div>
-                <span style="font-size:16px;font-weight:900;color:var(--blue);">94</span>
+        <div class="mv-header">
+          <div class="mv-dot" style="background:#ff5f57"></div>
+          <div class="mv-dot" style="background:#febc2e"></div>
+          <div class="mv-dot" style="background:#28c840"></div>
+          <span class="mv-title">マッチングスコア ランキング</span>
+        </div>
+        <div class="mv-body">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(0,196,204,0.06);border-radius:10px;">
+              <span style="font-size:16px;font-weight:900;color:var(--cyan);width:20px;">1</span>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;">株式会社ネクサス・テック</div>
+                <div style="height:5px;background:#e8edf2;border-radius:3px;margin-top:5px;"><div style="height:100%;width:94%;background:linear-gradient(to right,var(--cyan),var(--green));border-radius:3px;"></div></div>
               </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
-                <span style="font-size:18px;font-weight:900;color:#999;width:24px;">2</span>
-                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">グローバル・サプライ</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:87%;background:#bdd8f0;border-radius:3px;"></div></div></div>
-                <span style="font-size:16px;font-weight:900;color:#999;">87</span>
+              <span style="font-size:15px;font-weight:900;color:var(--cyan);">94</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
+              <span style="font-size:16px;font-weight:900;color:#bbb;width:20px;">2</span>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;">グローバル・サプライ</div>
+                <div style="height:5px;background:#e8edf2;border-radius:3px;margin-top:5px;"><div style="height:100%;width:87%;background:#bde8f0;border-radius:3px;"></div></div>
               </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
-                <span style="font-size:18px;font-weight:900;color:#999;width:24px;">3</span>
-                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">未来デザイン研究所</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:82%;background:#bdd8f0;border-radius:3px;"></div></div></div>
-                <span style="font-size:16px;font-weight:900;color:#999;">82</span>
+              <span style="font-size:15px;font-weight:900;color:#bbb;">87</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
+              <span style="font-size:16px;font-weight:900;color:#bbb;width:20px;">3</span>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;">未来デザイン研究所</div>
+                <div style="height:5px;background:#e8edf2;border-radius:3px;margin-top:5px;"><div style="height:100%;width:82%;background:#bde8f0;border-radius:3px;"></div></div>
               </div>
+              <span style="font-size:15px;font-weight:900;color:#bbb;">82</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- FN 04 -->
+    <!-- 04 -->
     <div class="fn-block reverse reveal">
       <div>
         <div class="fn-badge"><span class="fn-num">FUNCTION 04</span> 営業メール自動生成</div>
-        <h3>AIが<span class="blue">初回営業メール</span>まで<br>自動生成</h3>
-        <p class="fn-desc">
-          企業の特徴に合わせたパーソナライズメールをAIが即時作成。営業未経験者でも、刺さる初回文を即作成できます。
-        </p>
+        <h3>AIが<span class="cyan">初回営業メール</span>まで<br>自動生成</h3>
+        <p class="fn-desc">企業の特徴に合わせたパーソナライズメールをAIが即時作成。営業未経験者でも、刺さる初回文を即作成できます。</p>
         <div class="fn-items">
-          <div class="fn-item"><span class="fn-item-icon">👤</span>企業の特徴に合わせたパーソナライズ</div>
-          <div class="fn-item"><span class="fn-item-icon">✈️</span>目的別メールテンプレート対応</div>
-          <div class="fn-item"><span class="fn-item-icon">📬</span>一括メール対応（SendGrid連携）</div>
-          <div class="fn-item"><span class="fn-item-icon">✅</span>配信ステータスを自動管理</div>
+          <div class="fn-item"><span class="fi-icon">👤</span>企業の特徴に合わせたパーソナライズ</div>
+          <div class="fn-item"><span class="fi-icon">✈️</span>目的別メールテンプレート対応</div>
+          <div class="fn-item"><span class="fi-icon">📬</span>一括メール対応（SendGrid連携）</div>
+          <div class="fn-item"><span class="fi-icon">✅</span>配信ステータスを自動管理</div>
         </div>
       </div>
       <div class="fn-visual">
-        <div class="fn-visual-inner">
-          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;">✨ AIメール生成プレビュー</div>
-            <div style="background:#f8f8f8;border-radius:8px;padding:12px;font-size:12px;color:var(--dark2);line-height:1.7;">
-              <div style="font-weight:700;margin-bottom:6px;">件名：【AIパーソナライズ】貴社IT・通信業界の課題解決に特化したソリューションのご案内</div>
-              <div>株式会社ネクサス・テック<br>ご担当者様<br><br>突然のご連絡失礼いたします。<br>弊社のAIソリューションは、貴社のような<span style="color:var(--blue);font-weight:700;">IT・通信業界</span>の効率化に実績がございます…</div>
-            </div>
-            <button style="margin-top:12px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:40px;padding:10px;font-size:13px;font-weight:700;cursor:default;">AIメールを即時生成</button>
+        <div class="mv-header">
+          <div class="mv-dot" style="background:#ff5f57"></div>
+          <div class="mv-dot" style="background:#febc2e"></div>
+          <div class="mv-dot" style="background:#28c840"></div>
+          <span class="mv-title">AIメール生成プレビュー</span>
+        </div>
+        <div class="mv-body">
+          <div style="font-size:11px;color:var(--cyan);font-weight:700;margin-bottom:10px;">✨ ターゲット: 株式会社ネクサス・テック</div>
+          <div style="background:#f8f8f8;border-radius:8px;padding:12px;font-size:12px;color:var(--dark2);line-height:1.7;">
+            <div style="font-weight:700;margin-bottom:6px;">件名：貴社IT課題の解決に特化したご提案</div>
+            <div>株式会社ネクサス・テック<br>ご担当者様<br><br>弊社のAIソリューションは、貴社のような<span style="color:var(--cyan);font-weight:700;">IT・通信業界</span>の効率化に実績がございます…</div>
           </div>
+          <div style="margin-top:12px;background:linear-gradient(135deg,var(--cyan),var(--green));color:#fff;border-radius:40px;padding:10px;font-size:13px;font-weight:700;text-align:center;">AIメールを即時生成</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── COMPARISON ──────────────────────────── -->
+<!-- ─── COMPARISON ─── -->
 <section class="section comparison-section">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
       <span class="eyebrow-text">COMPARISON</span>
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title">
-      従来のデータベースでは不可能な<br><span class="blue">"動的リスト"を実現します</span>
+      従来のデータベースでは不可能な<br><span class="cyan">"動的リスト"を実現します</span>
     </h2>
     <p class="section-lead">日々変わり続ける企業情報。従来の仕組みでは"変化する企業情報"に対応しきれません。</p>
 
@@ -1644,60 +1371,27 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>📅 情報の鮮度</td>
-          <td><span class="c-no">✗</span> 更新が遅く最新情報を追えない</td>
-          <td><span class="c-yes">✓</span> AIが毎日自動更新</td>
-        </tr>
-        <tr>
-          <td>🔄 企業変化の検知</td>
-          <td><span class="c-no">✗</span> 変化を追跡できない</td>
-          <td><span class="c-yes">✓</span> AI差分解析で自動検知</td>
-        </tr>
-        <tr>
-          <td>🎯 アプローチ優先度</td>
-          <td><span class="c-no">✗</span> 手動での判断が必要</td>
-          <td><span class="c-yes">✓</span> マッチングスコアで自動判定</td>
-        </tr>
-        <tr>
-          <td>✉️ 営業メール生成</td>
-          <td><span class="c-no">✗</span> 対応なし（手作成が必要）</td>
-          <td><span class="c-yes">✓</span> AIがパーソナライズメールを即時生成</td>
-        </tr>
-        <tr>
-          <td>🏢 新設企業の発掘</td>
-          <td><span class="c-no">✗</span> タイムラグが大きい</td>
-          <td><span class="c-yes">✓</span> 国税庁APIで即時検出</td>
-        </tr>
-        <tr>
-          <td>💰 コスト効率</td>
-          <td><span class="c-no">✗</span> 購入直後から鮮度が下がる</td>
-          <td><span class="c-yes">✓</span> 常に最新状態・追加費用なし</td>
-        </tr>
-        <tr>
-          <td>🛡️ IT導入補助金</td>
-          <td><span class="c-no">✗</span> 非対象が多い</td>
-          <td><span class="c-yes">✓</span> 対象要件を完全に満たす</td>
-        </tr>
+        <tr><td>📅 情報の鮮度</td><td><span class="c-no">✗</span> 更新が遅く最新情報を追えない</td><td><span class="c-yes">✓</span> AIが毎日自動更新</td></tr>
+        <tr><td>🔄 企業変化の検知</td><td><span class="c-no">✗</span> 変化を追跡できない</td><td><span class="c-yes">✓</span> AI差分解析で自動検知</td></tr>
+        <tr><td>🎯 アプローチ優先度</td><td><span class="c-no">✗</span> 手動での判断が必要</td><td><span class="c-yes">✓</span> マッチングスコアで自動判定</td></tr>
+        <tr><td>✉️ 営業メール生成</td><td><span class="c-no">✗</span> 対応なし（手作成が必要）</td><td><span class="c-yes">✓</span> AIがパーソナライズメールを即時生成</td></tr>
+        <tr><td>🏢 新設企業の発掘</td><td><span class="c-no">✗</span> タイムラグが大きい</td><td><span class="c-yes">✓</span> 国税庁APIで即時検出</td></tr>
+        <tr><td>💰 コスト効率</td><td><span class="c-no">✗</span> 購入直後から鮮度が下がる</td><td><span class="c-yes">✓</span> 常に最新状態・追加費用なし</td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<!-- ─── RESULTS ─────────────────────────────── -->
+<!-- ─── RESULTS ─── -->
 <section class="section results-section">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
       <span class="eyebrow-text">RESULTS</span>
       <div class="eyebrow-line"></div>
     </div>
-    <h2 class="section-title">
-      営業の生産性が、<span class="blue">驚くほど向上します。</span>
-    </h2>
-    <p class="section-lead">
-      営業に必要な準備がすべて自動で整い、成果につながる業務に集中できるようになります。
-    </p>
+    <h2 class="section-title">営業の生産性が、<span class="cyan">驚くほど向上します。</span></h2>
+    <p class="section-lead">営業に必要な準備がすべて自動で整い、成果につながる業務に集中できるようになります。</p>
 
     <div class="results-grid">
       <div class="result-card reveal">
@@ -1724,110 +1418,22 @@
 
     <div style="margin-top:52px;text-align:center;padding:32px;background:var(--gray-bg);border-radius:20px;border:1px solid #eee;" class="reveal">
       <p style="font-size:18px;font-weight:700;color:var(--dark);">
-        "AIの自動化によって、<span style="color:var(--blue)">成果につながる業務に専念できる環境</span>が生まれます。"
+        "AIの自動化によって、<span style="color:var(--cyan)">成果につながる業務に専念できる環境</span>が生まれます。"
       </p>
     </div>
   </div>
 </section>
 
-<!-- ─── SUBSIDY ──────────────────────────────── -->
-<section class="subsidy-section" id="subsidy">
-  <div class="section-inner">
-    <div class="section-eyebrow">
-      <div class="eyebrow-line" style="background:var(--blue)"></div>
-      <span class="eyebrow-text">IT導入補助金 2025</span>
-      <div class="eyebrow-line" style="background:var(--blue)"></div>
-    </div>
-    <h2 class="section-title">
-      補助金を活用して、<br>お得に導入できます。
-    </h2>
-    <p class="section-lead">
-      AI営業リストマスターはIT導入補助金の対象要件を満たしています。<br>補助金を活用することで、導入コストを大幅に削減できます。
-    </p>
-
-    <div class="subsidy-grid reveal">
-      <div class="sub-card">
-        <h3>対象要件を満たす技術基盤</h3>
-        <ul>
-          <li>国税庁 法人番号 API利用</li>
-          <li>公開情報のみ利用（完全ホワイト）</li>
-          <li>AI差分解析（大量データの自動要約）</li>
-          <li>マッチングアルゴリズムによる優先度判定</li>
-          <li>SendGrid連携による送信成功率向上</li>
-        </ul>
-      </div>
-      <div class="sub-card">
-        <h3>補助金申請サポート</h3>
-        <ul>
-          <li>営業DX / IT導入補助金の対象要件を満たす</li>
-          <li>業務効率化・生産性向上ツールとして申請可能</li>
-          <li>導入前後の効果測定データを提供</li>
-          <li>申請書類の作成サポートあり</li>
-          <li>IT導入支援事業者による伴走支援</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="sub-highlight reveal">
-      <h3>IT導入補助金 活用で</h3>
-      <div class="big">最大 <small>補助率</small> 1/2</div>
-      <p>補助上限額 最大450万円 ／ 中小企業・小規模事業者が対象</p>
-    </div>
-  </div>
-</section>
-
-<!-- ─── TECH ────────────────────────────────── -->
-<section class="section tech-section">
-  <div class="section-inner">
-    <div class="section-eyebrow">
-      <div class="eyebrow-line"></div>
-      <span class="eyebrow-text">TECHNOLOGY</span>
-      <div class="eyebrow-line"></div>
-    </div>
-    <h2 class="section-title">
-      安心して導入できる、<span class="blue">技術的な裏付け</span>
-    </h2>
-    <p class="section-lead">
-      公開情報の活用、AI解析、公式API連携など、信頼性の高い仕組みで構築されています。
-    </p>
-
-    <div class="tech-grid">
-      <div class="tech-card reveal">
-        <div class="t-icon">🏛️</div>
-        <h4>国税庁 法人番号<br>API利用</h4>
-      </div>
-      <div class="tech-card reveal">
-        <div class="t-icon">✅</div>
-        <h4>公開情報のみ利用<br>（完全ホワイト）</h4>
-      </div>
-      <div class="tech-card reveal">
-        <div class="t-icon">🔬</div>
-        <h4>AI差分解析<br>（大量データ自動要約）</h4>
-      </div>
-      <div class="tech-card reveal">
-        <div class="t-icon">🧮</div>
-        <h4>マッチングアルゴリズム<br>による優先度判定</h4>
-      </div>
-      <div class="tech-card reveal">
-        <div class="t-icon">📧</div>
-        <h4>SendGrid連携<br>送信成功率向上</h4>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── PRICING ─────────────────────────────── -->
+<!-- ─── PRICING ─── -->
 <section class="pricing-section">
   <div class="section-inner">
-    <div class="section-eyebrow">
+    <div class="eyebrow">
       <div class="eyebrow-line"></div>
       <span class="eyebrow-text">PRICING</span>
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title">料金プラン</h2>
-    <p class="section-lead">
-      必要な自動化レベルに応じて、複数のプランをご用意。<br>導入環境や運用規模に合わせて柔軟にカスタマイズできます。
-    </p>
+    <p class="section-lead">必要な自動化レベルに応じて、複数のプランをご用意。<br>導入環境や運用規模に合わせて柔軟にカスタマイズできます。</p>
 
     <div class="pricing-grid">
       <div class="price-card lite reveal">
@@ -1840,7 +1446,6 @@
           <li>公開情報クロール</li>
         </ul>
       </div>
-
       <div class="price-card standard reveal">
         <div class="pname">STANDARD</div>
         <div class="pdesc">差分検知＋メール生成</div>
@@ -1852,7 +1457,6 @@
           <li>マッチングスコア</li>
         </ul>
       </div>
-
       <div class="price-card pro reveal">
         <div class="popular-badge">人気No.1</div>
         <div class="pname">PRO</div>
@@ -1866,7 +1470,6 @@
           <li>詳細レポート</li>
         </ul>
       </div>
-
       <div class="price-card enterprise reveal">
         <div class="pname">ENTERPRISE</div>
         <div class="pdesc">大量データ処理／代理店モデル対応</div>
@@ -1879,20 +1482,17 @@
         </ul>
       </div>
     </div>
-
-    <p style="text-align:center;color:rgba(255,255,255,0.3);font-size:13px;margin-top:28px;">
-      ※実際の価格は別途お問い合わせください。IT導入補助金適用後の実質負担額についてもご相談いただけます。
-    </p>
+    <p style="text-align:center;color:rgba(255,255,255,0.3);font-size:13px;margin-top:28px;">※実際の価格はお問い合わせください。</p>
   </div>
 </section>
 
-<!-- ─── CTA / FORM ───────────────────────────── -->
+<!-- ─── CTA / FORM ─── -->
 <section class="cta-section" id="contact">
   <h2>まずは無料デモで<br>その効果を体験してください。</h2>
-  <p>IT導入補助金の活用についても、お気軽にご相談ください。</p>
+  <p>導入のご相談・ご質問など、お気軽にお問い合わせください。</p>
 
   <div class="cta-form-wrap">
-    <h3>無料デモ・お問い合わせ</h3>
+    <h3>お問い合わせ・デモ申込</h3>
     <form onsubmit="handleSubmit(event)">
       <div class="form-group">
         <label>会社名<span>*</span></label>
@@ -1914,8 +1514,8 @@
         <label>お問い合わせ種別</label>
         <select>
           <option>無料デモを申し込みたい</option>
-          <option>IT導入補助金について相談したい</option>
           <option>料金・プランについて聞きたい</option>
+          <option>導入について相談したい</option>
           <option>その他</option>
         </select>
       </div>
@@ -1923,53 +1523,50 @@
         <label>メッセージ（任意）</label>
         <textarea placeholder="ご質問・ご要望などをご記入ください"></textarea>
       </div>
-      <button type="submit" class="form-submit">無料デモを申し込む →</button>
-      <p class="form-note">送信後、担当者より2営業日以内にご連絡いたします。<br>個人情報は適切に管理いたします。</p>
+      <button type="submit" class="form-submit">送信する →</button>
+      <p class="form-note">送信後、担当者より2営業日以内にご連絡いたします。</p>
     </form>
   </div>
 </section>
 
-<!-- ─── FOOTER ──────────────────────────────── -->
+<!-- ─── FOOTER ─── -->
 <footer class="footer">
-  <div class="footer-logo">
-    <div class="lm"></div>
-    <span>AI営業リストマスター</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
+      <circle cx="16" cy="7"  r="6.5" fill="#00c4cc"/>
+      <circle cx="30" cy="16" r="6"   fill="#00c4cc" opacity="0.8"/>
+      <circle cx="14" cy="28" r="6"   fill="#00c896" opacity="0.85"/>
+      <circle cx="30" cy="37" r="5"   fill="#00c896" opacity="0.7"/>
+      <line x1="16" y1="13.5" x2="24" y2="16" stroke="#00c4cc" stroke-width="2" stroke-linecap="round"/>
+      <line x1="24" y1="16"   x2="14" y2="22" stroke="#00c0a8" stroke-width="2" stroke-linecap="round"/>
+      <line x1="14" y1="22"   x2="25" y2="32" stroke="#00c896" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:700;">AI営業リストマスター</span>
   </div>
   <p>© AI営業リストマスター. All rights reserved.</p>
 </footer>
 
 <script>
-  // Scroll reveal
-  const revealEls = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        io.unobserve(e.target);
-      }
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-  revealEls.forEach(el => io.observe(el));
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  // Form
   function handleSubmit(e) {
     e.preventDefault();
     const btn = e.target.querySelector('.form-submit');
-    btn.textContent = '✓ 送信完了しました！担当者よりご連絡いたします。';
-    btn.style.background = '#27ae60';
+    btn.textContent = '✓ 送信完了しました！';
+    btn.style.background = 'linear-gradient(135deg, var(--cyan), var(--green))';
     btn.disabled = true;
   }
 
-  // Smooth scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        const top = target.getBoundingClientRect().top + window.scrollY - 80;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) { e.preventDefault(); window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); }
     });
   });
 </script>
