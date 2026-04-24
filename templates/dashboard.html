@@ -2052,11 +2052,13 @@ document.getElementById('furikomi-confirm-btn')?.addEventListener('click', async
   }
 });
 
-// 振込名義確認 削除ボタン
-document.querySelectorAll('.furikomi-delete-btn').forEach(btn => {
-  btn.addEventListener('click', async function() {
-    if (!confirm('この候補を削除しますか？')) return;
-    const recordId = this.dataset.id;
+// 振込名義確認 削除ボタン（イベント委任）
+document.addEventListener('click', async function(e) {
+  const btn = e.target.closest('.furikomi-delete-btn');
+  if (!btn) return;
+  if (!confirm('この候補を削除しますか？')) return;
+  const recordId = btn.dataset.id;
+  try {
     const resp = await fetch(`/api/furikomi_confirm/${recordId}/delete`, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
     });
@@ -2065,7 +2067,113 @@ document.querySelectorAll('.furikomi-delete-btn').forEach(btn => {
       const row = document.getElementById(`furikomi-row-${recordId}`);
       if (row) row.remove();
     }
-  });
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
+});
+
+// ===== 会計未仕分けタブ: 未仕分けチェックボタン =====
+const _unclassifiedLoadingModal = new bootstrap.Modal(document.getElementById('unclassifiedLoadingModal'));
+
+document.getElementById('unclassified-check-btn')?.addEventListener('click', async function() {
+  _unclassifiedLoadingModal.show();
+  this.disabled = true;
+
+  try {
+    const resp = await fetch('/api/unclassified/check', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+    });
+    let data;
+    try { data = await resp.json(); }
+    catch(_) {
+      _unclassifiedLoadingModal.hide();
+      alert(`サーバーエラー\nステータス: ${resp.status}`);
+      return;
+    }
+
+    _unclassifiedLoadingModal.hide();
+
+    if (!resp.ok) {
+      alert('エラー: ' + (data.error || ''));
+      return;
+    }
+
+    let msg = `取得完了\n・会計未仕分けタブ: ${data.new_count}件追加（計${data.total}件）\n・取得期間: ${data.from_date} 〜 ${data.to_date}`;
+    if (data.spans_fiscal) {
+      msg += `\n\n※会計期間をまたいで照会しました。\n（${data.from_date} 〜 ${data.fiscal_boundary.slice(0, 7)}末 / ${data.fiscal_boundary} 〜 ${data.to_date} の2期間）`;
+    }
+    alert(msg);
+    window.location.reload();
+
+  } catch(e) {
+    _unclassifiedLoadingModal.hide();
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+  }
+});
+
+// ===== 会計未仕分けタブ: 顧客リスト登録 =====
+const _unclassifiedRegisterModal = new bootstrap.Modal(document.getElementById('unclassifiedRegisterModal'));
+let _ucRegRecordId = null;
+
+document.addEventListener('click', async function(e) {
+  const btn = e.target.closest('.uc-register-btn');
+  if (!btn) return;
+
+  _ucRegRecordId = btn.dataset.id;
+  const remark = btn.dataset.remark || '';
+  const dt     = btn.dataset.date   || '';
+  const amt    = parseInt(btn.dataset.amt) || 0;
+
+  document.getElementById('uc-reg-deal-info').textContent =
+    `備考: ${remark} / 着金日: ${dt} / ¥${amt.toLocaleString()}`;
+  document.getElementById('uc-reg-furikomi').value = remark;
+  document.getElementById('uc-reg-company').value  = '';
+
+  try {
+    const cr = await fetch('/api/customers');
+    const customers = await cr.json();
+    const dl = document.getElementById('uc-reg-company-list');
+    dl.innerHTML = customers.map(c => `<option value="${escHtml(c.name)}">`).join('');
+  } catch(_) {}
+
+  _unclassifiedRegisterModal.show();
+  setTimeout(() => document.getElementById('uc-reg-company').focus(), 300);
+});
+
+document.getElementById('uc-reg-confirm-btn')?.addEventListener('click', async function() {
+  const company  = document.getElementById('uc-reg-company').value.trim();
+  const furikomi = document.getElementById('uc-reg-furikomi').value.trim();
+  if (!company)  { alert('顧客名を入力してください'); return; }
+  if (!furikomi) { alert('振込名義を入力してください'); return; }
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>登録中...';
+  try {
+    const r1 = await fetch('/api/customers/furikomi/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company, furikomi_name: furikomi}),
+    });
+    const d1 = await r1.json();
+    if (!d1.ok) { alert('エラー: ' + (d1.error || '')); return; }
+
+    await fetch(`/api/furikomi_confirm/${_ucRegRecordId}/delete`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+    });
+
+    _unclassifiedRegisterModal.hide();
+    const row = document.getElementById(`furikomi-row-${_ucRegRecordId}`);
+    if (row) row.remove();
+    alert(`「${company}」に振込名義「${furikomi}」を登録しました。`);
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-people me-1"></i>顧客リストに登録';
+  }
 });
 
 // ===== 月次確定モーダル =====
