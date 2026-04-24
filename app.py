@@ -2117,13 +2117,15 @@ def api_unclassified_check():
     from_date = from_dt.strftime("%Y-%m-%d")
     to_date   = today.strftime("%Y-%m-%d")
 
-    # 会計期間またぎチェック
+    # 会計期間またぎチェック: またぐ場合は今期開始日にクリップ
     _s      = load_settings()
     _fstart = _s.get("fiscal_year_start_month", 4)
     _fy_year = today.year if today.month >= _fstart else today.year - 1
     curr_from_dt = date(_fy_year, _fstart, 1)
     curr_from    = curr_from_dt.strftime("%Y-%m-%d")
     spans_fiscal = (from_dt < curr_from_dt <= today)
+    if spans_fiscal:
+        from_date = curr_from  # 前期分はAPIが受け付けないため今期開始日に切り詰め
 
     try:
         from mf_accounting import get_unclassified_deals
