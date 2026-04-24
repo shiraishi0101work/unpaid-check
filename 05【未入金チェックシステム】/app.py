@@ -2104,6 +2104,108 @@ def api_customers_delete():
 
 
 
+@app.route("/api/unclassified/check", methods=["POST"])
+@login_required
+def api_unclassified_check():
+    """
+    今日から2カ月前までのMFクラウド会計の未仕分け（is_realized=false）データを取得し、
+    会計未仕分けリストに追加する。
+    """
+    from datetime import timedelta
+
+    cid = get_company_id()
+    if not auth.is_authenticated("accounting", cid):
+        return jsonify({"error": "MFクラウド会計の連携が必要です。設定画面から連携してください。"}), 401
+
+    try:
+        from mf_accounting import get_unclassified_deals
+    except ImportError as e:
+        return jsonify({"error": f"会計モジュールエラー: {e}"}), 500
+
+    today = date.today()
+    # 2カ月前の1日を計算
+    m = today.month - 2
+    y = today.year
+    if m <= 0:
+        m += 12
+        y -= 1
+    from_dt = date(y, m, 1)
+    from_date = from_dt.strftime("%Y-%m-%d")
+    to_date   = today.strftime("%Y-%m-%d")
+
+    # 会計期間またぎチェック
+    _s = load_settings()
+    _fstart  = _s.get("fiscal_year_start_month", 4)
+    _fy_year = today.year if today.month >= _fstart else today.year - 1
+    curr_from_dt = date(_fy_year, _fstart, 1)
+    curr_from    = curr_from_dt.strftime("%Y-%m-%d")
+    spans_fiscal = (from_dt < curr_from_dt <= today)
+
+    # 未仕分けデータ取得（会計期間またぎは2回に分けて）
+    try:
+        if spans_fiscal:
+            prev_to_dt = curr_from_dt - timedelta(days=1)
+            prev_to = prev_to_dt.strftime("%Y-%m-%d")
+            unc_prev = get_unclassified_deals(from_date, prev_to, company_id=cid)
+            unc_curr = get_unclassified_deals(curr_from, to_date, company_id=cid)
+            deals = unc_prev + unc_curr
+            print(f"[未仕分け] 前期{len(unc_prev)}件 + 当期{len(unc_curr)}件", flush=True)
+        else:
+            deals = get_unclassified_deals(from_date, to_date, company_id=cid)
+            print(f"[未仕分け] {len(deals)}件取得", flush=True)
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        return jsonify({"error": f"MFクラウド会計APIエラー: {e}"}), 500
+
+    # 銀行口座科目のみ抽出して保存
+    _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
+    furikomi_unconf = load_furikomi_unconfirmed()
+    existing_jids   = {r.get("journal_id", r.get("id", "")) for r in furikomi_unconf}
+
+    import uuid as _uuid
+    new_count = 0
+    for d in deals:
+        journal_id = str(d.get("取引ID", ""))
+        if journal_id in existing_jids:
+            continue
+        account = d.get("科目", "") or ""
+        if not any(ba in account for ba in _BANK_ACCOUNTS):
+            continue
+        furikomi_unconf.append({
+            "id":                   str(_uuid.uuid4()),
+            "journal_id":           journal_id,
+            "fetched_at":           datetime.now().isoformat(),
+            "suggested_partner":    "",
+            "candidate_invoice_id": "",
+            "取引先名":             d.get("取引先名", ""),
+            "着金日":               d.get("着金日", ""),
+            "入金金額":             d.get("入金金額", 0),
+            "備考":                 d.get("備考", ""),
+            "科目":                 account,
+            "furikomi_to_register": "",
+            "linked_invoice_id":    None,
+            "linked_invoice_num":   None,
+            "linked_at":            None,
+            "deleted":              False,
+        })
+        existing_jids.add(journal_id)
+        new_count += 1
+
+    save_furikomi_unconfirmed(furikomi_unconf)
+    total = len([r for r in furikomi_unconf if not r.get("deleted")])
+
+    return jsonify({
+        "ok":           True,
+        "new_count":    new_count,
+        "total":        total,
+        "from_date":    from_date,
+        "to_date":      to_date,
+        "spans_fiscal": spans_fiscal,
+        "fiscal_boundary": curr_from if spans_fiscal else None,
+    })
+
+
 @app.route("/api/invoice/<invoice_id>/delete-draft", methods=["POST"])
 def delete_draft_invoice(invoice_id):
     """下書き（期限超過）タブから請求書を削除（非表示）する"""
