@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI営業リストマスター｜IT導入補助金対象ツール</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue:      #139AE2;
+      --blue-dark: #0e7abf;
+      --blue-light:#e8f5fd;
+      --dark:      #1a1f2b;
+      --dark2:     #303042;
+      --gray-bg:   #f8f8f8;
+      --gray-text: #495057;
+      --gray-mid:  #999;
+      --white:     #ffffff;
+      --orange:    #ff6b35;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', Meiryo, 'Hiragino Kaku Gothic Pro', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ──────────────────────────── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 999;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #eee;
+      padding: 0 48px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-mark svg { width: 22px; height: 22px; }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span { color: var(--blue); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-badge {
+      background: #fff3ee;
+      border: 1px solid #ffcfb8;
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 40px;
+      font-weight: 700;
+      transition: all 0.25s;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      padding: 12px 28px;
+      font-size: 14px;
+    }
+    .btn-primary:hover {
+      background: var(--blue-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(19,154,226,0.35);
+    }
+
+    .btn-dark {
+      background: var(--dark);
+      color: #fff;
+      padding: 14px 36px;
+      font-size: 16px;
+    }
+    .btn-dark:hover {
+      background: #2a3040;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+      padding: 12px 32px;
+      font-size: 16px;
+    }
+    .btn-outline:hover {
+      background: var(--blue);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .btn-white {
+      background: #fff;
+      color: var(--dark);
+      padding: 14px 36px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .btn-white:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+
+    /* ── HERO ──────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      padding: 100px 48px 80px;
+      position: relative;
+      overflow: hidden;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+    }
+
+    /* dotted pattern */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, #d0d8e4 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 460px;
+      gap: 60px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff3ee;
+      border: 1px solid #ffcfb8;
+      color: var(--orange);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    .hero-kicker {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-text);
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h1 {
+      font-size: 50px;
+      font-weight: 900;
+      line-height: 1.25;
+      color: var(--dark);
+      margin-bottom: 24px;
+      letter-spacing: -1.5px;
+    }
+
+    .hero h1 .accent { color: var(--blue); }
+
+    .hero-lead {
+      font-size: 17px;
+      color: var(--gray-text);
+      line-height: 1.8;
+      margin-bottom: 32px;
+      max-width: 500px;
+    }
+
+    .hero-checks {
+      list-style: none;
+      margin-bottom: 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hero-checks li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--dark2);
+    }
+
+    .hero-checks li::before {
+      content: '✓';
+      width: 22px; height: 22px;
+      background: var(--blue);
+      border-radius: 50%;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* Hero visual card */
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-stats-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      position: relative;
+    }
+
+    .hero-stats-card::before {
+      content: '';
+      position: absolute;
+      top: -3px; left: -3px; right: -3px; bottom: -3px;
+      border-radius: 27px;
+      background: linear-gradient(135deg, var(--blue), #00c896);
+      z-index: -1;
+    }
+
+    .stats-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--gray-bg);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-box .num sub {
+      font-size: 18px;
+    }
+
+    .stat-box .lbl {
+      font-size: 12px;
+      color: var(--gray-mid);
+      line-height: 1.4;
+    }
+
+    .subsidy-pill {
+      background: linear-gradient(135deg, #fff3ee, #ffe8dc);
+      border: 1px solid #ffcfb8;
+      border-radius: 16px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+
+    .subsidy-pill .sp-label {
+      font-size: 12px;
+      color: var(--orange);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .subsidy-pill .sp-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .subsidy-pill .sp-value strong {
+      color: var(--orange);
+      font-size: 22px;
+    }
+
+    /* floating chips */
+    .chip {
+      position: absolute;
+      background: #fff;
+      border-radius: 40px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      white-space: nowrap;
+    }
+
+    .chip-1 { top: -20px; right: -20px; color: var(--blue); border: 1px solid var(--blue-light); }
+    .chip-2 { bottom: 80px; left: -28px; color: var(--dark); border: 1px solid #eee; }
+
+    /* ── ORANGE BAND ─────────────────────── */
+    .subsidy-band {
+      background: linear-gradient(135deg, var(--orange), #e04e1e);
+      padding: 26px 48px;
+    }
+
+    .subsidy-band-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .sband-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .sband-badge {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    .sband-text {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    /* ── SECTION COMMON ──────────────────── */
+    .section { padding: 100px 48px; }
+
+    .section-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow-line {
+      width: 40px; height: 2px;
+      background: var(--blue);
+    }
+
+    .eyebrow-text {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--dark);
+      line-height: 1.3;
+      margin-bottom: 14px;
+      letter-spacing: -1px;
+    }
+
+    .section-title .blue { color: var(--blue); }
+
+    .section-lead {
+      text-align: center;
+      font-size: 16px;
+      color: var(--gray-text);
+      line-height: 1.8;
+      max-width: 640px;
+      margin: 0 auto 64px;
+    }
+
+    /* ── PROBLEM ─────────────────────────── */
+    .problem-section { background: var(--dark); }
+    .problem-section .section-title { color: #fff; }
+    .problem-section .section-lead { color: rgba(255,255,255,0.6); }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .problem-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: all 0.25s;
+    }
+
+    .problem-card:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(19,154,226,0.3);
+      transform: translateY(-4px);
+    }
+
+    .p-icon {
+      width: 52px; height: 52px;
+      background: rgba(19,154,226,0.1);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 16px;
+    }
+
+    .problem-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    .problem-quote {
+      margin-top: 48px;
+      text-align: center;
+      padding: 28px;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.25);
+      border-radius: 16px;
+      color: #ff8c5a;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* ── BEFORE / AFTER ──────────────────── */
+    .ba-section { background: var(--gray-bg); }
+
+    .ba-wrap {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      align-items: center;
+      gap: 0;
+    }
+
+    .ba-card {
+      border-radius: 24px;
+      padding: 44px 40px;
+    }
+
+    .ba-card.before {
+      background: var(--dark);
+    }
+
+    .ba-card.after {
+      background: var(--white);
+      border: 2px solid var(--blue);
+      box-shadow: 0 16px 48px rgba(19,154,226,0.15);
+    }
+
+    .ba-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    .before .ba-label {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+    }
+
+    .after .ba-label {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .ba-card h3 {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 28px;
+      line-height: 1.4;
+    }
+
+    .before h3 { color: #fff; }
+    .after h3 { color: var(--blue); }
+
+    .ba-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ba-list li {
+      font-size: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .before .ba-list li { color: rgba(255,255,255,0.7); }
+    .after .ba-list li { color: var(--dark2); font-weight: 500; }
+
+    .ba-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      font-size: 32px;
+    }
+
+    .ba-metrics {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      margin-top: 52px;
+      flex-wrap: wrap;
+    }
+
+    .ba-metric {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 40px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      border: 1px solid #eee;
+    }
+
+    .ba-metric .m-num {
+      font-size: 44px;
+      font-weight: 900;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .ba-metric .m-lbl {
+      font-size: 13px;
+      color: var(--gray-text);
+      font-weight: 500;
+    }
+
+    /* ── FUNCTIONS (alternating) ─────────── */
+    .functions-section { background: #fff; }
+
+    .fn-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      padding: 60px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .fn-block:last-child { border-bottom: none; }
+    .fn-block.reverse { direction: rtl; }
+    .fn-block.reverse > * { direction: ltr; }
+
+    .fn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue-light);
+      border: 1px solid rgba(19,154,226,0.2);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+
+    .fn-num {
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--blue);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .fn-block h3 {
+      font-size: 30px;
+      font-weight: 900;
+      color: var(--dark);
+      line-height: 1.35;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .fn-block h3 .blue { color: var(--blue); }
+
+    .fn-desc {
+      font-size: 15px;
+      color: var(--gray-text);
+      line-height: 1.8;
+      margin-bottom: 28px;
+    }
+
+    .fn-items {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .fn-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--gray-bg);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--dark2);
+      transition: all 0.2s;
+    }
+
+    .fn-item:hover {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .fn-item-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .fn-visual {
+      background: var(--gray-bg);
+      border-radius: 24px;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #eee;
+    }
+
+    .fn-visual-inner {
+      padding: 32px;
+      width: 100%;
+    }
+
+    /* mock dashboard inside fn-visual */
+    .mock-header {
+      background: var(--dark);
+      border-radius: 12px 12px 0 0;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+
+    .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .mock-body {
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .mock-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    .mock-row:last-child { border-bottom: none; }
+
+    .mock-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      margin-left: auto;
+    }
+
+    .mock-tag {
+      background: #e8f5fd;
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    /* ── COMPARISON TABLE ────────────────── */
+    .comparison-section { background: var(--gray-bg); }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+
+    .comp-table th {
+      padding: 22px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .comp-table th:first-child {
+      background: var(--dark);
+      color: rgba(255,255,255,0.7);
+      text-align: left;
+      width: 38%;
+    }
+
+    .comp-table th:nth-child(2) {
+      background: #e8edf2;
+      color: var(--gray-text);
+    }
+
+    .comp-table th:nth-child(3) {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .comp-table td {
+      padding: 18px 28px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: center;
+    }
+
+    .comp-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--dark);
+      background: #fff;
+    }
+
+    .comp-table td:nth-child(2) { background: #fcfcfc; color: var(--gray-text); }
+    .comp-table td:nth-child(3) { background: #f0f9ff; color: var(--dark); font-weight: 600; }
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    .c-yes { color: var(--blue); font-size: 18px; font-weight: 900; }
+    .c-no  { color: #ccc; font-size: 18px; }
+
+    /* ── RESULTS ─────────────────────────── */
+    .results-section { background: #fff; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .result-card {
+      text-align: center;
+      padding: 40px 24px;
+      border-radius: 24px;
+      border: 1px solid #eee;
+      transition: all 0.25s;
+      background: #fff;
+    }
+
+    .result-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 12px 40px rgba(19,154,226,0.12);
+      transform: translateY(-4px);
+    }
+
+    .result-card .r-icon {
+      width: 64px; height: 64px;
+      background: var(--blue-light);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      margin: 0 auto 20px;
+    }
+
+    .result-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .result-card p {
+      font-size: 14px;
+      color: var(--gray-text);
+      line-height: 1.7;
+    }
+
+    /* ── SUBSIDY ─────────────────────────── */
+    .subsidy-section { background: var(--dark); padding: 100px 48px; }
+    .subsidy-section .section-title { color: #fff; }
+    .subsidy-section .section-lead { color: rgba(255,255,255,0.6); }
+
+    .subsidy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+
+    .sub-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 36px;
+    }
+
+    .sub-card h3 {
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sub-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sub-card ul li {
+      color: rgba(255,255,255,0.8);
+      font-size: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .sub-card ul li::before {
+      content: '✓';
+      color: var(--blue);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .sub-highlight {
+      background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,69,0,0.08));
+      border: 2px solid rgba(255,107,53,0.4);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .sub-highlight h3 {
+      color: var(--orange);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .sub-highlight .big {
+      color: #fff;
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .sub-highlight .big small { font-size: 24px; }
+
+    .sub-highlight p {
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+    }
+
+    /* ── TECH ────────────────────────────── */
+    .tech-section { background: var(--gray-bg); }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 18px;
+    }
+
+    .tech-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 20px;
+      text-align: center;
+      border: 1px solid #eee;
+      transition: all 0.25s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+
+    .tech-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(19,154,226,0.12);
+    }
+
+    .tech-card .t-icon { font-size: 36px; margin-bottom: 14px; }
+
+    .tech-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.5;
+    }
+
+    /* ── PRICING ─────────────────────────── */
+    .pricing-section { background: var(--dark); padding: 100px 48px; }
+    .pricing-section .section-title { color: #fff; }
+    .pricing-section .section-lead { color: rgba(255,255,255,0.6); }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .price-card {
+      border-radius: 24px;
+      padding: 36px 28px;
+      transition: transform 0.25s;
+      position: relative;
+    }
+
+    .price-card:hover { transform: translateY(-6px); }
+
+    .price-card.lite     { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+    .price-card.standard { background: rgba(255,255,255,0.07); border: 1px solid rgba(19,154,226,0.25); }
+    .price-card.pro      { background: rgba(19,154,226,0.12); border: 2px solid var(--blue); }
+    .price-card.enterprise { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+
+    .popular-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--orange);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 18px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .pname {
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .lite .pname, .enterprise .pname { color: rgba(255,255,255,0.5); }
+    .standard .pname, .pro .pname { color: var(--blue); }
+
+    .pdesc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .pfeatures {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pfeatures li {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .pfeatures li::before {
+      content: '◆';
+      color: var(--blue);
+      font-size: 9px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .pro .pfeatures li { color: rgba(255,255,255,0.9); }
+
+    /* ── CTA / FORM ──────────────────────── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--blue) 0%, #0e9ad0 100%);
+      padding: 100px 48px;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 44px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .cta-section > p {
+      font-size: 17px;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 56px;
+    }
+
+    .cta-form-wrap {
+      max-width: 540px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 28px;
+      padding: 48px 44px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.2);
+      text-align: left;
+    }
+
+    .cta-form-wrap h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .form-group label span {
+      color: #e74c3c;
+      margin-left: 4px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e8edf2;
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--dark);
+      font-family: inherit;
+      transition: border-color 0.2s;
+      outline: none;
+      appearance: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--blue);
+    }
+
+    .form-group textarea { height: 90px; resize: vertical; }
+
+    .form-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: 40px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+
+    .form-submit:hover {
+      background: var(--blue);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(19,154,226,0.4);
+    }
+
+    .form-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-mid);
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ──────────────────────────── */
+    .footer {
+      background: var(--dark);
+      padding: 36px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-logo .lm {
+      width: 28px; height: 28px;
+      background: var(--blue);
+      border-radius: 8px;
+    }
+
+    .footer-logo span {
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .footer p {
+      color: rgba(255,255,255,0.35);
+      font-size: 13px;
+    }
+
+    /* ── SCROLL ANIMATION ─────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ──────────────────────── */
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .hero h1 { font-size: 36px; }
+      .problem-grid { grid-template-columns: 1fr 1fr; }
+      .ba-wrap { grid-template-columns: 1fr; }
+      .ba-arrow { display: none; }
+      .fn-block, .fn-block.reverse { grid-template-columns: 1fr; direction: ltr; }
+      .fn-visual { display: none; }
+      .results-grid { grid-template-columns: 1fr 1fr; }
+      .pricing-grid { grid-template-columns: 1fr 1fr; }
+      .subsidy-grid { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: repeat(3, 1fr); }
+      .section-title { font-size: 28px; }
+      .site-header { padding: 0 20px; }
+    }
+
+    @media (max-width: 640px) {
+      .section { padding: 60px 20px; }
+      .hero { padding: 90px 20px 60px; }
+      .hero h1 { font-size: 30px; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .results-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+      .cta-form-wrap { padding: 32px 24px; }
+      .cta-section h2 { font-size: 30px; }
+      .header-badge { display: none; }
+      .footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────────── -->
+<header class="site-header">
+  <a href="#" class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="4" r="3.5" fill="white"/>
+        <circle cx="16" cy="8" r="3.5" fill="white" opacity="0.7"/>
+        <circle cx="6" cy="14" r="3.5" fill="white" opacity="0.8"/>
+        <circle cx="16" cy="18" r="2.5" fill="white" opacity="0.6"/>
+        <line x1="6" y1="7.5" x2="12.5" y2="8" stroke="white" stroke-width="1.5"/>
+        <line x1="12.5" y1="8" x2="6" y2="10.5" stroke="white" stroke-width="1.5"/>
+        <line x1="6" y1="10.5" x2="13.5" y2="15.5" stroke="white" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <span class="logo-text">AI<span>営業</span>リストマスター</span>
+  </a>
+  <div class="header-right">
+    <div class="header-badge">IT導入補助金 対象ツール</div>
+    <a href="#contact" class="btn btn-primary">無料デモを申し込む</a>
+  </div>
+</header>
+
+<!-- ─── HERO ───────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">🎯 IT導入補助金2025 対象ツール認定</div>
+      <p class="hero-kicker">すべてをAIが自動化する時代へ —</p>
+      <h1>
+        営業リストの生成から<br>
+        初回アプローチまで<br>
+        <span class="accent">すべてをAIが自動化。</span>
+      </h1>
+      <p class="hero-lead">
+        企業情報の収集から優先度判断、初回アプローチ文の作成まで。<br>
+        営業活動の"前工程"をAIがシンプルに自動化します。
+      </p>
+      <ul class="hero-checks">
+        <li>最新の企業リストを毎日自動生成</li>
+        <li>企業の変化を捉えるAI差分解析</li>
+        <li>成約率の高い企業だけにアプローチ</li>
+        <li>初回営業メール自動生成</li>
+      </ul>
+      <div class="hero-btns">
+        <a href="#contact" class="btn btn-dark">無料デモを申し込む</a>
+        <a href="#features" class="btn btn-outline">機能を見る</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="chip chip-1">🤖 AIが自動でリスト生成中…</div>
+      <div class="hero-stats-card">
+        <p class="stats-card-title">導入効果・実績</p>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="num">97<sub>%</sub></div>
+            <div class="lbl">作業時間<br>削減</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">10<sub>倍</sub></div>
+            <div class="lbl">営業活動量<br>拡大</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">4<sub>倍</sub></div>
+            <div class="lbl">初回接触率<br>向上</div>
+          </div>
+          <div class="stat-box">
+            <div class="num">5<sub>分</sub></div>
+            <div class="lbl">5時間の作業が<br>5分で完了</div>
+          </div>
+        </div>
+        <div class="subsidy-pill">
+          <div class="sp-label">IT導入補助金活用で</div>
+          <div class="sp-value">導入コストを最大 <strong>1/2</strong> に削減</div>
+        </div>
+      </div>
+      <div class="chip chip-2">📋 739,313社のデータベース</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SUBSIDY BAND ────────────────────────── -->
+<div class="subsidy-band">
+  <div class="subsidy-band-inner">
+    <div class="sband-left">
+      <div class="sband-badge">IT導入補助金2025</div>
+      <div class="sband-text">補助率 最大 1/2 ・補助上限 450万円</div>
+    </div>
+    <a href="#subsidy" class="btn btn-white" style="padding:10px 24px;font-size:14px;">補助金詳細を確認 →</a>
+  </div>
+</div>
+
+<!-- ─── PROBLEM ─────────────────────────────── -->
+<section class="section problem-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text" style="color:rgba(255,255,255,0.5)">PROBLEM</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title" style="color:#fff;">
+      営業リスト作成は、<br>まだ <span style="color:#ff8c5a">"手作業"</span> ですか？
+    </h2>
+    <p class="section-lead">
+      こんなお悩みを抱えたままでは、<br>営業のスピードも成果も伸び続けません。
+    </p>
+
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="p-icon">⏰</div>
+        <h3>企業を探すのに<br>時間がかかる</h3>
+      </div>
+      <div class="problem-card reveal">
+        <div class="p-icon">📚</div>
+        <h3>リストの情報が古く<br>精度が安定しない</h3>
+      </div>
+      <div class="problem-card reveal">
+        <div class="p-icon">✉️</div>
+        <h3>メール作成が<br>担当者ごとにバラつく</h3>
+      </div>
+      <div class="problem-card reveal">
+        <div class="p-icon">🏢</div>
+        <h3>新設企業・成長企業の<br>動きを追えない</h3>
+      </div>
+      <div class="problem-card reveal">
+        <div class="p-icon">📂</div>
+        <h3>データ整理に追われ<br>営業時間が減る</h3>
+      </div>
+      <div class="problem-card reveal">
+        <div class="p-icon">🔍</div>
+        <h3>優先度が分からず<br>どこからアタックすべきか迷う</h3>
+      </div>
+    </div>
+
+    <div class="problem-quote reveal">
+      "この状態では、営業のスピードも成果も伸びません。"
+    </div>
+  </div>
+</section>
+
+<!-- ─── BEFORE / AFTER ──────────────────────── -->
+<section class="section ba-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">BEFORE / AFTER</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">
+      営業準備に費やしていた時間を、<br><span class="blue">すべてAIが肩代わり。</span>
+    </h2>
+    <p class="section-lead">5時間の作業が、5分で終わる。</p>
+
+    <div class="ba-wrap reveal">
+      <div class="ba-card before">
+        <span class="ba-label">Before 従来の営業プロセス</span>
+        <h3>毎日5時間以上が<br>"営業前の準備作業"に<br>消えていた</h3>
+        <ul class="ba-list">
+          <li><span>✗</span> 企業検索、リスト作成</li>
+          <li><span>✗</span> Web調査、情報整理</li>
+          <li><span>✗</span> ターゲット選定</li>
+          <li><span>✗</span> 営業メールの作成</li>
+          <li><span>✗</span> 情報更新のやり直し</li>
+        </ul>
+      </div>
+
+      <div class="ba-arrow">▶</div>
+
+      <div class="ba-card after">
+        <span class="ba-label">After AI営業リストマスター導入後</span>
+        <h3>AIが営業前工程を<br>すべて自動化！</h3>
+        <ul class="ba-list">
+          <li><span style="color:var(--blue)">✓</span> 営業リストを<strong>毎日自動生成</strong></li>
+          <li><span style="color:var(--blue)">✓</span> 情報は<strong>自動解析・自動更新</strong></li>
+          <li><span style="color:var(--blue)">✓</span> マッチングスコアで<strong>優先企業を自動表示</strong></li>
+          <li><span style="color:var(--blue)">✓</span> AIが初回の<strong>営業メールを即時生成</strong></li>
+          <li><span style="color:var(--blue)">✓</span> 必要なのは「送る」ボタンだけ</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ba-metrics reveal">
+      <div class="ba-metric">
+        <div class="m-num">97%</div>
+        <div class="m-lbl">作業時間 最大削減</div>
+      </div>
+      <div class="ba-metric">
+        <div class="m-num">10倍</div>
+        <div class="m-lbl">営業活動量 拡大</div>
+      </div>
+      <div class="ba-metric">
+        <div class="m-num">2〜4倍</div>
+        <div class="m-lbl">初回接触率 向上</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FUNCTIONS ───────────────────────────── -->
+<section class="section functions-section" id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">FEATURES</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">
+      AIリストマスターが<br><span class="blue">"営業前工程"をすべて自動化</span>します。
+    </h2>
+    <p class="section-lead">
+      4つの強力な機能で、企業情報の収集から初回アプローチまで完全自動化。
+    </p>
+
+    <!-- FN 01 -->
+    <div class="fn-block reveal">
+      <div>
+        <div class="fn-badge"><span class="fn-num">FUNCTION 01</span> 企業リスト自動生成</div>
+        <h3>公開情報だけで最新の<br><span class="blue">企業リストを自動生成</span></h3>
+        <p class="fn-desc">
+          法人番号データ・公式サイト・公開情報をAIが自動収集し、毎日最新状態のリストを維持。情報収集にかかっていた時間は、もう不要です。
+        </p>
+        <div class="fn-items">
+          <div class="fn-item"><span class="fn-item-icon">🏛️</span>法人番号データから新設企業を検出</div>
+          <div class="fn-item"><span class="fn-item-icon">🌐</span>公式サイトや公開情報を自動クロール</div>
+          <div class="fn-item"><span class="fn-item-icon">🤖</span>企業プロフィールをAIが生成</div>
+          <div class="fn-item"><span class="fn-item-icon">🔄</span>情報はすべて自動更新・常に最新状態</div>
+        </div>
+      </div>
+      <div class="fn-visual">
+        <div class="fn-visual-inner">
+          <div class="mock-header">
+            <div class="mock-dot" style="background:#ff5f57"></div>
+            <div class="mock-dot" style="background:#febc2e"></div>
+            <div class="mock-dot" style="background:#28c840"></div>
+            <span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:10px;">企業リスト管理</span>
+          </div>
+          <div class="mock-body">
+            <div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:#999;">
+              <span>📊 739,313社</span><span>✅ 100%更新</span><span>🔄 本日追加 91件</span>
+            </div>
+            <div class="mock-row"><span>株式会社ネクサス・テック</span><span class="mock-tag">IT・通信</span><span class="mock-score">★ 94</span></div>
+            <div class="mock-row"><span>グローバル・サプライ株式会社</span><span class="mock-tag">商社</span><span class="mock-score">★ 87</span></div>
+            <div class="mock-row"><span>株式会社未来デザイン研究所</span><span class="mock-tag">コンサル</span><span class="mock-score">★ 82</span></div>
+            <div class="mock-row"><span>イエロースター物流株式会社</span><span class="mock-tag">運輸</span><span class="mock-score">★ 78</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FN 02 -->
+    <div class="fn-block reverse reveal">
+      <div>
+        <div class="fn-badge"><span class="fn-num">FUNCTION 02</span> AI差分解析</div>
+        <h3>企業の<span class="blue">"変化"</span>を捉える<br>AI差分解析</h3>
+        <p class="fn-desc">
+          AIが変化点を自動要約し、営業機会を逃しません。企業のちょっとした変化こそが、アプローチのベストタイミングです。
+        </p>
+        <div class="fn-items">
+          <div class="fn-item"><span class="fn-item-icon">🌍</span>サイト更新 / 新サービス公開を検知</div>
+          <div class="fn-item"><span class="fn-item-icon">📅</span>採用開始 / 締め切りを自動通知</div>
+          <div class="fn-item"><span class="fn-item-icon">💼</span>経営体制の変化をリアルタイム把握</div>
+          <div class="fn-item"><span class="fn-item-icon">📣</span>SNS・ニュースへの露出を追跡</div>
+        </div>
+      </div>
+      <div class="fn-visual">
+        <div class="fn-visual-inner">
+          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;">🔔 本日の変化検知レポート</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:#f0f9ff;border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+                <div style="font-weight:700;color:var(--dark);">株式会社ネクサス・テック</div>
+                <div style="color:#666;font-size:12px;">採用ページ更新を検知 — エンジニア5名募集開始</div>
+              </div>
+              <div style="background:#fff8f0;border-left:3px solid #ff9f43;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+                <div style="font-weight:700;color:var(--dark);">グローバル・サプライ株式会社</div>
+                <div style="color:#666;font-size:12px;">新サービスページ公開を検知</div>
+              </div>
+              <div style="background:#f0fff4;border-left:3px solid #26de81;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+                <div style="font-weight:700;color:var(--dark);">未来デザイン研究所</div>
+                <div style="color:#666;font-size:12px;">代表取締役交代をニュースで検知</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FN 03 -->
+    <div class="fn-block reveal">
+      <div>
+        <div class="fn-badge"><span class="fn-num">FUNCTION 03</span> マッチングスコア</div>
+        <h3>マッチングスコアで<br><span class="blue">"今アタックすべき企業"</span>が分かる</h3>
+        <p class="fn-desc">
+          事業内容・成熟度・更新頻度・類似サービス導入傾向など、複数の指標からAIが優先順位スコアを算出。営業リストの精度が格段に上がります。
+        </p>
+        <div class="fn-items">
+          <div class="fn-item"><span class="fn-item-icon">🧭</span>事業内容・業種タグを自動生成</div>
+          <div class="fn-item"><span class="fn-item-icon">📈</span>企業の成熟度・更新頻度を分析</div>
+          <div class="fn-item"><span class="fn-item-icon">📰</span>類似サービス導入傾向をスコア化</div>
+          <div class="fn-item"><span class="fn-item-icon">🎯</span>優先順位スコアで上位企業を自動表示</div>
+        </div>
+      </div>
+      <div class="fn-visual">
+        <div class="fn-visual-inner">
+          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <div style="font-size:12px;font-weight:700;color:var(--gray-text);margin-bottom:14px;">マッチングスコア ランキング</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#f0f9ff;border-radius:10px;">
+                <span style="font-size:18px;font-weight:900;color:var(--blue);width:24px;">1</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">株式会社ネクサス・テック</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:94%;background:var(--blue);border-radius:3px;"></div></div></div>
+                <span style="font-size:16px;font-weight:900;color:var(--blue);">94</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
+                <span style="font-size:18px;font-weight:900;color:#999;width:24px;">2</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">グローバル・サプライ</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:87%;background:#bdd8f0;border-radius:3px;"></div></div></div>
+                <span style="font-size:16px;font-weight:900;color:#999;">87</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;">
+                <span style="font-size:18px;font-weight:900;color:#999;width:24px;">3</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:700;">未来デザイン研究所</div><div style="height:6px;background:#e8edf2;border-radius:3px;margin-top:4px;"><div style="height:100%;width:82%;background:#bdd8f0;border-radius:3px;"></div></div></div>
+                <span style="font-size:16px;font-weight:900;color:#999;">82</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FN 04 -->
+    <div class="fn-block reverse reveal">
+      <div>
+        <div class="fn-badge"><span class="fn-num">FUNCTION 04</span> 営業メール自動生成</div>
+        <h3>AIが<span class="blue">初回営業メール</span>まで<br>自動生成</h3>
+        <p class="fn-desc">
+          企業の特徴に合わせたパーソナライズメールをAIが即時作成。営業未経験者でも、刺さる初回文を即作成できます。
+        </p>
+        <div class="fn-items">
+          <div class="fn-item"><span class="fn-item-icon">👤</span>企業の特徴に合わせたパーソナライズ</div>
+          <div class="fn-item"><span class="fn-item-icon">✈️</span>目的別メールテンプレート対応</div>
+          <div class="fn-item"><span class="fn-item-icon">📬</span>一括メール対応（SendGrid連携）</div>
+          <div class="fn-item"><span class="fn-item-icon">✅</span>配信ステータスを自動管理</div>
+        </div>
+      </div>
+      <div class="fn-visual">
+        <div class="fn-visual-inner">
+          <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;">✨ AIメール生成プレビュー</div>
+            <div style="background:#f8f8f8;border-radius:8px;padding:12px;font-size:12px;color:var(--dark2);line-height:1.7;">
+              <div style="font-weight:700;margin-bottom:6px;">件名：【AIパーソナライズ】貴社IT・通信業界の課題解決に特化したソリューションのご案内</div>
+              <div>株式会社ネクサス・テック<br>ご担当者様<br><br>突然のご連絡失礼いたします。<br>弊社のAIソリューションは、貴社のような<span style="color:var(--blue);font-weight:700;">IT・通信業界</span>の効率化に実績がございます…</div>
+            </div>
+            <button style="margin-top:12px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:40px;padding:10px;font-size:13px;font-weight:700;cursor:default;">AIメールを即時生成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPARISON ──────────────────────────── -->
+<section class="section comparison-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">COMPARISON</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">
+      従来のデータベースでは不可能な<br><span class="blue">"動的リスト"を実現します</span>
+    </h2>
+    <p class="section-lead">日々変わり続ける企業情報。従来の仕組みでは"変化する企業情報"に対応しきれません。</p>
+
+    <table class="comp-table reveal">
+      <thead>
+        <tr>
+          <th>比較項目</th>
+          <th>従来のデータベース / リスト販売</th>
+          <th>AI営業リストマスター</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>📅 情報の鮮度</td>
+          <td><span class="c-no">✗</span> 更新が遅く最新情報を追えない</td>
+          <td><span class="c-yes">✓</span> AIが毎日自動更新</td>
+        </tr>
+        <tr>
+          <td>🔄 企業変化の検知</td>
+          <td><span class="c-no">✗</span> 変化を追跡できない</td>
+          <td><span class="c-yes">✓</span> AI差分解析で自動検知</td>
+        </tr>
+        <tr>
+          <td>🎯 アプローチ優先度</td>
+          <td><span class="c-no">✗</span> 手動での判断が必要</td>
+          <td><span class="c-yes">✓</span> マッチングスコアで自動判定</td>
+        </tr>
+        <tr>
+          <td>✉️ 営業メール生成</td>
+          <td><span class="c-no">✗</span> 対応なし（手作成が必要）</td>
+          <td><span class="c-yes">✓</span> AIがパーソナライズメールを即時生成</td>
+        </tr>
+        <tr>
+          <td>🏢 新設企業の発掘</td>
+          <td><span class="c-no">✗</span> タイムラグが大きい</td>
+          <td><span class="c-yes">✓</span> 国税庁APIで即時検出</td>
+        </tr>
+        <tr>
+          <td>💰 コスト効率</td>
+          <td><span class="c-no">✗</span> 購入直後から鮮度が下がる</td>
+          <td><span class="c-yes">✓</span> 常に最新状態・追加費用なし</td>
+        </tr>
+        <tr>
+          <td>🛡️ IT導入補助金</td>
+          <td><span class="c-no">✗</span> 非対象が多い</td>
+          <td><span class="c-yes">✓</span> 対象要件を完全に満たす</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── RESULTS ─────────────────────────────── -->
+<section class="section results-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">RESULTS</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">
+      営業の生産性が、<span class="blue">驚くほど向上します。</span>
+    </h2>
+    <p class="section-lead">
+      営業に必要な準備がすべて自動で整い、成果につながる業務に集中できるようになります。
+    </p>
+
+    <div class="results-grid">
+      <div class="result-card reveal">
+        <div class="r-icon">🚀</div>
+        <h3>自動でリードが<br>増え続ける</h3>
+        <p>毎日、新しい企業が自動でリストに追加される。</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="r-icon">⭐</div>
+        <h3>成約率の高い<br>企業だけに集中</h3>
+        <p>マッチングスコアで優先度がひと目で分かる。</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="r-icon">👥</div>
+        <h3>誰でも営業成果を<br>出せる</h3>
+        <p>AIメール生成で担当者ごとのバラつきを解消。</p>
+      </div>
+      <div class="result-card reveal">
+        <div class="r-icon">💰</div>
+        <h3>営業コストの<br>大幅削減</h3>
+        <p>リスト作成・情報整理・メール作成の手作業が不要に。</p>
+      </div>
+    </div>
+
+    <div style="margin-top:52px;text-align:center;padding:32px;background:var(--gray-bg);border-radius:20px;border:1px solid #eee;" class="reveal">
+      <p style="font-size:18px;font-weight:700;color:var(--dark);">
+        "AIの自動化によって、<span style="color:var(--blue)">成果につながる業務に専念できる環境</span>が生まれます。"
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SUBSIDY ──────────────────────────────── -->
+<section class="subsidy-section" id="subsidy">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line" style="background:var(--blue)"></div>
+      <span class="eyebrow-text">IT導入補助金 2025</span>
+      <div class="eyebrow-line" style="background:var(--blue)"></div>
+    </div>
+    <h2 class="section-title">
+      補助金を活用して、<br>お得に導入できます。
+    </h2>
+    <p class="section-lead">
+      AI営業リストマスターはIT導入補助金の対象要件を満たしています。<br>補助金を活用することで、導入コストを大幅に削減できます。
+    </p>
+
+    <div class="subsidy-grid reveal">
+      <div class="sub-card">
+        <h3>対象要件を満たす技術基盤</h3>
+        <ul>
+          <li>国税庁 法人番号 API利用</li>
+          <li>公開情報のみ利用（完全ホワイト）</li>
+          <li>AI差分解析（大量データの自動要約）</li>
+          <li>マッチングアルゴリズムによる優先度判定</li>
+          <li>SendGrid連携による送信成功率向上</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h3>補助金申請サポート</h3>
+        <ul>
+          <li>営業DX / IT導入補助金の対象要件を満たす</li>
+          <li>業務効率化・生産性向上ツールとして申請可能</li>
+          <li>導入前後の効果測定データを提供</li>
+          <li>申請書類の作成サポートあり</li>
+          <li>IT導入支援事業者による伴走支援</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub-highlight reveal">
+      <h3>IT導入補助金 活用で</h3>
+      <div class="big">最大 <small>補助率</small> 1/2</div>
+      <p>補助上限額 最大450万円 ／ 中小企業・小規模事業者が対象</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TECH ────────────────────────────────── -->
+<section class="section tech-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">TECHNOLOGY</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">
+      安心して導入できる、<span class="blue">技術的な裏付け</span>
+    </h2>
+    <p class="section-lead">
+      公開情報の活用、AI解析、公式API連携など、信頼性の高い仕組みで構築されています。
+    </p>
+
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="t-icon">🏛️</div>
+        <h4>国税庁 法人番号<br>API利用</h4>
+      </div>
+      <div class="tech-card reveal">
+        <div class="t-icon">✅</div>
+        <h4>公開情報のみ利用<br>（完全ホワイト）</h4>
+      </div>
+      <div class="tech-card reveal">
+        <div class="t-icon">🔬</div>
+        <h4>AI差分解析<br>（大量データ自動要約）</h4>
+      </div>
+      <div class="tech-card reveal">
+        <div class="t-icon">🧮</div>
+        <h4>マッチングアルゴリズム<br>による優先度判定</h4>
+      </div>
+      <div class="tech-card reveal">
+        <div class="t-icon">📧</div>
+        <h4>SendGrid連携<br>送信成功率向上</h4>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ─────────────────────────────── -->
+<section class="pricing-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">PRICING</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">料金プラン</h2>
+    <p class="section-lead">
+      必要な自動化レベルに応じて、複数のプランをご用意。<br>導入環境や運用規模に合わせて柔軟にカスタマイズできます。
+    </p>
+
+    <div class="pricing-grid">
+      <div class="price-card lite reveal">
+        <div class="pname">LITE</div>
+        <div class="pdesc">リスト生成＋基本分析</div>
+        <ul class="pfeatures">
+          <li>企業リスト自動生成</li>
+          <li>基本プロフィール作成</li>
+          <li>法人番号API連携</li>
+          <li>公開情報クロール</li>
+        </ul>
+      </div>
+
+      <div class="price-card standard reveal">
+        <div class="pname">STANDARD</div>
+        <div class="pdesc">差分検知＋メール生成</div>
+        <ul class="pfeatures">
+          <li>LITEの全機能</li>
+          <li>AI差分解析</li>
+          <li>変化点の自動通知</li>
+          <li>初回営業メール生成</li>
+          <li>マッチングスコア</li>
+        </ul>
+      </div>
+
+      <div class="price-card pro reveal">
+        <div class="popular-badge">人気No.1</div>
+        <div class="pname">PRO</div>
+        <div class="pdesc">メール一括送信＋自動営業レコメンド</div>
+        <ul class="pfeatures">
+          <li>STANDARDの全機能</li>
+          <li>SendGrid一括送信</li>
+          <li>配信ステータス管理</li>
+          <li>自動営業レコメンド</li>
+          <li>優先度ランキング</li>
+          <li>詳細レポート</li>
+        </ul>
+      </div>
+
+      <div class="price-card enterprise reveal">
+        <div class="pname">ENTERPRISE</div>
+        <div class="pdesc">大量データ処理／代理店モデル対応</div>
+        <ul class="pfeatures">
+          <li>PROの全機能</li>
+          <li>大量データ処理対応</li>
+          <li>代理店・アライアンス対応</li>
+          <li>専用サポート</li>
+          <li>カスタム開発対応</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:rgba(255,255,255,0.3);font-size:13px;margin-top:28px;">
+      ※実際の価格は別途お問い合わせください。IT導入補助金適用後の実質負担額についてもご相談いただけます。
+    </p>
+  </div>
+</section>
+
+<!-- ─── CTA / FORM ───────────────────────────── -->
+<section class="cta-section" id="contact">
+  <h2>まずは無料デモで<br>その効果を体験してください。</h2>
+  <p>IT導入補助金の活用についても、お気軽にご相談ください。</p>
+
+  <div class="cta-form-wrap">
+    <h3>無料デモ・お問い合わせ</h3>
+    <form onsubmit="handleSubmit(event)">
+      <div class="form-group">
+        <label>会社名<span>*</span></label>
+        <input type="text" placeholder="株式会社〇〇" required>
+      </div>
+      <div class="form-group">
+        <label>お名前<span>*</span></label>
+        <input type="text" placeholder="山田 太郎" required>
+      </div>
+      <div class="form-group">
+        <label>メールアドレス<span>*</span></label>
+        <input type="email" placeholder="example@company.co.jp" required>
+      </div>
+      <div class="form-group">
+        <label>電話番号</label>
+        <input type="tel" placeholder="03-0000-0000">
+      </div>
+      <div class="form-group">
+        <label>お問い合わせ種別</label>
+        <select>
+          <option>無料デモを申し込みたい</option>
+          <option>IT導入補助金について相談したい</option>
+          <option>料金・プランについて聞きたい</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>メッセージ（任意）</label>
+        <textarea placeholder="ご質問・ご要望などをご記入ください"></textarea>
+      </div>
+      <button type="submit" class="form-submit">無料デモを申し込む →</button>
+      <p class="form-note">送信後、担当者より2営業日以内にご連絡いたします。<br>個人情報は適切に管理いたします。</p>
+    </form>
+  </div>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-logo">
+    <div class="lm"></div>
+    <span>AI営業リストマスター</span>
+  </div>
+  <p>© AI営業リストマスター. All rights reserved.</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  revealEls.forEach(el => io.observe(el));
+
+  // Form
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.form-submit');
+    btn.textContent = '✓ 送信完了しました！担当者よりご連絡いたします。';
+    btn.style.background = '#27ae60';
+    btn.disabled = true;
+  }
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        const top = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
