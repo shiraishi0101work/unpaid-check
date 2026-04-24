@@ -28,7 +28,7 @@ def _headers(company_id: str = "") -> dict:
     }
 
 
-_REQUEST_INTERVAL = 1.5   # ページ間の待機秒数
+_REQUEST_INTERVAL = 0.8   # ページ間の待機秒数
 _MAX_RETRIES      = 5     # 429 時の最大リトライ回数
 
 
