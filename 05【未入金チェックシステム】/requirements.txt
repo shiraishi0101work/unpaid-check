@@ -1,0 +1,8 @@
+flask
+werkzeug
+requests
+python-dotenv
+openpyxl
+apscheduler
+gunicorn
+jaconv

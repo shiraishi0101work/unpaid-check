@@ -1,0 +1,747 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section">
+  <div class="sidebar-label">顧客リスト</div>
+  <div class="sidebar-item">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <i class="bi bi-arrow-left"></i> ダッシュボードへ
+    </a>
+  </div>
+</div>
+<hr class="sidebar-divider">
+<div class="sidebar-section">
+  <div class="sidebar-label">操作</div>
+  <div class="sidebar-item">
+    <label class="btn btn-outline-info btn-sm w-100" for="csv-file-input" style="cursor:pointer">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSVを読み込む
+    </label>
+    <input type="file" id="csv-file-input" accept=".csv" class="d-none">
+    <div class="form-text" style="font-size:0.68rem">マネーフォワード補助元帳（CSV）対応</div>
+  </div>
+</div>
+<hr class="sidebar-divider">
+<div class="sidebar-section">
+  <div class="sidebar-label">絞り込み</div>
+  <div class="sidebar-item">
+    <input type="text" id="search-input" class="form-control form-control-sm"
+           placeholder="顧客名・振込名義で検索">
+  </div>
+  <div class="sidebar-item">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="filter-no-furikomi">
+      <label class="form-check-label small" for="filter-no-furikomi">振込名義なしのみ</label>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>顧客リスト</h5>
+    <small class="text-muted">振込名義を顧客と紐づけて管理します</small>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <span class="badge bg-secondary" id="total-count">読み込み中...</span>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+      <i class="bi bi-plus-lg me-1"></i>顧客を追加
+    </button>
+  </div>
+</div>
+
+<!-- 顧客テーブル -->
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div id="customers-table-wrap" style="max-height:calc(100vh - 230px);overflow-y:auto">
+      <table class="table table-sm table-hover align-middle mb-0" id="customers-table">
+        <thead class="table-dark" id="customers-thead">
+          <tr id="customers-thead-row">
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:28%">顧客名</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:10%">担当者</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529" id="th-furikomi-1">振込名義1</th>
+            <th style="position:sticky;top:0;z-index:2;background:#212529;width:110px" class="text-center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="customers-tbody">
+          <tr>
+            <td colspan="99" class="text-center text-muted py-4">
+              <div class="spinner-border spinner-border-sm me-2"></div>読み込み中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ===== 顧客追加モーダル ===== #}
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>顧客を追加</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">顧客名 <span class="text-danger">*</span></label>
+          <input type="text" id="add-company-name" class="form-control" placeholder="例: 株式会社〇〇">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">担当者</label>
+          <input type="text" id="add-tantou" class="form-control" placeholder="例: 田中 太郎">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">振込名義（初期登録）</label>
+          <input type="text" id="add-furikomi" class="form-control" placeholder="例: ヤマダタロウ">
+          <div class="form-text">後から追加・変更も可能です</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button class="btn btn-primary" id="add-customer-btn">
+          <i class="bi bi-save me-1"></i>追加
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 振込名義追加モーダル ===== #}
+<div class="modal fade" id="addFurikomiModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-person-plus me-2 text-info"></i>振込名義を追加</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small">
+          顧客名: <strong id="furikomi-add-company"></strong>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">振込名義 <span class="text-danger">*</span></label>
+          <input type="text" id="furikomi-add-name" class="form-control"
+                 placeholder="例: ヤマダタロウ　カ)ヤマダショウジ">
+          <div class="form-text">
+            銀行の振込人名（カタカナ）をそのまま入力してください。<br>
+            複数登録する場合は「追加」を繰り返してください。
+          </div>
+        </div>
+        <div id="current-furikomi-list" class="mb-0"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+        <button class="btn btn-info text-white" id="furikomi-add-btn">
+          <i class="bi bi-plus-lg me-1"></i>追加
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== 担当者編集モーダル ===== #}
+<div class="modal fade" id="editTantouModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>担当者を編集</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small">
+          顧客名: <strong id="tantou-edit-company"></strong>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">担当者</label>
+          <input type="text" id="tantou-edit-name" class="form-control" placeholder="例: 田中 太郎">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button class="btn btn-primary" id="tantou-save-btn">
+          <i class="bi bi-save me-1"></i>保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ===== CSV インポートモーダル ===== #}
+<div class="modal fade" id="csvImportModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-info-subtle">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-file-earmark-spreadsheet me-2 text-info"></i>
+          補助元帳CSV 読み込み結果
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          CSVから振込入金データを読み取りました。顧客名を確認・修正して「登録」してください。<br>
+          すでに登録済みの振込名義は緑色で表示されます。
+        </div>
+
+        <!-- 一括登録バー -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <button class="btn btn-success btn-sm" id="bulk-register-btn">
+            <i class="bi bi-check2-all me-1"></i>
+            選択中の <span id="bulk-count">0</span> 件を一括登録
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" id="select-all-new-btn">
+            新規のみ全選択
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" id="deselect-all-btn">
+            全解除
+          </button>
+          <span class="text-muted small ms-auto" id="csv-summary"></span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle" id="csv-preview-table">
+            <thead class="table-secondary">
+              <tr>
+                <th style="width:36px">
+                  <input type="checkbox" id="csv-check-all" class="form-check-input">
+                </th>
+                <th>振込名義（CSV）</th>
+                <th>日付</th>
+                <th class="text-end">金額</th>
+                <th>顧客名（CSV記載）</th>
+                <th style="width:240px">紐付け先の顧客名</th>
+                <th>状態</th>
+              </tr>
+            </thead>
+            <tbody id="csv-preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ===== データ =====
+let _customers = [];        // 全顧客リスト
+let _csvData   = [];        // CSVパース結果
+let _currentCompany = '';   // 現在操作中の会社名
+
+// ===== 初期ロード =====
+loadCustomers();
+
+async function loadCustomers() {
+  try {
+    const resp = await fetch('/api/customers');
+    _customers = await resp.json();
+    renderTable(_customers);
+  } catch(e) {
+    document.getElementById('customers-tbody').innerHTML =
+      `<tr><td colspan="99" class="text-center text-danger py-3">読み込みエラー: ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('customers-tbody');
+  document.getElementById('total-count').textContent = `${list.length} 件`;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="99" class="text-center text-muted py-4">
+      <i class="bi bi-inbox fs-3"></i><br>顧客が登録されていません
+    </td></tr>`;
+    return;
+  }
+
+  // 振込名義の最大数を求めてヘッダー列を動的生成
+  const maxFurikomi = Math.max(1, ...list.map(c => c.furikomi_list.length));
+  const theadRow = document.getElementById('customers-thead-row');
+  // 既存ヘッダーを作り直す
+  theadRow.innerHTML =
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:180px">顧客名</th>` +
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:80px">担当者</th>` +
+    Array.from({length: maxFurikomi}, (_, i) =>
+      `<th style="position:sticky;top:0;z-index:2;background:#212529;min-width:160px">振込名義${i+1}</th>`
+    ).join('') +
+    `<th style="position:sticky;top:0;z-index:2;background:#212529;width:90px" class="text-center">操作</th>`;
+
+  tbody.innerHTML = list.map(c => {
+    const invoiceBadge = c.has_invoices
+      ? '<span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size:0.6rem">請求書あり</span>'
+      : '';
+
+    // 振込名義列（最大数分）
+    const furikomiCells = Array.from({length: maxFurikomi}, (_, i) => {
+      const f = c.furikomi_list[i];
+      if (!f) return `<td></td>`;
+      return `<td>
+        <span class="badge bg-info text-dark" style="font-size:0.8rem;font-weight:500">
+          ${escHtml(f)}
+          <button type="button" class="btn-close btn-close-sm ms-1 btn-remove-furikomi"
+                  style="font-size:0.45rem;vertical-align:middle"
+                  data-company="${escHtml(c.name)}"
+                  data-furikomi="${escHtml(f)}"
+                  title="削除"></button>
+        </span>
+      </td>`;
+    }).join('');
+
+    return `<tr data-company="${escHtml(c.name)}"
+                data-furikomi="${escHtml(c.furikomi_list.join(','))}"
+                data-has-furikomi="${c.furikomi_list.length > 0 ? '1' : '0'}">
+      <td class="fw-semibold">${escHtml(c.name)}${invoiceBadge}</td>
+      <td><span class="small ${c.tantou ? '' : 'text-muted'}">${escHtml(c.tantou || '—')}</span></td>
+      ${furikomiCells}
+      <td class="text-center">
+        <div class="d-flex gap-1 justify-content-center">
+          <button class="btn btn-outline-info btn-sm py-0 px-2 btn-add-furikomi"
+                  data-company="${escHtml(c.name)}"
+                  data-furikomi-json="${escHtml(JSON.stringify(c.furikomi_list))}"
+                  title="振込名義を追加">
+            <i class="bi bi-person-plus"></i>
+          </button>
+          <button class="btn btn-outline-secondary btn-sm py-0 px-2 btn-edit-tantou"
+                  data-company="${escHtml(c.name)}"
+                  data-tantou="${escHtml(c.tantou || '')}"
+                  title="担当者を編集">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-outline-danger btn-sm py-0 px-2 btn-delete-customer"
+                  data-company="${escHtml(c.name)}"
+                  title="顧客を削除">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// テーブル全体でイベント委譲（動的生成された行のボタン対応）
+document.getElementById('customers-tbody').addEventListener('click', function(e) {
+  const removeBtn = e.target.closest('.btn-remove-furikomi');
+  if (removeBtn) {
+    removeFurikomi(removeBtn.dataset.company, removeBtn.dataset.furikomi);
+    return;
+  }
+  const addBtn = e.target.closest('.btn-add-furikomi');
+  if (addBtn) {
+    const furikomiList = JSON.parse(addBtn.dataset.furikomiJson || '[]');
+    openAddFurikomi(addBtn.dataset.company, furikomiList);
+    return;
+  }
+  const editBtn = e.target.closest('.btn-edit-tantou');
+  if (editBtn) {
+    openEditTantou(editBtn.dataset.company, editBtn.dataset.tantou);
+    return;
+  }
+  const delBtn = e.target.closest('.btn-delete-customer');
+  if (delBtn) {
+    deleteCustomer(delBtn.dataset.company);
+    return;
+  }
+});
+
+async function deleteCustomer(company) {
+  if (!confirm(`「${company}」を顧客リストから削除しますか？\n※振込名義の登録情報もすべて削除されます。`)) return;
+  const resp = await fetch('/api/customers/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({company}),
+  });
+  const data = await resp.json();
+  if (data.ok) {
+    await loadCustomers();
+  } else {
+    alert('削除エラー: ' + (data.error || ''));
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return `"${escHtml(String(s))}"`;
+}
+
+// ===== 検索・フィルター =====
+document.getElementById('search-input').addEventListener('input', applyFilter);
+document.getElementById('filter-no-furikomi').addEventListener('change', applyFilter);
+
+function applyFilter() {
+  const q        = document.getElementById('search-input').value.toLowerCase();
+  const noFurikomi = document.getElementById('filter-no-furikomi').checked;
+  const rows = document.querySelectorAll('#customers-tbody tr[data-company]');
+  let shown = 0;
+  rows.forEach(row => {
+    const company  = (row.dataset.company || '').toLowerCase();
+    const furikomi = (row.dataset.furikomi || '').toLowerCase();
+    const hasFurikomi = row.dataset.hasFurikomi === '1';
+    const matchQ  = !q || company.includes(q) || furikomi.includes(q);
+    const matchF  = !noFurikomi || !hasFurikomi;
+    const show = matchQ && matchF;
+    row.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('total-count').textContent = `${shown} 件`;
+}
+
+// ===== 振込名義削除 =====
+async function removeFurikomi(company, name) {
+  if (!confirm(`「${name}」を ${company} の振込名義から削除しますか？`)) return;
+  const resp = await fetch('/api/customers/furikomi/remove', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({company, furikomi_name: name}),
+  });
+  const data = await resp.json();
+  if (data.ok) {
+    await loadCustomers();
+  } else {
+    alert('削除エラー: ' + (data.error || ''));
+  }
+}
+
+// ===== 振込名義追加モーダル =====
+const addFurikomiModal = new bootstrap.Modal(document.getElementById('addFurikomiModal'));
+
+function openAddFurikomi(company, furikomiList) {
+  _currentCompany = company;
+  document.getElementById('furikomi-add-company').textContent = company;
+  document.getElementById('furikomi-add-name').value = '';
+  // 現在の振込名義一覧
+  const listEl = document.getElementById('current-furikomi-list');
+  if (furikomiList.length > 0) {
+    listEl.innerHTML = '<div class="mb-1 small fw-semibold text-muted">現在の振込名義:</div>' +
+      furikomiList.map(f =>
+        `<span class="badge bg-info text-dark me-1">${escHtml(f)}</span>`
+      ).join('');
+  } else {
+    listEl.innerHTML = '<div class="text-muted small">まだ登録されていません</div>';
+  }
+  addFurikomiModal.show();
+  setTimeout(() => document.getElementById('furikomi-add-name').focus(), 300);
+}
+
+document.getElementById('furikomi-add-btn').addEventListener('click', async function() {
+  const name = document.getElementById('furikomi-add-name').value.trim();
+  if (!name) { alert('振込名義を入力してください'); return; }
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>追加中...';
+  try {
+    const resp = await fetch('/api/customers/furikomi/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company: _currentCompany, furikomi_name: name}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      addFurikomiModal.hide();
+      await loadCustomers();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-plus-lg me-1"></i>追加';
+  }
+});
+
+// Enter キーで追加
+document.getElementById('furikomi-add-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('furikomi-add-btn').click();
+});
+
+// ===== 担当者編集モーダル =====
+const editTantouModal = new bootstrap.Modal(document.getElementById('editTantouModal'));
+
+function openEditTantou(company, current) {
+  _currentCompany = company;
+  document.getElementById('tantou-edit-company').textContent = company;
+  document.getElementById('tantou-edit-name').value = current || '';
+  editTantouModal.show();
+  setTimeout(() => document.getElementById('tantou-edit-name').focus(), 300);
+}
+
+document.getElementById('tantou-save-btn').addEventListener('click', async function() {
+  const tantou = document.getElementById('tantou-edit-name').value.trim();
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+  try {
+    const resp = await fetch('/api/customers/tantou/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company: _currentCompany, tantou}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      editTantouModal.hide();
+      await loadCustomers();
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-save me-1"></i>保存';
+  }
+});
+
+// ===== 顧客追加モーダル =====
+const addCustomerModal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+
+document.getElementById('add-customer-btn').addEventListener('click', async function() {
+  const company  = document.getElementById('add-company-name').value.trim();
+  const tantou   = document.getElementById('add-tantou').value.trim();
+  const furikomi = document.getElementById('add-furikomi').value.trim();
+  if (!company) { alert('顧客名を入力してください'); return; }
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>追加中...';
+  try {
+    // 担当者を保存
+    await fetch('/api/customers/tantou/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company, tantou}),
+    });
+    // 振込名義を保存
+    if (furikomi) {
+      await fetch('/api/customers/furikomi/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({company, furikomi_name: furikomi}),
+      });
+    }
+    addCustomerModal.hide();
+    document.getElementById('add-company-name').value = '';
+    document.getElementById('add-tantou').value = '';
+    document.getElementById('add-furikomi').value = '';
+    await loadCustomers();
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-save me-1"></i>追加';
+  }
+});
+
+
+// ============================================================
+// CSV インポート
+// ============================================================
+
+document.getElementById('csv-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  this.value = ''; // 同じファイルを再選択できるようリセット
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const text = ev.target.result;
+    _csvData = parseFurikomiCSV(text);
+    showCsvImportModal(_csvData);
+  };
+  // 名古屋銀行補助元帳は Shift-JIS (CP932)
+  reader.readAsText(file, 'Shift_JIS');
+});
+
+function parseFurikomiCSV(text) {
+  const lines = text.split(/\r?\n/);
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (!cols || cols.length < 16) continue;
+    const description = (cols[14] || '').trim();
+    // 振込行のみ
+    if (!description.startsWith('振込')) continue;
+    const customerName = (cols[9] || '').trim();   // 貸方お相手名
+    const furikomiName = description.replace(/^振込\s*/, '').trim();
+    const amtStr = (cols[15] || '').replace(/,/g, '');
+    const amount = parseInt(amtStr) || 0;
+    const date   = (cols[1] || '').trim();
+    if (!furikomiName) continue;
+    results.push({ customerName, furikomiName, amount, date });
+  }
+  // 重複排除（同じ顧客名 × 振込名義）
+  const seen = new Set();
+  return results.filter(r => {
+    const key = `${r.customerName}|${r.furikomiName}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function parseCSVLine(line) {
+  line = line.trim();
+  if (!line) return null;
+  const result = [];
+  let cur = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+      else { inQuote = !inQuote; }
+    } else if (ch === ',' && !inQuote) {
+      result.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+const csvImportModal = new bootstrap.Modal(document.getElementById('csvImportModal'));
+
+function showCsvImportModal(rows) {
+  if (rows.length === 0) {
+    alert('振込データが見つかりませんでした。\n※「振込」で始まる摘要行を読み込みます。');
+    return;
+  }
+
+  // 顧客名のセット（既存）
+  const knownCompanies = new Set(_customers.map(c => c.name));
+  const furikomiMap = {}; // company → set of furikomi_list
+  _customers.forEach(c => { furikomiMap[c.name] = new Set(c.furikomi_list); });
+
+  let newCount = 0, existCount = 0;
+
+  const tbody = document.getElementById('csv-preview-tbody');
+  tbody.innerHTML = rows.map((r, idx) => {
+    // 状態判定
+    const isKnown     = !!r.customerName && knownCompanies.has(r.customerName);
+    const isLinked    = isKnown && furikomiMap[r.customerName]?.has(r.furikomiName);
+    const statusBadge = isLinked
+      ? '<span class="badge bg-success">登録済み</span>'
+      : (isKnown
+          ? '<span class="badge bg-warning text-dark">顧客一致・未登録</span>'
+          : (r.customerName
+              ? '<span class="badge bg-secondary">顧客なし</span>'
+              : '<span class="badge bg-danger">顧客名不明</span>'));
+
+    if (!isLinked) newCount++;
+    else existCount++;
+
+    // 顧客名候補のオートコンプリート選択
+    const companyOptions = _customers.map(c =>
+      `<option value="${escHtml(c.name)}">`
+    ).join('');
+
+    return `<tr id="csv-row-${idx}" data-linked="${isLinked ? '1' : '0'}">
+      <td>
+        <input type="checkbox" class="form-check-input csv-row-check"
+               data-idx="${idx}" ${isLinked ? 'disabled' : 'checked'}>
+      </td>
+      <td class="fw-semibold ${isLinked ? 'text-success' : ''}">${escHtml(r.furikomiName)}</td>
+      <td class="small text-muted">${escHtml(r.date)}</td>
+      <td class="text-end small">¥${(r.amount).toLocaleString()}</td>
+      <td class="small text-muted">${escHtml(r.customerName || '（不明）')}</td>
+      <td>
+        <datalist id="dl-${idx}">${companyOptions}</datalist>
+        <input type="text" class="form-control form-control-sm csv-company-input"
+               data-idx="${idx}"
+               value="${escHtml(r.customerName)}"
+               list="dl-${idx}"
+               placeholder="顧客名を選択または入力"
+               ${isLinked ? 'disabled' : ''}>
+      </td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('csv-summary').textContent =
+    `計 ${rows.length} 件（新規 ${newCount} 件・登録済み ${existCount} 件）`;
+
+  updateBulkCount();
+  csvImportModal.show();
+}
+
+// チェックボックス変更でカウント更新
+document.getElementById('csv-preview-tbody').addEventListener('change', function(e) {
+  if (e.target.classList.contains('csv-row-check')) updateBulkCount();
+});
+document.getElementById('csv-check-all').addEventListener('change', function() {
+  document.querySelectorAll('.csv-row-check:not(:disabled)').forEach(cb => {
+    cb.checked = this.checked;
+  });
+  updateBulkCount();
+});
+
+function updateBulkCount() {
+  const n = document.querySelectorAll('.csv-row-check:checked:not(:disabled)').length;
+  document.getElementById('bulk-count').textContent = n;
+  document.getElementById('bulk-register-btn').disabled = n === 0;
+}
+
+document.getElementById('select-all-new-btn').addEventListener('click', function() {
+  document.querySelectorAll('.csv-row-check:not(:disabled)').forEach(cb => cb.checked = true);
+  document.getElementById('csv-check-all').checked = true;
+  updateBulkCount();
+});
+document.getElementById('deselect-all-btn').addEventListener('click', function() {
+  document.querySelectorAll('.csv-row-check').forEach(cb => cb.checked = false);
+  document.getElementById('csv-check-all').checked = false;
+  updateBulkCount();
+});
+
+// 一括登録
+document.getElementById('bulk-register-btn').addEventListener('click', async function() {
+  const checked = document.querySelectorAll('.csv-row-check:checked:not(:disabled)');
+  if (checked.length === 0) return;
+
+  const items = [];
+  checked.forEach(cb => {
+    const idx   = parseInt(cb.dataset.idx);
+    const input = document.querySelector(`.csv-company-input[data-idx="${idx}"]`);
+    const company = (input?.value || '').trim();
+    const furikomiName = _csvData[idx]?.furikomiName || '';
+    if (company && furikomiName) {
+      items.push({ company, furikomi_name: furikomiName });
+    }
+  });
+
+  if (items.length === 0) {
+    alert('紐付け先の顧客名が入力されていない行があります。顧客名を入力してください。');
+    return;
+  }
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>登録中...';
+  try {
+    const resp = await fetch('/api/customers/furikomi/bulk-add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ items }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      csvImportModal.hide();
+      await loadCustomers();
+      alert(`✅ ${data.added} 件の振込名義を登録しました。`);
+    } else {
+      alert('エラー: ' + (data.error || ''));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-check2-all me-1"></i>選択中の <span id="bulk-count">0</span> 件を一括登録';
+    updateBulkCount();
+  }
+});
+</script>
+{% endblock %}
