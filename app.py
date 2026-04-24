@@ -1676,20 +1676,17 @@ def _run_recheck_all(cid: str):
                         new_recheck += 1
 
         save_recheck_records(recheck_records)
-        save_furikomi_unconfirmed(furikomi_unconf)
 
         with _recheck_all_lock:
             _recheck_all_status["running"]    = False
             _recheck_all_status["error"]      = None
             _recheck_all_status["error_type"] = None
             _recheck_all_status["result"]     = {
-                "ok":            True,
-                "new_recheck":   new_recheck,
-                "new_furikomi":  new_furikomi,
-                "total_recheck":  len([r for r in recheck_records if not r.get("deleted")]),
-                "total_furikomi": len([r for r in furikomi_unconf  if not r.get("deleted")]),
-                "from_date":     fetch_from,
-                "to_date":       fetch_to,
+                "ok":           True,
+                "new_recheck":  new_recheck,
+                "total_recheck": len([r for r in recheck_records if not r.get("deleted")]),
+                "from_date":    fetch_from,
+                "to_date":      fetch_to,
             }
     except AccountingPeriodError as e:
         print(f"[再確認] 会計期間エラー: {e}", flush=True)
