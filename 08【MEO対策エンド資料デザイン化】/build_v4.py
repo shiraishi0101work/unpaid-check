@@ -751,7 +751,7 @@ def make_ranking():
 # ============================================================
 def make_action_change():
     s = ns()
-    bg_grad(s, H_DK, H_MD, ang=5400000)
+    bg_solid(s, T_DK)
     box(s, 0, 0, W, Inches(0.07), YLW)
     box(s, 0, H - Inches(0.07), W, Inches(0.07), YLW)
     tb(s, MR, Inches(0.2), W - MR*2, Inches(0.85),
