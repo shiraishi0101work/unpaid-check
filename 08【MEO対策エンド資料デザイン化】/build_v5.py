@@ -97,12 +97,9 @@ def gbox(s, l, t, w, h, h1, h2, ang=0, back=True):
     return sh
 
 def gbox_rnd(s, l, t, w, h, h1, h2, ang=0, back=False):
-    """グラデーション矩形カード（type1でグラデ確実描画）"""
-    sh = s.shapes.add_shape(1, int(l), int(t), int(w), int(h))
-    sh.line.fill.background()
-    _inject_grad(sh, h1, h2, ang)
-    if back: _push_back(s, sh._element)
-    return sh
+    """ソリッドカード（h1色で塗りつぶし）"""
+    r = int(h1[0:2], 16); g = int(h1[2:4], 16); b = int(h1[4:6], 16)
+    return box(s, l, t, w, h, RGBColor(r, g, b), back=back)
 
 def oval(s, l, t, w, h, c, back=False):
     sh = s.shapes.add_shape(9, int(l), int(t), int(w), int(h))
