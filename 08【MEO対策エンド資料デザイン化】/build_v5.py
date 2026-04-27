@@ -189,9 +189,9 @@ def std_header(s, title, bdg='', wm_text=''):
     # サイドバー・ボトムバー
     box(s, 0, BODY_T, SB_W, H - BODY_T - BOT, T_MD, back=False)
     box(s, 0, H - BOT, W, BOT, T_DK, back=False)
-    # タイトル（36pt）
+    # タイトル（26pt — 長タイトルでもオーバーフローしない）
     tb(s, MR, Inches(0.22), W - MR - Inches(2.4), HDR - Inches(0.15),
-       title, 36, WHT, bold=True)
+       title, 26, WHT, bold=True)
     # バッジ
     if bdg:
         badge(s, W - Inches(2.1), Inches(0.10), bdg)
