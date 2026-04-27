@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お問い合わせありがとうございます｜AI営業リストマスター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue:      #139AE2;
+      --blue-dark: #0e7abf;
+      --blue-light:#e8f5fd;
+      --cyan:      #00c4cc;
+      --green:     #00c896;
+      --dark:      #1a1f2b;
+      --dark2:     #303042;
+      --gray-bg:   #f8f8f8;
+      --gray-text: #495057;
+      --gray-mid:  #999;
+      --white:     #ffffff;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', Meiryo, 'Hiragino Kaku Gothic Pro', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--dark);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 999;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #eee;
+      padding: 0 48px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-svg { width: 42px; height: 42px; flex-shrink: 0; }
+
+    .logo-text-block {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      line-height: 1;
+    }
+
+    .logo-ai {
+      font-size: 26px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan) 0%, #00d8b0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .logo-name {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    /* ── MAIN ── */
+    .thanks-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 48px 80px;
+      position: relative;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .thanks-main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, #d0d8e4 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .thanks-main::after {
+      content: '';
+      position: absolute;
+      top: -200px; right: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,196,204,0.08), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .thanks-card {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      width: 100%;
+      background: #fff;
+      border-radius: 32px;
+      padding: 60px 56px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.12);
+      text-align: center;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .thanks-card::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border-radius: 34px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      z-index: -1;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .check-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      box-shadow: 0 12px 32px rgba(0,196,204,0.35);
+      animation: popIn 0.5s 0.3s ease both;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .check-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .thanks-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .thanks-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--dark);
+      line-height: 1.3;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .thanks-lead {
+      font-size: 15px;
+      color: var(--gray-text);
+      line-height: 1.85;
+      margin-bottom: 36px;
+    }
+
+    .info-box {
+      background: var(--gray-bg);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 36px;
+      text-align: left;
+    }
+
+    .info-box-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-box-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 14px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .info-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-list li {
+      font-size: 13px;
+      color: var(--gray-text);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .info-list li::before {
+      content: '◆';
+      color: var(--cyan);
+      font-size: 8px;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 15px 40px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(0,196,204,0.35);
+      transition: all 0.25s;
+      font-family: inherit;
+    }
+
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,196,204,0.45);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--dark);
+      padding: 36px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer p { color: rgba(255,255,255,0.3); font-size: 13px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .thanks-main { padding: 90px 20px 60px; }
+      .thanks-card { padding: 40px 28px; }
+      .thanks-title { font-size: 24px; }
+      .site-header { padding: 0 20px; }
+      .footer { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="site-header">
+  <a href="index.html" class="logo-wrap">
+    <svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lgrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#00c4cc"/>
+          <stop offset="100%" stop-color="#00c896"/>
+        </linearGradient>
+      </defs>
+      <line x1="10" y1="6"  x2="28" y2="14" stroke="#00c4cc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="28" y1="14" x2="10" y2="22" stroke="#00c0bc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="10" y1="22" x2="28" y2="30" stroke="#00c0b0" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="28" y1="30" x2="10" y2="38" stroke="#00c896" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <circle cx="10" cy="6"  r="5.5" fill="#00c4cc"/>
+      <circle cx="28" cy="14" r="5.5" fill="#00c4cc" opacity="0.85"/>
+      <circle cx="10" cy="22" r="5.5" fill="#00c0b8"/>
+      <circle cx="28" cy="30" r="5"   fill="#00c896" opacity="0.85"/>
+      <circle cx="10" cy="38" r="4.5" fill="#00c896" opacity="0.75"/>
+    </svg>
+    <div class="logo-text-block">
+      <span class="logo-ai">AI</span><span class="logo-name">営業リストマスター</span>
+    </div>
+  </a>
+</header>
+
+<!-- ─── MAIN ─── -->
+<main class="thanks-main">
+  <div class="thanks-card">
+
+    <div class="check-icon">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 20L16 28L32 12" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <p class="thanks-eyebrow">THANK YOU</p>
+
+    <h1 class="thanks-title">
+      お問い合わせ<br>ありがとうございます。
+    </h1>
+
+    <p class="thanks-lead">
+      お問い合わせを受け付けました。<br>
+      内容を確認のうえ、担当者より折り返しご連絡いたします。<br>
+      今しばらくお待ちください。
+    </p>
+
+    <div class="info-box">
+      <div class="info-box-title">今後の流れ</div>
+      <ul class="info-list">
+        <li>ご入力いただいたメールアドレス宛に、受付確認メールをお送りします。</li>
+        <li>担当者より <strong>2営業日以内</strong> にご連絡いたします。</li>
+        <li>デモのご希望の場合は、日程調整のご連絡をいたします。</li>
+      </ul>
+    </div>
+
+    <a href="index.html" class="btn-back">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      トップページに戻る
+    </a>
+
+  </div>
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+      <line x1="10" y1="6"  x2="28" y2="14" stroke="#00c4cc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="28" y1="14" x2="10" y2="22" stroke="#00c0bc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="10" y1="22" x2="28" y2="30" stroke="#00c0b0" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="28" y1="30" x2="10" y2="38" stroke="#00c896" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <circle cx="10" cy="6"  r="5.5" fill="#00c4cc"/>
+      <circle cx="28" cy="14" r="5.5" fill="#00c4cc" opacity="0.85"/>
+      <circle cx="10" cy="22" r="5.5" fill="#00c0b8"/>
+      <circle cx="28" cy="30" r="5"   fill="#00c896" opacity="0.85"/>
+      <circle cx="10" cy="38" r="4.5" fill="#00c896" opacity="0.75"/>
+    </svg>
+    <span style="font-size:16px;font-weight:900;color:rgba(255,255,255,0.8);">
+      <span style="background:linear-gradient(135deg,#00c4cc,#00d8b0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI</span>営業リストマスター
+    </span>
+  </div>
+  <p>© AI営業リストマスター. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
