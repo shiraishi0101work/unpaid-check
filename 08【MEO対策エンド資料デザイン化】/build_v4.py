@@ -427,7 +427,7 @@ def make_three_factors():
         cx = base_l + ow * i
         # 円形シェイプ
         o = oval(s, cx + ow*0.1, ot, ow*0.8, oh * 0.75, c)
-        shape_text(o, '', 0, WHT)
+        shape_text(o, '', 1, WHT)
         # テキスト
         tb(s, cx + Inches(0.1), ot + oh*0.05, ow*0.8, Inches(0.55),
            jn, 26, WHT, bold=True, align=PP_ALIGN.CENTER)
