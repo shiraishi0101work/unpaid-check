@@ -144,29 +144,27 @@ def std_header(s, title):
 # ============================================================
 def make_cover():
     s = ns()
-    bg_grad(s, H_DK, H_LT, ang=0)
-    # 右側ライトオーバーレイ
-    gbox(s, W*0.52, 0, W*0.48, H, H_LT, H_XL, ang=0)
-    # 左ダークバー
-    box(s, 0, 0, Inches(0.1), H, NVY)
+    bg_solid(s, NVY)
+    # Z-order: back=False で追加順に積み上げ、gboxを最後にback=Trueで最背面へ
+    # 左ティールアクセントバー
+    box(s, 0, 0, Inches(0.12), H, T_MD, back=False)
     # 下部ホワイトパネル
-    box(s, 0, H*0.72, W, H*0.28, WHT)
+    box(s, 0, H*0.72, W, H*0.28, WHT, back=False)
     # イエローセパレーター
-    box(s, 0, H*0.70, W, Inches(0.07), YLW)
-    # 右上装飾サークル
-    sh = oval(s, W*0.68, -Inches(1.2), Inches(4.5), Inches(4.5), T_LT)
-    sh.fill.fore_color.rgb = T_LT
-    # メインタイトル
-    tb(s, Inches(0.5), H*0.08, W*0.78, H*0.38,
-       'MEO対策で\n集客力を最大化する', 46, WHT, bold=True)
-    # サブタイトル
-    tb(s, Inches(0.5), H*0.50, W*0.78, H*0.18,
+    box(s, 0, H*0.70, W, Inches(0.065), YLW, back=False)
+    # 右上装飾サークル（テキストより背面）
+    oval(s, W*0.66, -Inches(1.0), Inches(4.5), Inches(4.5), T_XL)
+    # テキスト
+    tb(s, Inches(0.55), H*0.07, W*0.62, H*0.47,
+       'MEO対策で\n集客力を最大化する', 50, WHT, bold=True)
+    tb(s, Inches(0.55), H*0.52, W*0.62, H*0.16,
        'Googleマップ集客で、売上が上がる、選ばれるお店に', 20, YLW, bold=True)
-    # ボトムタグ
-    tb(s, Inches(0.5), H*0.75, W*0.6, H*0.08,
+    tb(s, Inches(0.55), H*0.745, W*0.58, H*0.08,
        'MEO対策 / Googleビジネスプロフィール最適化', 13, TXMD)
-    tb(s, Inches(0.5), H*0.83, W*0.6, H*0.1,
-       '検索上位獲得で、見込み客を自動集客', 15, TXT, bold=True)
+    tb(s, Inches(0.55), H*0.835, W*0.58, H*0.10,
+       '検索上位獲得で、見込み客を自動集客', 16, TXT, bold=True)
+    # 右グラデーションパネル — 最後にback=Trueで最背面（index 2）へ
+    gbox(s, W*0.42, 0, W*0.58, H, H_MD, H_XL, ang=5400000)
     print('  slide 01: Cover ✓')
     return s
 
