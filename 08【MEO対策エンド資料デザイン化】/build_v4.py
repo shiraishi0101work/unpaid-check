@@ -544,7 +544,7 @@ def make_common_traits():
 # ============================================================
 def make_review_psychology():
     s = ns()
-    bg_grad(s, H_DK, H_MD, ang=0)
+    bg_solid(s, T_DK)
     box(s, 0, 0, W, Inches(0.07), YLW)
     box(s, 0, H - Inches(0.07), W, Inches(0.07), YLW)
     tb(s, MR, Inches(0.18), W - MR*2, Inches(0.9),
