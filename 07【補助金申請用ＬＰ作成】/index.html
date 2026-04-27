@@ -1550,9 +1550,11 @@
   function handleSubmit(e) {
     e.preventDefault();
     const btn = e.target.querySelector('.form-submit');
-    btn.textContent = '✓ 送信完了しました！';
-    btn.style.background = 'linear-gradient(135deg, var(--cyan), var(--green))';
+    btn.textContent = '送信中...';
     btn.disabled = true;
+    setTimeout(() => {
+      window.location.href = 'thanks.html';
+    }, 600);
   }
 
   document.querySelectorAll('a[href^="#"]').forEach(a => {
