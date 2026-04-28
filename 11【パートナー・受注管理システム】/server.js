@@ -184,6 +184,69 @@ app.delete('/api/partner-products/:id', (req, res) => {
 
 // ─── Contracts ────────────────────────────────────────────────────────────────
 
+// PDF text extraction and parsing (free, no API required)
+async function extractFromPdf(filePath) {
+  const pdfParse = require('pdf-parse');
+  const buffer = fs.readFileSync(filePath);
+  const data = await pdfParse(buffer);
+  const text = data.text;
+
+  const result = {
+    company_name: null,
+    contract_date: null,
+    representative: null,
+    address: null,
+    contract_type: null,
+    contract_period: null,
+    raw_text_preview: text.slice(0, 300),
+  };
+
+  // ── 企業名 ────────────────────────────────────────────
+  // 株式会社・有限会社・合同会社・一般社団法人 etc.
+  const companyPatterns = [
+    /(?:株式会社|有限会社|合同会社|一般社団法人|公益社団法人|一般財団法人|公益財団法人|医療法人|社会福祉法人|特定非営利活動法人|NPO法人)\s*[\u3040-\u9FFF\w\s・]+?(?=\s|　|（|「|,|、|。|\n|$)/,
+    /[\u3040-\u9FFF\w\s・]+?(?:株式会社|有限会社|合同会社)(?=\s|　|（|「|,|、|。|\n|$)/,
+  ];
+  for (const pat of companyPatterns) {
+    const m = text.match(pat);
+    if (m) { result.company_name = m[0].trim(); break; }
+  }
+
+  // ── 契約日 ────────────────────────────────────────────
+  // 令和X年X月X日 / 西暦YYYY年MM月DD日 / YYYY-MM-DD / YYYY/MM/DD
+  const datePatterns = [
+    { re: /令和\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日/, fn: (m) => { const y = 2018 + parseInt(m[1]); return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`; } },
+    { re: /平成\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日/, fn: (m) => { const y = 1988 + parseInt(m[1]); return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`; } },
+    { re: /(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/, fn: (m) => `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` },
+    { re: /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/, fn: (m) => `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` },
+  ];
+  for (const { re, fn } of datePatterns) {
+    const m = text.match(re);
+    if (m) { result.contract_date = fn(m); break; }
+  }
+
+  // ── 代表者名 ───────────────────────────────────────────
+  const repPatterns = [
+    /代表取締役\s*([^\s　\n（「]{2,10})/,
+    /代表者\s*[:：]?\s*([^\s　\n（「]{2,10})/,
+    /担当者\s*[:：]?\s*([^\s　\n（「]{2,10})/,
+  ];
+  for (const pat of repPatterns) {
+    const m = text.match(pat);
+    if (m) { result.representative = m[1].trim(); break; }
+  }
+
+  // ── 契約種別 ───────────────────────────────────────────
+  const typeMatch = text.match(/(?:販売代理店|業務委託|パートナー|代理店|販売|取引基本|秘密保持|NDA)\s*契約/);
+  if (typeMatch) result.contract_type = typeMatch[0].trim();
+
+  // ── 住所 ──────────────────────────────────────────────
+  const addrMatch = text.match(/〒?\d{3}[-－]\d{4}[^\n]{5,50}/);
+  if (addrMatch) result.address = addrMatch[0].trim();
+
+  return result;
+}
+
 app.post('/api/contracts/upload', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'PDFファイルが必要です' });
@@ -191,44 +254,10 @@ app.post('/api/contracts/upload', upload.single('pdf'), async (req, res) => {
     const file = req.file;
     let extractedData = {};
 
-    if (process.env.ANTHROPIC_API_KEY) {
-      try {
-        const Anthropic = require('@anthropic-ai/sdk');
-        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-        const pdfBase64 = fs.readFileSync(file.path).toString('base64');
-
-        const response = await client.messages.create({
-          model: 'claude-opus-4-6',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
-              {
-                type: 'text',
-                text: `この契約書PDFから以下の情報をJSON形式で抽出してください。不明な項目はnullにしてください。
-
-{
-  "company_name": "契約先の企業名（法人格含む正式名称）",
-  "contract_date": "契約日（YYYY-MM-DD形式）",
-  "representative": "代表者名または担当者名",
-  "address": "住所",
-  "contract_type": "契約の種類",
-  "contract_period": "契約期間"
-}
-
-JSONのみ返してください。`
-              }
-            ]
-          }]
-        });
-
-        const text = response.content[0].text;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) extractedData = JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        console.error('Claude API error:', e.message);
-      }
+    try {
+      extractedData = await extractFromPdf(file.path);
+    } catch (e) {
+      console.error('PDF parse error:', e.message);
     }
 
     const db = getDB();
