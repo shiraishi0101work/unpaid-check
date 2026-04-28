@@ -20,7 +20,6 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    // Preserve original name in metadata, use safe filename on disk
     cb(null, uniqueSuffix + '.pdf');
   }
 });
@@ -54,10 +53,11 @@ app.post('/api/partners', (req, res) => {
   const db = getDB();
   const { company_name, contract_date, rep_name, rep_email, rep_phone, status, notes } = req.body;
   if (!company_name) return res.status(400).json({ error: '企業名は必須です' });
-  const result = db.prepare(`
+  const stmt = db.prepare(`
     INSERT INTO partners (company_name, contract_date, rep_name, rep_email, rep_phone, status, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(company_name, contract_date || null, rep_name || null, rep_email || null, rep_phone || null, status || 'active', notes || null);
+  `);
+  const result = stmt.run(company_name, contract_date || null, rep_name || null, rep_email || null, rep_phone || null, status || 'active', notes || null);
   res.json(db.prepare('SELECT * FROM partners WHERE id = ?').get(result.lastInsertRowid));
 });
 
@@ -66,15 +66,14 @@ app.put('/api/partners/:id', (req, res) => {
   const { company_name, contract_date, rep_name, rep_email, rep_phone, status, notes } = req.body;
   if (!company_name) return res.status(400).json({ error: '企業名は必須です' });
   db.prepare(`
-    UPDATE partners SET company_name=?, contract_date=?, rep_name=?, rep_email=?, rep_phone=?, status=?, notes=?, updated_at=CURRENT_TIMESTAMP
-    WHERE id=?
+    UPDATE partners SET company_name=?, contract_date=?, rep_name=?, rep_email=?, rep_phone=?, status=?, notes=?,
+    updated_at=datetime('now','localtime') WHERE id=?
   `).run(company_name, contract_date || null, rep_name || null, rep_email || null, rep_phone || null, status, notes || null, req.params.id);
   res.json(db.prepare('SELECT * FROM partners WHERE id = ?').get(req.params.id));
 });
 
 app.delete('/api/partners/:id', (req, res) => {
-  const db = getDB();
-  db.prepare('DELETE FROM partners WHERE id = ?').run(req.params.id);
+  getDB().prepare('DELETE FROM partners WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
@@ -96,9 +95,8 @@ app.post('/api/products', (req, res) => {
   const db = getDB();
   const { name, description, initial_count } = req.body;
   if (!name) return res.status(400).json({ error: '商品名は必須です' });
-  const result = db.prepare(`
-    INSERT INTO products (name, description, initial_count) VALUES (?, ?, ?)
-  `).run(name, description || null, parseInt(initial_count) || 0);
+  const result = db.prepare('INSERT INTO products (name, description, initial_count) VALUES (?, ?, ?)')
+    .run(name, description || null, parseInt(initial_count) || 0);
   res.json(db.prepare('SELECT * FROM products WHERE id = ?').get(result.lastInsertRowid));
 });
 
@@ -106,15 +104,13 @@ app.put('/api/products/:id', (req, res) => {
   const db = getDB();
   const { name, description, initial_count } = req.body;
   if (!name) return res.status(400).json({ error: '商品名は必須です' });
-  db.prepare(`
-    UPDATE products SET name=?, description=?, initial_count=?, updated_at=CURRENT_TIMESTAMP WHERE id=?
-  `).run(name, description || null, parseInt(initial_count) || 0, req.params.id);
+  db.prepare(`UPDATE products SET name=?, description=?, initial_count=?, updated_at=datetime('now','localtime') WHERE id=?`)
+    .run(name, description || null, parseInt(initial_count) || 0, req.params.id);
   res.json(db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id));
 });
 
 app.delete('/api/products/:id', (req, res) => {
-  const db = getDB();
-  db.prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
+  getDB().prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
@@ -146,7 +142,7 @@ app.post('/api/partner-products', (req, res) => {
   const existing = db.prepare('SELECT * FROM partner_products WHERE partner_id=? AND product_id=?').get(partner_id, product_id);
   let id;
   if (existing) {
-    db.prepare('UPDATE partner_products SET order_count=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+    db.prepare(`UPDATE partner_products SET order_count=?, updated_at=datetime('now','localtime') WHERE id=?`)
       .run(parseInt(order_count) || 0, existing.id);
     id = existing.id;
   } else {
@@ -168,9 +164,8 @@ app.post('/api/partner-products', (req, res) => {
 
 app.put('/api/partner-products/:id', (req, res) => {
   const db = getDB();
-  const { order_count } = req.body;
-  db.prepare('UPDATE partner_products SET order_count=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
-    .run(parseInt(order_count) || 0, req.params.id);
+  db.prepare(`UPDATE partner_products SET order_count=?, updated_at=datetime('now','localtime') WHERE id=?`)
+    .run(parseInt(req.body.order_count) || 0, req.params.id);
   const record = db.prepare(`
     SELECT pp.*, pt.company_name, pt.status as partner_status,
            pr.name as product_name, pr.initial_count
@@ -183,8 +178,7 @@ app.put('/api/partner-products/:id', (req, res) => {
 });
 
 app.delete('/api/partner-products/:id', (req, res) => {
-  const db = getDB();
-  db.prepare('DELETE FROM partner_products WHERE id = ?').run(req.params.id);
+  getDB().prepare('DELETE FROM partner_products WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
@@ -212,19 +206,18 @@ app.post('/api/contracts/upload', upload.single('pdf'), async (req, res) => {
               { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
               {
                 type: 'text',
-                text: `この契約書PDFから以下の情報をJSON形式で抽出してください。
-不明な項目はnullにしてください。
+                text: `この契約書PDFから以下の情報をJSON形式で抽出してください。不明な項目はnullにしてください。
 
 {
   "company_name": "契約先の企業名（法人格含む正式名称）",
   "contract_date": "契約日（YYYY-MM-DD形式）",
   "representative": "代表者名または担当者名",
   "address": "住所",
-  "contract_type": "契約の種類（販売代理店契約など）",
+  "contract_type": "契約の種類",
   "contract_period": "契約期間"
 }
 
-JSONのみ返してください。説明文は不要です。`
+JSONのみ返してください。`
               }
             ]
           }]
@@ -286,7 +279,7 @@ app.delete('/api/contracts/:id', (req, res) => {
   res.json({ success: true });
 });
 
-// ─── Dashboard stats ──────────────────────────────────────────────────────────
+// ─── Stats ────────────────────────────────────────────────────────────────────
 
 app.get('/api/stats', (req, res) => {
   const db = getDB();
@@ -305,5 +298,6 @@ app.get('/api/stats', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n✅ パートナー・受注管理システム起動\n   http://localhost:${PORT}\n`);
+  console.log(`\n✅ パートナー・受注管理システム起動`);
+  console.log(`   http://localhost:${PORT}\n`);
 });
