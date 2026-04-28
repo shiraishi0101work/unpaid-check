@@ -1,11 +1,10 @@
-const Database = require('better-sqlite3');
+const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 
 let db;
 
 function initDB() {
-  db = new Database(path.join(__dirname, 'data.db'));
-  db.pragma('journal_mode = WAL');
+  db = new DatabaseSync(path.join(__dirname, 'data.db'));
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS partners (
@@ -17,8 +16,8 @@ function initDB() {
       rep_phone TEXT,
       status TEXT DEFAULT 'active',
       notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS contracts (
@@ -29,7 +28,7 @@ function initDB() {
       extracted_company_name TEXT,
       extracted_contract_date TEXT,
       extracted_data TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL
     );
 
@@ -38,8 +37,8 @@ function initDB() {
       name TEXT NOT NULL,
       description TEXT,
       initial_count INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
     CREATE TABLE IF NOT EXISTS partner_products (
@@ -47,8 +46,8 @@ function initDB() {
       partner_id INTEGER NOT NULL,
       product_id INTEGER NOT NULL,
       order_count INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE,
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
       UNIQUE(partner_id, product_id)
