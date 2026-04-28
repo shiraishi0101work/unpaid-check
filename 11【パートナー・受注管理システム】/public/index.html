@@ -247,7 +247,12 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   <div id="page-products" class="page">
     <div class="page-header">
       <h1>商品管理</h1>
-      <button class="btn btn-primary" onclick="openProductModal()">＋ 新規商品追加</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="file" id="product-excel-input" accept=".xlsx,.xls" style="display:none" onchange="importProducts(this)">
+        <button class="btn btn-secondary" onclick="document.getElementById('product-excel-input').click()">📥 Excelで一括登録</button>
+        <a href="/api/products/template" class="btn btn-secondary">📄 ひな型DL</a>
+        <button class="btn btn-primary" onclick="openProductModal()">＋ 新規追加</button>
+      </div>
     </div>
     <div class="page-content">
       <div class="card">
