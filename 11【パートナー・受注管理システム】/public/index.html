@@ -567,6 +567,41 @@ async function loadDashboard() {
 }
 
 // ══════════════════════════════════════════════════════
+//  Excel Import
+// ══════════════════════════════════════════════════════
+async function importPartners(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  await runImport('/api/partners/import', file, '代理店', loadPartners);
+}
+
+async function importProducts(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  await runImport('/api/products/import', file, '商品', loadProducts);
+}
+
+async function runImport(url, file, label, reloadFn) {
+  const form = new FormData();
+  form.append('excel', file);
+  try {
+    const r = await fetch(url, { method: 'POST', body: form });
+    const data = await r.json();
+    if (!r.ok) { alert('エラー: ' + (data.error || '不明なエラー')); return; }
+
+    let msg = `${label}の一括登録が完了しました。\n登録: ${data.inserted}件`;
+    if (data.skipped) msg += `　スキップ: ${data.skipped}件`;
+    if (data.errors && data.errors.length) msg += `\n\nエラー行:\n` + data.errors.join('\n');
+    alert(msg);
+    await reloadFn();
+  } catch (e) {
+    alert('インポートエラー: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
 //  Partners
 // ══════════════════════════════════════════════════════
 async function loadPartners() {
