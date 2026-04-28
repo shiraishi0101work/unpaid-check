@@ -395,6 +395,7 @@ app.post('/api/partners/import', xlsxUpload.single('excel'), (req, res) => {
 // 商品一覧インポート
 app.post('/api/products/import', xlsxUpload.single('excel'), (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: 'Excelファイルが必要です' });
     const XLSX = require('xlsx');
     const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
     const ws = wb.Sheets[wb.SheetNames[0]];
