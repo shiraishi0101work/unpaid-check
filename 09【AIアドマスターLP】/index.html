@@ -1803,8 +1803,9 @@
 
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const t = document.querySelector(a.getAttribute('href'));
-      if (t) { e.preventDefault(); window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); }
+      const href = a.getAttribute('href');
+      const t = document.querySelector(href);
+      if (t) { e.preventDefault(); history.pushState(null, '', href); window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); }
     });
   });
 </script>
