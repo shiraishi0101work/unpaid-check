@@ -212,7 +212,12 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   <div id="page-partners" class="page">
     <div class="page-header">
       <h1>パートナー管理</h1>
-      <button class="btn btn-primary" onclick="openPartnerModal()">＋ 新規パートナー追加</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="file" id="partner-excel-input" accept=".xlsx,.xls" style="display:none" onchange="importPartners(this)">
+        <button class="btn btn-secondary" onclick="document.getElementById('partner-excel-input').click()">📥 Excelで一括登録</button>
+        <a href="/api/partners/template" class="btn btn-secondary">📄 ひな型DL</a>
+        <button class="btn btn-primary" onclick="openPartnerModal()">＋ 新規追加</button>
+      </div>
     </div>
     <div class="page-content">
       <div class="toolbar">
