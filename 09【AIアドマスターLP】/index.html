@@ -814,7 +814,7 @@
 
     .price-card.lite     { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
     .price-card.standard { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,107,53,0.3); }
-    .price-card.pro      { background: rgba(255,107,53,0.1); border: 2px solid var(--orange); }
+    .price-card.pro      { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); }
 
     .popular-badge {
       position: absolute;
@@ -840,7 +840,7 @@
 
     .lite .pname { color: rgba(255,255,255,0.45); }
     .standard .pname { color: var(--orange); }
-    .pro .pname { color: var(--amber); }
+    .pro .pname { color: rgba(255,255,255,0.45); }
 
     .pprice {
       font-size: 36px;
@@ -1091,7 +1091,6 @@
     </div>
 
     <div class="hero-visual">
-      <div class="chip chip-top">🎯 AIがターゲットを自動選定</div>
       <div class="hero-card">
         <div class="card-logo">
           <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
@@ -1116,12 +1115,12 @@
 
         <div class="stats-grid">
           <div class="stat-box">
-            <div class="num">数<sub>分</sub></div>
-            <div class="lbl">KW調査が<br>数日→数分に</div>
+            <div class="num"><span style="font-size:16px;">最短</span>1<sub>分</sub></div>
+            <div class="lbl">KW調査</div>
           </div>
           <div class="stat-box">
-            <div class="num">1<sub>万〜</sub></div>
-            <div class="lbl">月1万円から<br>始められる</div>
+            <div class="num">50<sub>%</sub></div>
+            <div class="lbl">人件費削減</div>
           </div>
           <div class="stat-box">
             <div class="num">0</div>
@@ -1137,7 +1136,6 @@
           広告運用は<span>AIに丸ごとお任せ</span>できる時代へ
         </div>
       </div>
-      <div class="chip chip-bot">⚡ ワンクリックでGoogle Ads入稿</div>
     </div>
   </div>
 </section>
@@ -1579,6 +1577,77 @@
   </div>
 </section>
 
+<!-- ─── MORE FEATURES ─── -->
+<section class="section" style="background:#fff;">
+  <div class="section-inner">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">MORE FEATURES</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">さらに<span class="ora">広がる機能</span></h2>
+    <p class="section-lead">基本の5ステップに加え、より高度な運用を支える機能が揃っています。</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;">
+      <div class="result-card reveal" style="text-align:left;padding:36px 32px;">
+        <div class="r-icon" style="margin:0 0 20px;">⚙️</div>
+        <h3 style="font-size:18px;margin-bottom:10px;">プロンプト<br>カスタマイズ</h3>
+        <p>AIの分析・生成ロジックを管理画面から自由にカスタマイズ。業種やターゲットに合わせた最適な広告生成が可能です。</p>
+      </div>
+      <div class="result-card reveal" style="text-align:left;padding:36px 32px;">
+        <div class="r-icon" style="margin:0 0 20px;">📊</div>
+        <h3 style="font-size:18px;margin-bottom:10px;">レポート＆<br>ダッシュボード</h3>
+        <p>Google Adsのキャンペーンレポートを自動取得。広告効果の推移をダッシュボードで一目確認できます。</p>
+      </div>
+      <div class="result-card reveal" style="text-align:left;padding:36px 32px;">
+        <div class="r-icon" style="margin:0 0 20px;">🏢</div>
+        <h3 style="font-size:18px;margin-bottom:10px;">MCC<br>一元管理</h3>
+        <p>複数の広告アカウントをAI アドマスター上で一括管理。複数サービス・複数拠点の運用にも対応します。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FUTURE ─── -->
+<section class="section" style="background:var(--dark);">
+  <div class="section-inner">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text" style="color:var(--orange);">FUTURE</span>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title" style="color:#fff;">今後の展望 —<br><span style="color:var(--orange);">AI自動改善への進化</span></h2>
+    <p class="section-lead" style="color:rgba(255,255,255,0.6);">現在のAI アドマスターはアラートで異常を通知しますが、今後はさらに進化。広告運用のPDCAサイクルすべてをAIが回す世界を目指しています。</p>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;" class="reveal">
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,107,53,0.2);border-radius:20px;padding:32px 24px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">🔍</div>
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;">AI学習</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">過去の配信データを蓄積・学習し、精度を継続的に向上</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,107,53,0.2);border-radius:20px;padding:32px 24px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">📈</div>
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;">自動分析</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">CVが不調になった原因をAIが自動で特定・分析</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,107,53,0.2);border-radius:20px;padding:32px 24px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">💡</div>
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;">改善案提案</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">テコ入れ策・改善案をAIが学習の蓄積から自動で提案</div>
+      </div>
+      <div style="background:rgba(255,107,53,0.12);border:2px solid var(--orange);border-radius:20px;padding:32px 24px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">🚀</div>
+        <div style="font-size:15px;font-weight:700;color:var(--orange);margin-bottom:8px;">広告最適化</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">改善をAIが自動実行。PDCAサイクルが完全自動化</div>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;text-align:center;padding:28px;background:rgba(255,107,53,0.07);border:1px solid rgba(255,107,53,0.2);border-radius:16px;" class="reveal">
+      <p style="font-size:18px;font-weight:700;color:var(--orange);">"広告運用のPDCAサイクルすべてをAIが回す世界へ。"</p>
+    </div>
+  </div>
+</section>
+
 <!-- ─── PRICING ─── -->
 <section class="pricing-section">
   <div class="section-inner">
@@ -1588,42 +1657,43 @@
       <div class="eyebrow-line"></div>
     </div>
     <h2 class="section-title">料金プラン</h2>
-    <p class="section-lead">月1万円から始められる、中小企業にやさしい料金設計。<br>必要な機能に合わせてプランをお選びください。</p>
+    <p class="section-lead">複数の料金プランをご用意しております。<br>必要な機能に合わせてプランをお選びください。</p>
 
     <div class="pricing-grid">
       <div class="price-card lite reveal">
-        <div class="pname">STARTER</div>
-        <div class="pprice">¥10,000<span style="font-size:16px;opacity:0.6;">/月〜</span></div>
-        <div class="pprice-sub">※広告費別途</div>
+        <div class="pname" translate="no">LITE</div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:4px;">ライト</div>
+        <div class="pprice-sub"></div>
         <div class="pdesc">まず試してみたい方に</div>
         <ul class="pfeatures">
           <li>LP/URL 自動分析</li>
           <li>キーワード自動生成（Hot/Warm/Cool）</li>
           <li>広告文 AI自動生成</li>
-          <li>Google Ads 入稿（月3キャンペーンまで）</li>
+          <li>Google Ads 入稿</li>
+          <li>配信開始まで一気通貫</li>
         </ul>
       </div>
       <div class="price-card standard reveal">
-        <div class="pname">STANDARD</div>
-        <div class="pprice">お問合せ</div>
-        <div class="pprice-sub">※広告費別途</div>
+        <div class="popular-badge">人気No.1</div>
+        <div class="pname" translate="no">STANDARD</div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,107,53,0.7);margin-bottom:4px;">スタンダード</div>
+        <div class="pprice-sub"></div>
         <div class="pdesc">本格運用したい方に</div>
         <ul class="pfeatures">
-          <li>STARTERの全機能</li>
-          <li>AIアラート＆モニタリング</li>
+          <li>ライトの全機能</li>
+          <li>AIアラート＆24時間モニタリング</li>
           <li>レポート＆ダッシュボード</li>
-          <li>キャンペーン無制限</li>
           <li>プロンプトカスタマイズ</li>
+          <li>キャンペーン無制限</li>
         </ul>
       </div>
       <div class="price-card pro reveal">
-        <div class="popular-badge">人気No.1</div>
-        <div class="pname">PRO</div>
-        <div class="pprice">お問合せ</div>
-        <div class="pprice-sub">※広告費別途</div>
+        <div class="pname" translate="no">PRO</div>
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:4px;">プロ</div>
+        <div class="pprice-sub"></div>
         <div class="pdesc">複数拠点・パートナー向け</div>
         <ul class="pfeatures">
-          <li>STANDARDの全機能</li>
+          <li>スタンダードの全機能</li>
           <li>MCC 複数アカウント一括管理</li>
           <li>代理店・アライアンス対応</li>
           <li>専用サポート</li>
@@ -1631,7 +1701,7 @@
         </ul>
       </div>
     </div>
-    <p style="text-align:center;color:rgba(255,255,255,0.3);font-size:13px;margin-top:28px;">※実際の価格・詳細はお問い合わせください。</p>
+    <p style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-top:28px;">料金詳細はお気軽にお問い合わせください。</p>
   </div>
 </section>
 
