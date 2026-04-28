@@ -308,6 +308,148 @@ app.delete('/api/contracts/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Excel Import ─────────────────────────────────────────────────────────────
+
+const xlsxUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    const ok = file.mimetype.includes('spreadsheet') ||
+               file.mimetype.includes('excel') ||
+               file.originalname.match(/\.(xlsx|xls)$/i);
+    if (ok) cb(null, true);
+    else cb(new Error('Excel ファイル（.xlsx / .xls）のみ対応です'));
+  },
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+// 列名の揺れを吸収するマッピング
+function colVal(row, candidates) {
+  for (const k of candidates) {
+    if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
+      return String(row[k]).trim();
+    }
+  }
+  return null;
+}
+
+// パートナー一覧インポート
+app.post('/api/partners/import', xlsxUpload.single('excel'), (req, res) => {
+  try {
+    const XLSX = require('xlsx');
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+
+    const db = getDB();
+    let inserted = 0, skipped = 0;
+    const errors = [];
+
+    for (const [i, row] of rows.entries()) {
+      const company_name = colVal(row, ['企業名', 'company_name', '会社名', '法人名']);
+      if (!company_name) { skipped++; continue; }
+
+      const contract_date_raw = colVal(row, ['契約日', 'contract_date', '契約年月日']);
+      let contract_date = null;
+      if (contract_date_raw) {
+        // Date objects from cellDates:true
+        if (contract_date_raw instanceof Date || (typeof contract_date_raw === 'object' && contract_date_raw?.toISOString)) {
+          const d = new Date(contract_date_raw);
+          contract_date = d.toISOString().slice(0, 10);
+        } else {
+          // Try parsing string
+          const d = new Date(contract_date_raw);
+          contract_date = isNaN(d) ? contract_date_raw : d.toISOString().slice(0, 10);
+        }
+      }
+
+      const status_raw = colVal(row, ['ステータス', 'status', '状態']);
+      const statusMap = { '契約中': 'active', '検討中': 'pending', '解約': 'inactive', 'active': 'active', 'pending': 'pending', 'inactive': 'inactive' };
+      const status = statusMap[status_raw] || 'active';
+
+      try {
+        db.prepare(`
+          INSERT INTO partners (company_name, contract_date, rep_name, rep_email, rep_phone, status, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          company_name,
+          contract_date,
+          colVal(row, ['担当者名', '担当者', 'rep_name', '担当']),
+          colVal(row, ['メール', 'メールアドレス', 'email', 'rep_email', 'Email']),
+          colVal(row, ['電話', '電話番号', 'phone', 'rep_phone', 'TEL']),
+          status,
+          colVal(row, ['備考', 'notes', 'メモ', '備考欄'])
+        );
+        inserted++;
+      } catch (e) {
+        errors.push(`行${i + 2}: ${e.message}`);
+      }
+    }
+
+    res.json({ inserted, skipped, errors });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// 商品一覧インポート
+app.post('/api/products/import', xlsxUpload.single('excel'), (req, res) => {
+  try {
+    const XLSX = require('xlsx');
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+
+    const db = getDB();
+    let inserted = 0, skipped = 0;
+    const errors = [];
+
+    for (const [i, row] of rows.entries()) {
+      const name = colVal(row, ['商品名', 'name', '品名', '製品名', 'サービス名']);
+      if (!name) { skipped++; continue; }
+
+      const count_raw = colVal(row, ['初期取扱数', 'initial_count', '取扱数', '数量']);
+      const initial_count = parseInt(count_raw) || 0;
+
+      try {
+        db.prepare('INSERT INTO products (name, description, initial_count) VALUES (?, ?, ?)')
+          .run(name, colVal(row, ['説明', 'description', '備考', '詳細']), initial_count);
+        inserted++;
+      } catch (e) {
+        errors.push(`行${i + 2}: ${e.message}`);
+      }
+    }
+
+    res.json({ inserted, skipped, errors });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ひな型DL（現在のデータをExcelで書き出し）
+app.get('/api/partners/template', (req, res) => {
+  const XLSX = require('xlsx');
+  const sample = [{ 企業名: '株式会社サンプル', 契約日: '2026-01-01', 担当者名: '田中 一郎', メール: 'tanaka@sample.co.jp', 電話: '03-0000-0000', ステータス: '契約中', 備考: '' }];
+  const ws = XLSX.utils.json_to_sheet(sample);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'パートナー一覧');
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  res.setHeader('Content-Disposition', 'attachment; filename="partners_template.xlsx"');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.send(buf);
+});
+
+app.get('/api/products/template', (req, res) => {
+  const XLSX = require('xlsx');
+  const sample = [{ 商品名: 'スタンダードプラン', 説明: 'プランの説明', 初期取扱数: 100 }];
+  const ws = XLSX.utils.json_to_sheet(sample);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '商品一覧');
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  res.setHeader('Content-Disposition', 'attachment; filename="products_template.xlsx"');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.send(buf);
+});
+
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
 app.get('/api/stats', (req, res) => {
