@@ -601,11 +601,6 @@ function updCCSel() {
   const s = document.getElementById('fcd'); if (!s) return;
   s.innerHTML = '<option value="">カードを選択</option>' + cards.map(c => `<option value="${c.id}">${c.name}${c.last4?' ···'+c.last4:''}</option>`).join('');
 }
-function updClSug() {
-  const cl = [...new Set(orders.map(o => o.client).filter(Boolean))];
-  const dl = document.getElementById('cldl'); if (dl) dl.innerHTML = cl.map(c => `<option value="${c}">`).join('');
-}
-
 function updClSel() {
   const sel = document.getElementById('fcl2'); if (!sel) return;
   const cur = sel.value;
