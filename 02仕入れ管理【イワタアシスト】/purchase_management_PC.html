@@ -697,6 +697,29 @@ async function logout() {
   await apiFetch('logout', {});
   location.href = '/login.php';
 }
+function openPwModal() {
+  document.getElementById('pw-cur').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-err').textContent = '';
+  const m = document.getElementById('pw-modal');
+  m.style.display = 'flex';
+}
+function closePwModal() {
+  document.getElementById('pw-modal').style.display = 'none';
+}
+async function submitPw() {
+  const cur = document.getElementById('pw-cur').value;
+  const nw  = document.getElementById('pw-new').value;
+  const err = document.getElementById('pw-err');
+  err.textContent = '';
+  const r = await apiFetch('change_password', { current: cur, new: nw });
+  if (r?.ok) {
+    closePwModal();
+    alert('パスワードを変更しました');
+  } else {
+    err.textContent = r?.error || 'エラーが発生しました';
+  }
+}
 function save() { /* データはAPIで管理 */ }
 function nid(a) { return a.length ? Math.max(...a.map(x => x.id)) + 1 : 1; }
 function ccBy(id) { return cards.find(c => c.id === id); }
