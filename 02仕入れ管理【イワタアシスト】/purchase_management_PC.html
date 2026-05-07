@@ -556,6 +556,26 @@
     </div>
   </div>
 
+  <!-- 納品先一覧 -->
+  <div id="p-clients" class="page">
+    <div class="page-header">
+      <div class="page-title">納品先一覧</div>
+    </div>
+    <div class="card">
+      <div class="card-title">納品先を追加</div>
+      <div class="form-grid">
+        <div class="fg"><label>納品先名 *</label><input type="text" id="cl-name" placeholder="クライアント名"></div>
+        <div class="fg" style="justify-content:flex-end;align-self:flex-end">
+          <button class="btn btn-primary" onclick="addClient()">追加する</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">登録済み納品先</div>
+      <div id="clients-list"><p style="text-align:center;color:var(--text-hint);padding:24px;font-size:13px">納品先が登録されていません</p></div>
+    </div>
+  </div>
+
   <!-- カード管理 -->
   <div id="p-cards" class="page">
     <div class="page-header">
