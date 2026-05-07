@@ -863,7 +863,10 @@ function rt() {
   document.getElementById('order-count').textContent =
     total <= PAGE_SIZE ? `全${total}件` : `${start+1}〜${dispEnd}件 / 全${total}件`;
 
-  tb.innerHTML = pageData.map(o => `<tr>
+  tb.innerHTML = pageData.map(o => {
+    const incomplete = !o.name || !o.price || !o.sellPrice || !o.client;
+    const rowStyle = incomplete ? 'background:#FFF0F0;' : '';
+    return `<tr style="${rowStyle}">
     <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
     <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
     <td style="white-space:nowrap">${o.shop||'—'}</td>
