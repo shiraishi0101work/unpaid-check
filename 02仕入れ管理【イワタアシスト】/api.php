@@ -96,18 +96,28 @@ function getDb() {
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->exec('PRAGMA journal_mode=WAL');
     $db->exec('CREATE TABLE IF NOT EXISTS orders (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        date          TEXT NOT NULL,
+        name          TEXT NOT NULL,
+        shop          TEXT DEFAULT "",
+        brand         TEXT DEFAULT "",
+        url           TEXT DEFAULT "",
+        qty           INTEGER DEFAULT 1,
+        price         INTEGER DEFAULT 0,
+        sell_price    INTEGER DEFAULT 0,
+        delivery_date TEXT DEFAULT "",
+        client        TEXT DEFAULT "",
+        cc_id         INTEGER DEFAULT NULL,
+        status        TEXT DEFAULT "未発注",
+        memo          TEXT DEFAULT ""
+    )');
+    // カラム追加（既存DBへの対応）
+    try { $db->exec('ALTER TABLE orders ADD COLUMN sell_price INTEGER DEFAULT 0'); } catch(Exception $e) {}
+    try { $db->exec('ALTER TABLE orders ADD COLUMN delivery_date TEXT DEFAULT ""'); } catch(Exception $e) {}
+    $db->exec('CREATE TABLE IF NOT EXISTS clients (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
-        date    TEXT NOT NULL,
-        name    TEXT NOT NULL,
-        shop    TEXT DEFAULT "",
-        brand   TEXT DEFAULT "",
-        url     TEXT DEFAULT "",
-        qty     INTEGER DEFAULT 1,
-        price   INTEGER DEFAULT 0,
-        client  TEXT DEFAULT "",
-        cc_id   INTEGER DEFAULT NULL,
-        status  TEXT DEFAULT "未発注",
-        memo    TEXT DEFAULT ""
+        name    TEXT NOT NULL UNIQUE,
+        created TEXT DEFAULT ""
     )');
     $db->exec('CREATE TABLE IF NOT EXISTS cards (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
