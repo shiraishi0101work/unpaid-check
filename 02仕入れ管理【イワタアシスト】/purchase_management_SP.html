@@ -902,9 +902,42 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('on'), 2500);
 }
 
-// Init — open on 新規登録
+function renderClients() {
+  const el = document.getElementById('clients-list'); if (!el) return;
+  if (!clients.length) { el.innerHTML = '<p style="text-align:center;color:var(--text-hint);padding:24px;font-size:13px">納品先が登録されていません</p>'; return; }
+  el.innerHTML = clients.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px">${c.name}</span>
+      <button class="btn btn-danger btn-sm" onclick="delClient(${c.id},'${c.name.replace(/'/g,"\\'")}')">削除</button>
+    </div>`).join('');
+}
+
+async function addClient() {
+  const input = document.getElementById('cl-name');
+  const name = input.value.trim();
+  if (!name) { alert('納品先名を入力してください'); return; }
+  const res = await apiFetch('add_client', { name });
+  if (!res?.ok) { alert(res?.error || 'エラーが発生しました'); return; }
+  if (!clients.find(c => c.id === res.id)) {
+    clients.push({ id: res.id, name });
+    clients.sort((a,b) => a.name.localeCompare(b.name,'ja'));
+  }
+  input.value = '';
+  renderClients();
+  toast('納品先を追加しました');
+}
+
+async function delClient(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  await apiFetch('del_client', { id });
+  clients = clients.filter(c => c.id !== id);
+  renderClients();
+  toast('削除しました');
+}
+
+// Init — open on 仕入れ登録
 (async () => {
-  [orders, cards] = await Promise.all([apiFetch('orders'), apiFetch('cards')]);
+  [orders, cards, clients] = await Promise.all([apiFetch('orders'), apiFetch('cards'), apiFetch('clients')]);
   swNav('add', document.querySelectorAll('.bnav-item')[1]);
 })();
 </script>
