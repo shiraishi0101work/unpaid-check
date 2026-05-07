@@ -1028,14 +1028,29 @@ function clrF() {
 async function addOrd() {
   const name = document.getElementById('fn').value.trim();
   if (!name) { alert('商品名を入力してください'); return; }
+  const price = parseInt(document.getElementById('fp').value) || 0;
+  if (!price) { alert('仕入れ単価を入力してください'); return; }
+  const sellPrice = parseInt(document.getElementById('fsp').value) || 0;
+  if (!sellPrice) { alert('販売単価を入力してください'); return; }
+  const sel = document.getElementById('fcl2');
+  let clientName = sel.value === '__new__'
+    ? document.getElementById('fcl2-new').value.trim()
+    : sel.value;
+  if (!clientName) { alert('納品先を選択または入力してください'); return; }
+  // 新規納品先ならクライアント一覧に追加
+  if (sel.value === '__new__') {
+    const cr = await apiFetch('add_client', { name: clientName });
+    if (cr?.ok) { clients.push({ id: cr.id, name: clientName }); clients.sort((a,b)=>a.name.localeCompare(b.name,'ja')); }
+  }
   const data = {
     date: document.getElementById('fd').value || new Date().toISOString().split('T')[0],
     name, shop: document.getElementById('fs').value.trim(),
     brand: document.getElementById('fbr').value.trim(),
     url: document.getElementById('fu').value.trim(),
     qty: parseInt(document.getElementById('fq').value) || 1,
-    price: parseInt(document.getElementById('fp').value) || 0,
-    client: document.getElementById('fcl2').value.trim(),
+    price, sellPrice,
+    deliveryDate: document.getElementById('fdd').value || '',
+    client: clientName,
     ccId: parseInt(document.getElementById('fcd').value) || null,
     status: document.getElementById('fss').value,
     memo: document.getElementById('fm').value.trim()
