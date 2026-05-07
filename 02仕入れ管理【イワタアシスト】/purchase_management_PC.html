@@ -1567,7 +1567,7 @@ async function stmtApprove(id) {
 
 // Init
 (async () => {
-  [orders, cards, statements] = await Promise.all([apiFetch('orders'), apiFetch('cards'), apiFetch('card_statements')]);
+  [orders, cards, clients, statements] = await Promise.all([apiFetch('orders'), apiFetch('cards'), apiFetch('clients'), apiFetch('card_statements')]);
   rmets(); rt(); updFilters(); today(); updStmtBadge();
 })();
 </script>
