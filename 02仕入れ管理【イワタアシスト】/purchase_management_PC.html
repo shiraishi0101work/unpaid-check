@@ -992,18 +992,32 @@ function updCCSel() {
   s.innerHTML = '<option value="">カードを選択</option>' + cards.map(c => `<option value="${c.id}">${c.name}${c.last4?' ···'+c.last4:''}</option>`).join('');
 }
 
-function updClSug() {
-  const cl = [...new Set(orders.map(o => o.client).filter(Boolean))];
-  const dl = document.getElementById('cldl'); if (dl) dl.innerHTML = cl.map(c => `<option value="${c}">`).join('');
+function updClSel() {
+  const sel = document.getElementById('fcl2'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">納品先を選択</option>' +
+    clients.map(c => `<option value="${c.name}" ${c.name===cur?'selected':''}>${c.name}</option>`).join('') +
+    '<option value="__new__">＋ 新規追加</option>';
+  const ni = document.getElementById('fcl2-new'); if (ni) ni.style.display = 'none';
+}
+function onClientSelChange() {
+  const sel = document.getElementById('fcl2');
+  const ni  = document.getElementById('fcl2-new');
+  ni.style.display = sel.value === '__new__' ? '' : 'none';
+  if (sel.value === '__new__') ni.focus();
 }
 
 function clrF() {
-  ['fn','fs','fbr','fu','fm','fcl2'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  ['fn','fs','fbr','fu','fm'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
   document.getElementById('fq').value = 1;
   document.getElementById('fp').value = '';
+  document.getElementById('fsp').value = '';
+  document.getElementById('fdd').value = '';
   document.getElementById('fss').value = '発注済';
   document.getElementById('fcd').value = '';
   document.getElementById('pu').value = '';
+  const ni = document.getElementById('fcl2-new'); if (ni) { ni.value=''; ni.style.display='none'; }
+  updClSel();
   const pt = document.getElementById('paste-text'); if (pt) pt.value = '';
   ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
   document.getElementById('ldb').style.display = 'none';
