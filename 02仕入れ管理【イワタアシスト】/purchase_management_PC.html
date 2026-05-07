@@ -521,13 +521,14 @@
     </div>
 
     <div class="card">
-      <div class="card-title">発注情報</div>
+      <div class="card-title">仕入れ情報</div>
       <div class="form-grid">
-        <div class="fg full"><label>商品名 *</label><input type="text" id="fn" placeholder="商品名（型番含む）"></div>
+        <div class="fg full"><label>商品名 <span style="color:#E05050">*</span></label><input type="text" id="fn" placeholder="商品名（型番含む）"></div>
         <div class="fg"><label>仕入れ先</label><input type="text" id="fs" placeholder="Amazon / e-trend など"></div>
         <div class="fg"><label>ブランド / メーカー</label><input type="text" id="fbr" placeholder="Dell / Panasonic など"></div>
         <div class="fg"><label>数量</label><input type="number" id="fq" value="1" min="1"></div>
-        <div class="fg"><label>単価（円）</label><input type="number" id="fp" placeholder="0"></div>
+        <div class="fg"><label>仕入れ単価（税抜）<span style="color:#E05050">*</span></label><input type="number" id="fp" placeholder="0"></div>
+        <div class="fg"><label>販売単価（税抜）<span style="color:#E05050">*</span></label><input type="number" id="fsp" placeholder="0"></div>
         <div class="fg">
           <label>発注日</label>
           <div class="date-row">
@@ -535,7 +536,12 @@
             <button class="btn btn-sm" onclick="today()">今日</button>
           </div>
         </div>
-        <div class="fg"><label>納品先（クライアント名）</label><input type="text" id="fcl2" list="cldl" placeholder="クライアント名"><datalist id="cldl"></datalist></div>
+        <div class="fg"><label>納品予定日</label><input type="date" id="fdd"></div>
+        <div class="fg">
+          <label>納品先 <span style="color:#E05050">*</span></label>
+          <select id="fcl2" onchange="onClientSelChange()"><option value="">納品先を選択</option><option value="__new__">＋ 新規追加</option></select>
+          <input type="text" id="fcl2-new" placeholder="新しい納品先名" style="display:none;margin-top:6px;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px">
+        </div>
         <div class="fg"><label>支払いカード</label><select id="fcd"><option value="">カードを選択</option></select></div>
         <div class="fg"><label>ステータス</label>
           <select id="fss"><option>未発注</option><option selected>発注済</option><option>納品済</option><option>キャンセル</option></select>
