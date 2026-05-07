@@ -304,22 +304,27 @@ if ($action === 'update_order') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
     $db = getDb();
     $id = (int)$body['id'];
-    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,client=:client,cc_id=:cc_id,status=:status,memo=:memo WHERE id=:id');
+    $clientName = trim($body['client'] ?? '');
+    if ($clientName) {
+        try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
+    }
+    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,sell_price=:sell_price,delivery_date=:delivery_date,client=:client,cc_id=:cc_id,status=:status,memo=:memo WHERE id=:id');
     $s->execute([
-        ':date'   => $body['date']   ?? date('Y-m-d'),
-        ':name'   => $body['name']   ?? '',
-        ':shop'   => $body['shop']   ?? '',
-        ':brand'  => $body['brand']  ?? '',
-        ':url'    => $body['url']    ?? '',
-        ':qty'    => (int)($body['qty']   ?? 1),
-        ':price'  => (int)($body['price'] ?? 0),
-        ':client' => $body['client'] ?? '',
-        ':cc_id'  => $body['ccId']   ? (int)$body['ccId'] : null,
-        ':status' => $body['status'] ?? '未発注',
-        ':memo'   => $body['memo']   ?? '',
-        ':id'     => $id,
+        ':date'          => $body['date']          ?? date('Y-m-d'),
+        ':name'          => $body['name']          ?? '',
+        ':shop'          => $body['shop']          ?? '',
+        ':brand'         => $body['brand']         ?? '',
+        ':url'           => $body['url']           ?? '',
+        ':qty'           => (int)($body['qty']     ?? 1),
+        ':price'         => (int)($body['price']   ?? 0),
+        ':sell_price'    => (int)($body['sellPrice'] ?? 0),
+        ':delivery_date' => $body['deliveryDate']  ?? '',
+        ':client'        => $clientName,
+        ':cc_id'         => $body['ccId'] ? (int)$body['ccId'] : null,
+        ':status'        => $body['status']        ?? '未発注',
+        ':memo'          => $body['memo']          ?? '',
+        ':id'            => $id,
     ]);
-    // DellaScore仕入れも更新
     dsSyncAdd([
         'id'    => $id,
         'date'  => $body['date']   ?? date('Y-m-d'),
