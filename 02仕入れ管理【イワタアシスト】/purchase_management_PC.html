@@ -783,11 +783,12 @@ function sw(page, el) {
   if (el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('p-' + page).classList.add('active');
-  if (page === 'list')   { rmets(); rt(); updFilters(); }
-  if (page === 'add')    { today(); updCCSel(); updClSug(); }
-  if (page === 'cards')  { renderCC(); }
-  if (page === 'stmt')   { updStmtCardSel(); renderStmt(); }
-  if (page === 'export') { showPayload(); }
+  if (page === 'list')    { rmets(); rt(); updFilters(); }
+  if (page === 'add')     { today(); updCCSel(); updClSel(); }
+  if (page === 'clients') { renderClients(); }
+  if (page === 'cards')   { renderCC(); }
+  if (page === 'stmt')    { updStmtCardSel(); renderStmt(); }
+  if (page === 'export')  { showPayload(); }
 }
 
 function scls(s) {
