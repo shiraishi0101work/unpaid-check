@@ -966,12 +966,14 @@ async function saveEdit() {
     shop:   document.getElementById('edit-shop').value.trim(),
     brand:  document.getElementById('edit-brand').value.trim(),
     url:    document.getElementById('edit-url').value.trim(),
-    qty:    parseInt(document.getElementById('edit-qty').value)   || 1,
-    price:  parseInt(document.getElementById('edit-price').value) || 0,
-    client: document.getElementById('edit-client').value.trim(),
-    ccId:   parseInt(document.getElementById('edit-card').value)  || null,
-    status: document.getElementById('edit-status').value,
-    memo:   document.getElementById('edit-memo').value.trim()
+    qty:          parseInt(document.getElementById('edit-qty').value)           || 1,
+    price:        parseInt(document.getElementById('edit-price').value)         || 0,
+    sellPrice:    parseInt(document.getElementById('edit-sell-price').value)    || 0,
+    deliveryDate: document.getElementById('edit-delivery-date').value           || '',
+    client:       document.getElementById('edit-client').value.trim(),
+    ccId:         parseInt(document.getElementById('edit-card').value)          || null,
+    status:       document.getElementById('edit-status').value,
+    memo:         document.getElementById('edit-memo').value.trim()
   };
   const res = await apiFetch('update_order', data);
   if (!res?.ok) { alert('保存に失敗しました'); return; }
