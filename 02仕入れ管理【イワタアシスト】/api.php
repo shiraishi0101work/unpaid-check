@@ -139,24 +139,64 @@ function getDb() {
     return $db;
 }
 
+// ── 納品先一覧 ──
+if ($action === 'clients') {
+    $db = getDb();
+    $rows = $db->query('SELECT * FROM clients ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(array_map(fn($r) => ['id'=>(int)$r['id'],'name'=>$r['name']], $rows));
+    exit;
+}
+
+// ── 納品先追加 ──
+if ($action === 'add_client') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $name = trim($body['name'] ?? '');
+    if (!$name) { echo json_encode(['error'=>'名前を入力してください']); exit; }
+    try {
+        $s = $db->prepare('INSERT INTO clients (name, created) VALUES (?, ?)');
+        $s->execute([$name, date('Y-m-d')]);
+        echo json_encode(['ok'=>true, 'id'=>(int)$db->lastInsertId(), 'name'=>$name]);
+    } catch (Exception $e) {
+        // UNIQUE制約違反（重複）
+        $row = $db->prepare('SELECT id FROM clients WHERE name=?');
+        $row->execute([$name]);
+        $r = $row->fetch(PDO::FETCH_ASSOC);
+        echo json_encode(['ok'=>true, 'id'=>(int)($r['id']??0), 'name'=>$name]);
+    }
+    exit;
+}
+
+// ── 納品先削除 ──
+if ($action === 'del_client') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $s = $db->prepare('DELETE FROM clients WHERE id=?');
+    $s->execute([(int)$body['id']]);
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 // ── 発注一覧 ──
 if ($action === 'orders') {
     $db = getDb();
     $rows = $db->query('SELECT * FROM orders ORDER BY date DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
     $out = array_map(function($r) {
         return [
-            'id'     => (int)$r['id'],
-            'date'   => $r['date'],
-            'name'   => $r['name'],
-            'shop'   => $r['shop'],
-            'brand'  => $r['brand'],
-            'url'    => $r['url'],
-            'qty'    => (int)$r['qty'],
-            'price'  => (int)$r['price'],
-            'client' => $r['client'],
-            'ccId'   => $r['cc_id'] ? (int)$r['cc_id'] : null,
-            'status' => $r['status'],
-            'memo'   => $r['memo'],
+            'id'           => (int)$r['id'],
+            'date'         => $r['date'],
+            'name'         => $r['name'],
+            'shop'         => $r['shop'],
+            'brand'        => $r['brand'],
+            'url'          => $r['url'],
+            'qty'          => (int)$r['qty'],
+            'price'        => (int)$r['price'],
+            'sellPrice'    => (int)($r['sell_price'] ?? 0),
+            'deliveryDate' => $r['delivery_date'] ?? '',
+            'client'       => $r['client'],
+            'ccId'         => $r['cc_id'] ? (int)$r['cc_id'] : null,
+            'status'       => $r['status'],
+            'memo'         => $r['memo'],
         ];
     }, $rows);
     echo json_encode($out);
