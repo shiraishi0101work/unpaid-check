@@ -934,20 +934,20 @@ function editOrd(id) {
   document.getElementById('edit-name').value  = o.name  || '';
   document.getElementById('edit-shop').value  = o.shop  || '';
   document.getElementById('edit-brand').value = o.brand || '';
-  document.getElementById('edit-qty').value   = o.qty   || 1;
-  document.getElementById('edit-price').value = o.price || 0;
-  document.getElementById('edit-date').value  = o.date  || '';
-  document.getElementById('edit-client').value= o.client|| '';
-  document.getElementById('edit-url').value   = o.url   || '';
-  document.getElementById('edit-memo').value  = o.memo  || '';
-  document.getElementById('edit-status').value= o.status|| '未発注';
-  // カード選択肢を更新
+  document.getElementById('edit-qty').value            = o.qty          || 1;
+  document.getElementById('edit-price').value          = o.price        || 0;
+  document.getElementById('edit-sell-price').value     = o.sellPrice    || 0;
+  document.getElementById('edit-date').value           = o.date         || '';
+  document.getElementById('edit-delivery-date').value  = o.deliveryDate || '';
+  document.getElementById('edit-client').value         = o.client       || '';
+  document.getElementById('edit-url').value            = o.url          || '';
+  document.getElementById('edit-memo').value           = o.memo         || '';
+  document.getElementById('edit-status').value         = o.status       || '未発注';
   document.getElementById('edit-card').innerHTML =
     '<option value="">カードを選択</option>' +
     cards.map(c => `<option value="${c.id}" ${c.id === o.ccId ? 'selected' : ''}>${c.name}${c.last4?' ···'+c.last4:''}</option>`).join('');
-  // 納品先サジェスト
   document.getElementById('edit-cldl').innerHTML =
-    [...new Set(orders.map(x => x.client).filter(Boolean))].map(c => `<option value="${c}">`).join('');
+    clients.map(c => `<option value="${c.name}">`).join('');
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
