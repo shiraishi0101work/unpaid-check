@@ -419,5 +419,27 @@ if ($action === 'clear_statements') {
     exit;
 }
 
+// ── パスワード変更 ──
+if ($action === 'change_password') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $current = $body['current'] ?? '';
+    $newpass  = $body['new']     ?? '';
+    if (!$current || !$newpass) { echo json_encode(['error'=>'入力が不正です']); exit; }
+    if (mb_strlen($newpass) < 4) { echo json_encode(['error'=>'新しいパスワードは4文字以上にしてください']); exit; }
+    $db   = getDb();
+    $user = $_SESSION['user'];
+    $row  = $db->prepare('SELECT password FROM users WHERE username=?');
+    $row->execute([$user]);
+    $row  = $row->fetch(PDO::FETCH_ASSOC);
+    if (!$row || !password_verify($current, $row['password'])) {
+        echo json_encode(['error'=>'現在のパスワードが違います']); exit;
+    }
+    $hash = password_hash($newpass, PASSWORD_DEFAULT);
+    $st   = $db->prepare('UPDATE users SET password=? WHERE username=?');
+    $st->execute([$hash, $user]);
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(['error'=>'unknown action']);
