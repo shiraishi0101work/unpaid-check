@@ -282,7 +282,20 @@
     </div>
   </div>
 
-  <!-- 新規登録 -->
+  <!-- 納品先一覧 -->
+  <div id="p-clients" class="page">
+    <div class="card">
+      <div class="card-title">納品先を追加</div>
+      <div class="fg"><label>納品先名 *</label><input type="text" id="cl-name" placeholder="クライアント名"></div>
+      <button class="btn btn-primary btn-full" onclick="addClient()" style="margin-top:8px">追加する</button>
+    </div>
+    <div class="card">
+      <div class="card-title">登録済み納品先</div>
+      <div id="clients-list"><p style="text-align:center;color:var(--text-hint);padding:24px;font-size:13px">納品先が登録されていません</p></div>
+    </div>
+  </div>
+
+  <!-- 仕入れ登録 -->
   <div id="p-add" class="page">
     <div class="import-box">
       <div class="import-box-title">商品情報の自動読み込み</div>
