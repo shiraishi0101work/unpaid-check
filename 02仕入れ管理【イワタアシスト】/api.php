@@ -225,23 +225,29 @@ if ($action === 'cards') {
 if ($action === 'add_order') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
     $db = getDb();
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,client,cc_id,status,memo)
-                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:client,:cc_id,:status,:memo)');
+    $clientName = trim($body['client'] ?? '');
+    // 新しい納品先なら自動登録
+    if ($clientName) {
+        try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
+    }
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
     $s->execute([
-        ':date'   => $body['date']   ?? date('Y-m-d'),
-        ':name'   => $body['name']   ?? '',
-        ':shop'   => $body['shop']   ?? '',
-        ':brand'  => $body['brand']  ?? '',
-        ':url'    => $body['url']    ?? '',
-        ':qty'    => (int)($body['qty']   ?? 1),
-        ':price'  => (int)($body['price'] ?? 0),
-        ':client' => $body['client'] ?? '',
-        ':cc_id'  => $body['ccId']   ? (int)$body['ccId'] : null,
-        ':status' => $body['status'] ?? '未発注',
-        ':memo'   => $body['memo']   ?? '',
+        ':date'          => $body['date']         ?? date('Y-m-d'),
+        ':name'          => $body['name']          ?? '',
+        ':shop'          => $body['shop']          ?? '',
+        ':brand'         => $body['brand']         ?? '',
+        ':url'           => $body['url']           ?? '',
+        ':qty'           => (int)($body['qty']     ?? 1),
+        ':price'         => (int)($body['price']   ?? 0),
+        ':sell_price'    => (int)($body['sellPrice'] ?? 0),
+        ':delivery_date' => $body['deliveryDate']  ?? '',
+        ':client'        => $clientName,
+        ':cc_id'         => $body['ccId'] ? (int)$body['ccId'] : null,
+        ':status'        => $body['status']        ?? '未発注',
+        ':memo'          => $body['memo']          ?? '',
     ]);
     $newId = (int)$db->lastInsertId();
-    // DellaScore仕入れに同期
     dsSyncAdd([
         'id'    => $newId,
         'date'  => $body['date']   ?? date('Y-m-d'),
