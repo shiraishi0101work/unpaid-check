@@ -394,6 +394,12 @@
     </svg>
     出力
   </div>
+  <div class="bnav-item" onclick="openPwModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="12" cy="7" r="4"/><path d="M4 21c0-5 3.6-9 8-9s8 4 8 9"/>
+    </svg>
+    設定
+  </div>
   <div class="bnav-item" onclick="logout()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
       <path d="M9 3H5v18h4M15 17l5-5-5-5M20 12H9"/>
@@ -401,6 +407,22 @@
     ログアウト
   </div>
 </nav>
+
+<!-- パスワード変更モーダル -->
+<div id="pw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+    <div style="font-size:16px;font-weight:700;color:#1A2A29;margin-bottom:20px;">パスワード変更</div>
+    <label style="display:block;font-size:12px;font-weight:600;color:#5A7170;margin-bottom:6px;">現在のパスワード</label>
+    <input id="pw-cur" type="password" style="width:100%;padding:10px 12px;border:1px solid #D8E4E3;border-radius:8px;font-size:14px;margin-bottom:14px;">
+    <label style="display:block;font-size:12px;font-weight:600;color:#5A7170;margin-bottom:6px;">新しいパスワード</label>
+    <input id="pw-new" type="password" style="width:100%;padding:10px 12px;border:1px solid #D8E4E3;border-radius:8px;font-size:14px;margin-bottom:6px;">
+    <div id="pw-err" style="color:#9A2020;font-size:12px;min-height:18px;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closePwModal()" style="flex:1;padding:10px;border:1px solid #D8E4E3;background:#fff;border-radius:8px;font-size:14px;cursor:pointer;">キャンセル</button>
+      <button onclick="submitPw()" style="flex:1;padding:10px;background:#00A89D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">変更する</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="tst"></div>
 
