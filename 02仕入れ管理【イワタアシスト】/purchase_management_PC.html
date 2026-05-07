@@ -881,7 +881,8 @@ function rt() {
       <button class="btn btn-sm" onclick="editOrd(${o.id})">編集</button>
       <button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})" style="margin-left:4px">削除</button>
     </td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 
   if (pager) renderPager(total, totalPages);
 }
