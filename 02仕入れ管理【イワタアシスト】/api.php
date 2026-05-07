@@ -51,12 +51,15 @@ function dsSave($key, $data) {
 
 // IWの発注1件 → DSの仕入れレコードに変換
 function iwToDsPurchase($iw) {
+    $total  = (int)$iw['price'] * (int)($iw['qty'] ?? 1); // 税込み金額
+    $amount = (int)round($total / 1.1);                    // 税抜き
+    $tax    = $total - $amount;                            // 消費税額
     return [
         'id'          => 'iw_' . $iw['id'],
         'supplier'    => $iw['shop'] ?: '（購入先未記入）',
         'desc'        => $iw['name'] . ($iw['qty'] > 1 ? '×' . $iw['qty'] : ''),
-        'amount'      => (int)$iw['price'] * (int)($iw['qty'] ?? 1),
-        'tax'         => 0,
+        'amount'      => $amount,
+        'tax'         => $tax,
         'issued'      => $iw['date'],
         'due'         => '',
         'bank'        => '',
