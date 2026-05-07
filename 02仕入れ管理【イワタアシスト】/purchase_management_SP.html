@@ -568,8 +568,10 @@ function rt() {
     el.innerHTML = '<div style="text-align:center;color:var(--text-hint);padding:24px;font-size:13px">データがありません</div>';
     return;
   }
-  el.innerHTML = data.map(o => `
-    <div class="order-item">
+  el.innerHTML = data.map(o => {
+    const incomplete = !o.name || !o.price || !o.sellPrice || !o.client;
+    return `
+    <div class="order-item" style="${incomplete ? 'background:#FFF0F0;border-left:3px solid #E05050;' : ''}">
       <div class="order-row1">
         <div class="order-name">${o.name}</div>
         <div class="order-price">¥${(o.qty*o.price).toLocaleString()}</div>
