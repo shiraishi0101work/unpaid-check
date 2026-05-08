@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ダッシュボード — アライアンスパートナー管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>アライアンス<br>パートナー管理</h1>
+    <span>Alliance Partner System</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">メニュー</div>
+    <a href="index.html" class="nav-item active"><span class="icon">🏠</span><span>ダッシュボード</span></a>
+    <a href="partners.html" class="nav-item"><span class="icon">🤝</span><span>パートナー一覧</span></a>
+    <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
+    <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
+    <a href="monthly.html" class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+  </nav>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="page-header">
+    <h2>ダッシュボード</h2>
+    <p id="currentDate"></p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">今月請求合計</div>
+      <div class="stat-value" id="monthlyTotal">-</div>
+      <div class="stat-sub" id="thisMonthLabel">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">年間請求合計</div>
+      <div class="stat-value" id="yearlyTotal">-</div>
+      <div class="stat-sub" id="yearLabel">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">アクティブパートナー</div>
+      <div class="stat-value" id="partnerCount">-</div>
+      <div class="stat-sub">社</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">未確定請求書</div>
+      <div class="stat-value" id="pendingCount" style="color:#d97706">-</div>
+      <div class="stat-sub">件</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Top Partners -->
+    <div class="card">
+      <div class="card-header">
+        <h3>📊 今年度 パートナー別請求ランキング</h3>
+      </div>
+      <div id="topPartners">
+        <p class="text-muted" style="font-size:13px;">データを読み込み中...</p>
+      </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="card">
+      <div class="card-header">
+        <h3>🕐 最近の請求書</h3>
+        <a href="invoices.html" class="btn btn-outline btn-sm">すべて見る</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>パートナー</th><th>請求月</th><th>金額</th><th>状態</th>
+          </tr></thead>
+          <tbody id="recentInvoices">
+            <tr><td colspan="4" class="text-muted" style="text-align:center;padding:20px">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const fmt = n => n ? '¥' + Number(n).toLocaleString() : '¥0';
+
+async function loadDashboard() {
+  const data = await fetch('/api/dashboard').then(r => r.json());
+
+  const now = new Date();
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+  document.getElementById('thisMonthLabel').textContent = data.thisMonth;
+  document.getElementById('yearLabel').textContent = now.getFullYear() + '年度';
+
+  document.getElementById('monthlyTotal').textContent = fmt(data.monthlyTotal);
+  document.getElementById('yearlyTotal').textContent = fmt(data.yearlyTotal);
+  document.getElementById('partnerCount').textContent = data.partnerCount;
+  document.getElementById('pendingCount').textContent = data.pendingCount;
+
+  // Top partners
+  const maxAmount = data.topPartners[0]?.total || 1;
+  const topEl = document.getElementById('topPartners');
+  if (data.topPartners.length === 0) {
+    topEl.innerHTML = '<p class="text-muted" style="font-size:13px">データがありません</p>';
+  } else {
+    topEl.innerHTML = data.topPartners.map(p => `
+      <div class="partner-bar">
+        <div class="partner-bar-label">
+          <span style="font-weight:600">${p.company_name}</span>
+          <span style="color:var(--primary);font-weight:700">${fmt(p.total)}</span>
+        </div>
+        <div class="partner-bar-track">
+          <div class="partner-bar-fill" style="width:${Math.round(p.total/maxAmount*100)}%"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Recent invoices
+  const tbody = document.getElementById('recentInvoices');
+  if (data.recentInvoices.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-muted" style="text-align:center;padding:20px">請求書がありません</td></tr>';
+  } else {
+    tbody.innerHTML = data.recentInvoices.map(i => `
+      <tr>
+        <td>${i.partner_name || '<span class="text-muted">未設定</span>'}</td>
+        <td>${i.billing_month || '-'}</td>
+        <td style="text-align:right;font-weight:600">${fmt(i.total_amount)}</td>
+        <td>${statusBadge(i.status)}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+function statusBadge(s) {
+  if (s === 'confirmed') return '<span class="badge badge-green">確定</span>';
+  return '<span class="badge badge-yellow">未確定</span>';
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
