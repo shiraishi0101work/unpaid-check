@@ -11,9 +11,19 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static('public'));
 
+// ── ファイル名デコードユーティリティ（multerはLatin-1で受け取るためUTF-8に変換）────
+function decodeFileName(name) {
+  try {
+    return Buffer.from(name, 'latin1').toString('utf8');
+  } catch {
+    return name;
+  }
+}
+
 // ── PDF アップロード設定 ──────────────────────────────────────────────────────
 const makeStorage = (subdir) => multer.diskStorage({
   destination: (req, file, cb) => {
+    file.originalname = decodeFileName(file.originalname);
     const dir = path.join(__dirname, 'uploads', subdir);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
