@@ -280,21 +280,22 @@ async function loadAnalytics() {
 
 function renderAllCharts() {
   const d = analyticsData;
+  const year = d.year;
 
-  // ① ② 代理店数推移（年次グループ棒グラフ）
+  // ① ② 月別 代理店数（累計 / 請求あり）
   destroyChart('chartPartnerCount');
   chartInstances['chartPartnerCount'] = new Chart(
     document.getElementById('chartPartnerCount'), {
       type: 'bar',
       data: {
-        labels: d.partner_counts.map(x => x.year + '年'),
+        labels: MONTHS,
         datasets: [
-          { label: '①累計代理店数', data: d.partner_counts.map(x => x.total),  backgroundColor: '#6366f1cc', borderRadius: 6 },
-          { label: '②請求代理店数', data: d.partner_counts.map(x => x.active), backgroundColor: '#10b981cc', borderRadius: 6 },
+          { label: '①累計代理店数', data: d.monthly_partners.map(x => x.total),  backgroundColor: '#6366f1cc', borderRadius: 4 },
+          { label: '②請求代理店数', data: d.monthly_partners.map(x => x.active), backgroundColor: '#10b981cc', borderRadius: 4 },
         ]
       },
       options: {
-        plugins: { legend: { position: 'top' } },
+        plugins: { legend: { position: 'top' }, title: { display: true, text: `${year}年` } },
         scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
       }
     }
@@ -311,37 +312,41 @@ function renderAllCharts() {
           label: '売上金額',
           data: d.monthly_revenue.map(x => x.amount),
           backgroundColor: '#6366f1cc',
-          borderRadius: 6,
+          borderRadius: 4,
         }]
       },
       options: {
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: false }, title: { display: true, text: `${year}年` } },
         scales: { y: { beginAtZero: true, ticks: { callback: v => '¥' + v.toLocaleString() } } }
       }
     }
   );
 
-  // ④ 商品別売上（棒グラフ）
+  // ④ 商品別売上 月次積み上げ棒グラフ
   destroyChart('chartProductRevenue');
-  chartInstances['chartProductRevenue'] = new Chart(
-    document.getElementById('chartProductRevenue'), {
-      type: 'bar',
-      data: {
-        labels: d.product_revenue.map(x => x.product_name),
-        datasets: [{
-          label: '売上金額',
-          data: d.product_revenue.map(x => x.amount),
-          backgroundColor: d.product_revenue.map((_, i) => COLORS[i % COLORS.length] + 'cc'),
-          borderRadius: 6,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        plugins: { legend: { display: false } },
-        scales: { x: { beginAtZero: true, ticks: { callback: v => '¥' + v.toLocaleString() } } }
-      }
-    }
-  );
+  const pNames = Object.keys(d.monthly_product_revenue);
+  chartInstances['chartProductRevenue'] = pNames.length > 0
+    ? new Chart(document.getElementById('chartProductRevenue'), {
+        type: 'bar',
+        data: {
+          labels: MONTHS,
+          datasets: pNames.map((pName, i) => ({
+            label: pName,
+            data: d.monthly_product_revenue[pName],
+            backgroundColor: COLORS[i % COLORS.length] + 'cc',
+            borderRadius: 4,
+            stack: 'stack',
+          }))
+        },
+        options: {
+          plugins: { legend: { position: 'top' }, title: { display: true, text: `${year}年` } },
+          scales: {
+            y: { beginAtZero: true, stacked: true, ticks: { callback: v => '¥' + v.toLocaleString() } },
+            x: { stacked: true }
+          }
+        }
+      })
+    : null;
 
   // ⑥ 商品別割合（円グラフ）
   destroyChart('chartProductPie');
@@ -359,6 +364,7 @@ function renderAllCharts() {
       options: {
         plugins: {
           legend: { position: 'right', labels: { font: { size: 11 } } },
+          title: { display: true, text: `${year}年 年間合計` },
           tooltip: {
             callbacks: {
               label: ctx => {
