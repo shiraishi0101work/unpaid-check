@@ -740,20 +740,20 @@ app.get('/api/analytics', (req, res) => {
   const year = req.query.year || new Date().getFullYear().toString();
   const thisYear = parseInt(year);
 
-  // ① ② 代理店数（直近4年分）
-  const yearRange = [];
-  for (let y = thisYear - 3; y <= thisYear; y++) yearRange.push(String(y));
-
-  const partnerCounts = yearRange.map(y => {
+  // ① 月別 累計代理店数 / ② 月別 請求代理店数（選択年 × 12ヶ月）
+  const monthlyPartners = [];
+  for (let m = 1; m <= 12; m++) {
+    const month = `${year}-${String(m).padStart(2, '0')}`;
+    // 累計: その月末時点での登録済み総数
     const total = db.prepare(
-      "SELECT COUNT(*) as cnt FROM partners WHERE strftime('%Y', created_at) <= ?"
-    ).get(y)?.cnt || 0;
-    const active = db.prepare(`
-      SELECT COUNT(DISTINCT partner_id) as cnt FROM invoices
-      WHERE status='confirmed' AND billing_month LIKE ? AND partner_id IS NOT NULL
-    `).get(`${y}-%`)?.cnt || 0;
-    return { year: y, total, active };
-  });
+      "SELECT COUNT(*) as cnt FROM partners WHERE strftime('%Y-%m', created_at) <= ?"
+    ).get(month)?.cnt || 0;
+    // 請求あり: その月に確定請求書があるパートナー数
+    const active = db.prepare(
+      "SELECT COUNT(DISTINCT partner_id) as cnt FROM invoices WHERE status='confirmed' AND billing_month=? AND partner_id IS NOT NULL"
+    ).get(month)?.cnt || 0;
+    monthlyPartners.push({ month, total, active });
+  }
 
   // ⑤ 月別売上合計（選択年）
   const monthlyRevenue = [];
@@ -765,7 +765,7 @@ app.get('/api/analytics', (req, res) => {
     monthlyRevenue.push({ month, amount });
   }
 
-  // ④ 商品別売上（選択年）
+  // ④ 商品別売上 年間合計（円グラフ・棒グラフ用）
   const productRevenue = db.prepare(`
     SELECT
       COALESCE(pr.name, '（未紐付け）') as product_name,
@@ -777,6 +777,31 @@ app.get('/api/analytics', (req, res) => {
     GROUP BY COALESCE(pr.name, '（未紐付け）')
     ORDER BY amount DESC
   `).all(`${year}-%`);
+
+  // ④ 商品別売上 月次内訳（積み上げ棒グラフ用）
+  const rawMonthlyProduct = db.prepare(`
+    SELECT
+      i.billing_month,
+      COALESCE(pr.name, '（未紐付け）') as product_name,
+      COALESCE(SUM(ii.amount), 0) as amount
+    FROM invoice_items ii
+    LEFT JOIN products pr ON pr.id = ii.product_id
+    INNER JOIN invoices i ON i.id = ii.invoice_id
+    WHERE i.status = 'confirmed' AND i.billing_month LIKE ?
+    GROUP BY i.billing_month, COALESCE(pr.name, '（未紐付け）')
+  `).all(`${year}-%`);
+
+  // 月×商品の2次元マップに変換
+  const productNames = [...new Set(rawMonthlyProduct.map(r => r.product_name))];
+  const monthlyProductRevenue = {};
+  for (const pName of productNames) {
+    monthlyProductRevenue[pName] = Array(12).fill(0);
+  }
+  for (const row of rawMonthlyProduct) {
+    const mIdx = parseInt(row.billing_month.split('-')[1]) - 1;
+    if (!monthlyProductRevenue[row.product_name]) monthlyProductRevenue[row.product_name] = Array(12).fill(0);
+    monthlyProductRevenue[row.product_name][mIdx] = row.amount;
+  }
 
   // ③ 商品別受注数（新規/継続/解約）月ごとに partner×product の組み合わせで集計
   const prevDecKey = `${thisYear - 1}-12`;
