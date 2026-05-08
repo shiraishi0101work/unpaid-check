@@ -527,8 +527,10 @@ async function uploadContract(input) {
   if (!input.files[0]) return;
   document.getElementById('contractUploadProgress').style.display = 'block';
 
+  const docType = document.getElementById('contractDocType')?.value || '契約書';
   const fd = new FormData();
   fd.append('file', input.files[0]);
+  fd.append('doc_type', docType);
   const res = await fetch(`/api/partners/${currentEditId}/contracts`, { method:'POST', body: fd });
   const data = await res.json();
   document.getElementById('contractUploadProgress').style.display = 'none';
