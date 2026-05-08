@@ -810,6 +810,7 @@ function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt
 document.getElementById('addModalOverlay').addEventListener('click', e => { if (e.target.id === 'addModalOverlay') closeAddModal(); });
 document.getElementById('editModalOverlay').addEventListener('click', e => { if (e.target.id === 'editModalOverlay') closeEditModal(); });
 document.getElementById('csvModalOverlay').addEventListener('click', e => { if (e.target.id === 'csvModalOverlay') closeCSVModal(); });
+document.getElementById('pdfImportOverlay').addEventListener('click', e => { if (e.target.id === 'pdfImportOverlay') closePDFImportModal(); });
 
 init();
 </script>
