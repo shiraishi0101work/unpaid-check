@@ -230,10 +230,8 @@ app.post('/api/partners/:id/contracts', uploadContract.single('file'), async (re
   let extractedText = '';
   let extractedDate = null;
   try {
-    const pdfParse = require('pdf-parse');
     const buffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(buffer);
-    extractedText = data.text || '';
+    extractedText = await parsePDFText(buffer);
     extractedDate = extractContractDate(extractedText);
   } catch (e) {
     console.error('契約書PDF解析エラー:', e.message);
