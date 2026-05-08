@@ -527,27 +527,35 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
 app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
   const db = getDB();
   const partners = db.prepare('SELECT id, company_name FROM partners WHERE status = ?').all('active');
-  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId } = await parseInvoiceFile(req.file, partners);
+  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, invoiceNo, dueDate } =
+    await parseInvoiceFile(req.file, partners);
 
   const result = db.prepare(`
-    INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending')
+    INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status, notes)
+    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
   `).run(
     req.file ? req.file.originalname : '手動入力',
     req.file ? req.file.path : '',
     guessedMonth,
     guessedAmount,
     extractedText.slice(0, 5000),
-    guessedPartnerId
+    guessedPartnerId,
+    invoiceNo ? `請求書番号: ${invoiceNo}` : null
   );
 
+  const invoiceId = result.lastInsertRowid;
+  saveInvoiceItems(db, invoiceId, extractedItems);
+
   res.json({
-    id: result.lastInsertRowid,
+    id: invoiceId,
     guessed_month: guessedMonth,
     guessed_amount: guessedAmount,
     guessed_partner_id: guessedPartnerId,
     extracted_text: extractedText.slice(0, 2000),
-    message: 'アップロード完了。内容を確認して保存してください。'
+    items_count: extractedItems.length,
+    invoice_no: invoiceNo,
+    due_date: dueDate,
+    message: `アップロード完了。明細${extractedItems.length}件を自動取得しました。内容を確認して保存してください。`
   });
 });
 
