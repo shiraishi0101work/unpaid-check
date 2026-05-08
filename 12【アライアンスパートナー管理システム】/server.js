@@ -234,15 +234,76 @@ app.post('/api/partners/import-csv', uploadCSV.single('file'), (req, res) => {
   res.json({ message: `${imported}件取込完了 (スキップ: ${skipped}件)`, imported, skipped, errors });
 });
 
+// 請求グレード（A/B/C）を計算してステータスを自動反映
+function computePartnerStatuses(db, partners) {
+  const now = new Date();
+  const months6 = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months6.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const months3 = months6.slice(0, 3);
+  const oldest  = months6[5];
+
+  // 直近6ヶ月の (partner_id, billing_month) 一覧を一括取得
+  const recentRows = db.prepare(`
+    SELECT DISTINCT partner_id, billing_month FROM invoices
+    WHERE status='confirmed' AND billing_month >= ? AND partner_id IS NOT NULL
+  `).all(oldest);
+  const recentMap = {};
+  for (const r of recentRows) {
+    if (!recentMap[r.partner_id]) recentMap[r.partner_id] = new Set();
+    recentMap[r.partner_id].add(r.billing_month);
+  }
+
+  // 一度でも請求があるパートナーID集合
+  const everBilled = new Set(
+    db.prepare("SELECT DISTINCT partner_id FROM invoices WHERE status='confirmed' AND partner_id IS NOT NULL")
+      .all().map(r => r.partner_id)
+  );
+
+  return partners.map(p => {
+    const pMonths = recentMap[p.id] || new Set();
+    const cnt3 = months3.filter(m => pMonths.has(m)).length;
+    const cnt6 = months6.filter(m => pMonths.has(m)).length;
+
+    let grade, status;
+    if (!everBilled.has(p.id)) {
+      grade = null; status = 'active'; // 新規未請求パートナーはactive
+    } else if (cnt3 === 3) {
+      grade = 'A'; status = 'active';
+    } else if (cnt3 >= 1) {
+      grade = 'B'; status = 'active';
+    } else {
+      grade = 'C'; status = 'inactive';
+    }
+
+    // DBのstatusも更新（差分があるときだけ）
+    if (p.status !== status) {
+      db.prepare("UPDATE partners SET status=? WHERE id=?").run(status, p.id);
+    }
+
+    return { ...p, status, grade };
+  });
+}
+
 app.get('/api/partners', (req, res) => {
   const db = getDB();
-  const { search, status } = req.query;
+  const { search } = req.query;
   let q = 'SELECT * FROM partners WHERE 1=1';
   const params = [];
   if (search) { q += ' AND (company_name LIKE ? OR contact_name LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
-  if (status)  { q += ' AND status = ?'; params.push(status); }
   q += ' ORDER BY company_name ASC';
-  res.json(db.prepare(q).all(...params));
+  let partners = db.prepare(q).all(...params);
+
+  // グレード計算 → ステータス自動反映
+  partners = computePartnerStatuses(db, partners);
+
+  // statusフィルターはグレード計算後に適用
+  const { status } = req.query;
+  if (status) partners = partners.filter(p => p.status === status);
+
+  res.json(partners);
 });
 
 app.get('/api/partners/:id', (req, res) => {
