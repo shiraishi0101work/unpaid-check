@@ -502,11 +502,14 @@ async function loadContractsList() {
     return;
   }
 
+  const typeColor = { '契約書':'badge-blue', '申込書':'badge-green', '覚書':'badge-yellow', 'その他':'badge-gray' };
   container.innerHTML = contracts.map(c => `
     <div class="contract-row" id="contract-${c.id}">
       <div class="c-icon">📄</div>
       <div class="c-info">
-        <div class="c-name" title="${esc(c.file_name)}">${esc(c.file_name)}</div>
+        <div class="c-name" title="${esc(c.file_name)}">
+          <span class="badge ${typeColor[c.doc_type] || 'badge-gray'}" style="margin-right:6px;font-size:11px">${esc(c.doc_type || '契約書')}</span>${esc(c.file_name)}
+        </div>
         <div class="c-date">
           <span style="margin-right:6px">締結日:</span>
           <input type="date" value="${c.contract_date || ''}" id="cdate-${c.id}"
