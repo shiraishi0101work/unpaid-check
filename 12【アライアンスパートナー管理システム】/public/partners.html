@@ -426,7 +426,7 @@ async function saveNewPartner() {
     contact_email: document.getElementById('a_contact_email').value.trim(),
     contact_phone: document.getElementById('a_contact_phone').value.trim(),
     contract_start: document.getElementById('a_contract_start').value,
-    status: document.getElementById('a_status').value,
+    status: 'active',
     notes: document.getElementById('a_notes').value.trim(),
   };
   if (!body.company_name) { alert('会社名を入力してください'); return; }
