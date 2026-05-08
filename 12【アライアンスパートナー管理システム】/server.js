@@ -237,6 +237,8 @@ app.post('/api/partners/:id/contracts', uploadContract.single('file'), async (re
   const db = getDB();
   if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
 
+  const docType = req.body.doc_type || '契約書';
+
   let extractedText = '';
   let extractedDate = null;
   try {
@@ -248,14 +250,15 @@ app.post('/api/partners/:id/contracts', uploadContract.single('file'), async (re
   }
 
   const result = db.prepare(`
-    INSERT INTO partner_contracts (partner_id, file_name, file_path, contract_date, extracted_text)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO partner_contracts (partner_id, file_name, file_path, contract_date, extracted_text, doc_type)
+    VALUES (?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id,
     req.file.originalname,
     req.file.path,
     extractedDate,
-    extractedText.slice(0, 5000)
+    extractedText.slice(0, 5000),
+    docType
   );
 
   res.json({
