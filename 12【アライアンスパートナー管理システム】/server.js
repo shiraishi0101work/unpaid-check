@@ -363,10 +363,65 @@ app.get('/api/invoices/:id', (req, res) => {
 });
 
 // ── PDF解析ユーティリティ ────────────────────────────────────────────────────
+
+// 明細行を抽出（サジェスト請求書フォーマット対応）
+function extractInvoiceItems(text) {
+  const items = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const SKIP = /^(納品日|品目|Google\s|税率|小計|合計|消費税|振込先|備考|請求書|株式会社Dell|\d+\s*\/\s*\d+)/;
+
+  for (let i = 0; i < lines.length - 2; i++) {
+    const serviceMatch = lines[i].match(/^(Google\s+(?:サジェスト|関連語)【[^】]+】)$/);
+    if (!serviceMatch) continue;
+
+    const clientName = lines[i + 1];
+    const priceLine  = lines[i + 2];
+
+    // クライアント名行がヘッダー行でないことを確認
+    if (SKIP.test(clientName)) continue;
+
+    // "11,0001ヶ月11,000" or "14,0001ヶ月14,000" のパターン
+    const priceMatch = priceLine.match(/^([\d,]+)\d+ヶ月([\d,]+)$/);
+    if (!priceMatch) continue;
+
+    const unitPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+    const amount    = parseInt(priceMatch[2].replace(/,/g, ''));
+
+    items.push({
+      description: `${serviceMatch[1]} / ${clientName}`,
+      client_name: clientName,
+      service_type: serviceMatch[1],
+      quantity:   1,
+      unit_price: unitPrice,
+      amount:     amount,
+    });
+    i += 2;
+  }
+  return items;
+}
+
+// 宛先（代理店名）抽出: "株式会社アーク御中" → "株式会社アーク"
+function extractPartnerNameFromText(text) {
+  const m = text.match(/^(.+?)御中$/m);
+  return m ? m[1].trim() : null;
+}
+
+// 請求月抽出: 件名"4月分〜" + 請求日の年 → "2026-04"
+function extractBillingMonth(text) {
+  const subjectMatch = text.match(/件名[：:]\s*(\d+)月分/);
+  const dateMatch    = text.match(/請求日[：:]\s*(\d{4})\/(\d{2})\/(\d{2})/);
+  if (subjectMatch && dateMatch) {
+    return `${dateMatch[1]}-${String(subjectMatch[1]).padStart(2, '0')}`;
+  }
+  // フォールバック
+  const m = text.match(/(\d{4})[年\/\-](\d{1,2})(?:[月\/\-])/);
+  return m ? `${m[1]}-${String(m[2]).padStart(2, '0')}` : '';
+}
+
 async function parseInvoiceFile(file, partners) {
   let extractedText = '';
 
-  if (file.mimetype === 'application/pdf') {
+  if (file && file.mimetype === 'application/pdf') {
     try {
       const pdfParse = require('pdf-parse');
       const buffer = fs.readFileSync(file.path);
@@ -377,20 +432,47 @@ async function parseInvoiceFile(file, partners) {
     }
   }
 
+  // 請求金額（ご請求金額 優先）
   let guessedAmount = 0;
-  const amountMatch = extractedText.match(/(?:合計|請求金額|ご請求金額)[^\d]*([0-9,，]+)/);
+  const amountMatch = extractedText.match(/ご請求金額\s*([\d,，]+)\s*円/) ||
+                      extractedText.match(/(?:合計|請求金額)[^\d]*([0-9,，]+)/);
   if (amountMatch) guessedAmount = parseInt(amountMatch[1].replace(/[,，]/g, '')) || 0;
 
-  let guessedMonth = '';
-  const monthMatch = extractedText.match(/(\d{4})[年\/\-](\d{1,2})(?:[月\/\-])/);
-  if (monthMatch) guessedMonth = `${monthMatch[1]}-${String(monthMatch[2]).padStart(2, '0')}`;
+  // 請求月（件名 + 請求日の年 優先）
+  const guessedMonth = extractBillingMonth(extractedText);
 
+  // 代理店名（御中の前から取得 → DBと照合）
   let guessedPartnerId = null;
-  for (const p of partners) {
-    if (extractedText.includes(p.company_name)) { guessedPartnerId = p.id; break; }
+  const nameFromPdf = extractPartnerNameFromText(extractedText);
+  if (nameFromPdf) {
+    // 完全一致 or 部分一致
+    const hit = partners.find(p => p.company_name === nameFromPdf) ||
+                partners.find(p => nameFromPdf.includes(p.company_name) || p.company_name.includes(nameFromPdf));
+    if (hit) guessedPartnerId = hit.id;
+  }
+  // フォールバック: テキスト全体で会社名検索
+  if (!guessedPartnerId) {
+    for (const p of partners) {
+      if (extractedText.includes(p.company_name)) { guessedPartnerId = p.id; break; }
+    }
   }
 
-  return { extractedText, guessedAmount, guessedMonth, guessedPartnerId };
+  // 明細行の抽出
+  const extractedItems = extractInvoiceItems(extractedText);
+
+  // 請求書番号・支払期限
+  const invoiceNoMatch  = extractedText.match(/請求書番号[：:]\s*(\d+)/);
+  const dueDateMatch    = extractedText.match(/お支払期限[：:]\s*(\d{4}\/\d{2}\/\d{2})/);
+
+  return {
+    extractedText,
+    guessedAmount,
+    guessedMonth,
+    guessedPartnerId,
+    extractedItems,
+    invoiceNo: invoiceNoMatch?.[1] || null,
+    dueDate:   dueDateMatch?.[1]   || null,
+  };
 }
 
 // PDF 一括アップロード（最大20枚）
