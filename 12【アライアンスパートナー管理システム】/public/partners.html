@@ -665,10 +665,7 @@ async function startPDFImport(input) {
 function renderPDFPreview(data) {
   const tbody = document.getElementById('pdfPreviewBody');
   tbody.innerHTML = data.map((row, i) => `
-    <tr id="pdf-row-${i}" style="background:${row.company_name ? '#fff' : '#fff8f8'}">
-      <td style="padding:6px 8px;border:1px solid var(--border);text-align:center">
-        <input type="checkbox" id="pdf-chk-${i}" ${row.company_name ? 'checked' : ''}>
-      </td>
+    <tr id="pdf-row-${i}">
       <td style="padding:4px;border:1px solid var(--border)">
         <input class="pdf-cell" data-i="${i}" data-f="company_name" value="${esc(row.company_name)}"
           style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
