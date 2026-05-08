@@ -418,15 +418,34 @@ function extractBillingMonth(text) {
   return m ? `${m[1]}-${String(m[2]).padStart(2, '0')}` : '';
 }
 
+async function parsePDFText(buffer) {
+  const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+  const cmapUrl = path.join(require.resolve('pdfjs-dist/package.json'), '..', 'cmaps') + path.sep;
+
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+    cMapUrl: cmapUrl,
+    cMapPacked: true,
+    disableWorker: true,
+  });
+
+  const pdfDoc = await loadingTask.promise;
+  let text = '';
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const page = await pdfDoc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join('') + '\n';
+  }
+  return text;
+}
+
 async function parseInvoiceFile(file, partners) {
   let extractedText = '';
 
   if (file && file.mimetype === 'application/pdf') {
     try {
-      const pdfParse = require('pdf-parse');
       const buffer = fs.readFileSync(file.path);
-      const data = await pdfParse(buffer);
-      extractedText = data.text || '';
+      extractedText = await parsePDFText(buffer);
     } catch (e) {
       console.error('PDF解析エラー:', e.message);
     }
