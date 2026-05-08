@@ -698,8 +698,8 @@ function renderPDFPreview(data) {
 }
 
 async function savePDFImport() {
-  const entries = pdfPreviewData.filter((_, i) => document.getElementById(`pdf-chk-${i}`)?.checked);
-  if (entries.length === 0) { alert('取込する行を選択してください'); return; }
+  const entries = pdfPreviewData.filter(e => e.company_name?.trim());
+  if (entries.length === 0) { alert('会社名を入力してください'); return; }
 
   const btn = document.getElementById('pdfSaveBtn');
   btn.disabled = true; btn.textContent = '登録中...';
