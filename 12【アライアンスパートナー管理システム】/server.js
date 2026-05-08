@@ -108,57 +108,9 @@ function extractContractDate(text) {
   return null;
 }
 
-// ── 契約書PDFからパートナー情報を抽出 ────────────────────────────────────────
-function extractPartnerInfoFromText(text, filename) {
-  const lines = text.split(/[\n\r]+/).map(l => l.trim()).filter(l => l);
-
-  // 会社名: 乙・甲側パターン → 御中パターン → テキスト内の法人名
-  let companyName = null;
-
-  // 乙（受注側）の会社名
-  for (const line of lines) {
-    const m = line.match(/乙[）)：:\s]*(.{2,30}?(?:株式会社|合同会社|有限会社|一般社団法人|公益社団法人|NPO法人))/);
-    if (m) { companyName = m[1].trim(); break; }
-    const m2 = line.match(/^(.{2,30}?(?:株式会社|合同会社|有限会社|一般社団法人|公益社団法人))\s*乙/);
-    if (m2) { companyName = m2[1].trim(); break; }
-  }
-  // 御中パターン
-  if (!companyName) {
-    const m = text.match(/^(.{2,40}?)御中/m);
-    if (m) companyName = m[1].trim();
-  }
-  // ファイル名から法人名を抽出
-  if (!companyName) {
-    const m = filename.replace(/\.pdf$/i, '').match(/(.{2,30}?(?:株式会社|合同会社|有限会社|一般社団法人))/);
-    if (m) companyName = m[1].trim();
-  }
-  // テキスト内の最初の法人名
-  if (!companyName) {
-    const m = text.match(/([^\s　\n\r]{2,20}?(?:株式会社|合同会社|有限会社|一般社団法人)[^\s　\n\r]{0,15})/);
-    if (m) companyName = m[1].trim();
-  }
-
-  // 担当者名・代表者
-  let contactName = null;
-  for (const line of lines) {
-    const m = line.match(/(?:代表取締役|代表者|担当者|担当)[：:\s]+([^\s　\d０-９]{2,15})/);
-    if (m && !m[1].match(/会社|法人|部|課/)) { contactName = m[1].trim(); break; }
-  }
-
-  // 電話番号
-  let phone = null;
-  const phoneMatch = text.match(/(?:TEL|Tel|電話|℡)[：:\s]*([0-9０-９\-－]{10,15})/);
-  if (phoneMatch) phone = phoneMatch[1].replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-
-  // メールアドレス
-  let email = null;
-  const emailMatch = text.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
-  if (emailMatch) email = emailMatch[1];
-
-  // 締結日
-  const contractDate = extractContractDate(text);
-
-  return { companyName, contactName, phone, email, contractDate };
+// ── 契約書PDFから締結日のみ抽出（他は手入力）────────────────────────────────
+function extractPartnerInfoFromText(text) {
+  return { contractDate: extractContractDate(text) };
 }
 
 initDB();
