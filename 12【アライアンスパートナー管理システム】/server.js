@@ -475,6 +475,18 @@ async function parseInvoiceFile(file, partners) {
   };
 }
 
+// 明細をDBに一括保存するヘルパー
+function saveInvoiceItems(db, invoiceId, items) {
+  if (!items || items.length === 0) return;
+  const stmt = db.prepare(`
+    INSERT INTO invoice_items (invoice_id, product_id, description, quantity, unit_price, amount)
+    VALUES (?, NULL, ?, ?, ?, ?)
+  `);
+  for (const item of items) {
+    stmt.run(invoiceId, item.description, item.quantity || 1, item.unit_price || 0, item.amount || 0);
+  }
+}
+
 // PDF 一括アップロード（最大20枚）
 app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res) => {
   const db = getDB();
@@ -484,20 +496,27 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
   const results = [];
 
   for (const file of req.files) {
-    const { extractedText, guessedAmount, guessedMonth, guessedPartnerId } = await parseInvoiceFile(file, partners);
+    const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, invoiceNo } =
+      await parseInvoiceFile(file, partners);
 
     const result = db.prepare(`
-      INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending')
-    `).run(file.originalname, file.path, guessedMonth, guessedAmount, extractedText.slice(0, 5000), guessedPartnerId);
+      INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status, notes)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+    `).run(file.originalname, file.path, guessedMonth, guessedAmount,
+           extractedText.slice(0, 5000), guessedPartnerId,
+           invoiceNo ? `請求書番号: ${invoiceNo}` : null);
+
+    const invoiceId = result.lastInsertRowid;
+    saveInvoiceItems(db, invoiceId, extractedItems);
 
     results.push({
-      id: result.lastInsertRowid,
+      id: invoiceId,
       file_name: file.originalname,
       guessed_month: guessedMonth,
       guessed_amount: guessedAmount,
       guessed_partner_id: guessedPartnerId,
       guessed_partner_name: partners.find(p => p.id === guessedPartnerId)?.company_name || null,
+      items_count: extractedItems.length,
     });
   }
 
