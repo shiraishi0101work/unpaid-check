@@ -422,45 +422,11 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
   res.json({ count: results.length, results });
 });
 
-// PDF アップロード → テキスト抽出
+// PDF アップロード → テキスト抽出（単体）
 app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
   const db = getDB();
-  let extractedText = '';
-
-  if (req.file && req.file.mimetype === 'application/pdf') {
-    try {
-      const pdfParse = require('pdf-parse');
-      const buffer = fs.readFileSync(req.file.path);
-      const data = await pdfParse(buffer);
-      extractedText = data.text || '';
-    } catch (e) {
-      console.error('PDF解析エラー:', e.message);
-    }
-  }
-
-  // 請求金額を推定（合計行を探す）
-  let guessedAmount = 0;
-  const amountMatch = extractedText.match(/(?:合計|請求金額|ご請求金額)[^\d]*([0-9,，]+)/);
-  if (amountMatch) {
-    guessedAmount = parseInt(amountMatch[1].replace(/[,，]/g, '')) || 0;
-  }
-
-  // 請求月を推定
-  let guessedMonth = '';
-  const monthMatch = extractedText.match(/(\d{4})[年\/\-](\d{1,2})(?:[月\/\-])/);
-  if (monthMatch) {
-    guessedMonth = `${monthMatch[1]}-${String(monthMatch[2]).padStart(2, '0')}`;
-  }
-
-  // パートナー名を推定（DB上の会社名と照合）
   const partners = db.prepare('SELECT id, company_name FROM partners WHERE status = ?').all('active');
-  let guessedPartnerId = null;
-  for (const p of partners) {
-    if (extractedText.includes(p.company_name)) {
-      guessedPartnerId = p.id;
-      break;
-    }
-  }
+  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId } = await parseInvoiceFile(req.file, partners);
 
   const result = db.prepare(`
     INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status)
