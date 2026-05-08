@@ -867,9 +867,10 @@ app.get('/api/analytics', (req, res) => {
 
   res.json({
     year,
-    partner_counts: partnerCounts,
+    monthly_partners: monthlyPartners,
     monthly_revenue: monthlyRevenue,
     product_revenue: productRevenue,
+    monthly_product_revenue: monthlyProductRevenue,
     product_orders: productOrderMap,
   });
 });
