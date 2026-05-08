@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>パートナー一覧 — アライアンスパートナー管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>アライアンス<br>パートナー管理</h1>
+    <span>Alliance Partner System</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">メニュー</div>
+    <a href="index.html" class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
+    <a href="partners.html" class="nav-item active"><span class="icon">🤝</span><span>パートナー一覧</span></a>
+    <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
+    <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
+    <a href="monthly.html" class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <h2>🤝 パートナー一覧</h2>
+    <p>アライアンス事業部の代理店・パートナー企業を管理します</p>
+  </div>
+
+  <div id="alert"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="toolbar" style="margin:0;flex:1">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="会社名・担当者名で検索..." oninput="loadPartners()">
+        </div>
+        <select id="statusFilter" onchange="loadPartners()" style="min-width:120px">
+          <option value="">すべて</option>
+          <option value="active">アクティブ</option>
+          <option value="inactive">非アクティブ</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">＋ パートナー追加</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>会社名</th>
+            <th>担当者</th>
+            <th>メール</th>
+            <th>電話</th>
+            <th>契約開始</th>
+            <th>状態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="countLabel" style="font-size:13px;color:var(--text-muted);margin-top:12px"></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">パートナー追加</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>会社名 <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="f_company_name" placeholder="株式会社〇〇">
+      </div>
+      <div class="form-group">
+        <label>担当者名</label>
+        <input type="text" id="f_contact_name" placeholder="山田 太郎">
+      </div>
+      <div class="form-group">
+        <label>メールアドレス</label>
+        <input type="email" id="f_contact_email" placeholder="yamada@example.com">
+      </div>
+      <div class="form-group">
+        <label>電話番号</label>
+        <input type="tel" id="f_contact_phone" placeholder="03-0000-0000">
+      </div>
+      <div class="form-group">
+        <label>契約開始日</label>
+        <input type="date" id="f_contract_start">
+      </div>
+      <div class="form-group">
+        <label>状態</label>
+        <select id="f_status">
+          <option value="active">アクティブ</option>
+          <option value="inactive">非アクティブ</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>備考</label>
+        <textarea id="f_notes" placeholder="メモ・特記事項など"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="savePartner()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let editId = null;
+
+async function loadPartners() {
+  const search = document.getElementById('searchInput').value;
+  const status = document.getElementById('statusFilter').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+
+  const data = await fetch('/api/partners?' + params).then(r => r.json());
+  const tbody = document.getElementById('tableBody');
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">パートナーが登録されていません</td></tr>';
+  } else {
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td><strong>${p.company_name}</strong></td>
+        <td>${p.contact_name || '-'}</td>
+        <td>${p.contact_email ? `<a href="mailto:${p.contact_email}" style="color:var(--primary)">${p.contact_email}</a>` : '-'}</td>
+        <td>${p.contact_phone || '-'}</td>
+        <td>${p.contract_start || '-'}</td>
+        <td>${p.status === 'active' ? '<span class="badge badge-green">アクティブ</span>' : '<span class="badge badge-gray">非アクティブ</span>'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="editPartner(${p.id})">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${p.company_name}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('countLabel').textContent = `${data.length}件`;
+}
+
+function openModal(id = null) {
+  editId = id;
+  clearForm();
+  document.getElementById('modalTitle').textContent = id ? 'パートナー編集' : 'パートナー追加';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editId = null;
+}
+
+function clearForm() {
+  ['f_company_name','f_contact_name','f_contact_email','f_contact_phone','f_contract_start','f_notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_status').value = 'active';
+}
+
+async function editPartner(id) {
+  const p = await fetch(`/api/partners/${id}`).then(r => r.json());
+  openModal(id);
+  document.getElementById('f_company_name').value  = p.company_name || '';
+  document.getElementById('f_contact_name').value  = p.contact_name || '';
+  document.getElementById('f_contact_email').value = p.contact_email || '';
+  document.getElementById('f_contact_phone').value = p.contact_phone || '';
+  document.getElementById('f_contract_start').value = p.contract_start || '';
+  document.getElementById('f_status').value = p.status || 'active';
+  document.getElementById('f_notes').value  = p.notes || '';
+}
+
+async function savePartner() {
+  const body = {
+    company_name:  document.getElementById('f_company_name').value.trim(),
+    contact_name:  document.getElementById('f_contact_name').value.trim(),
+    contact_email: document.getElementById('f_contact_email').value.trim(),
+    contact_phone: document.getElementById('f_contact_phone').value.trim(),
+    contract_start: document.getElementById('f_contract_start').value,
+    status: document.getElementById('f_status').value,
+    notes: document.getElementById('f_notes').value.trim(),
+  };
+
+  if (!body.company_name) { alert('会社名を入力してください'); return; }
+
+  const url = editId ? `/api/partners/${editId}` : '/api/partners';
+  const method = editId ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+
+  showAlert(data.message || '保存しました', res.ok ? 'success' : 'error');
+  if (res.ok) { closeModal(); loadPartners(); }
+}
+
+async function deletePartner(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  const res = await fetch(`/api/partners/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  showAlert(data.message, res.ok ? 'success' : 'error');
+  if (res.ok) loadPartners();
+}
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('alert');
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 3000);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+loadPartners();
+</script>
+</body>
+</html>
