@@ -436,6 +436,18 @@ app.get('/api/partners/:id/contracts/:contractId/download', (req, res) => {
   res.download(row.file_path, row.file_name);
 });
 
+// PDF インライン表示（ブラウザで直接開く）
+app.get('/api/partners/:id/contracts/:contractId/view', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT * FROM partner_contracts WHERE id=? AND partner_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (!row) return res.status(404).send('見つかりません');
+  if (!fs.existsSync(row.file_path)) return res.status(404).send('ファイルが存在しません');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(row.file_name)}`);
+  res.sendFile(path.resolve(row.file_path));
+});
+
 // ── 商材 ──────────────────────────────────────────────────────────────────────
 
 app.get('/api/products', (req, res) => {
