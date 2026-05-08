@@ -14,17 +14,32 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">メニュー</div>
-    <a href="index.html" class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
-    <a href="partners.html" class="nav-item"><span class="icon">🤝</span><span>パートナー一覧</span></a>
-    <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
-    <a href="invoices.html" class="nav-item active"><span class="icon">📄</span><span>請求書管理</span></a>
-    <a href="monthly.html" class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span>ダッシュボード</span>
+    </a>
+    <a href="partners.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span>パートナー一覧</span>
+    </a>
+    <a href="products.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+      <span>商材一覧</span>
+    </a>
+    <a href="invoices.html" class="nav-item active">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+      <span>請求書管理</span>
+    </a>
+    <a href="monthly.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      <span>月別集計</span>
+    </a>
   </nav>
 </aside>
 
 <main class="main">
   <div class="page-header">
-    <h2>📄 請求書管理</h2>
+    <h2>請求書管理</h2>
     <p>PDFをアップロードするか、手動で請求データを入力します</p>
   </div>
 
@@ -33,17 +48,19 @@
   <!-- Upload zone -->
   <div class="card" style="margin-bottom:20px">
     <div class="card-header">
-      <h3>📤 請求書アップロード</h3>
-      <button class="btn btn-outline btn-sm" onclick="openManualModal()">＋ 手動入力</button>
+      <h3>請求書アップロード</h3>
+      <button class="btn btn-outline btn-sm" onclick="openManualModal()">+ 手動入力</button>
     </div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">📄</div>
+      <div class="upload-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      </div>
       <p><strong>PDFをクリックまたはドラッグ&ドロップ</strong></p>
       <p style="color:var(--text-muted);font-size:13px">最大20枚まで同時アップロード可能</p>
     </div>
     <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none" onchange="uploadFiles(this)">
     <div id="uploadProgress" style="display:none;margin-top:12px">
-      <p id="uploadProgressText" style="font-size:13px;color:var(--primary)">⏳ アップロード・解析中...</p>
+      <p id="uploadProgressText" style="font-size:13px;color:var(--primary)">アップロード・解析中...</p>
     </div>
     <!-- 一括アップロード結果 -->
     <div id="bulkResult" style="display:none;margin-top:16px"></div>
@@ -98,8 +115,8 @@
 
     <!-- PDF抽出テキスト表示 -->
     <div id="extractedSection" style="display:none;margin-bottom:16px">
-      <label style="font-size:13px;font-weight:600;color:var(--text-muted)">📝 PDF抽出テキスト（参考）</label>
-      <textarea id="extractedText" style="height:100px;font-size:12px;background:#f8f9ff;color:var(--text-muted)" readonly></textarea>
+      <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">PDF抽出テキスト（参考）</label>
+      <textarea id="extractedText" style="height:100px;font-size:12px;background:#f8fafc;color:var(--text-muted);margin-top:6px" readonly></textarea>
     </div>
 
     <div class="form-grid cols-3">
@@ -138,16 +155,16 @@
         </thead>
         <tbody id="itemsBody"></tbody>
       </table>
-      <button class="btn btn-outline btn-sm add-item-btn" onclick="addItem()">＋ 明細追加</button>
+      <button class="btn btn-outline btn-sm add-item-btn" onclick="addItem()">+ 明細追加</button>
       <div style="text-align:right;margin-top:8px;font-size:14px">
         合計: <strong id="itemsTotal" style="color:var(--primary);font-size:16px">¥0</strong>
-        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="applyItemsTotal()" title="明細合計を請求金額に反映">↑ 請求金額に反映</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="applyItemsTotal()" title="明細合計を請求金額に反映">反映</button>
       </div>
     </div>
 
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-success" onclick="saveInvoice()">✓ 確定・保存</button>
+      <button class="btn btn-success" onclick="saveInvoice()">確定・保存</button>
     </div>
   </div>
 </div>
@@ -202,8 +219,8 @@ async function loadInvoices() {
         <td style="font-size:12px;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.file_name || '-'}</td>
         <td style="color:var(--text-muted);font-size:12px">${i.created_at?.slice(0,10) || '-'}</td>
         <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="editInvoice(${i.id})">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteInvoice(${i.id})">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="editInvoice(${i.id})">編集</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteInvoice(${i.id})" style="color:var(--danger)">削除</button>
         </td>
       </tr>
     `).join('');
@@ -226,7 +243,7 @@ async function uploadFiles(input) {
   if (files.length === 1) {
     // 単体はモーダルで確認
     document.getElementById('uploadProgress').style.display = 'block';
-    document.getElementById('uploadProgressText').textContent = '⏳ アップロード・解析中...';
+    document.getElementById('uploadProgressText').textContent = 'アップロード・解析中...';
     const formData = new FormData();
     formData.append('file', files[0]);
     const res = await fetch('/api/invoices/upload', { method: 'POST', body: formData });
@@ -242,7 +259,7 @@ async function uploadFiles(input) {
 
   document.getElementById('uploadProgress').style.display = 'block';
   document.getElementById('bulkResult').style.display = 'none';
-  document.getElementById('uploadProgressText').textContent = `⏳ ${files.length}枚をアップロード・解析中...`;
+  document.getElementById('uploadProgressText').textContent = `${files.length}枚をアップロード・解析中...`;
 
   const formData = new FormData();
   files.forEach(f => formData.append('files', f));
@@ -260,7 +277,6 @@ async function uploadFiles(input) {
 
 function showBulkResult(results) {
   const detected   = results.filter(r => r.guessed_partner_id && r.guessed_month);
-  const partial    = results.filter(r => r.guessed_partner_id || r.guessed_month);
   const undetected = results.filter(r => !r.guessed_partner_id && !r.guessed_month);
 
   const rows = results.map(r => `
@@ -269,7 +285,7 @@ function showBulkResult(results) {
       <td>${r.guessed_partner_name ? `<span style="color:var(--success)">${r.guessed_partner_name}</span>` : '<span class="text-muted">未検出</span>'}</td>
       <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
       <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">✏️ 確認</button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">確認</button></td>
     </tr>
   `).join('');
 
@@ -278,8 +294,8 @@ function showBulkResult(results) {
     <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px">
       <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
         <span style="font-size:13px"><strong>${results.length}枚</strong> アップロード完了</span>
-        ${detected.length   ? `<span style="color:var(--success);font-size:13px">✓ 自動検出: ${detected.length}件</span>` : ''}
-        ${undetected.length ? `<span style="color:var(--warning);font-size:13px">⚠ 要確認: ${undetected.length}件</span>` : ''}
+        ${detected.length   ? `<span style="color:var(--success);font-size:13px">自動検出: ${detected.length}件</span>` : ''}
+        ${undetected.length ? `<span style="color:var(--warning);font-size:13px">要確認: ${undetected.length}件</span>` : ''}
       </div>
       <div style="overflow-x:auto">
         <table style="font-size:13px;width:100%">
@@ -287,7 +303,7 @@ function showBulkResult(results) {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">✏️ 確認ボタンから内容を確定してください</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">確認ボタンから内容を確定してください</p>
     </div>
   `;
 }
