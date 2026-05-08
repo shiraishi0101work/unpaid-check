@@ -219,20 +219,77 @@ function clearFilters() {
 }
 
 // ── Upload ──
-async function uploadFile(input) {
-  const file = input.files[0];
-  if (!file) return;
+async function uploadFiles(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  if (files.length === 1) {
+    // 単体はモーダルで確認
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('uploadProgressText').textContent = '⏳ アップロード・解析中...';
+    const formData = new FormData();
+    formData.append('file', files[0]);
+    const res = await fetch('/api/invoices/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    document.getElementById('uploadProgress').style.display = 'none';
+    input.value = '';
+    openModal(data.id, data);
+    return;
+  }
+
+  // 複数ファイル一括処理
+  if (files.length > 20) { showAlert('一度にアップロードできるのは20枚までです', 'error'); return; }
+
   document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('bulkResult').style.display = 'none';
+  document.getElementById('uploadProgressText').textContent = `⏳ ${files.length}枚をアップロード・解析中...`;
 
   const formData = new FormData();
-  formData.append('file', file);
+  files.forEach(f => formData.append('files', f));
 
-  const res = await fetch('/api/invoices/upload', { method: 'POST', body: formData });
+  const res = await fetch('/api/invoices/upload-bulk', { method: 'POST', body: formData });
   const data = await res.json();
   document.getElementById('uploadProgress').style.display = 'none';
   input.value = '';
 
-  openModal(data.id, data);
+  if (!res.ok) { showAlert(data.error || 'アップロードに失敗しました', 'error'); return; }
+
+  showBulkResult(data.results);
+  loadInvoices();
+}
+
+function showBulkResult(results) {
+  const detected   = results.filter(r => r.guessed_partner_id && r.guessed_month);
+  const partial    = results.filter(r => r.guessed_partner_id || r.guessed_month);
+  const undetected = results.filter(r => !r.guessed_partner_id && !r.guessed_month);
+
+  const rows = results.map(r => `
+    <tr>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.file_name}</td>
+      <td>${r.guessed_partner_name ? `<span style="color:var(--success)">${r.guessed_partner_name}</span>` : '<span class="text-muted">未検出</span>'}</td>
+      <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
+      <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">✏️ 確認</button></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('bulkResult').style.display = 'block';
+  document.getElementById('bulkResult').innerHTML = `
+    <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px">
+      <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-size:13px"><strong>${results.length}枚</strong> アップロード完了</span>
+        ${detected.length   ? `<span style="color:var(--success);font-size:13px">✓ 自動検出: ${detected.length}件</span>` : ''}
+        ${undetected.length ? `<span style="color:var(--warning);font-size:13px">⚠ 要確認: ${undetected.length}件</span>` : ''}
+      </div>
+      <div style="overflow-x:auto">
+        <table style="font-size:13px;width:100%">
+          <thead><tr><th>ファイル名</th><th>パートナー</th><th>請求月</th><th>金額</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">✏️ 確認ボタンから内容を確定してください</p>
+    </div>
+  `;
 }
 
 function setupDragDrop() {
@@ -242,13 +299,13 @@ function setupDragDrop() {
   zone.addEventListener('drop', e => {
     e.preventDefault();
     zone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) {
+    const files = e.dataTransfer.files;
+    if (files.length) {
       const input = document.getElementById('fileInput');
       const dt = new DataTransfer();
-      dt.items.add(file);
+      Array.from(files).forEach(f => dt.items.add(f));
       input.files = dt.files;
-      uploadFile(input);
+      uploadFiles(input);
     }
   });
 }
