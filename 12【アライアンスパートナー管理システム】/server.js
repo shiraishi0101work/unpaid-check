@@ -140,15 +140,15 @@ app.post('/api/partners/import-pdf-preview', uploadPDFBulk.array('files', 30), a
       console.error('PDF解析エラー:', e.message);
     }
 
-    const info = extractPartnerInfoFromText(text, file.originalname);
+    const { contractDate } = extractPartnerInfoFromText(text);
     results.push({
-      file_name: file.originalname,
-      file_path: file.path,
-      company_name:   info.companyName   || '',
-      contact_name:   info.contactName   || '',
-      contact_phone:  info.phone         || '',
-      contact_email:  info.email         || '',
-      contract_start: info.contractDate  || '',
+      file_name:      file.originalname,
+      file_path:      file.path,
+      company_name:   '',
+      contact_name:   '',
+      contact_phone:  '',
+      contact_email:  '',
+      contract_start: contractDate || '',
       extracted_text: text.slice(0, 5000),
     });
   }
