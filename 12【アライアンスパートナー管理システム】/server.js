@@ -740,7 +740,7 @@ app.get('/api/analytics', (req, res) => {
   const year = req.query.year || new Date().getFullYear().toString();
   const thisYear = parseInt(year);
 
-  // ① 月別 累計代理店数 / ② 月別 請求代理店数（選択年 × 12ヶ月）
+  // ① 月別 累計代理店数 / 新規登録数 / ② 月別 請求代理店数（選択年 × 12ヶ月）
   const monthlyPartners = [];
   for (let m = 1; m <= 12; m++) {
     const month = `${year}-${String(m).padStart(2, '0')}`;
@@ -748,11 +748,15 @@ app.get('/api/analytics', (req, res) => {
     const total = db.prepare(
       "SELECT COUNT(*) as cnt FROM partners WHERE strftime('%Y-%m', created_at) <= ?"
     ).get(month)?.cnt || 0;
+    // 新規: その月に新規登録されたパートナー数
+    const newCount = db.prepare(
+      "SELECT COUNT(*) as cnt FROM partners WHERE strftime('%Y-%m', created_at) = ?"
+    ).get(month)?.cnt || 0;
     // 請求あり: その月に確定請求書があるパートナー数
     const active = db.prepare(
       "SELECT COUNT(DISTINCT partner_id) as cnt FROM invoices WHERE status='confirmed' AND billing_month=? AND partner_id IS NOT NULL"
     ).get(month)?.cnt || 0;
-    monthlyPartners.push({ month, total, active });
+    monthlyPartners.push({ month, total, new: newCount, active });
   }
 
   // ⑤ 月別売上合計（選択年）
