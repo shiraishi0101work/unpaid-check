@@ -39,12 +39,14 @@
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="icon">📄</div>
       <p><strong>PDFをクリックまたはドラッグ&ドロップ</strong></p>
-      <p>アップロード後、パートナーと請求月を確認・確定してください</p>
+      <p style="color:var(--text-muted);font-size:13px">最大20枚まで同時アップロード可能</p>
     </div>
-    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="uploadFile(this)">
+    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none" onchange="uploadFiles(this)">
     <div id="uploadProgress" style="display:none;margin-top:12px">
-      <p style="font-size:13px;color:var(--primary)">⏳ アップロード・解析中...</p>
+      <p id="uploadProgressText" style="font-size:13px;color:var(--primary)">⏳ アップロード・解析中...</p>
     </div>
+    <!-- 一括アップロード結果 -->
+    <div id="bulkResult" style="display:none;margin-top:16px"></div>
   </div>
 
   <!-- Invoice list -->
