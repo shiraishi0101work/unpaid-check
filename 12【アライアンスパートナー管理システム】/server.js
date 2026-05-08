@@ -362,6 +362,66 @@ app.get('/api/invoices/:id', (req, res) => {
   res.json({ ...invoice, items });
 });
 
+// ── PDF解析ユーティリティ ────────────────────────────────────────────────────
+async function parseInvoiceFile(file, partners) {
+  let extractedText = '';
+
+  if (file.mimetype === 'application/pdf') {
+    try {
+      const pdfParse = require('pdf-parse');
+      const buffer = fs.readFileSync(file.path);
+      const data = await pdfParse(buffer);
+      extractedText = data.text || '';
+    } catch (e) {
+      console.error('PDF解析エラー:', e.message);
+    }
+  }
+
+  let guessedAmount = 0;
+  const amountMatch = extractedText.match(/(?:合計|請求金額|ご請求金額)[^\d]*([0-9,，]+)/);
+  if (amountMatch) guessedAmount = parseInt(amountMatch[1].replace(/[,，]/g, '')) || 0;
+
+  let guessedMonth = '';
+  const monthMatch = extractedText.match(/(\d{4})[年\/\-](\d{1,2})(?:[月\/\-])/);
+  if (monthMatch) guessedMonth = `${monthMatch[1]}-${String(monthMatch[2]).padStart(2, '0')}`;
+
+  let guessedPartnerId = null;
+  for (const p of partners) {
+    if (extractedText.includes(p.company_name)) { guessedPartnerId = p.id; break; }
+  }
+
+  return { extractedText, guessedAmount, guessedMonth, guessedPartnerId };
+}
+
+// PDF 一括アップロード（最大20枚）
+app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res) => {
+  const db = getDB();
+  if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'ファイルがありません' });
+
+  const partners = db.prepare('SELECT id, company_name FROM partners WHERE status = ?').all('active');
+  const results = [];
+
+  for (const file of req.files) {
+    const { extractedText, guessedAmount, guessedMonth, guessedPartnerId } = await parseInvoiceFile(file, partners);
+
+    const result = db.prepare(`
+      INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending')
+    `).run(file.originalname, file.path, guessedMonth, guessedAmount, extractedText.slice(0, 5000), guessedPartnerId);
+
+    results.push({
+      id: result.lastInsertRowid,
+      file_name: file.originalname,
+      guessed_month: guessedMonth,
+      guessed_amount: guessedAmount,
+      guessed_partner_id: guessedPartnerId,
+      guessed_partner_name: partners.find(p => p.id === guessedPartnerId)?.company_name || null,
+    });
+  }
+
+  res.json({ count: results.length, results });
+});
+
 // PDF アップロード → テキスト抽出
 app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
   const db = getDB();
