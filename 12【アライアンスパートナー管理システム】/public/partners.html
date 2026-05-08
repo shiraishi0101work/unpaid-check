@@ -294,9 +294,65 @@
   </div>
 </div>
 
+<!-- ── 契約書PDF一括取込モーダル ── -->
+<div class="modal-overlay" id="pdfImportOverlay">
+  <div class="modal" style="max-width:860px;width:95vw">
+    <div class="modal-header">
+      <h3>📄 契約書PDFからパートナーを一括追加</h3>
+      <button class="modal-close" onclick="closePDFImportModal()">✕</button>
+    </div>
+
+    <!-- Step1: アップロード -->
+    <div id="pdfStep1">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+        契約書・申込書PDFをまとめてアップロードしてください。会社名・担当者・電話・締結日を自動抽出してパートナー登録します。
+      </p>
+      <div class="csv-zone" onclick="document.getElementById('pdfBulkInput').click()" id="pdfDropZone">
+        <div style="font-size:32px">📂</div>
+        <p><strong>PDFファイルをクリックまたはドラッグ&ドロップ（複数可）</strong></p>
+        <p>最大30ファイル・1ファイル30MBまで</p>
+      </div>
+      <input type="file" id="pdfBulkInput" accept=".pdf" multiple style="display:none" onchange="startPDFImport(this)">
+      <div id="pdfUploadProgress" style="display:none;text-align:center;padding:20px;color:var(--primary)">
+        <div style="font-size:24px">⏳</div>
+        <div id="pdfProgressText" style="font-size:14px;margin-top:8px">PDFを解析中...</div>
+      </div>
+    </div>
+
+    <!-- Step2: 確認・編集テーブル -->
+    <div id="pdfStep2" style="display:none">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+        抽出結果を確認してください。内容を編集してから「登録」できます。会社名が空白の行はスキップされます。
+      </p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px" id="pdfPreviewTable">
+          <thead>
+            <tr style="background:#f5f7ff">
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:40px">取込</th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:160px">会社名 <span style="color:var(--danger)">*</span></th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:100px">担当者名</th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:120px">電話番号</th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:160px">メール</th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:120px">締結日</th>
+              <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:160px">ファイル名</th>
+            </tr>
+          </thead>
+          <tbody id="pdfPreviewBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="resetPDFImport()">← やり直し</button>
+        <button class="btn btn-primary" onclick="savePDFImport()" id="pdfSaveBtn">✅ チェックした行を登録</button>
+      </div>
+      <div id="pdfSaveResult" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 let currentEditId = null;
 let allProducts   = [];
+let pdfPreviewData = [];
 
 // ── 初期化 ──────────────────────────────────────────────────────────────────
 async function init() {
