@@ -241,11 +241,21 @@
       </div>
     </div>
 
-    <!-- Tab: 契約書 -->
+    <!-- Tab: 契約書・申込書 -->
     <div class="tab-panel" id="tab-contracts">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;white-space:nowrap">書類種別</label>
+        <select id="contractDocType" style="min-width:130px">
+          <option value="契約書">契約書</option>
+          <option value="申込書">申込書</option>
+          <option value="覚書">覚書</option>
+          <option value="その他">その他</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('contractFileInput').click()">＋ PDFをアップロード</button>
+      </div>
       <div class="contract-upload" onclick="document.getElementById('contractFileInput').click()" id="contractUploadZone">
         <div style="font-size:28px">📄</div>
-        <p><strong>契約書PDFをクリックまたはドロップしてアップロード</strong></p>
+        <p><strong>クリックまたはドラッグ&ドロップでアップロード</strong></p>
         <p>締結日を自動抽出します。抽出できない場合は手入力してください</p>
       </div>
       <input type="file" id="contractFileInput" accept=".pdf" style="display:none" onchange="uploadContract(this)">
