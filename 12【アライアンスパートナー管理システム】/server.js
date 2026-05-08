@@ -1,12 +1,22 @@
 require('dotenv').config();
-const express = require('express');
-const multer  = require('multer');
-const path    = require('path');
-const fs      = require('fs');
+const express    = require('express');
+const multer     = require('multer');
+const path       = require('path');
+const fs         = require('fs');
+const basicAuth  = require('express-basic-auth');
 const { initDB, getDB } = require('./database');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
+
+// ── Basic認証（外部公開時のパスワード保護）──────────────────────────────────
+const AUTH_USER = process.env.AUTH_USER || 'admin';
+const AUTH_PASS = process.env.AUTH_PASS || 'della2024';
+app.use(basicAuth({
+  users: { [AUTH_USER]: AUTH_PASS },
+  challenge: true,
+  realm: 'アライアンスパートナー管理',
+}));
 
 app.use(express.json());
 app.use(express.static('public'));
