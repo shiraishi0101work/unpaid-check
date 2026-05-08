@@ -15,7 +15,7 @@ const AUTH_PASS = process.env.AUTH_PASS || 'della2024';
 app.use(basicAuth({
   users: { [AUTH_USER]: AUTH_PASS },
   challenge: true,
-  realm: 'アライアンスパートナー管理',
+  realm: 'Alliance Partner System',
 }));
 
 app.use(express.json());
