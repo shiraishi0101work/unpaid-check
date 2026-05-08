@@ -12,9 +12,9 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ── PDF アップロード設定 ──────────────────────────────────────────────────────
-const storage = multer.diskStorage({
+const makeStorage = (subdir) => multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, 'uploads');
+    const dir = path.join(__dirname, 'uploads', subdir);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -24,15 +24,79 @@ const storage = multer.diskStorage({
     cb(null, suffix + ext);
   }
 });
+
 const upload = multer({
-  storage,
+  storage: makeStorage('invoices'),
   fileFilter: (req, file, cb) => {
     const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('PDF・PNG・JPGファイルのみアップロード可能です'));
+    else cb(new Error('PDF・PNG・JPGファイルのみ'));
   },
   limits: { fileSize: 30 * 1024 * 1024 }
 });
+
+const uploadContract = multer({
+  storage: makeStorage('contracts'),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('PDFファイルのみアップロード可能です'));
+  },
+  limits: { fileSize: 30 * 1024 * 1024 }
+});
+
+const uploadCSV = multer({
+  storage: makeStorage('csv'),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) cb(null, true);
+    else cb(new Error('CSVファイルのみアップロード可能です'));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+// ── CSV ユーティリティ ────────────────────────────────────────────────────────
+function parseCSVRow(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+const CSV_HEADER_MAP = {
+  '会社名': 'company_name', '担当者名': 'contact_name', '担当者': 'contact_name',
+  'メール': 'contact_email', 'メールアドレス': 'contact_email',
+  '電話': 'contact_phone', '電話番号': 'contact_phone',
+  '契約開始日': 'contract_start', '状態': 'status', '備考': 'notes',
+};
+
+// ── 契約日抽出ユーティリティ ──────────────────────────────────────────────────
+function extractContractDate(text) {
+  // 令和N年M月D日
+  let m = text.match(/令和\s*(\d+)年\s*(\d{1,2})月\s*(\d{1,2})日/);
+  if (m) {
+    const year = parseInt(m[1]) + 2018;
+    return `${year}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+  // 西暦 YYYY年M月D日
+  m = text.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  // YYYY/MM/DD or YYYY-MM-DD
+  m = text.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return null;
+}
 
 initDB();
 
