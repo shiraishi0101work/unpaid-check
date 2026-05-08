@@ -102,6 +102,52 @@ initDB();
 
 // ── パートナー ────────────────────────────────────────────────────────────────
 
+// CSV取込（/api/partners/:id より先に定義）
+app.post('/api/partners/import-csv', uploadCSV.single('file'), (req, res) => {
+  const db = getDB();
+  if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+
+  let text = fs.readFileSync(req.file.path, 'utf-8');
+  // BOM除去
+  text = text.replace(/^\uFEFF/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return res.status(400).json({ error: 'データが1件もありません' });
+
+  const rawHeaders = parseCSVRow(lines[0]);
+  const headers = rawHeaders.map(h => CSV_HEADER_MAP[h] || h);
+
+  const stmt = db.prepare(`
+    INSERT INTO partners (company_name, contact_name, contact_email, contact_phone, contract_start, status, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  let imported = 0, skipped = 0;
+  const errors = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVRow(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+
+    if (!row.company_name) { skipped++; continue; }
+    try {
+      stmt.run(
+        row.company_name, row.contact_name || null, row.contact_email || null,
+        row.contact_phone || null, row.contract_start || null,
+        row.status === 'inactive' ? 'inactive' : 'active',
+        row.notes || null
+      );
+      imported++;
+    } catch (e) {
+      errors.push(`行${i + 1}: ${e.message}`);
+      skipped++;
+    }
+  }
+
+  fs.unlinkSync(req.file.path);
+  res.json({ message: `${imported}件取込完了 (スキップ: ${skipped}件)`, imported, skipped, errors });
+});
+
 app.get('/api/partners', (req, res) => {
   const db = getDB();
   const { search, status } = req.query;
