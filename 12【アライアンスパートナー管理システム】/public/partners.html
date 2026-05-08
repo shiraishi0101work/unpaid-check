@@ -452,8 +452,13 @@ async function openEditModal(id, defaultTab = 'info') {
   document.getElementById('e_contact_email').value  = p.contact_email || '';
   document.getElementById('e_contact_phone').value  = p.contact_phone || '';
   document.getElementById('e_contract_start').value = p.contract_start || '';
-  document.getElementById('e_status').value         = p.status || 'active';
   document.getElementById('e_notes').value          = p.notes || '';
+  const gradeLabel = { A:'A（毎月）', B:'B（3ヶ月に1回）', C:'C（半年以上なし）' };
+  const gradeColor = { A:'var(--success)', B:'var(--warning)', C:'var(--danger)' };
+  const g = p.grade;
+  document.getElementById('e_grade_display').innerHTML = g
+    ? `<span style="font-weight:700;color:${gradeColor[g]}">${gradeLabel[g]}</span>　<span style="color:var(--text-muted);font-size:12px">${p.status==='active'?'✅ アクティブ':'⛔ 非アクティブ'}</span>`
+    : `<span style="color:var(--text-muted)">未請求（アクティブ）</span>`;
 
   document.getElementById('editModalOverlay').classList.add('open');
   switchTab(defaultTab);
