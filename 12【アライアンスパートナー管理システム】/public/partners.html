@@ -766,6 +766,21 @@ function downloadTemplate() {
 function setupDragDrop() {
   setupDropZone('csvZone', 'csvFileInput', importCSV);
   setupDropZone('contractUploadZone', 'contractFileInput', uploadContract);
+  // PDF一括取込ゾーン（複数ファイル対応）
+  const pdfZone = document.getElementById('pdfDropZone');
+  if (pdfZone) {
+    pdfZone.addEventListener('dragover', e => { e.preventDefault(); pdfZone.style.borderColor = 'var(--primary)'; });
+    pdfZone.addEventListener('dragleave', () => { pdfZone.style.borderColor = ''; });
+    pdfZone.addEventListener('drop', e => {
+      e.preventDefault(); pdfZone.style.borderColor = '';
+      const input = document.getElementById('pdfBulkInput');
+      const dt = new DataTransfer();
+      for (const f of e.dataTransfer.files) if (f.type === 'application/pdf') dt.items.add(f);
+      if (dt.files.length === 0) { alert('PDFファイルをドロップしてください'); return; }
+      input.files = dt.files;
+      startPDFImport(input);
+    });
+  }
 }
 
 function setupDropZone(zoneId, inputId, handler) {
