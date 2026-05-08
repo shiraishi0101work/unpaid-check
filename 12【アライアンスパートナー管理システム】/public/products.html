@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>商材一覧 — アライアンスパートナー管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>アライアンス<br>パートナー管理</h1>
+    <span>Alliance Partner System</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">メニュー</div>
+    <a href="index.html" class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
+    <a href="partners.html" class="nav-item"><span class="icon">🤝</span><span>パートナー一覧</span></a>
+    <a href="products.html" class="nav-item active"><span class="icon">📦</span><span>商材一覧</span></a>
+    <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
+    <a href="monthly.html" class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <h2>📦 商材一覧</h2>
+    <p>パートナーが取り扱う商材・サービスを管理します</p>
+  </div>
+
+  <div id="alert"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="toolbar" style="margin:0;flex:1">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="商材名・コードで検索..." oninput="loadProducts()">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">＋ 商材追加</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>商材名</th>
+            <th>コード</th>
+            <th>単価</th>
+            <th>説明</th>
+            <th>登録日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="countLabel" style="font-size:13px;color:var(--text-muted);margin-top:12px"></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">商材追加</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>商材名 <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="f_name" placeholder="例：AIブログマスター">
+      </div>
+      <div class="form-group">
+        <label>商材コード</label>
+        <input type="text" id="f_code" placeholder="例：ABM-001">
+      </div>
+      <div class="form-group">
+        <label>単価（円）</label>
+        <input type="number" id="f_unit_price" placeholder="0" min="0">
+      </div>
+      <div class="form-group full">
+        <label>説明</label>
+        <textarea id="f_description" placeholder="商材の説明・特徴など"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveProduct()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let editId = null;
+const fmt = n => n ? '¥' + Number(n).toLocaleString() : '-';
+
+async function loadProducts() {
+  const search = document.getElementById('searchInput').value;
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+
+  const data = await fetch('/api/products?' + params).then(r => r.json());
+  const tbody = document.getElementById('tableBody');
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
+  } else {
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.code ? `<span class="badge badge-blue">${p.code}</span>` : '-'}</td>
+        <td style="text-align:right;font-weight:600;color:var(--primary)">${fmt(p.unit_price)}</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
+        <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteProduct(${p.id}, '${p.name}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('countLabel').textContent = `${data.length}件`;
+}
+
+function openModal(id = null) {
+  editId = id;
+  clearForm();
+  document.getElementById('modalTitle').textContent = id ? '商材編集' : '商材追加';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editId = null;
+}
+
+function clearForm() {
+  ['f_name','f_code','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function editProduct(id) {
+  const products = await fetch('/api/products').then(r => r.json());
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  openModal(id);
+  document.getElementById('f_name').value        = p.name || '';
+  document.getElementById('f_code').value        = p.code || '';
+  document.getElementById('f_unit_price').value  = p.unit_price || '';
+  document.getElementById('f_description').value = p.description || '';
+}
+
+async function saveProduct() {
+  const body = {
+    name:        document.getElementById('f_name').value.trim(),
+    code:        document.getElementById('f_code').value.trim(),
+    unit_price:  parseInt(document.getElementById('f_unit_price').value) || 0,
+    description: document.getElementById('f_description').value.trim(),
+  };
+
+  if (!body.name) { alert('商材名を入力してください'); return; }
+
+  const url    = editId ? `/api/products/${editId}` : '/api/products';
+  const method = editId ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+
+  showAlert(data.message || '保存しました', res.ok ? 'success' : 'error');
+  if (res.ok) { closeModal(); loadProducts(); }
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  showAlert(data.message, res.ok ? 'success' : 'error');
+  if (res.ok) loadProducts();
+}
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('alert');
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 3000);
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+loadProducts();
+</script>
+</body>
+</html>
