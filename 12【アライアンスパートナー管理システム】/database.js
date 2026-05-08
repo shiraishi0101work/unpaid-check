@@ -1,0 +1,73 @@
+const { DatabaseSync } = require('node:sqlite');
+const path = require('path');
+
+let db;
+
+function initDB() {
+  db = new DatabaseSync(path.join(__dirname, 'data.db'));
+
+  db.exec(`
+    -- パートナー（代理店）
+    CREATE TABLE IF NOT EXISTS partners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      company_name TEXT NOT NULL,
+      contact_name TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      contract_start TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    -- 商材
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT,
+      unit_price INTEGER DEFAULT 0,
+      description TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    -- 請求書
+    CREATE TABLE IF NOT EXISTS invoices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      partner_id INTEGER,
+      file_name TEXT,
+      file_path TEXT,
+      billing_month TEXT,
+      total_amount INTEGER DEFAULT 0,
+      extracted_text TEXT,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL
+    );
+
+    -- 請求明細
+    CREATE TABLE IF NOT EXISTS invoice_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoice_id INTEGER NOT NULL,
+      product_id INTEGER,
+      description TEXT,
+      quantity INTEGER DEFAULT 1,
+      unit_price INTEGER DEFAULT 0,
+      amount INTEGER DEFAULT 0,
+      FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    );
+  `);
+
+  return db;
+}
+
+function getDB() {
+  if (!db) initDB();
+  return db;
+}
+
+module.exports = { initDB, getDB };
