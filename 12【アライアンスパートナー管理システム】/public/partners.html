@@ -403,9 +403,12 @@ async function loadPartners() {
             ? `<span class="badge badge-green">📄 ${ex.contractCount}件</span>`
             : '<span class="text-muted" style="font-size:12px">なし</span>'}
         </td>
-        <td>${p.status === 'active'
-              ? '<span class="badge badge-green">アクティブ</span>'
-              : '<span class="badge badge-gray">非アクティブ</span>'}</td>
+        <td>
+          ${p.status === 'active'
+            ? '<span class="badge badge-green">アクティブ</span>'
+            : '<span class="badge badge-gray">非アクティブ</span>'}
+          ${p.grade ? `<span class="badge" style="margin-left:4px;background:${p.grade==='A'?'#dcfce7':p.grade==='B'?'#fef9c3':'#fee2e2'};color:${p.grade==='A'?'#16a34a':p.grade==='B'?'#d97706':'#dc2626'}">${p.grade}</span>` : ''}
+        </td>
         <td style="white-space:nowrap">
           <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})" title="編集">✏️</button>
           <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${esc(p.company_name)}')" title="削除">🗑️</button>
