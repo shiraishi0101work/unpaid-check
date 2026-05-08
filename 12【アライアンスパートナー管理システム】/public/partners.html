@@ -573,7 +573,8 @@ async function loadContractsList() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.created_at?.slice(0,10) || ''} 登録</div>
       </div>
       <div class="c-actions">
-        <a href="/api/partners/${currentEditId}/contracts/${c.id}/download" class="btn btn-outline btn-sm" title="ダウンロード">⬇</a>
+        <a href="/api/partners/${currentEditId}/contracts/${c.id}/view" target="_blank" class="btn btn-outline btn-sm" title="表示">👁 表示</a>
+        <a href="/api/partners/${currentEditId}/contracts/${c.id}/download" class="btn btn-ghost btn-sm" title="ダウンロード">⬇</a>
         <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" title="削除">🗑️</button>
       </div>
     </div>
