@@ -282,7 +282,7 @@ function renderAllCharts() {
   const d = analyticsData;
   const year = d.year;
 
-  // ① ② 月別 代理店数（累計 / 請求あり）
+  // ① ② 月別 代理店数（累計 / 新規増加 / 請求あり）
   destroyChart('chartPartnerCount');
   chartInstances['chartPartnerCount'] = new Chart(
     document.getElementById('chartPartnerCount'), {
@@ -290,13 +290,46 @@ function renderAllCharts() {
       data: {
         labels: MONTHS,
         datasets: [
-          { label: '①累計代理店数', data: d.monthly_partners.map(x => x.total),  backgroundColor: '#6366f1cc', borderRadius: 4 },
-          { label: '②請求代理店数', data: d.monthly_partners.map(x => x.active), backgroundColor: '#10b981cc', borderRadius: 4 },
+          {
+            label: '①累計代理店数',
+            data: d.monthly_partners.map(x => x.total),
+            backgroundColor: '#6366f144',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            borderRadius: 4,
+            type: 'bar',
+            yAxisID: 'y',
+          },
+          {
+            label: '②請求代理店数',
+            data: d.monthly_partners.map(x => x.active),
+            backgroundColor: '#10b98144',
+            borderColor: '#10b981',
+            borderWidth: 2,
+            borderRadius: 4,
+            type: 'bar',
+            yAxisID: 'y',
+          },
+          {
+            label: '新規登録数（増加）',
+            data: d.monthly_partners.map(x => x.new),
+            borderColor: '#f59e0b',
+            backgroundColor: '#f59e0bcc',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            type: 'line',
+            yAxisID: 'y2',
+            tension: 0.3,
+          },
         ]
       },
       options: {
         plugins: { legend: { position: 'top' }, title: { display: true, text: `${year}年` } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        scales: {
+          y:  { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: '累計・請求数' } },
+          y2: { beginAtZero: true, position: 'right', ticks: { stepSize: 1 }, title: { display: true, text: '新規登録数' }, grid: { drawOnChartArea: false } },
+        }
       }
     }
   );
