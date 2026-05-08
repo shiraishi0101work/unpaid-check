@@ -60,6 +60,30 @@ function initDB() {
       FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
     );
+
+    -- パートナー契約書
+    CREATE TABLE IF NOT EXISTS partner_contracts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      partner_id INTEGER NOT NULL,
+      file_name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      contract_date TEXT,
+      extracted_text TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE
+    );
+
+    -- パートナー取扱商材
+    CREATE TABLE IF NOT EXISTS partner_products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      partner_id INTEGER NOT NULL,
+      product_id INTEGER NOT NULL,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      UNIQUE(partner_id, product_id)
+    );
   `);
 
   return db;
