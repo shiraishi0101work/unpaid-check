@@ -622,6 +622,109 @@ async function deleteContract(contractId) {
   if (res.ok) { loadContractsList(); loadPartners(); }
 }
 
+// ── 契約書PDF一括取込 ────────────────────────────────────────────────────────
+function openPDFImportModal() {
+  resetPDFImport();
+  document.getElementById('pdfImportOverlay').classList.add('open');
+}
+function closePDFImportModal() {
+  document.getElementById('pdfImportOverlay').classList.remove('open');
+}
+function resetPDFImport() {
+  document.getElementById('pdfStep1').style.display = '';
+  document.getElementById('pdfStep2').style.display = 'none';
+  document.getElementById('pdfUploadProgress').style.display = 'none';
+  document.getElementById('pdfDropZone').style.display = '';
+  document.getElementById('pdfBulkInput').value = '';
+  document.getElementById('pdfSaveResult').innerHTML = '';
+  pdfPreviewData = [];
+}
+
+async function startPDFImport(input) {
+  if (!input.files || input.files.length === 0) return;
+  document.getElementById('pdfDropZone').style.display = 'none';
+  document.getElementById('pdfUploadProgress').style.display = 'block';
+  document.getElementById('pdfProgressText').textContent = `${input.files.length}件のPDFを解析中...`;
+
+  const fd = new FormData();
+  for (const f of input.files) fd.append('files', f);
+
+  const res = await fetch('/api/partners/import-pdf-preview', { method: 'POST', body: fd });
+  const data = await res.json();
+
+  document.getElementById('pdfUploadProgress').style.display = 'none';
+  if (!res.ok) { alert(data.error || 'エラーが発生しました'); resetPDFImport(); return; }
+
+  pdfPreviewData = data;
+  renderPDFPreview(data);
+  document.getElementById('pdfStep1').style.display = 'none';
+  document.getElementById('pdfStep2').style.display = '';
+}
+
+function renderPDFPreview(data) {
+  const tbody = document.getElementById('pdfPreviewBody');
+  tbody.innerHTML = data.map((row, i) => `
+    <tr id="pdf-row-${i}" style="background:${row.company_name ? '#fff' : '#fff8f8'}">
+      <td style="padding:6px 8px;border:1px solid var(--border);text-align:center">
+        <input type="checkbox" id="pdf-chk-${i}" ${row.company_name ? 'checked' : ''}>
+      </td>
+      <td style="padding:4px;border:1px solid var(--border)">
+        <input class="pdf-cell" data-i="${i}" data-f="company_name" value="${esc(row.company_name)}"
+          style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
+          placeholder="会社名（必須）" oninput="pdfPreviewData[this.dataset.i][this.dataset.f]=this.value">
+      </td>
+      <td style="padding:4px;border:1px solid var(--border)">
+        <input class="pdf-cell" data-i="${i}" data-f="contact_name" value="${esc(row.contact_name)}"
+          style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
+          oninput="pdfPreviewData[this.dataset.i][this.dataset.f]=this.value">
+      </td>
+      <td style="padding:4px;border:1px solid var(--border)">
+        <input class="pdf-cell" data-i="${i}" data-f="contact_phone" value="${esc(row.contact_phone)}"
+          style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
+          oninput="pdfPreviewData[this.dataset.i][this.dataset.f]=this.value">
+      </td>
+      <td style="padding:4px;border:1px solid var(--border)">
+        <input class="pdf-cell" data-i="${i}" data-f="contact_email" value="${esc(row.contact_email)}"
+          style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
+          oninput="pdfPreviewData[this.dataset.i][this.dataset.f]=this.value">
+      </td>
+      <td style="padding:4px;border:1px solid var(--border)">
+        <input type="date" data-i="${i}" data-f="contract_start" value="${row.contract_start || ''}"
+          style="width:100%;border:none;padding:4px;font-size:13px;background:transparent;outline:none"
+          onchange="pdfPreviewData[this.dataset.i][this.dataset.f]=this.value">
+      </td>
+      <td style="padding:6px 8px;border:1px solid var(--border);color:var(--text-muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          title="${esc(row.file_name)}">${esc(row.file_name)}</td>
+    </tr>
+  `).join('');
+}
+
+async function savePDFImport() {
+  const entries = pdfPreviewData.filter((_, i) => document.getElementById(`pdf-chk-${i}`)?.checked);
+  if (entries.length === 0) { alert('取込する行を選択してください'); return; }
+
+  const btn = document.getElementById('pdfSaveBtn');
+  btn.disabled = true; btn.textContent = '登録中...';
+
+  const res = await fetch('/api/partners/import-pdf-save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entries })
+  });
+  const data = await res.json();
+  btn.disabled = false; btn.textContent = '✅ チェックした行を登録';
+
+  if (res.ok) {
+    document.getElementById('pdfSaveResult').innerHTML =
+      `<div class="alert alert-success">✅ ${data.count}件のパートナーを登録しました</div>`;
+    loadPartners();
+    setTimeout(closePDFImportModal, 2000);
+  } else {
+    document.getElementById('pdfSaveResult').innerHTML =
+      `<div class="alert alert-error">❌ ${data.error}</div>`;
+  }
+}
+
 // ── CSV取込モーダル ──────────────────────────────────────────────────────────
 function openCSVModal() { document.getElementById('csvModalOverlay').classList.add('open'); document.getElementById('csvResult').innerHTML = ''; }
 function closeCSVModal() { document.getElementById('csvModalOverlay').classList.remove('open'); }
