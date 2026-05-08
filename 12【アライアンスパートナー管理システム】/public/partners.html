@@ -4,6 +4,62 @@
   <meta charset="UTF-8">
   <title>パートナー一覧 — アライアンスパートナー管理</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* タブ */
+    .modal-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:20px; }
+    .modal-tab {
+      padding:10px 20px; cursor:pointer; font-size:14px; font-weight:600;
+      color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-2px;
+      transition:all .15s; background:none; border-top:none; border-left:none; border-right:none;
+    }
+    .modal-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .modal-tab:hover:not(.active) { color:var(--text); }
+    .tab-panel { display:none; } .tab-panel.active { display:block; }
+
+    /* 契約書リスト */
+    .contract-row {
+      display:flex; align-items:center; gap:12px; padding:10px 12px;
+      border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:#fafbff;
+    }
+    .contract-row .c-icon { font-size:22px; }
+    .contract-row .c-info { flex:1; min-width:0; }
+    .contract-row .c-name { font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .contract-row .c-date { font-size:12px; color:var(--text-muted); }
+    .contract-row .c-date input { padding:3px 8px; font-size:12px; border:1.5px solid var(--border); border-radius:6px; }
+    .contract-row .c-actions { display:flex; gap:6px; flex-shrink:0; }
+
+    /* 商材チェックリスト */
+    .product-checklist { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:280px; overflow-y:auto; }
+    .product-check-item {
+      display:flex; align-items:center; gap:10px; padding:10px 12px;
+      border:1.5px solid var(--border); border-radius:8px; cursor:pointer; transition:all .15s;
+    }
+    .product-check-item:hover { border-color:var(--primary); background:var(--primary-light); }
+    .product-check-item.checked { border-color:var(--primary); background:var(--primary-light); }
+    .product-check-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--primary); }
+    .product-check-item .p-name { font-weight:600; font-size:13px; }
+    .product-check-item .p-code { font-size:11px; color:var(--text-muted); }
+
+    /* CSV upload zone */
+    .csv-zone {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:24px; text-align:center; cursor:pointer; transition:all .15s; background:#fafbff;
+    }
+    .csv-zone:hover { border-color:var(--primary); background:var(--primary-light); }
+    .csv-zone p { font-size:13px; color:var(--text-muted); margin-top:6px; }
+
+    /* 契約書アップロードゾーン */
+    .contract-upload {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:20px; text-align:center; cursor:pointer; transition:all .15s;
+      background:#fafbff; margin-bottom:16px;
+    }
+    .contract-upload:hover { border-color:var(--primary); background:var(--primary-light); }
+    .contract-upload p { font-size:13px; color:var(--text-muted); margin-top:4px; }
+
+    .badge-count { display:inline-block; background:var(--primary-light); color:var(--primary); font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:4px; }
+    .saving-hint { font-size:12px; color:var(--text-muted); margin-top:8px; }
+  </style>
 </head>
 <body>
 
@@ -14,11 +70,11 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">メニュー</div>
-    <a href="index.html" class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
+    <a href="index.html"   class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
     <a href="partners.html" class="nav-item active"><span class="icon">🤝</span><span>パートナー一覧</span></a>
     <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
     <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
-    <a href="monthly.html" class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+    <a href="monthly.html"  class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
   </nav>
 </aside>
 
@@ -31,8 +87,8 @@
   <div id="alert"></div>
 
   <div class="card">
-    <div class="card-header">
-      <div class="toolbar" style="margin:0;flex:1">
+    <div class="card-header" style="flex-wrap:wrap;gap:10px">
+      <div class="toolbar" style="margin:0;flex:1;min-width:240px">
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" placeholder="会社名・担当者名で検索..." oninput="loadPartners()">
@@ -43,7 +99,11 @@
           <option value="inactive">非アクティブ</option>
         </select>
       </div>
-      <button class="btn btn-primary" onclick="openModal()">＋ パートナー追加</button>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()" title="CSVテンプレートをダウンロード">📥 CSVテンプレート</button>
+        <button class="btn btn-outline btn-sm" onclick="openCSVModal()">📤 CSV取込</button>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ パートナー追加</button>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -52,15 +112,16 @@
           <tr>
             <th>会社名</th>
             <th>担当者</th>
-            <th>メール</th>
             <th>電話</th>
-            <th>契約開始</th>
+            <th>契約開始日</th>
+            <th>取扱商材</th>
+            <th>契約書</th>
             <th>状態</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+          <tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -68,56 +129,172 @@
   </div>
 </main>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- ── パートナー追加モーダル（基本情報のみ） ── -->
+<div class="modal-overlay" id="addModalOverlay">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modalTitle">パートナー追加</h3>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>パートナー追加</h3>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
     </div>
     <div class="form-grid">
       <div class="form-group full">
         <label>会社名 <span style="color:var(--danger)">*</span></label>
-        <input type="text" id="f_company_name" placeholder="株式会社〇〇">
+        <input type="text" id="a_company_name" placeholder="株式会社〇〇">
       </div>
       <div class="form-group">
         <label>担当者名</label>
-        <input type="text" id="f_contact_name" placeholder="山田 太郎">
+        <input type="text" id="a_contact_name" placeholder="山田 太郎">
       </div>
       <div class="form-group">
         <label>メールアドレス</label>
-        <input type="email" id="f_contact_email" placeholder="yamada@example.com">
+        <input type="email" id="a_contact_email" placeholder="yamada@example.com">
       </div>
       <div class="form-group">
         <label>電話番号</label>
-        <input type="tel" id="f_contact_phone" placeholder="03-0000-0000">
+        <input type="tel" id="a_contact_phone" placeholder="03-0000-0000">
       </div>
       <div class="form-group">
         <label>契約開始日</label>
-        <input type="date" id="f_contract_start">
+        <input type="date" id="a_contract_start">
       </div>
       <div class="form-group">
         <label>状態</label>
-        <select id="f_status">
+        <select id="a_status">
           <option value="active">アクティブ</option>
           <option value="inactive">非アクティブ</option>
         </select>
       </div>
       <div class="form-group full">
         <label>備考</label>
-        <textarea id="f_notes" placeholder="メモ・特記事項など"></textarea>
+        <textarea id="a_notes" placeholder="メモ・特記事項など"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="savePartner()">保存</button>
+      <button class="btn btn-ghost" onclick="closeAddModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveNewPartner()">保存して詳細設定へ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── パートナー詳細・編集モーダル（3タブ） ── -->
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3 id="editModalTitle">パートナー編集</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('info')">📋 基本情報</button>
+      <button class="modal-tab" onclick="switchTab('products')">📦 取扱商材</button>
+      <button class="modal-tab" onclick="switchTab('contracts')">📄 契約書</button>
+    </div>
+
+    <!-- Tab: 基本情報 -->
+    <div class="tab-panel active" id="tab-info">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>会社名 <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="e_company_name" placeholder="株式会社〇〇">
+        </div>
+        <div class="form-group">
+          <label>担当者名</label>
+          <input type="text" id="e_contact_name">
+        </div>
+        <div class="form-group">
+          <label>メールアドレス</label>
+          <input type="email" id="e_contact_email">
+        </div>
+        <div class="form-group">
+          <label>電話番号</label>
+          <input type="tel" id="e_contact_phone">
+        </div>
+        <div class="form-group">
+          <label>契約開始日</label>
+          <input type="date" id="e_contract_start">
+        </div>
+        <div class="form-group">
+          <label>状態</label>
+          <select id="e_status">
+            <option value="active">アクティブ</option>
+            <option value="inactive">非アクティブ</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>備考</label>
+          <textarea id="e_notes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
+        <button class="btn btn-primary" onclick="saveEditPartner()">保存</button>
+      </div>
+    </div>
+
+    <!-- Tab: 取扱商材 -->
+    <div class="tab-panel" id="tab-products">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">このパートナーが取り扱う商材にチェックを入れてください</p>
+      <div class="product-checklist" id="productChecklist"></div>
+      <div class="modal-footer" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
+        <button class="btn btn-primary" onclick="savePartnerProducts()">商材を保存</button>
+      </div>
+    </div>
+
+    <!-- Tab: 契約書 -->
+    <div class="tab-panel" id="tab-contracts">
+      <div class="contract-upload" onclick="document.getElementById('contractFileInput').click()" id="contractUploadZone">
+        <div style="font-size:28px">📄</div>
+        <p><strong>契約書PDFをクリックまたはドロップしてアップロード</strong></p>
+        <p>締結日を自動抽出します。抽出できない場合は手入力してください</p>
+      </div>
+      <input type="file" id="contractFileInput" accept=".pdf" style="display:none" onchange="uploadContract(this)">
+      <div id="contractUploadProgress" style="display:none;font-size:13px;color:var(--primary);margin-bottom:12px">⏳ アップロード・解析中...</div>
+
+      <div id="contractsList"></div>
+      <div class="modal-footer" style="margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CSV取込モーダル ── -->
+<div class="modal-overlay" id="csvModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📤 CSVでパートナーを一括取込</h3>
+      <button class="modal-close" onclick="closeCSVModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+      CSVの1行目にヘッダーが必要です。列の順序は問いません。<br>
+      対応ヘッダー: <code>会社名, 担当者名, メール, 電話, 契約開始日, 状態, 備考</code>
+    </p>
+    <div class="csv-zone" onclick="document.getElementById('csvFileInput').click()" id="csvZone">
+      <div style="font-size:28px">📊</div>
+      <p><strong>CSVファイルをクリックまたはドロップ</strong></p>
+      <p>Excel (.xlsx) はCSVに変換してからアップロードしてください</p>
+    </div>
+    <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(this)">
+    <div id="csvResult" style="margin-top:14px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCSVModal()">閉じる</button>
     </div>
   </div>
 </div>
 
 <script>
-let editId = null;
+let currentEditId = null;
+let allProducts   = [];
 
+// ── 初期化 ──────────────────────────────────────────────────────────────────
+async function init() {
+  allProducts = await fetch('/api/products').then(r => r.json());
+  loadPartners();
+  setupDragDrop();
+}
+
+// ── パートナー一覧 ───────────────────────────────────────────────────────────
 async function loadPartners() {
   const search = document.getElementById('searchInput').value;
   const status = document.getElementById('statusFilter').value;
@@ -126,99 +303,325 @@ async function loadPartners() {
   if (status) params.set('status', status);
 
   const data = await fetch('/api/partners?' + params).then(r => r.json());
-  const tbody = document.getElementById('tableBody');
 
+  // 各パートナーの商材数・契約書数を並列取得
+  const extras = await Promise.all(data.map(async p => {
+    const [prods, contracts] = await Promise.all([
+      fetch(`/api/partners/${p.id}/products`).then(r => r.json()),
+      fetch(`/api/partners/${p.id}/contracts`).then(r => r.json()),
+    ]);
+    return { id: p.id, prodCount: prods.length, contractCount: contracts.length };
+  }));
+  const extraMap = Object.fromEntries(extras.map(e => [e.id, e]));
+
+  const tbody = document.getElementById('tableBody');
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">パートナーが登録されていません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px">パートナーが登録されていません</td></tr>';
   } else {
-    tbody.innerHTML = data.map(p => `
+    tbody.innerHTML = data.map(p => {
+      const ex = extraMap[p.id] || { prodCount: 0, contractCount: 0 };
+      return `
       <tr>
-        <td><strong>${p.company_name}</strong></td>
-        <td>${p.contact_name || '-'}</td>
-        <td>${p.contact_email ? `<a href="mailto:${p.contact_email}" style="color:var(--primary)">${p.contact_email}</a>` : '-'}</td>
-        <td>${p.contact_phone || '-'}</td>
+        <td><strong>${esc(p.company_name)}</strong></td>
+        <td>${esc(p.contact_name || '-')}</td>
+        <td>${esc(p.contact_phone || '-')}</td>
         <td>${p.contract_start || '-'}</td>
-        <td>${p.status === 'active' ? '<span class="badge badge-green">アクティブ</span>' : '<span class="badge badge-gray">非アクティブ</span>'}</td>
         <td>
-          <button class="btn btn-ghost btn-sm" onclick="editPartner(${p.id})">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${p.company_name}')">🗑️</button>
+          ${ex.prodCount > 0
+            ? `<span class="badge badge-blue">${ex.prodCount}商材</span>`
+            : '<span class="text-muted" style="font-size:12px">未設定</span>'}
         </td>
-      </tr>
-    `).join('');
+        <td>
+          ${ex.contractCount > 0
+            ? `<span class="badge badge-green">📄 ${ex.contractCount}件</span>`
+            : '<span class="text-muted" style="font-size:12px">なし</span>'}
+        </td>
+        <td>${p.status === 'active'
+              ? '<span class="badge badge-green">アクティブ</span>'
+              : '<span class="badge badge-gray">非アクティブ</span>'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})" title="編集">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${esc(p.company_name)}')" title="削除">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
   }
   document.getElementById('countLabel').textContent = `${data.length}件`;
 }
 
-function openModal(id = null) {
-  editId = id;
-  clearForm();
-  document.getElementById('modalTitle').textContent = id ? 'パートナー編集' : 'パートナー追加';
-  document.getElementById('modalOverlay').classList.add('open');
+// ── 追加モーダル ─────────────────────────────────────────────────────────────
+function openAddModal() {
+  ['a_company_name','a_contact_name','a_contact_email','a_contact_phone','a_contract_start','a_notes']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('a_status').value = 'active';
+  document.getElementById('addModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('a_company_name').focus(), 50);
 }
+function closeAddModal() { document.getElementById('addModalOverlay').classList.remove('open'); }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  editId = null;
-}
-
-function clearForm() {
-  ['f_company_name','f_contact_name','f_contact_email','f_contact_phone','f_contract_start','f_notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f_status').value = 'active';
-}
-
-async function editPartner(id) {
-  const p = await fetch(`/api/partners/${id}`).then(r => r.json());
-  openModal(id);
-  document.getElementById('f_company_name').value  = p.company_name || '';
-  document.getElementById('f_contact_name').value  = p.contact_name || '';
-  document.getElementById('f_contact_email').value = p.contact_email || '';
-  document.getElementById('f_contact_phone').value = p.contact_phone || '';
-  document.getElementById('f_contract_start').value = p.contract_start || '';
-  document.getElementById('f_status').value = p.status || 'active';
-  document.getElementById('f_notes').value  = p.notes || '';
-}
-
-async function savePartner() {
+async function saveNewPartner() {
   const body = {
-    company_name:  document.getElementById('f_company_name').value.trim(),
-    contact_name:  document.getElementById('f_contact_name').value.trim(),
-    contact_email: document.getElementById('f_contact_email').value.trim(),
-    contact_phone: document.getElementById('f_contact_phone').value.trim(),
-    contract_start: document.getElementById('f_contract_start').value,
-    status: document.getElementById('f_status').value,
-    notes: document.getElementById('f_notes').value.trim(),
+    company_name:  document.getElementById('a_company_name').value.trim(),
+    contact_name:  document.getElementById('a_contact_name').value.trim(),
+    contact_email: document.getElementById('a_contact_email').value.trim(),
+    contact_phone: document.getElementById('a_contact_phone').value.trim(),
+    contract_start: document.getElementById('a_contract_start').value,
+    status: document.getElementById('a_status').value,
+    notes: document.getElementById('a_notes').value.trim(),
   };
-
   if (!body.company_name) { alert('会社名を入力してください'); return; }
 
-  const url = editId ? `/api/partners/${editId}` : '/api/partners';
-  const method = editId ? 'PUT' : 'POST';
-  const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const res = await fetch('/api/partners', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const data = await res.json();
+  if (!res.ok) { showAlert(data.error, 'error'); return; }
 
-  showAlert(data.message || '保存しました', res.ok ? 'success' : 'error');
-  if (res.ok) { closeModal(); loadPartners(); }
+  closeAddModal();
+  showAlert('登録しました。続けて商材・契約書を設定できます。');
+  await loadPartners();
+  openEditModal(data.id, 'products'); // 商材タブを開く
+}
+
+// ── 編集モーダル（3タブ） ────────────────────────────────────────────────────
+async function openEditModal(id, defaultTab = 'info') {
+  currentEditId = id;
+
+  const p = await fetch(`/api/partners/${id}`).then(r => r.json());
+  document.getElementById('editModalTitle').textContent = `${p.company_name} — 編集`;
+  document.getElementById('e_company_name').value   = p.company_name || '';
+  document.getElementById('e_contact_name').value   = p.contact_name || '';
+  document.getElementById('e_contact_email').value  = p.contact_email || '';
+  document.getElementById('e_contact_phone').value  = p.contact_phone || '';
+  document.getElementById('e_contract_start').value = p.contract_start || '';
+  document.getElementById('e_status').value         = p.status || 'active';
+  document.getElementById('e_notes').value          = p.notes || '';
+
+  document.getElementById('editModalOverlay').classList.add('open');
+  switchTab(defaultTab);
+}
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').classList.remove('open');
+  currentEditId = null;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.modal-tab').forEach((t, i) => {
+    const tabs = ['info','products','contracts'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+
+  if (name === 'products') loadProductChecklist();
+  if (name === 'contracts') loadContractsList();
+}
+
+async function saveEditPartner() {
+  const body = {
+    company_name:  document.getElementById('e_company_name').value.trim(),
+    contact_name:  document.getElementById('e_contact_name').value.trim(),
+    contact_email: document.getElementById('e_contact_email').value.trim(),
+    contact_phone: document.getElementById('e_contact_phone').value.trim(),
+    contract_start: document.getElementById('e_contract_start').value,
+    status: document.getElementById('e_status').value,
+    notes: document.getElementById('e_notes').value.trim(),
+  };
+  if (!body.company_name) { alert('会社名を入力してください'); return; }
+  const res = await fetch(`/api/partners/${currentEditId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  showAlert(data.message || '更新しました', res.ok ? 'success' : 'error');
+  if (res.ok) { loadPartners(); document.getElementById('editModalTitle').textContent = `${body.company_name} — 編集`; }
 }
 
 async function deletePartner(id, name) {
-  if (!confirm(`「${name}」を削除しますか？`)) return;
-  const res = await fetch(`/api/partners/${id}`, { method: 'DELETE' });
+  if (!confirm(`「${name}」を削除しますか？関連する契約書も削除されます。`)) return;
+  const res = await fetch(`/api/partners/${id}`, { method:'DELETE' });
   const data = await res.json();
   showAlert(data.message, res.ok ? 'success' : 'error');
   if (res.ok) loadPartners();
 }
 
+// ── 取扱商材タブ ──────────────────────────────────────────────────────────────
+async function loadProductChecklist() {
+  const linked = await fetch(`/api/partners/${currentEditId}/products`).then(r => r.json());
+  const container = document.getElementById('productChecklist');
+
+  if (allProducts.length === 0) {
+    container.innerHTML = '<p class="text-muted" style="font-size:13px">商材が登録されていません。先に商材一覧で商材を追加してください。</p>';
+    return;
+  }
+
+  container.innerHTML = allProducts.map(p => {
+    const checked = linked.includes(p.id);
+    return `
+    <label class="product-check-item ${checked ? 'checked' : ''}" onclick="toggleProductCheck(this)">
+      <input type="checkbox" value="${p.id}" ${checked ? 'checked' : ''} onclick="event.stopPropagation()">
+      <div>
+        <div class="p-name">${esc(p.name)}</div>
+        ${p.code ? `<div class="p-code">${esc(p.code)}</div>` : ''}
+        ${p.unit_price ? `<div class="p-code">¥${Number(p.unit_price).toLocaleString()}</div>` : ''}
+      </div>
+    </label>`;
+  }).join('');
+}
+
+function toggleProductCheck(label) {
+  const cb = label.querySelector('input[type=checkbox]');
+  cb.checked = !cb.checked;
+  label.classList.toggle('checked', cb.checked);
+}
+
+async function savePartnerProducts() {
+  const checked = [...document.querySelectorAll('#productChecklist input[type=checkbox]:checked')]
+    .map(cb => parseInt(cb.value));
+  const res = await fetch(`/api/partners/${currentEditId}/products`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ product_ids: checked })
+  });
+  const data = await res.json();
+  showAlert(data.message || '保存しました', res.ok ? 'success' : 'error');
+  if (res.ok) loadPartners();
+}
+
+// ── 契約書タブ ────────────────────────────────────────────────────────────────
+async function loadContractsList() {
+  const contracts = await fetch(`/api/partners/${currentEditId}/contracts`).then(r => r.json());
+  const container = document.getElementById('contractsList');
+
+  if (contracts.length === 0) {
+    container.innerHTML = '<p class="text-muted" style="font-size:13px;text-align:center;padding:16px">契約書がまだアップロードされていません</p>';
+    return;
+  }
+
+  container.innerHTML = contracts.map(c => `
+    <div class="contract-row" id="contract-${c.id}">
+      <div class="c-icon">📄</div>
+      <div class="c-info">
+        <div class="c-name" title="${esc(c.file_name)}">${esc(c.file_name)}</div>
+        <div class="c-date">
+          <span style="margin-right:6px">締結日:</span>
+          <input type="date" value="${c.contract_date || ''}" id="cdate-${c.id}"
+            onchange="updateContractDate(${c.id})" style="background:#fff">
+          ${!c.contract_date ? '<span style="color:var(--warning);font-size:11px;margin-left:6px">⚠ 手入力してください</span>' : ''}
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.created_at?.slice(0,10) || ''} 登録</div>
+      </div>
+      <div class="c-actions">
+        <a href="/api/partners/${currentEditId}/contracts/${c.id}/download" class="btn btn-outline btn-sm" title="ダウンロード">⬇</a>
+        <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" title="削除">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadContract(input) {
+  if (!input.files[0]) return;
+  document.getElementById('contractUploadProgress').style.display = 'block';
+
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  const res = await fetch(`/api/partners/${currentEditId}/contracts`, { method:'POST', body: fd });
+  const data = await res.json();
+  document.getElementById('contractUploadProgress').style.display = 'none';
+  input.value = '';
+
+  if (res.ok) {
+    showAlert(data.message, 'success');
+    loadContractsList();
+    loadPartners();
+  } else {
+    showAlert(data.error || 'エラーが発生しました', 'error');
+  }
+}
+
+async function updateContractDate(contractId) {
+  const date = document.getElementById(`cdate-${contractId}`).value;
+  await fetch(`/api/partners/${currentEditId}/contracts/${contractId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contract_date: date })
+  });
+  showAlert('締結日を更新しました');
+  loadPartners();
+}
+
+async function deleteContract(contractId) {
+  if (!confirm('この契約書を削除しますか？')) return;
+  const res = await fetch(`/api/partners/${currentEditId}/contracts/${contractId}`, { method:'DELETE' });
+  const data = await res.json();
+  showAlert(data.message, res.ok ? 'success' : 'error');
+  if (res.ok) { loadContractsList(); loadPartners(); }
+}
+
+// ── CSV取込モーダル ──────────────────────────────────────────────────────────
+function openCSVModal() { document.getElementById('csvModalOverlay').classList.add('open'); document.getElementById('csvResult').innerHTML = ''; }
+function closeCSVModal() { document.getElementById('csvModalOverlay').classList.remove('open'); }
+
+async function importCSV(input) {
+  if (!input.files[0]) return;
+  const resultEl = document.getElementById('csvResult');
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--primary)">⏳ 取込中...</p>';
+
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  const res = await fetch('/api/partners/import-csv', { method:'POST', body: fd });
+  const data = await res.json();
+  input.value = '';
+
+  if (res.ok) {
+    resultEl.innerHTML = `<div class="alert alert-success">
+      ✅ ${data.message}
+      ${data.errors.length > 0 ? '<br><small>' + data.errors.join('<br>') + '</small>' : ''}
+    </div>`;
+    loadPartners();
+  } else {
+    resultEl.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+  }
+}
+
+function downloadTemplate() {
+  const bom = '\uFEFF';
+  const csv = bom + '会社名,担当者名,メール,電話番号,契約開始日,状態,備考\n' +
+    '株式会社サンプル,山田太郎,yamada@example.com,03-0000-0001,2026-01-01,active,サンプルパートナー\n';
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'パートナー取込テンプレート.csv';
+  a.click();
+}
+
+// ── ドラッグ&ドロップ ─────────────────────────────────────────────────────────
+function setupDragDrop() {
+  setupDropZone('csvZone', 'csvFileInput', importCSV);
+  setupDropZone('contractUploadZone', 'contractFileInput', uploadContract);
+}
+
+function setupDropZone(zoneId, inputId, handler) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--primary)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const input = document.getElementById(inputId);
+    const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+    handler(input);
+  });
+}
+
+// ── ユーティリティ ────────────────────────────────────────────────────────────
 function showAlert(msg, type = 'success') {
   const el = document.getElementById('alert');
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 3000);
+  setTimeout(() => el.innerHTML = '', 4000);
 }
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-document.getElementById('modalOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('modalOverlay')) closeModal();
-});
+// overlay click close
+document.getElementById('addModalOverlay').addEventListener('click', e => { if (e.target.id === 'addModalOverlay') closeAddModal(); });
+document.getElementById('editModalOverlay').addEventListener('click', e => { if (e.target.id === 'editModalOverlay') closeEditModal(); });
+document.getElementById('csvModalOverlay').addEventListener('click', e => { if (e.target.id === 'csvModalOverlay') closeCSVModal(); });
 
-loadPartners();
+init();
 </script>
 </body>
 </html>
