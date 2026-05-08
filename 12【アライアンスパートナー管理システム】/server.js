@@ -194,6 +194,100 @@ app.delete('/api/partners/:id', (req, res) => {
   res.json({ message: '削除しました' });
 });
 
+// ── パートナー取扱商材 ────────────────────────────────────────────────────────
+
+app.get('/api/partners/:id/products', (req, res) => {
+  const db = getDB();
+  const linked = db.prepare('SELECT product_id FROM partner_products WHERE partner_id = ?').all(req.params.id);
+  res.json(linked.map(r => r.product_id));
+});
+
+app.put('/api/partners/:id/products', (req, res) => {
+  const db = getDB();
+  const { product_ids } = req.body; // number[]
+  db.prepare('DELETE FROM partner_products WHERE partner_id = ?').run(req.params.id);
+  if (product_ids && product_ids.length > 0) {
+    const stmt = db.prepare('INSERT OR IGNORE INTO partner_products (partner_id, product_id) VALUES (?, ?)');
+    for (const pid of product_ids) stmt.run(req.params.id, pid);
+  }
+  res.json({ message: '更新しました' });
+});
+
+// ── パートナー契約書 ──────────────────────────────────────────────────────────
+
+app.get('/api/partners/:id/contracts', (req, res) => {
+  const db = getDB();
+  const contracts = db.prepare(
+    'SELECT * FROM partner_contracts WHERE partner_id = ? ORDER BY created_at DESC'
+  ).all(req.params.id);
+  res.json(contracts);
+});
+
+app.post('/api/partners/:id/contracts', uploadContract.single('file'), async (req, res) => {
+  const db = getDB();
+  if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+
+  let extractedText = '';
+  let extractedDate = null;
+  try {
+    const pdfParse = require('pdf-parse');
+    const buffer = fs.readFileSync(req.file.path);
+    const data = await pdfParse(buffer);
+    extractedText = data.text || '';
+    extractedDate = extractContractDate(extractedText);
+  } catch (e) {
+    console.error('契約書PDF解析エラー:', e.message);
+  }
+
+  const result = db.prepare(`
+    INSERT INTO partner_contracts (partner_id, file_name, file_path, contract_date, extracted_text)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    req.params.id,
+    req.file.originalname,
+    req.file.path,
+    extractedDate,
+    extractedText.slice(0, 5000)
+  );
+
+  res.json({
+    id: result.lastInsertRowid,
+    extracted_date: extractedDate,
+    message: extractedDate
+      ? `締結日を自動検出しました: ${extractedDate}`
+      : '締結日を自動検出できませんでした。手動で入力してください。'
+  });
+});
+
+app.put('/api/partners/:id/contracts/:contractId', (req, res) => {
+  const db = getDB();
+  const { contract_date, notes } = req.body;
+  db.prepare('UPDATE partner_contracts SET contract_date=?, notes=? WHERE id=? AND partner_id=?')
+    .run(contract_date, notes, req.params.contractId, req.params.id);
+  res.json({ message: '更新しました' });
+});
+
+app.delete('/api/partners/:id/contracts/:contractId', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT file_path FROM partner_contracts WHERE id=? AND partner_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (row?.file_path && fs.existsSync(row.file_path)) {
+    try { fs.unlinkSync(row.file_path); } catch {}
+  }
+  db.prepare('DELETE FROM partner_contracts WHERE id=? AND partner_id=?')
+    .run(req.params.contractId, req.params.id);
+  res.json({ message: '削除しました' });
+});
+
+app.get('/api/partners/:id/contracts/:contractId/download', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT * FROM partner_contracts WHERE id=? AND partner_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (!row) return res.status(404).json({ error: '見つかりません' });
+  if (!fs.existsSync(row.file_path)) return res.status(404).json({ error: 'ファイルが存在しません' });
+  res.download(row.file_path, row.file_name);
+});
+
 // ── 商材 ──────────────────────────────────────────────────────────────────────
 
 app.get('/api/products', (req, res) => {
