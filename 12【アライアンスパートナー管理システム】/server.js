@@ -733,6 +733,163 @@ app.get('/api/dashboard', (req, res) => {
   res.json({ thisMonth, monthlyTotal, yearlyTotal, partnerCount, pendingCount, topPartners, recentInvoices });
 });
 
+// ── 分析グラフ用 API ──────────────────────────────────────────────────────────
+
+app.get('/api/analytics', (req, res) => {
+  const db = getDB();
+  const year = req.query.year || new Date().getFullYear().toString();
+  const thisYear = parseInt(year);
+
+  // ① ② 代理店数（直近4年分）
+  const yearRange = [];
+  for (let y = thisYear - 3; y <= thisYear; y++) yearRange.push(String(y));
+
+  const partnerCounts = yearRange.map(y => {
+    const total = db.prepare(
+      "SELECT COUNT(*) as cnt FROM partners WHERE strftime('%Y', created_at) <= ?"
+    ).get(y)?.cnt || 0;
+    const active = db.prepare(`
+      SELECT COUNT(DISTINCT partner_id) as cnt FROM invoices
+      WHERE status='confirmed' AND billing_month LIKE ? AND partner_id IS NOT NULL
+    `).get(`${y}-%`)?.cnt || 0;
+    return { year: y, total, active };
+  });
+
+  // ⑤ 月別売上合計（選択年）
+  const monthlyRevenue = [];
+  for (let m = 1; m <= 12; m++) {
+    const month = `${year}-${String(m).padStart(2, '0')}`;
+    const amount = db.prepare(
+      "SELECT COALESCE(SUM(total_amount),0) as s FROM invoices WHERE status='confirmed' AND billing_month=?"
+    ).get(month)?.s || 0;
+    monthlyRevenue.push({ month, amount });
+  }
+
+  // ④ 商品別売上（選択年）
+  const productRevenue = db.prepare(`
+    SELECT
+      COALESCE(pr.name, '（未紐付け）') as product_name,
+      COALESCE(SUM(ii.amount), 0) as amount
+    FROM invoice_items ii
+    LEFT JOIN products pr ON pr.id = ii.product_id
+    INNER JOIN invoices i ON i.id = ii.invoice_id
+    WHERE i.status = 'confirmed' AND i.billing_month LIKE ?
+    GROUP BY COALESCE(pr.name, '（未紐付け）')
+    ORDER BY amount DESC
+  `).all(`${year}-%`);
+
+  // ③ 商品別受注数（新規/継続/解約）月ごとに partner×product の組み合わせで集計
+  const prevDecKey = `${thisYear - 1}-12`;
+  const monthSets = {};
+
+  // 前年12月
+  const prevDecItems = db.prepare(`
+    SELECT DISTINCT i.partner_id, COALESCE(pr.name, '（未紐付け）') as product_name
+    FROM invoice_items ii
+    LEFT JOIN products pr ON pr.id = ii.product_id
+    INNER JOIN invoices i ON i.id = ii.invoice_id
+    WHERE i.status = 'confirmed' AND i.billing_month = ? AND i.partner_id IS NOT NULL
+  `).all(prevDecKey);
+  monthSets[prevDecKey] = new Set(prevDecItems.map(x => `${x.partner_id}::${x.product_name}`));
+
+  for (let m = 1; m <= 12; m++) {
+    const month = `${year}-${String(m).padStart(2, '0')}`;
+    const items = db.prepare(`
+      SELECT DISTINCT i.partner_id, COALESCE(pr.name, '（未紐付け）') as product_name
+      FROM invoice_items ii
+      LEFT JOIN products pr ON pr.id = ii.product_id
+      INNER JOIN invoices i ON i.id = ii.invoice_id
+      WHERE i.status = 'confirmed' AND i.billing_month = ? AND i.partner_id IS NOT NULL
+    `).all(month);
+    monthSets[month] = new Set(items.map(x => `${x.partner_id}::${x.product_name}`));
+  }
+
+  // 全商品名を収集
+  const allProducts = new Set();
+  for (let m = 1; m <= 12; m++) {
+    const month = `${year}-${String(m).padStart(2, '0')}`;
+    const prevMonth = m === 1 ? prevDecKey : `${year}-${String(m - 1).padStart(2, '0')}`;
+    for (const key of [...(monthSets[month] || []), ...(monthSets[prevMonth] || [])]) {
+      allProducts.add(key.split('::').slice(1).join('::'));
+    }
+  }
+
+  const productOrderMap = {};
+  for (const pName of allProducts) {
+    productOrderMap[pName] = Array(12).fill(null).map(() => ({ new: 0, continued: 0, cancelled: 0 }));
+  }
+
+  for (let m = 1; m <= 12; m++) {
+    const month = `${year}-${String(m).padStart(2, '0')}`;
+    const prevMonth = m === 1 ? prevDecKey : `${year}-${String(m - 1).padStart(2, '0')}`;
+    const thisSet = monthSets[month] || new Set();
+    const prevSet = monthSets[prevMonth] || new Set();
+
+    for (const key of thisSet) {
+      const pName = key.split('::').slice(1).join('::');
+      if (!productOrderMap[pName]) productOrderMap[pName] = Array(12).fill(null).map(() => ({ new: 0, continued: 0, cancelled: 0 }));
+      if (prevSet.has(key)) productOrderMap[pName][m - 1].continued++;
+      else                  productOrderMap[pName][m - 1].new++;
+    }
+    for (const key of prevSet) {
+      const pName = key.split('::').slice(1).join('::');
+      if (!thisSet.has(key)) {
+        if (!productOrderMap[pName]) productOrderMap[pName] = Array(12).fill(null).map(() => ({ new: 0, continued: 0, cancelled: 0 }));
+        productOrderMap[pName][m - 1].cancelled++;
+      }
+    }
+  }
+
+  res.json({
+    year,
+    partner_counts: partnerCounts,
+    monthly_revenue: monthlyRevenue,
+    product_revenue: productRevenue,
+    product_orders: productOrderMap,
+  });
+});
+
+// パートナー稼働率（A/B/C）
+app.get('/api/analytics/partner-activity', (req, res) => {
+  const db = getDB();
+  const now = new Date();
+
+  const months6 = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months6.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const months3 = months6.slice(0, 3);
+  const oldest = months6[months6.length - 1];
+
+  const partners = db.prepare('SELECT id, company_name, status FROM partners ORDER BY company_name ASC').all();
+
+  const result = partners.map(p => {
+    const invoiceMonths = db.prepare(`
+      SELECT DISTINCT billing_month FROM invoices
+      WHERE partner_id = ? AND status = 'confirmed' AND billing_month >= ?
+    `).all(p.id, oldest).map(r => r.billing_month);
+
+    const cnt3 = months3.filter(m => invoiceMonths.includes(m)).length;
+    const cnt6 = months6.filter(m => invoiceMonths.includes(m)).length;
+
+    const lastInvoice = db.prepare(
+      "SELECT billing_month FROM invoices WHERE partner_id=? AND status='confirmed' ORDER BY billing_month DESC LIMIT 1"
+    ).get(p.id)?.billing_month || null;
+
+    // A=毎月(直近3ヶ月すべて), B=3ヶ月に1回(直近3ヶ月に1件以上), C=半年以上なし
+    let grade;
+    if (cnt6 === 0) grade = 'C';
+    else if (cnt3 === 3) grade = 'A';
+    else if (cnt3 >= 1) grade = 'B';
+    else grade = 'C';
+
+    return { id: p.id, company_name: p.company_name, status: p.status, grade, cnt3, cnt6, last_invoice: lastInvoice };
+  });
+
+  res.json(result);
+});
+
 // ── 起動 ──────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
