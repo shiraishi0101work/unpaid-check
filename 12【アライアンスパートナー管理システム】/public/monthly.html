@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>月別集計 — アライアンスパートナー管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>アライアンス<br>パートナー管理</h1>
+    <span>Alliance Partner System</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">メニュー</div>
+    <a href="index.html" class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
+    <a href="partners.html" class="nav-item"><span class="icon">🤝</span><span>パートナー一覧</span></a>
+    <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
+    <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
+    <a href="monthly.html" class="nav-item active"><span class="icon">📊</span><span>月別集計</span></a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <h2>📊 月別パートナー請求集計</h2>
+    <p>パートナーごとの月次請求金額を一覧で確認できます</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-weight:600;font-size:14px">年度</label>
+        <select id="yearSelect" onchange="loadSummary()" style="min-width:100px">
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadSummary()">🔄 更新</button>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV出力</button>
+      <div style="flex:1"></div>
+      <div id="summaryTotal" style="font-size:18px;font-weight:800;color:var(--primary)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="matrix-wrap" id="matrixWrap">
+      <p class="text-muted" style="text-align:center;padding:40px">読み込み中...</p>
+    </div>
+  </div>
+</main>
+
+<script>
+const fmt = n => n ? '¥' + Number(n).toLocaleString() : '';
+const fmtFull = n => '¥' + Number(n || 0).toLocaleString();
+
+let currentData = null;
+
+function initYears() {
+  const sel = document.getElementById('yearSelect');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear; y >= thisYear - 3; y--) {
+    sel.innerHTML += `<option value="${y}">${y}年</option>`;
+  }
+}
+
+async function loadSummary() {
+  const year = document.getElementById('yearSelect').value;
+  const data = await fetch(`/api/monthly-summary?year=${year}`).then(r => r.json());
+  currentData = data;
+  renderMatrix(data);
+}
+
+function renderMatrix(data) {
+  const wrap = document.getElementById('matrixWrap');
+
+  if (data.partners.length === 0) {
+    wrap.innerHTML = '<p class="text-muted" style="text-align:center;padding:40px">確定済みの請求書がありません。<br>請求書管理で請求書を確定してください。</p>';
+    document.getElementById('summaryTotal').textContent = '';
+    return;
+  }
+
+  const monthLabels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  // ヘッダー
+  let html = `<table class="matrix-table">
+    <thead>
+      <tr>
+        <th style="text-align:left;min-width:160px">パートナー名</th>
+        ${data.months.map((m, i) => `<th>${monthLabels[i]}</th>`).join('')}
+        <th style="background:#e0e7ff">年間合計</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  let grandTotal = 0;
+
+  for (const partner of data.partners) {
+    let partnerTotal = 0;
+    const cells = data.months.map(m => {
+      const val = partner.months[m] || 0;
+      partnerTotal += val;
+      return `<td class="amount">${fmt(val)}</td>`;
+    });
+
+    grandTotal += partnerTotal;
+
+    html += `
+      <tr>
+        <td class="partner-name">${partner.company_name}</td>
+        ${cells.join('')}
+        <td class="amount total-col">${fmtFull(partnerTotal)}</td>
+      </tr>`;
+  }
+
+  // 月合計行
+  const monthTotals = data.months.map(m => {
+    const val = data.monthly_totals[m] || 0;
+    return `<td class="amount" style="font-weight:700">${fmt(val)}</td>`;
+  });
+
+  html += `
+      <tr class="total-row">
+        <td class="partner-name">月合計</td>
+        ${monthTotals.join('')}
+        <td class="amount total-col" style="font-size:15px">${fmtFull(grandTotal)}</td>
+      </tr>
+    </tbody>
+  </table>`;
+
+  wrap.innerHTML = html;
+  document.getElementById('summaryTotal').textContent = `年間合計: ${fmtFull(grandTotal)}`;
+}
+
+function exportCSV() {
+  if (!currentData) return;
+  const monthLabels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const header = ['パートナー名', ...monthLabels, '年間合計'].join(',');
+
+  const rows = currentData.partners.map(p => {
+    let total = 0;
+    const cells = currentData.months.map(m => {
+      const v = p.months[m] || 0;
+      total += v;
+      return v;
+    });
+    return [p.company_name, ...cells, total].join(',');
+  });
+
+  // 月合計行
+  const monthTotals = currentData.months.map(m => currentData.monthly_totals[m] || 0);
+  const grandTotal = monthTotals.reduce((a, b) => a + b, 0);
+  rows.push(['月合計', ...monthTotals, grandTotal].join(','));
+
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `パートナー請求集計_${currentData.year}.csv`;
+  a.click();
+}
+
+initYears();
+loadSummary();
+</script>
+</body>
+</html>
