@@ -6,11 +6,11 @@
   <link rel="stylesheet" href="style.css">
   <style>
     /* タブ */
-    .modal-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:20px; }
+    .modal-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:20px; }
     .modal-tab {
-      padding:10px 20px; cursor:pointer; font-size:14px; font-weight:600;
-      color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-2px;
-      transition:all .15s; background:none; border-top:none; border-left:none; border-right:none;
+      padding:10px 20px; cursor:pointer; font-size:13px; font-weight:600;
+      color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px;
+      transition:all .12s; background:none; border-top:none; border-left:none; border-right:none;
     }
     .modal-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
     .modal-tab:hover:not(.active) { color:var(--text); }
@@ -19,20 +19,20 @@
     /* 契約書リスト */
     .contract-row {
       display:flex; align-items:center; gap:12px; padding:10px 12px;
-      border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:#fafbff;
+      border:1px solid var(--border); border-radius:6px; margin-bottom:8px; background:#fafcff;
     }
-    .contract-row .c-icon { font-size:22px; }
+    .contract-row .c-icon { color:var(--text-muted); flex-shrink:0; display:flex; align-items:center; }
     .contract-row .c-info { flex:1; min-width:0; }
     .contract-row .c-name { font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .contract-row .c-date { font-size:12px; color:var(--text-muted); }
-    .contract-row .c-date input { padding:3px 8px; font-size:12px; border:1.5px solid var(--border); border-radius:6px; }
+    .contract-row .c-date input { padding:3px 8px; font-size:12px; border:1px solid var(--border); border-radius:4px; }
     .contract-row .c-actions { display:flex; gap:6px; flex-shrink:0; }
 
     /* 商材チェックリスト */
     .product-checklist { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-height:280px; overflow-y:auto; }
     .product-check-item {
       display:flex; align-items:center; gap:10px; padding:10px 12px;
-      border:1.5px solid var(--border); border-radius:8px; cursor:pointer; transition:all .15s;
+      border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:all .12s;
     }
     .product-check-item:hover { border-color:var(--primary); background:var(--primary-light); }
     .product-check-item.checked { border-color:var(--primary); background:var(--primary-light); }
@@ -43,19 +43,29 @@
     /* CSV upload zone */
     .csv-zone {
       border:2px dashed var(--border); border-radius:var(--radius);
-      padding:24px; text-align:center; cursor:pointer; transition:all .15s; background:#fafbff;
+      padding:28px; text-align:center; cursor:pointer; transition:all .12s; background:#fafcff;
     }
     .csv-zone:hover { border-color:var(--primary); background:var(--primary-light); }
-    .csv-zone p { font-size:13px; color:var(--text-muted); margin-top:6px; }
+    .csv-zone p { font-size:13px; color:var(--text-muted); margin-top:8px; }
+    .csv-zone .zone-icon {
+      width:44px; height:44px; background:var(--primary-light); border-radius:10px;
+      margin:0 auto 4px; display:flex; align-items:center; justify-content:center;
+      color:var(--primary);
+    }
 
     /* 契約書アップロードゾーン */
     .contract-upload {
       border:2px dashed var(--border); border-radius:var(--radius);
-      padding:20px; text-align:center; cursor:pointer; transition:all .15s;
-      background:#fafbff; margin-bottom:16px;
+      padding:20px; text-align:center; cursor:pointer; transition:all .12s;
+      background:#fafcff; margin-bottom:16px;
     }
     .contract-upload:hover { border-color:var(--primary); background:var(--primary-light); }
-    .contract-upload p { font-size:13px; color:var(--text-muted); margin-top:4px; }
+    .contract-upload p { font-size:13px; color:var(--text-muted); margin-top:6px; }
+    .contract-upload .zone-icon {
+      width:40px; height:40px; background:var(--primary-light); border-radius:8px;
+      margin:0 auto 2px; display:flex; align-items:center; justify-content:center;
+      color:var(--primary);
+    }
 
     .badge-count { display:inline-block; background:var(--primary-light); color:var(--primary); font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:4px; }
     .saving-hint { font-size:12px; color:var(--text-muted); margin-top:8px; }
@@ -70,17 +80,32 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-label">メニュー</div>
-    <a href="index.html"   class="nav-item"><span class="icon">🏠</span><span>ダッシュボード</span></a>
-    <a href="partners.html" class="nav-item active"><span class="icon">🤝</span><span>パートナー一覧</span></a>
-    <a href="products.html" class="nav-item"><span class="icon">📦</span><span>商材一覧</span></a>
-    <a href="invoices.html" class="nav-item"><span class="icon">📄</span><span>請求書管理</span></a>
-    <a href="monthly.html"  class="nav-item"><span class="icon">📊</span><span>月別集計</span></a>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span>ダッシュボード</span>
+    </a>
+    <a href="partners.html" class="nav-item active">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span>パートナー一覧</span>
+    </a>
+    <a href="products.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+      <span>商材一覧</span>
+    </a>
+    <a href="invoices.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+      <span>請求書管理</span>
+    </a>
+    <a href="monthly.html" class="nav-item">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      <span>月別集計</span>
+    </a>
   </nav>
 </aside>
 
 <main class="main">
   <div class="page-header">
-    <h2>🤝 パートナー一覧</h2>
+    <h2>パートナー一覧</h2>
     <p>アライアンス事業部の代理店・パートナー企業を管理します</p>
   </div>
 
@@ -90,7 +115,7 @@
     <div class="card-header" style="flex-wrap:wrap;gap:10px">
       <div class="toolbar" style="margin:0;flex:1;min-width:240px">
         <div class="search-wrap">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <input type="text" id="searchInput" placeholder="会社名・担当者名で検索..." oninput="loadPartners()">
         </div>
         <select id="statusFilter" onchange="loadPartners()" style="min-width:120px">
@@ -100,10 +125,10 @@
         </select>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
-        <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()" title="CSVテンプレートをダウンロード">📥 CSVテンプレート</button>
-        <button class="btn btn-outline btn-sm" onclick="openCSVModal()">📤 CSV取込</button>
-        <button class="btn btn-outline btn-sm" onclick="openPDFImportModal()" style="border-color:#7c3aed;color:#7c3aed">📄 契約書PDF取込</button>
-        <button class="btn btn-primary" onclick="openAddModal()">＋ パートナー追加</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()" title="CSVテンプレートをダウンロード">CSVテンプレート</button>
+        <button class="btn btn-outline btn-sm" onclick="openCSVModal()">CSV取込</button>
+        <button class="btn btn-outline btn-sm" onclick="openPDFImportModal()" style="border-color:#7c3aed;color:#7c3aed">契約書PDF取込</button>
+        <button class="btn btn-primary" onclick="openAddModal()">+ パートナー追加</button>
       </div>
     </div>
 
@@ -179,9 +204,9 @@
     </div>
 
     <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab('info')">📋 基本情報</button>
-      <button class="modal-tab" onclick="switchTab('products')">📦 取扱商材</button>
-      <button class="modal-tab" onclick="switchTab('contracts')">📄 契約書</button>
+      <button class="modal-tab active" onclick="switchTab('info')">基本情報</button>
+      <button class="modal-tab" onclick="switchTab('products')">取扱商材</button>
+      <button class="modal-tab" onclick="switchTab('contracts')">契約書</button>
     </div>
 
     <!-- Tab: 基本情報 -->
@@ -208,7 +233,7 @@
           <input type="date" id="e_contract_start">
         </div>
         <div class="form-group">
-          <label>稼働ランク <span style="font-size:11px;color:var(--text-muted)">（請求書から自動判定）</span></label>
+          <label>稼働ランク <span style="font-size:11px;color:var(--text-muted);text-transform:none;letter-spacing:0">（請求書から自動判定）</span></label>
           <div id="e_grade_display" style="padding:8px 0;font-size:13px;color:var(--text-muted)">—</div>
         </div>
         <div class="form-group full">
@@ -235,22 +260,24 @@
     <!-- Tab: 契約書・申込書 -->
     <div class="tab-panel" id="tab-contracts">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;white-space:nowrap">書類種別</label>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap">書類種別</label>
         <select id="contractDocType" style="min-width:130px">
           <option value="契約書">契約書</option>
           <option value="申込書">申込書</option>
           <option value="覚書">覚書</option>
           <option value="その他">その他</option>
         </select>
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('contractFileInput').click()">＋ PDFをアップロード</button>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('contractFileInput').click()">+ PDFをアップロード</button>
       </div>
       <div class="contract-upload" onclick="document.getElementById('contractFileInput').click()" id="contractUploadZone">
-        <div style="font-size:28px">📄</div>
+        <div class="zone-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        </div>
         <p><strong>クリックまたはドラッグ&ドロップでアップロード</strong></p>
         <p>締結日を自動抽出します。抽出できない場合は手入力してください</p>
       </div>
       <input type="file" id="contractFileInput" accept=".pdf" style="display:none" onchange="uploadContract(this)">
-      <div id="contractUploadProgress" style="display:none;font-size:13px;color:var(--primary);margin-bottom:12px">⏳ アップロード・解析中...</div>
+      <div id="contractUploadProgress" style="display:none;font-size:13px;color:var(--primary);margin-bottom:12px">アップロード・解析中...</div>
 
       <div id="contractsList"></div>
       <div class="modal-footer" style="margin-top:8px">
@@ -264,7 +291,7 @@
 <div class="modal-overlay" id="csvModalOverlay">
   <div class="modal">
     <div class="modal-header">
-      <h3>📤 CSVでパートナーを一括取込</h3>
+      <h3>CSVでパートナーを一括取込</h3>
       <button class="modal-close" onclick="closeCSVModal()">✕</button>
     </div>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
@@ -272,7 +299,9 @@
       対応ヘッダー: <code>会社名, 担当者名, メール, 電話, 契約開始日, 状態, 備考</code>
     </p>
     <div class="csv-zone" onclick="document.getElementById('csvFileInput').click()" id="csvZone">
-      <div style="font-size:28px">📊</div>
+      <div class="zone-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      </div>
       <p><strong>CSVファイルをクリックまたはドロップ</strong></p>
       <p>Excel (.xlsx) はCSVに変換してからアップロードしてください</p>
     </div>
@@ -288,7 +317,7 @@
 <div class="modal-overlay" id="pdfImportOverlay">
   <div class="modal" style="max-width:860px;width:95vw">
     <div class="modal-header">
-      <h3>📄 契約書PDFからパートナーを一括追加</h3>
+      <h3>契約書PDFからパートナーを一括追加</h3>
       <button class="modal-close" onclick="closePDFImportModal()">✕</button>
     </div>
 
@@ -298,13 +327,14 @@
         契約書・申込書PDFをまとめてアップロードしてください。会社名・担当者・電話・締結日を自動抽出してパートナー登録します。
       </p>
       <div class="csv-zone" onclick="document.getElementById('pdfBulkInput').click()" id="pdfDropZone">
-        <div style="font-size:32px">📂</div>
+        <div class="zone-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
         <p><strong>PDFファイルをクリックまたはドラッグ&ドロップ（複数可）</strong></p>
         <p>最大30ファイル・1ファイル30MBまで</p>
       </div>
       <input type="file" id="pdfBulkInput" accept=".pdf" multiple style="display:none" onchange="startPDFImport(this)">
       <div id="pdfUploadProgress" style="display:none;text-align:center;padding:20px;color:var(--primary)">
-        <div style="font-size:24px">⏳</div>
         <div id="pdfProgressText" style="font-size:14px;margin-top:8px">PDFを解析中...</div>
       </div>
     </div>
@@ -317,7 +347,7 @@
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:13px" id="pdfPreviewTable">
           <thead>
-            <tr style="background:#f5f7ff">
+            <tr style="background:#f8fafc">
               <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:160px">会社名 <span style="color:var(--danger)">*</span></th>
               <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:100px">担当者名</th>
               <th style="padding:8px;text-align:left;border:1px solid var(--border);min-width:120px">電話番号</th>
@@ -331,7 +361,7 @@
       </div>
       <div class="modal-footer" style="margin-top:16px">
         <button class="btn btn-ghost" onclick="resetPDFImport()">← やり直し</button>
-        <button class="btn btn-primary" onclick="savePDFImport()" id="pdfSaveBtn">✅ まとめて登録</button>
+        <button class="btn btn-primary" onclick="savePDFImport()" id="pdfSaveBtn">まとめて登録</button>
       </div>
       <div id="pdfSaveResult" style="margin-top:10px"></div>
     </div>
@@ -389,7 +419,7 @@ async function loadPartners() {
         </td>
         <td>
           ${ex.contractCount > 0
-            ? `<span class="badge badge-green">📄 ${ex.contractCount}件</span>`
+            ? `<span class="badge badge-green">${ex.contractCount}件</span>`
             : '<span class="text-muted" style="font-size:12px">なし</span>'}
         </td>
         <td>
@@ -399,8 +429,8 @@ async function loadPartners() {
           ${p.grade ? `<span class="badge" style="margin-left:4px;background:${p.grade==='A'?'#dcfce7':p.grade==='B'?'#fef9c3':'#fee2e2'};color:${p.grade==='A'?'#16a34a':p.grade==='B'?'#d97706':'#dc2626'}">${p.grade}</span>` : ''}
         </td>
         <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})" title="編集">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${esc(p.company_name)}')" title="削除">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})" title="編集">編集</button>
+          <button class="btn btn-ghost btn-sm" onclick="deletePartner(${p.id}, '${esc(p.company_name)}')" title="削除" style="color:var(--danger)">削除</button>
         </td>
       </tr>`;
     }).join('');
@@ -412,7 +442,6 @@ async function loadPartners() {
 function openAddModal() {
   ['a_company_name','a_contact_name','a_contact_email','a_contact_phone','a_contract_start','a_notes']
     .forEach(id => document.getElementById(id).value = '');
-  document.getElementById('a_status').value = 'active';
   document.getElementById('addModalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('a_company_name').focus(), 50);
 }
@@ -456,7 +485,7 @@ async function openEditModal(id, defaultTab = 'info') {
   const gradeColor = { A:'var(--success)', B:'var(--warning)', C:'var(--danger)' };
   const g = p.grade;
   document.getElementById('e_grade_display').innerHTML = g
-    ? `<span style="font-weight:700;color:${gradeColor[g]}">${gradeLabel[g]}</span>　<span style="color:var(--text-muted);font-size:12px">${p.status==='active'?'✅ アクティブ':'⛔ 非アクティブ'}</span>`
+    ? `<span style="font-weight:700;color:${gradeColor[g]}">${gradeLabel[g]}</span>　<span style="color:var(--text-muted);font-size:12px">${p.status==='active'?'アクティブ':'非アクティブ'}</span>`
     : `<span style="color:var(--text-muted)">未請求（アクティブ）</span>`;
 
   document.getElementById('editModalOverlay').classList.add('open');
@@ -558,7 +587,9 @@ async function loadContractsList() {
   const typeColor = { '契約書':'badge-blue', '申込書':'badge-green', '覚書':'badge-yellow', 'その他':'badge-gray' };
   container.innerHTML = contracts.map(c => `
     <div class="contract-row" id="contract-${c.id}">
-      <div class="c-icon">📄</div>
+      <div class="c-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
       <div class="c-info">
         <div class="c-name" title="${esc(c.file_name)}">
           <span class="badge ${typeColor[c.doc_type] || 'badge-gray'}" style="margin-right:6px;font-size:11px">${esc(c.doc_type || '契約書')}</span>
@@ -571,14 +602,14 @@ async function loadContractsList() {
           <span style="margin-right:6px">締結日:</span>
           <input type="date" value="${c.contract_date || ''}" id="cdate-${c.id}"
             onchange="updateContractDate(${c.id})" style="background:#fff">
-          ${!c.contract_date ? '<span style="color:var(--warning);font-size:11px;margin-left:6px">⚠ 手入力してください</span>' : ''}
+          ${!c.contract_date ? '<span style="color:var(--warning);font-size:11px;margin-left:6px">要入力</span>' : ''}
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.created_at?.slice(0,10) || ''} 登録</div>
       </div>
       <div class="c-actions">
-        <a href="/api/partners/${currentEditId}/contracts/${c.id}/view" target="_blank" class="btn btn-outline btn-sm" title="表示">👁 表示</a>
-        <a href="/api/partners/${currentEditId}/contracts/${c.id}/download" class="btn btn-ghost btn-sm" title="ダウンロード">⬇</a>
-        <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" title="削除">🗑️</button>
+        <a href="/api/partners/${currentEditId}/contracts/${c.id}/view" target="_blank" class="btn btn-outline btn-sm" title="表示">表示</a>
+        <a href="/api/partners/${currentEditId}/contracts/${c.id}/download" class="btn btn-ghost btn-sm" title="ダウンロード">DL</a>
+        <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" title="削除" style="color:var(--danger)">削除</button>
       </div>
     </div>
   `).join('');
@@ -710,16 +741,16 @@ async function savePDFImport() {
     body: JSON.stringify({ entries })
   });
   const data = await res.json();
-  btn.disabled = false; btn.textContent = '✅ チェックした行を登録';
+  btn.disabled = false; btn.textContent = 'まとめて登録';
 
   if (res.ok) {
     document.getElementById('pdfSaveResult').innerHTML =
-      `<div class="alert alert-success">✅ ${data.count}件のパートナーを登録しました</div>`;
+      `<div class="alert alert-success">${data.count}件のパートナーを登録しました</div>`;
     loadPartners();
     setTimeout(closePDFImportModal, 2000);
   } else {
     document.getElementById('pdfSaveResult').innerHTML =
-      `<div class="alert alert-error">❌ ${data.error}</div>`;
+      `<div class="alert alert-error">${data.error}</div>`;
   }
 }
 
@@ -730,7 +761,7 @@ function closeCSVModal() { document.getElementById('csvModalOverlay').classList.
 async function importCSV(input) {
   if (!input.files[0]) return;
   const resultEl = document.getElementById('csvResult');
-  resultEl.innerHTML = '<p style="font-size:13px;color:var(--primary)">⏳ 取込中...</p>';
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--primary)">取込中...</p>';
 
   const fd = new FormData();
   fd.append('file', input.files[0]);
@@ -740,12 +771,12 @@ async function importCSV(input) {
 
   if (res.ok) {
     resultEl.innerHTML = `<div class="alert alert-success">
-      ✅ ${data.message}
+      ${data.message}
       ${data.errors.length > 0 ? '<br><small>' + data.errors.join('<br>') + '</small>' : ''}
     </div>`;
     loadPartners();
   } else {
-    resultEl.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
   }
 }
 
