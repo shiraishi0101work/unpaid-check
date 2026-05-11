@@ -462,31 +462,32 @@ app.get('/api/partners/:id/contracts/:contractId/view', (req, res) => {
 
 app.get('/api/products', (req, res) => {
   const db = getDB();
-  const { search } = req.query;
+  const { search, category } = req.query;
   let q = 'SELECT * FROM products WHERE 1=1';
   const params = [];
-  if (search) { q += ' AND (name LIKE ? OR code LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
-  q += ' ORDER BY name ASC';
+  if (search) { q += ' AND (name LIKE ? OR code LIKE ? OR category LIKE ?)'; params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+  if (category) { q += ' AND category = ?'; params.push(category); }
+  q += ' ORDER BY category ASC, name ASC';
   res.json(db.prepare(q).all(...params));
 });
 
 app.post('/api/products', (req, res) => {
   const db = getDB();
-  const { name, code, unit_price, description } = req.body;
+  const { name, code, unit_price, description, category } = req.body;
   if (!name) return res.status(400).json({ error: '商材名は必須です' });
   const result = db.prepare(`
-    INSERT INTO products (name, code, unit_price, description) VALUES (?, ?, ?, ?)
-  `).run(name, code, unit_price || 0, description);
+    INSERT INTO products (name, code, unit_price, description, category) VALUES (?, ?, ?, ?, ?)
+  `).run(name, code, unit_price || 0, description, category || null);
   res.json({ id: result.lastInsertRowid, message: '登録しました' });
 });
 
 app.put('/api/products/:id', (req, res) => {
   const db = getDB();
-  const { name, code, unit_price, description } = req.body;
+  const { name, code, unit_price, description, category } = req.body;
   db.prepare(`
-    UPDATE products SET name=?, code=?, unit_price=?, description=?, updated_at=datetime('now','localtime')
+    UPDATE products SET name=?, code=?, unit_price=?, description=?, category=?, updated_at=datetime('now','localtime')
     WHERE id=?
-  `).run(name, code, unit_price || 0, description, req.params.id);
+  `).run(name, code, unit_price || 0, description, category || null, req.params.id);
   res.json({ message: '更新しました' });
 });
 
