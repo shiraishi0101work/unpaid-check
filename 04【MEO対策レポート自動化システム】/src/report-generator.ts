@@ -27,7 +27,7 @@ interface SlidesInput {
   keywords?: SlideData[];
   views?: SlideData;
   interactions?: SlideData;
-  userActions?: SlideData;
+  userActions?: SlideData | SlideData[];
 }
 
 export class ReportGenerator {
