@@ -47,11 +47,14 @@
 
   <div class="card">
     <div class="card-header">
-      <div class="toolbar" style="margin:0;flex:1">
+      <div class="toolbar" style="margin:0;flex:1;gap:8px">
         <div class="search-wrap">
           <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          <input type="text" id="searchInput" placeholder="商材名・コードで検索..." oninput="loadProducts()">
+          <input type="text" id="searchInput" placeholder="商材名・コード・分類で検索..." oninput="loadProducts()">
         </div>
+        <select id="categoryFilter" onchange="loadProducts()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;color:var(--text);min-width:140px">
+          <option value="">すべての分類</option>
+        </select>
       </div>
       <button class="btn btn-primary" onclick="openModal()">+ 商材追加</button>
     </div>
@@ -60,6 +63,7 @@
       <table>
         <thead>
           <tr>
+            <th>分類</th>
             <th>商材名</th>
             <th>コード</th>
             <th>単価</th>
@@ -69,7 +73,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+          <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -86,12 +90,17 @@
     </div>
     <div class="form-grid">
       <div class="form-group full">
+        <label>分類</label>
+        <input type="text" id="f_category" placeholder="例：サジェスト対策、MEO対策、SEO対策" list="category-suggestions">
+        <datalist id="category-suggestions"></datalist>
+      </div>
+      <div class="form-group full">
         <label>商材名 <span style="color:var(--danger)">*</span></label>
-        <input type="text" id="f_name" placeholder="例：AIブログマスター">
+        <input type="text" id="f_name" placeholder="例：Googleサジェスト消し放題【成果型】">
       </div>
       <div class="form-group">
         <label>商材コード</label>
-        <input type="text" id="f_code" placeholder="例：ABM-001">
+        <input type="text" id="f_code" placeholder="例：SGT-001">
       </div>
       <div class="form-group">
         <label>単価（円）</label>
@@ -111,34 +120,65 @@
 
 <script>
 let editId = null;
+let allCategories = [];
 const fmt = n => n ? '¥' + Number(n).toLocaleString() : '-';
 
 async function loadProducts() {
-  const search = document.getElementById('searchInput').value;
-  const params = new URLSearchParams();
-  if (search) params.set('search', search);
+  const search   = document.getElementById('searchInput').value;
+  const category = document.getElementById('categoryFilter').value;
+  const params   = new URLSearchParams();
+  if (search)   params.set('search', search);
+  if (category) params.set('category', category);
 
   const data = await fetch('/api/products?' + params).then(r => r.json());
   const tbody = document.getElementById('tableBody');
 
+  // 分類フィルターを更新
+  updateCategoryFilter(data);
+
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
   } else {
-    tbody.innerHTML = data.map(p => `
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.code ? `<span class="badge badge-blue">${p.code}</span>` : '-'}</td>
-        <td style="text-align:right;font-weight:600;color:var(--primary)">${fmt(p.unit_price)}</td>
-        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
-        <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">編集</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteProduct(${p.id}, '${p.name}')" style="color:var(--danger)">削除</button>
-        </td>
-      </tr>
-    `).join('');
+    // 分類でグループ化して表示
+    let lastCategory = null;
+    const rows = data.map(p => {
+      const catCell = p.category !== lastCategory
+        ? `<td rowspan="1" style="font-weight:700;color:var(--primary);white-space:nowrap">
+             <span class="badge badge-blue">${p.category || '未分類'}</span>
+           </td>`
+        : `<td style="color:var(--text-muted);font-size:11px">　└</td>`;
+      lastCategory = p.category;
+      return `
+        <tr>
+          ${catCell}
+          <td><strong>${p.name}</strong></td>
+          <td>${p.code ? `<span class="badge badge-blue">${p.code}</span>` : '-'}</td>
+          <td style="text-align:right;font-weight:600;color:var(--primary)">${fmt(p.unit_price)}</td>
+          <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
+          <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">編集</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"&#39;")}')" style="color:var(--danger)">削除</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    tbody.innerHTML = rows;
   }
   document.getElementById('countLabel').textContent = `${data.length}件`;
+}
+
+function updateCategoryFilter(data) {
+  const cats = [...new Set(data.map(p => p.category).filter(Boolean))].sort();
+  const current = document.getElementById('categoryFilter').value;
+  const sel = document.getElementById('categoryFilter');
+  sel.innerHTML = '<option value="">すべての分類</option>' +
+    cats.map(c => `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`).join('');
+
+  // datalistも更新
+  document.getElementById('category-suggestions').innerHTML =
+    cats.map(c => `<option value="${c}">`).join('');
+  allCategories = cats;
 }
 
 function openModal(id = null) {
@@ -154,7 +194,7 @@ function closeModal() {
 }
 
 function clearForm() {
-  ['f_name','f_code','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
+  ['f_category','f_name','f_code','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
 }
 
 async function editProduct(id) {
@@ -162,6 +202,7 @@ async function editProduct(id) {
   const p = products.find(x => x.id === id);
   if (!p) return;
   openModal(id);
+  document.getElementById('f_category').value    = p.category || '';
   document.getElementById('f_name').value        = p.name || '';
   document.getElementById('f_code').value        = p.code || '';
   document.getElementById('f_unit_price').value  = p.unit_price || '';
@@ -170,6 +211,7 @@ async function editProduct(id) {
 
 async function saveProduct() {
   const body = {
+    category:    document.getElementById('f_category').value.trim(),
     name:        document.getElementById('f_name').value.trim(),
     code:        document.getElementById('f_code').value.trim(),
     unit_price:  parseInt(document.getElementById('f_unit_price').value) || 0,
