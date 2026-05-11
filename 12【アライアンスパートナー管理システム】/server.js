@@ -279,7 +279,7 @@ function computePartnerStatuses(db, partners) {
 
     let grade, status;
     if (!everBilled.has(p.id)) {
-      grade = null; status = 'active'; // 新規未請求パートナーはactive
+      grade = null; status = 'inactive'; // 請求書未発生のパートナーはinactive
     } else if (cnt3 === 3) {
       grade = 'A'; status = 'active';
     } else if (cnt3 >= 1) {
