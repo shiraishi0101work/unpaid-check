@@ -29,7 +29,7 @@ const uploadFields = upload.fields([
   { name: 'keyword', maxCount: 5 },
   { name: 'views', maxCount: 1 },
   { name: 'interactions', maxCount: 1 },
-  { name: 'userActions', maxCount: 1 },
+  { name: 'userActions', maxCount: 4 },
   { name: 'csv', maxCount: 1 },
 ]);
 

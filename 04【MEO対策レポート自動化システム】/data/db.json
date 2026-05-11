@@ -14,6 +14,11 @@
       "id": "mnsca2czfpsh",
       "name": "3ピース香川",
       "createdAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "mp0q55kzl9gd",
+      "name": "Sun east planning株式会社",
+      "createdAt": "2026-05-11T04:51:19.043Z"
     }
   ],
   "reports": [
@@ -46,6 +51,16 @@
       "fileName": "MEO対策レポート_3ピース香川様_2026年3月.pptx",
       "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsca2czfpsh\\MEO対策レポート_3ピース香川様_2026年3月.pptx",
       "generatedAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "mp0qwfgpabuo",
+      "storeId": "mp0q55kzl9gd",
+      "storeName": "Sun east planning株式会社",
+      "month": 4,
+      "year": 2026,
+      "generatedAt": "2026-05-11T05:12:31.554Z",
+      "fileName": "MEO対策レポート_Sun east planning株式会社様_2026年4月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mp0q55kzl9gd\\MEO対策レポート_Sun east planning株式会社様_2026年4月.pptx"
     }
   ],
   "defaultPrompts": {},
