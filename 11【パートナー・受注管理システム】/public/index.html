@@ -789,6 +789,22 @@ async function refreshDetailContracts() {
   }).join('');
 }
 
+function openPdfPreview(contractId, fileName) {
+  const url = `/api/contracts/${contractId}/file`;
+  document.getElementById('pdf-preview-iframe').src = url;
+  document.getElementById('pdf-preview-title').textContent = fileName;
+  document.getElementById('pdf-preview-download').href = url;
+  document.getElementById('pdf-preview-download').download = fileName;
+  document.getElementById('pdf-preview-overlay').classList.add('open');
+}
+
+function closePdfPreview(event) {
+  if (event.target === document.getElementById('pdf-preview-overlay')) {
+    document.getElementById('pdf-preview-overlay').classList.remove('open');
+    document.getElementById('pdf-preview-iframe').src = '';
+  }
+}
+
 async function deleteContract(id) {
   confirmDelete('この契約書を削除しますか？', async () => {
     await api.del(`/api/contracts/${id}`);
