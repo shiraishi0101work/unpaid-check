@@ -654,11 +654,11 @@
               <div class="upload-preview-badge"><span id="fn-interactions"></span></div>
             </div>
             <div class="upload-zone" id="zone-userActions" ondragover="handleDragOver(event,'userActions')" ondragleave="handleDragLeave(event,'userActions')" ondrop="handleDrop(event,'userActions')">
-              <input type="file" id="img-userActions" accept="image/*" onchange="handleFileSelect(this,'userActions')">
+              <input type="file" id="img-userActions" accept="image/*" multiple onchange="handleFileSelect(this,'userActions')">
               <div class="upload-inner">
                 <div class="upload-icon">📍</div>
                 <div class="upload-label">ユーザー行動データ</div>
-                <div class="upload-sub">5ページ目</div>
+                <div class="upload-sub">5ページ目（最大4枚・2×2配置）</div>
               </div>
               <img class="upload-preview-img" id="preview-userActions" src="" alt="">
               <div class="upload-preview-badge"><span id="fn-userActions"></span></div>
