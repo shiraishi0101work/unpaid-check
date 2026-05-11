@@ -780,7 +780,8 @@ async function refreshDetailContracts() {
           <div class="ci-date">登録日：${fmtDate(c.created_at)}${ext.company_name ? ' ／ ' + esc(ext.company_name) : ''}${c.extracted_contract_date ? ' ／ 契約日：' + c.extracted_contract_date : ''}</div>
         </div>
         <div class="ci-actions">
-          <a href="/api/contracts/${c.id}/file" target="_blank" class="btn btn-secondary btn-sm">開く</a>
+          <button class="btn btn-secondary btn-sm" onclick="openPdfPreview(${c.id}, '${esc(c.file_name)}')">👁 プレビュー</button>
+          <a href="/api/contracts/${c.id}/file" download="${esc(c.file_name)}" class="btn btn-secondary btn-sm">⬇ DL</a>
           <button class="btn btn-danger btn-sm" onclick="deleteContract(${c.id})">削除</button>
         </div>
       </div>
