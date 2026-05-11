@@ -1,0 +1,53 @@
+{
+  "stores": [
+    {
+      "id": "mnqupujm8li9",
+      "name": "ピタットハウス栄住吉店",
+      "createdAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "mnsc9sh5hrqh",
+      "name": "3ピース 徳島",
+      "createdAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "mnsca2czfpsh",
+      "name": "3ピース香川",
+      "createdAt": "2026-03-01T00:00:00.000Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "rep_mnqupujm8li9_1",
+      "storeId": "mnqupujm8li9",
+      "storeName": "ピタットハウス栄住吉店",
+      "month": 3,
+      "year": 2026,
+      "fileName": "MEO対策レポート_ピタットハウス栄住吉店様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnqupujm8li9\\MEO対策レポート_ピタットハウス栄住吉店様_2026年3月.pptx",
+      "generatedAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "rep_mnsc9sh5hrqh_1",
+      "storeId": "mnsc9sh5hrqh",
+      "storeName": "3ピース 徳島",
+      "month": 3,
+      "year": 2026,
+      "fileName": "MEO対策レポート_3ピース 徳島様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsc9sh5hrqh\\MEO対策レポート_3ピース 徳島様_2026年3月.pptx",
+      "generatedAt": "2026-03-01T00:00:00.000Z"
+    },
+    {
+      "id": "rep_mnsca2czfpsh_1",
+      "storeId": "mnsca2czfpsh",
+      "storeName": "3ピース香川",
+      "month": 3,
+      "year": 2026,
+      "fileName": "MEO対策レポート_3ピース香川様_2026年3月.pptx",
+      "filePath": "C:\\Users\\shira_k13727w\\OneDrive\\Desktop\\クロード保管用\\04【MEO対策レポート自動化システム】\\data\\reports\\mnsca2czfpsh\\MEO対策レポート_3ピース香川様_2026年3月.pptx",
+      "generatedAt": "2026-03-01T00:00:00.000Z"
+    }
+  ],
+  "defaultPrompts": {},
+  "storePrompts": {}
+}
