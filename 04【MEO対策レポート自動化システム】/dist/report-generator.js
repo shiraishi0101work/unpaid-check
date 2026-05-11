@@ -246,6 +246,79 @@ class ReportGenerator {
             });
         }
     }
+    // 複数ユーザー行動画像を2×2グリッドで配置
+    addUserActionsGridSlide(userActSlides) {
+        const slide = this.pptx.addSlide();
+        slide.background = { color: 'F2F2F2' };
+        // Header
+        slide.addShape(this.pptx.ShapeType.rect, {
+            x: 0, y: 0, w: SLIDE_W, h: 0.65,
+            fill: { color: COLORS.headerBg },
+            line: { color: COLORS.headerBg },
+        });
+        slide.addText(userActSlides[0].title, {
+            x: 0.2, y: 0.05, w: SLIDE_W - 0.4, h: 0.55,
+            fontSize: 18, bold: true, color: COLORS.headerText,
+            align: 'left', fontFace: 'メイリオ',
+        });
+        const imageAreaY = 0.75;
+        const gap = 0.08;
+        const totalW = SLIDE_W - 0.3;
+        const boxY = SLIDE_H - 5.2;
+        const imageAreaH = boxY - imageAreaY - 0.1;
+        const cols = 2;
+        const rows = 2;
+        const cellW = (totalW - gap * (cols - 1)) / cols;
+        const cellH = (imageAreaH - gap * (rows - 1)) / rows;
+        for (let i = 0; i < Math.min(userActSlides.length, 4); i++) {
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            const x = 0.15 + col * (cellW + gap);
+            const y = imageAreaY + row * (cellH + gap);
+            slide.addShape(this.pptx.ShapeType.rect, {
+                x, y, w: cellW, h: cellH,
+                fill: { color: 'FFFFFF' },
+                line: { color: 'AAAAAA', width: 1 },
+            });
+            const s = userActSlides[i];
+            if (s.imagePath && fs.existsSync(s.imagePath)) {
+                const { w, h, offsetX, offsetY } = this.containImage(s.imagePath, cellW - 0.06, cellH - 0.06);
+                slide.addImage({
+                    path: s.imagePath,
+                    x: x + 0.03 + offsetX,
+                    y: y + 0.03 + offsetY,
+                    w, h,
+                });
+            }
+            else {
+                slide.addText(`スクリーンショット ${i + 1}`, {
+                    x, y: y + cellH / 2 - 0.2, w: cellW, h: 0.4,
+                    fontSize: 10, color: 'AAAAAA',
+                    align: 'center', fontFace: 'メイリオ',
+                });
+            }
+        }
+        const first = userActSlides[0];
+        if (first.currentStatus || first.analysis) {
+            const boxH = 5.0;
+            slide.addShape(this.pptx.ShapeType.roundRect, {
+                x: 0.15, y: boxY, w: SLIDE_W - 0.3, h: boxH,
+                fill: { color: 'FFFFFF' },
+                line: { color: 'CCCCCC', width: 1 },
+                rectRadius: 0.08,
+            });
+            const commentText = [
+                { text: '【現状】\n', options: { bold: true, color: '1A5276', fontSize: 11 } },
+                { text: first.currentStatus + '\n\n', options: { bold: false, color: '333333', fontSize: 11 } },
+                { text: '【分析】\n', options: { bold: true, color: '1A5276', fontSize: 11 } },
+                { text: first.analysis, options: { bold: false, color: '333333', fontSize: 11 } },
+            ];
+            slide.addText(commentText, {
+                x: 0.3, y: boxY + 0.12, w: SLIDE_W - 0.6, h: boxH - 0.25,
+                fontFace: 'メイリオ', valign: 'top', wrap: true,
+            });
+        }
+    }
     async generateReport(input, slides, outputPath) {
         // Slide 1: Cover
         this.addCoverSlide(input.storeName, input.month, input.year);
