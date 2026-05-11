@@ -340,7 +340,13 @@ class ReportGenerator {
         }
         // Slide 5: User actions
         if (slides.userActions) {
-            this.addContentSlide(slides.userActions, input.month);
+            const uaSlides = Array.isArray(slides.userActions) ? slides.userActions : [slides.userActions];
+            if (uaSlides.length > 1) {
+                this.addUserActionsGridSlide(uaSlides);
+            }
+            else {
+                this.addContentSlide(uaSlides[0], input.month);
+            }
         }
         await this.pptx.writeFile({ fileName: outputPath });
         console.log(`✅ レポートを出力しました: ${outputPath}`);
