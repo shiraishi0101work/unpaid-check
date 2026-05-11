@@ -469,6 +469,20 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   </div>
 </div>
 
+<!-- PDF Preview modal -->
+<div class="pdf-preview-overlay" id="pdf-preview-overlay" onclick="closePdfPreview(event)">
+  <div class="pdf-preview-header">
+    <span class="pdf-preview-title" id="pdf-preview-title">契約書</span>
+    <div class="pdf-preview-actions">
+      <a id="pdf-preview-download" href="" download class="btn btn-primary btn-sm">⬇ ダウンロード</a>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pdf-preview-overlay').classList.remove('open')">✕ 閉じる</button>
+    </div>
+  </div>
+  <div class="pdf-preview-body">
+    <iframe id="pdf-preview-iframe" src=""></iframe>
+  </div>
+</div>
+
 <!-- Confirm delete modal -->
 <div class="overlay" id="confirm-overlay">
   <div class="modal modal-sm">
