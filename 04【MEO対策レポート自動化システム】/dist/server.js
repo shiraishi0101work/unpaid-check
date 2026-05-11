@@ -245,14 +245,27 @@ app.post('/api/generate-report', uploadFields, async (req, res) => {
                 analysis: interactData.analysis,
             };
         }
+        const userActFiles = files['userActions'] ?? [];
+        for (const f of userActFiles)
+            tmpFiles.push(f.path);
         const userActData = csvData[3];
-        if (userActData && (userActData.current || userActData.analysis || screenshots.userActions)) {
-            slides.userActions = {
-                title: 'ユーザー行動データ（来店・売上に直結）',
-                imagePath: screenshots.userActions,
-                currentStatus: userActData.current,
-                analysis: userActData.analysis,
-            };
+        if (userActData && (userActData.current || userActData.analysis || userActFiles.length > 0)) {
+            if (userActFiles.length > 1) {
+                slides.userActions = userActFiles.map((f, i) => ({
+                    title: 'ユーザー行動データ（来店・売上に直結）',
+                    imagePath: f.path,
+                    currentStatus: i === 0 ? userActData.current : '',
+                    analysis: i === 0 ? userActData.analysis : '',
+                }));
+            }
+            else {
+                slides.userActions = {
+                    title: 'ユーザー行動データ（来店・売上に直結）',
+                    imagePath: userActFiles[0]?.path ?? screenshots.userActions,
+                    currentStatus: userActData.current,
+                    analysis: userActData.analysis,
+                };
+            }
         }
         const input = { storeName, month: monthNum, year: yearNum, screenshots, apiKey: '' };
         const generator = new report_generator_js_1.ReportGenerator();
