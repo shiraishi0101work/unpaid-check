@@ -543,18 +543,31 @@ async function loadProductChecklist() {
     return;
   }
 
-  container.innerHTML = allProducts.map(p => {
-    const checked = linked.includes(p.id);
-    return `
-    <label class="product-check-item ${checked ? 'checked' : ''}" onclick="toggleProductCheck(this)">
-      <input type="checkbox" value="${p.id}" ${checked ? 'checked' : ''} onclick="event.stopPropagation()">
-      <div>
-        <div class="p-name">${esc(p.name)}</div>
-        ${p.code ? `<div class="p-code">${esc(p.code)}</div>` : ''}
-        ${p.unit_price ? `<div class="p-code">¥${Number(p.unit_price).toLocaleString()}</div>` : ''}
-      </div>
-    </label>`;
-  }).join('');
+  // 分類でグループ化して表示
+  const groups = {};
+  for (const p of allProducts) {
+    const cat = p.category || '未分類';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(p);
+  }
+
+  container.innerHTML = Object.entries(groups).map(([cat, products]) => `
+    <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;margin-top:10px;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--border)">
+      ${esc(cat)}
+    </div>
+    ${products.map(p => {
+      const checked = linked.includes(p.id);
+      return `
+      <label class="product-check-item ${checked ? 'checked' : ''}" onclick="toggleProductCheck(this)">
+        <input type="checkbox" value="${p.id}" ${checked ? 'checked' : ''} onclick="event.stopPropagation()">
+        <div>
+          <div class="p-name">${esc(p.name)}</div>
+          ${p.code ? `<div class="p-code">${esc(p.code)}</div>` : ''}
+          ${p.unit_price ? `<div class="p-code">¥${Number(p.unit_price).toLocaleString()}</div>` : ''}
+        </div>
+      </label>`;
+    }).join('')}
+  `).join('');
 }
 
 function toggleProductCheck(label) {
