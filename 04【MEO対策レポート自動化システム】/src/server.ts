@@ -167,7 +167,7 @@ app.post('/api/generate-report', uploadFields, async (req, res) => {
     for (const f of keywordFiles) tmpFiles.push(f.path);
     if (keywordFiles.length > 0) screenshots.keyword = keywordFiles[0].path;
 
-    for (const key of ['views', 'interactions', 'userActions']) {
+    for (const key of ['views', 'interactions']) {
       const file = files[key]?.[0];
       if (file) {
         screenshots[key] = file.path;
