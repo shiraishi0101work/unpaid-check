@@ -263,46 +263,90 @@
   .s3 .ptxt h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
   .s3 .ptxt p { font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.55; }
 
-  /* ── SLIDE 4: 5ステップ ── */
-  .s4 { background: linear-gradient(135deg, #0D1B2A 0%, #005F7F 100%); }
-  .s4 .header {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 108px;
-    background: linear-gradient(90deg, rgba(0,119,168,.88), rgba(0,180,216,.65));
-    display: flex; flex-direction: column;
-    justify-content: center; padding: 0 56px;
+  /* ── REASON SLIDES 共通 ── */
+  .reason { background: #0D1B2A; }
+  .reason .side-accent {
+    position: absolute; top: 0; left: 0; bottom: 0; width: 5px;
+    background: linear-gradient(180deg, var(--yellow), var(--orange));
   }
-  .s4 .header h2 { font-size: 24px; font-weight: 900; color: #fff; }
-  .s4 .header h2 em { color: var(--yellow); font-style: normal; }
-  .s4 .grid {
-    position: absolute;
-    top: 118px; left: 32px; right: 32px; bottom: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 14px;
+  .reason .lpanel {
+    position: absolute; top: 0; left: 0; bottom: 0; width: 400px;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 52px 0 52px;
   }
-  .s4 .vcard {
-    background: rgba(0,180,216,.09);
-    border: 1px solid rgba(0,180,216,.24);
-    border-radius: 10px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
+  .reason .rnum {
+    font-size: 90px; font-weight: 900; color: rgba(0,180,216,.1);
+    line-height: 1; letter-spacing: -.04em; margin-bottom: 2px;
   }
-  .s4 .vcard::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange));
+  .reason .rlabel {
+    font-size: 10px; font-weight: 700; letter-spacing: .28em;
+    color: var(--yellow); margin-bottom: 18px;
+    text-transform: uppercase;
   }
-  .s4 .vnum {
-    font-size: 28px; font-weight: 900;
-    color: rgba(0,180,216,.25);
-    line-height: 1; margin-bottom: 8px;
-    letter-spacing: -.02em;
+  .reason .rtitle {
+    font-size: 21px; font-weight: 900; color: #fff;
+    line-height: 1.4; margin-bottom: 18px;
+    padding-left: 14px;
+    border-left: 4px solid var(--yellow);
   }
-  .s4 .vcard h3 { font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 6px; line-height: 1.3; }
-  .s4 .vcard p { font-size: 12px; color: rgba(255,255,255,.72); line-height: 1.65; }
+  .reason .rbody { font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.8; }
+  .reason .rpanel {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 400px;
+    background: linear-gradient(135deg, rgba(0,95,127,.3) 0%, #0D1B2A 100%);
+    border-left: 1px solid rgba(0,180,216,.18);
+    display: flex; align-items: center; justify-content: center;
+    padding: 30px 32px;
+  }
+
+  /* 棒グラフ（理由03 時間比較） */
+  .bar-chart { width: 100%; }
+  .bc-item { margin-bottom: 22px; }
+  .bc-item:last-child { margin-bottom: 0; }
+  .bc-name { font-size: 13px; color: rgba(255,255,255,.65); margin-bottom: 8px; letter-spacing: .03em; }
+  .bc-track { height: 48px; background: rgba(255,255,255,.05); border-radius: 8px; overflow: hidden; position: relative; }
+  .bc-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding: 0 16px; transition: width 1s ease; }
+  .bc-fill.manual { background: linear-gradient(90deg, rgba(220,60,60,.55), rgba(255,140,0,.4)); width: 90%; }
+  .bc-fill.ai     { background: linear-gradient(90deg, var(--teal2), var(--teal)); width: 4%; min-width: 60px; }
+  .bc-fill span { font-size: 15px; font-weight: 900; color: #fff; white-space: nowrap; }
+  .bc-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 5px; }
+
+  /* コスト比較（理由04） */
+  .cost-compare { display: flex; gap: 24px; align-items: flex-end; width: 100%; }
+  .cc-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .cc-bar-area { width: 100%; display: flex; align-items: flex-end; justify-content: center; height: 240px; }
+  .cc-bar { width: 70px; border-radius: 8px 8px 0 0; }
+  .cc-bar.old { background: linear-gradient(180deg, rgba(220,60,60,.5), rgba(220,60,60,.15)); height: 100%; }
+  .cc-bar.ai  { background: linear-gradient(180deg, var(--teal), var(--teal2)); height: 35%; }
+  .cc-label { text-align: center; margin-top: 12px; font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.55; }
+  .cc-amount { font-size: 15px; font-weight: 900; color: var(--yellow); margin-top: 6px; }
+  .cc-divider { display: flex; align-items: center; color: rgba(255,255,255,.3); font-size: 22px; padding-bottom: 120px; }
+
+  /* 一元管理フロー図（理由02） */
+  .flow-diagram { width: 100%; }
+  .fd-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .fd-row:last-child { margin-bottom: 0; }
+  .fd-box {
+    flex: 1; padding: 14px 16px;
+    background: rgba(0,180,216,.1);
+    border: 1px solid rgba(0,180,216,.3);
+    border-radius: 8px; text-align: center;
+  }
+  .fd-box.highlight {
+    background: rgba(255,214,10,.1);
+    border-color: rgba(255,214,10,.4);
+  }
+  .fd-box .fb-num { font-size: 10px; font-weight: 700; color: var(--yellow); letter-spacing: .15em; margin-bottom: 4px; }
+  .fd-box .fb-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .fd-box .fb-sub { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 3px; line-height: 1.4; }
+  .fd-arrow { color: var(--yellow); font-size: 18px; flex-shrink: 0; }
+  .fd-unified {
+    margin-top: 16px; padding: 14px 20px;
+    background: linear-gradient(90deg, rgba(255,214,10,.15), rgba(255,140,0,.1));
+    border: 1.5px solid rgba(255,214,10,.45);
+    border-radius: 8px; text-align: center;
+  }
+  .fd-unified .fu-label { font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 4px; letter-spacing: .1em; }
+  .fd-unified .fu-text { font-size: 15px; font-weight: 900; color: var(--yellow); }
 
   /* ── SLIDE 5: データ収集 ── */
   .s5 { background: #0D1B2A; }
