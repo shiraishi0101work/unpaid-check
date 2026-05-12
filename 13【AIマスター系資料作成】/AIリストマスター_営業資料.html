@@ -802,6 +802,8 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
   const sl=document.querySelectorAll('.slide'),nv=document.getElementById('nav'),ct=document.getElementById('counter'),sc=document.getElementById('scaler'),N=sl.length;
@@ -814,6 +816,34 @@
   scale();window.addEventListener('resize',scale);
   window.toggleEdit=function(){const b=document.body,btn=document.getElementById('btn-edit'),els=document.querySelectorAll('.e');if(b.classList.contains('em')){b.classList.remove('em');els.forEach(e=>e.removeAttribute('contenteditable'));btn.classList.remove('active');btn.textContent='編集モード';}else{b.classList.add('em');els.forEach(e=>e.setAttribute('contenteditable','true'));btn.classList.add('active');btn.textContent='編集終了';}};
   window.saveHTML=function(){const blob=new Blob(['<!DOCTYPE html>\n'+document.documentElement.outerHTML],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='AIリストマスター_営業資料.html';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+
+  window.exportPDF = async function(){
+    const btn = document.getElementById('btn-pdf');
+    btn.textContent = '生成中...'; btn.disabled = true;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:[960,540], hotfixes:['px_scaling'] });
+    const orig = c;
+    for(let i=0;i<N;i++){
+      // show slide
+      sl.forEach(s=>{ s.style.opacity='0'; s.style.pointerEvents='none'; });
+      sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
+      await new Promise(r=>setTimeout(r,120));
+      const canvas = await html2canvas(sl[i],{
+        scale:2, useCORS:true, allowTaint:true,
+        width:960, height:540,
+        backgroundColor:null,
+        logging:false
+      });
+      const img = canvas.toDataURL('image/jpeg',0.95);
+      if(i>0) pdf.addPage([960,540],'landscape');
+      pdf.addImage(img,'JPEG',0,0,960,540);
+    }
+    // restore
+    sl.forEach(s=>{ s.style.opacity=''; s.style.pointerEvents=''; });
+    go(orig);
+    pdf.save('AIリストマスター_営業資料.pdf');
+    btn.textContent='PDFで保存'; btn.disabled=false;
+  };
 })();
 </script>
 </body>
