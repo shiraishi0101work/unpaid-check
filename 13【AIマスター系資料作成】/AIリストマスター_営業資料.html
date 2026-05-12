@@ -821,25 +821,40 @@
     const btn = document.getElementById('btn-pdf');
     btn.textContent = '生成中...'; btn.disabled = true;
     const { jsPDF } = window.jspdf;
-    // 16:9 標準プレゼン サイズ = 10in × 5.625in = 720pt × 405pt
     const W=720, H=405;
     const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:[W,H] });
     const orig = c;
+
+    // スケーラーのtransformを一時停止し、960×540で正確にキャプチャ
+    const savedTransform = sc.style.transform;
+    sc.style.transform = 'translate(0px,0px) scale(1)';
+    document.body.style.overflow = 'visible';
+    await new Promise(r=>setTimeout(r,100));
+
     for(let i=0;i<N;i++){
       sl.forEach(s=>{ s.style.opacity='0'; s.style.pointerEvents='none'; });
       sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
-      await new Promise(r=>setTimeout(r,150));
+      await new Promise(r=>setTimeout(r,200));
       const canvas = await html2canvas(sl[i],{
-        scale:2, useCORS:true, allowTaint:true,
+        scale:2,
+        useCORS:true,
+        allowTaint:true,
         width:960, height:540,
+        windowWidth:960, windowHeight:540,
+        x:0, y:0,
+        scrollX:0, scrollY:0,
         backgroundColor:'#ffffff',
-        logging:false
+        logging:false,
+        ignoreElements: el => el.id==='toolbar'||el.id==='nav'||el.id==='counter'||el.classList.contains('nb')
       });
-      const img = canvas.toDataURL('image/jpeg',0.95);
+      const img = canvas.toDataURL('image/jpeg',0.96);
       if(i>0) pdf.addPage([W,H],'landscape');
-      pdf.addImage(img,'JPEG',0,0,W,H);
+      pdf.addImage(img,'JPEG',0,0,W,H,undefined,'FAST');
     }
-    // restore
+
+    // 元に戻す
+    sc.style.transform = savedTransform;
+    document.body.style.overflow = '';
     sl.forEach(s=>{ s.style.opacity=''; s.style.pointerEvents=''; });
     go(orig);
     pdf.save('AIリストマスター_営業資料.pdf');
