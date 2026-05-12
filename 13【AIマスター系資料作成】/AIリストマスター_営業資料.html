@@ -435,38 +435,35 @@
   .s8 { background: linear-gradient(135deg, #0A1825 0%, var(--teal3) 100%); }
   .s8 .lcol {
     position: absolute; top: 0; left: 0; bottom: 0;
-    width: 375px;
+    width: 360px;
     background: linear-gradient(160deg, var(--teal2) 0%, #006080 100%);
     clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
     display: flex; flex-direction: column;
     justify-content: center;
-    padding: 0 58px 0 50px;
+    padding: 0 56px 0 50px;
   }
   .s8 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 12px; }
-  .s8 .lcol h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
+  .s8 .lcol h2 { font-size: 22px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
   .s8 .lcol p { font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.7; }
+  .s8 .lcol .pts { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .s8 .lcol .pt {
+    display: flex; gap: 10px; align-items: center;
+    padding: 9px 12px;
+    background: rgba(255,255,255,.1);
+    border-left: 3px solid var(--yellow);
+    border-radius: 5px;
+  }
+  .s8 .lcol .pt span { font-size: 13px; font-weight: 700; color: var(--yellow); flex-shrink: 0; }
+  .s8 .lcol .pt p { font-size: 11px; color: rgba(255,255,255,.8); line-height: 1.4; }
   .s8 .rcol {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 352px;
+    position: absolute; top: 0; right: 0; bottom: 0; left: 336px;
+    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
     display: flex; flex-direction: column;
-    justify-content: center; gap: 18px;
-    padding: 0 42px 0 34px;
+    align-items: center; justify-content: center;
+    padding: 20px 20px;
+    gap: 10px;
   }
-  .s8 .acard {
-    background: rgba(0,180,216,.1);
-    border: 1px solid rgba(0,180,216,.3);
-    border-radius: 10px; padding: 18px 20px;
-    display: flex; gap: 16px; align-items: flex-start;
-  }
-  .s8 .acard .ai { font-size: 26px; flex-shrink: 0; }
-  .s8 .acard h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; }
-  .s8 .acard p { font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.55; }
-  .s8 .abadge {
-    display: inline-block; margin-top: 6px;
-    padding: 3px 10px;
-    background: var(--yellow); color: var(--dark);
-    font-size: 11px; font-weight: 700;
-    border-radius: 20px;
-  }
+  .s8 .screenlabel { font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45); text-transform: uppercase; }
 
   /* ── SLIDE 9: 架電フロー ── */
   .s9 { background: #0D1B2A; }
