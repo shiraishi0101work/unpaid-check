@@ -2,1202 +2,1144 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>AIリストマスター｜営業提案資料</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIリストマスター 営業資料</title>
 <style>
-:root{
-  --n1:#0D2B6E;   /* deep navy */
-  --n2:#1E4DB7;   /* royal blue */
-  --n3:#3B82F6;   /* bright blue */
-  --o1:#F97316;   /* orange */
-  --o2:#FBBF24;   /* gold */
-  --w: #FFFFFF;
-  --g1:#F0F6FF;
-  --g2:#E8F0FE;
-  --dk:#0A1628;
-  --tx:#1E293B;
-  --tx2:#475569;
-  --bd:#D1D9E6;
-}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Noto Sans JP','Hiragino Kaku Gothic Pro',sans-serif}
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
 
-/* ─── DECK ─── */
-.deck{width:100vw;height:100vh;position:relative}
-.slide{
-  position:absolute;inset:0;background:var(--w);
-  opacity:0;pointer-events:none;overflow:hidden;
-  transition:opacity .45s ease,transform .45s ease;
-  transform:translateX(40px);
-}
-.slide.active{opacity:1;pointer-events:auto;transform:translateX(0)}
-.slide.out{opacity:0;transform:translateX(-40px)}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ─── PROGRESS ─── */
-.prg{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--n2),var(--o1),var(--o2));z-index:999;transition:width .35s ease}
+  :root {
+    --teal:   #00B4D8;
+    --teal2:  #0077A8;
+    --teal3:  #005F7F;
+    --yellow: #FFD60A;
+    --orange: #FF8C00;
+    --dark:   #0D1B2A;
+    --darkb:  #112233;
+    --white:  #FFFFFF;
+  }
 
-/* ─── NAV ─── */
-.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;z-index:999}
-.nb{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);backdrop-filter:blur(8px);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.nb:hover{background:var(--o1);border-color:var(--o1)}
-.nc{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);letter-spacing:1px}
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
 
-/* ─── DOTS ─── */
-.dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:999}
-.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s}
-.dot.on{background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7);transform:scale(1.5)}
+  /* ── Viewport scaling ── */
+  #scaler {
+    position: fixed;
+    top: 0; left: 0;
+    width: 960px; height: 540px;
+    transform-origin: top left;
+  }
 
-/* ─── EDIT ─── */
-#eBtn{position:fixed;top:14px;left:14px;z-index:9999;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);border-radius:30px;padding:7px 16px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-#eBtn:hover{background:var(--o1);border-color:var(--o1)}
-#sBtn{position:fixed;top:14px;left:148px;z-index:9999;background:var(--o1);border:none;border-radius:30px;padding:7px 16px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;display:none;box-shadow:0 4px 12px rgba(249,115,22,.4)}
-#eHint{position:fixed;top:14px;left:268px;z-index:9999;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:7px 14px;font-size:10px;color:rgba(255,255,255,.8);font-weight:600;display:none;font-family:inherit;letter-spacing:.5px}
-body.edit [contenteditable]:hover{outline:1.5px dashed rgba(249,115,22,.7);border-radius:3px;cursor:text}
-body.edit [contenteditable]:focus{outline:2px solid var(--o1);border-radius:3px;background:rgba(249,115,22,.06)}
+  /* ── Slides ── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 960px; height: 540px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s ease;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
 
-/* ══════════════════════════════════
-   共通パーツ
-══════════════════════════════════ */
-.logo{font-size:13px;font-weight:900;letter-spacing:.5px}
-.logo b{color:var(--o1)}
-.tag{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase}
+  /* ── UI chrome (outside scaler so it's always full viewport) ── */
+  #toolbar {
+    position: fixed;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px;
+    z-index: 200;
+  }
+  #toolbar button {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(0,180,216,.6);
+    background: rgba(13,27,42,.9);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  #toolbar button:hover { background: rgba(0,180,216,.35); }
+  #toolbar button.active { background: var(--teal); border-color: var(--teal); }
 
-/* 斜めクリップ用 */
-.clip-r{clip-path:polygon(0 0,100% 0,88% 100%,0 100%)}
-.clip-l{clip-path:polygon(12% 0,100% 0,100% 100%,0 100%)}
-.clip-b{clip-path:polygon(0 0,100% 0,100% 88%,0 100%)}
+  #counter {
+    position: fixed;
+    top: 10px; right: 16px;
+    color: rgba(255,255,255,.4);
+    font-size: 12px;
+    z-index: 200;
+  }
 
-/* ══════════════════════════════════
-   S1 COVER
-══════════════════════════════════ */
-#s1{background:linear-gradient(135deg,#0A1C52 0%,#1E4DB7 55%,#0E3A8C 100%)}
+  .nav-btn {
+    position: fixed;
+    top: 50%; transform: translateY(-50%);
+    background: rgba(0,180,216,.12);
+    border: 1.5px solid rgba(0,180,216,.35);
+    color: #fff;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .nav-btn:hover { background: rgba(0,180,216,.4); }
+  #btn-prev { left: 10px; }
+  #btn-next { right: 10px; }
 
-.s1-header{
-  position:absolute;top:0;left:0;right:0;
-  display:flex;justify-content:space-between;align-items:center;
-  padding:22px 52px;z-index:10;
-}
+  #nav {
+    position: fixed;
+    bottom: 14px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    z-index: 200;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.3);
+    cursor: pointer;
+    transition: background .25s, transform .25s;
+  }
+  .dot.active { background: var(--yellow); transform: scale(1.45); }
 
-/* 右上デコ */
-#s1::before{
-  content:'';position:absolute;
-  top:-80px;right:-80px;
-  width:420px;height:420px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(251,191,36,.12),transparent 65%);
-  pointer-events:none;
-}
-/* 左下デコ */
-#s1::after{
-  content:'';position:absolute;
-  bottom:-60px;left:-60px;
-  width:300px;height:300px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(249,115,22,.1),transparent 65%);
-  pointer-events:none;
-}
+  /* ── Edit mode ── */
+  .editable { outline: none; }
+  body.edit-mode .editable {
+    outline: 1.5px dashed rgba(255,214,10,.55);
+    cursor: text;
+    border-radius: 2px;
+  }
+  body.edit-mode .editable:focus {
+    outline: 2px solid var(--yellow);
+    background: rgba(255,214,10,.06);
+    border-radius: 3px;
+  }
 
-.s1-body{
-  position:absolute;inset:0;
-  display:flex;align-items:center;
-  padding:80px 52px 60px;
-  gap:48px;
-}
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE DESIGNS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-.s1-left{flex:1}
-.s1-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  border:1px solid rgba(251,191,36,.4);
-  border-radius:30px;padding:5px 18px;
-  font-size:10px;font-weight:700;letter-spacing:2.5px;
-  color:rgba(251,191,36,.9);margin-bottom:28px;
-  background:rgba(251,191,36,.07);
-}
-.s1-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--o2);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  /* ── SLIDE 1: Title ── */
+  .s1 { background: linear-gradient(135deg, #0D1B2A 0%, #005F7F 65%, #0077A8 100%); }
+  .s1 .diag {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,180,216,.07) 0%, transparent 55%);
+    clip-path: polygon(0 0, 58% 0, 40% 100%, 0 100%);
+  }
+  .s1 .stripe {
+    position: absolute; bottom: 0; right: 0;
+    width: 440px; height: 440px;
+    background: repeating-linear-gradient(-55deg, transparent, transparent 18px, rgba(0,180,216,.06) 18px, rgba(0,180,216,.06) 20px);
+    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .s1 .top-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+  }
+  .s1 .content {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 72px;
+  }
+  .s1 .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .28em;
+    color: var(--yellow); text-transform: uppercase; margin-bottom: 18px;
+  }
+  .s1 .title {
+    font-size: 68px; font-weight: 900; color: #fff;
+    line-height: 1.0; letter-spacing: -.02em; margin-bottom: 12px;
+  }
+  .s1 .title em { color: var(--yellow); font-style: normal; }
+  .s1 .subtitle {
+    font-size: 18px; color: rgba(255,255,255,.75);
+    font-weight: 400; letter-spacing: .04em; margin-bottom: 38px;
+  }
+  .s1 .tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .s1 .tag {
+    padding: 5px 16px;
+    border: 1.5px solid rgba(0,180,216,.45);
+    border-radius: 20px;
+    font-size: 12px; color: rgba(255,255,255,.75);
+    letter-spacing: .07em;
+  }
+  .s1 .logo {
+    position: absolute; bottom: 28px; right: 48px;
+    font-size: 12px; font-weight: 700; letter-spacing: .12em;
+    color: rgba(255,255,255,.3);
+  }
 
-.s1-h1{
-  font-size:clamp(44px,6.5vw,80px);font-weight:900;
-  color:#fff;line-height:1.05;letter-spacing:-2.5px;
-  margin-bottom:18px;
-}
-.s1-h1 em{
-  font-style:normal;
-  background:linear-gradient(90deg,#FBBF24,#F97316);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-}
-.s1-lead{font-size:16px;color:rgba(255,255,255,.65);line-height:1.85;margin-bottom:36px}
+  /* ── SLIDE 2: 営業の現実 ── */
+  .s2 { background: #0D1B2A; }
+  .s2 .topband {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 130px;
+    background: linear-gradient(90deg, var(--teal2), var(--teal));
+    clip-path: polygon(0 0, 100% 0, 100% 68%, 0 100%);
+    display: flex; align-items: center;
+    padding: 0 56px;
+  }
+  .s2 .topband h2 {
+    font-size: 28px; font-weight: 900; color: #fff;
+    line-height: 1.2;
+  }
+  .s2 .topband h2 em { color: var(--yellow); font-style: normal; }
+  .s2 .stats {
+    position: absolute;
+    top: 145px; left: 40px; right: 40px;
+    display: flex; gap: 20px;
+  }
+  .s2 .scard {
+    flex: 1;
+    background: rgba(0,180,216,.09);
+    border: 1px solid rgba(0,180,216,.28);
+    border-radius: 12px;
+    padding: 28px 18px 22px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .s2 .scard::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+  }
+  .s2 .snum { font-size: 56px; font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 6px; }
+  .s2 .snum small { font-size: 24px; }
+  .s2 .slabel { font-size: 13px; color: rgba(255,255,255,.78); line-height: 1.55; }
+  .s2 .footnote {
+    position: absolute; bottom: 22px; left: 0; right: 0;
+    text-align: center; font-size: 12px; color: rgba(255,255,255,.38);
+  }
 
-.s1-stats{display:flex;gap:14px}
-.s1-stat{
-  padding:16px 22px;border-radius:16px;
-  background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.12);
-  backdrop-filter:blur(10px);text-align:center;
-  min-width:110px;
-}
-.s1-stat .sn{
-  font-size:32px;font-weight:900;color:#fff;
-  line-height:1;margin-bottom:4px;letter-spacing:-1px;
-}
-.s1-stat .sn span{font-size:18px}
-.s1-stat .sl{font-size:11px;color:rgba(255,255,255,.55);line-height:1.4}
+  /* ── SLIDE 3: 3つの限界 ── */
+  .s3 { background: linear-gradient(160deg, #112233 0%, #0A1A28 100%); }
+  .s3 .lcol {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 340px;
+    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
+    clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 52px 0 50px;
+  }
+  .s3 .lcol .icon-wrap {
+    width: 50px; height: 50px;
+    background: rgba(255,255,255,.14);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 18px;
+  }
+  .s3 .lcol h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 12px; }
+  .s3 .lcol p { font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.7; }
+  .s3 .rcol {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 308px;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 18px;
+    padding: 0 48px 0 44px;
+  }
+  .s3 .pitem {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 16px 18px;
+    background: rgba(0,180,216,.07);
+    border: 1px solid rgba(0,180,216,.2);
+    border-left: 4px solid var(--yellow);
+    border-radius: 10px;
+  }
+  .s3 .pnum { font-size: 26px; font-weight: 900; color: var(--yellow); line-height: 1; width: 32px; flex-shrink: 0; }
+  .s3 .ptxt h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .s3 .ptxt p { font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.55; }
 
-.s1-right{width:380px;flex-shrink:0}
-.s1-card{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:22px;padding:28px;
-  backdrop-filter:blur(16px);
-}
-.s1-card-title{
-  font-size:11px;font-weight:700;letter-spacing:2px;
-  color:rgba(255,255,255,.45);margin-bottom:18px;
-  padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.1);
-  text-transform:uppercase;
-}
-.s1-flow{display:flex;flex-direction:column;gap:8px}
-.s1-step{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 14px;border-radius:12px;
-  background:rgba(255,255,255,.05);
-}
-.s1-step .n{
-  width:26px;height:26px;border-radius:50%;
-  background:linear-gradient(135deg,var(--o1),var(--o2));
-  color:#fff;font-size:11px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.s1-step .t{font-size:12px;font-weight:700;color:rgba(255,255,255,.85)}
-.s1-step .d{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
-.s1-arr{text-align:center;color:rgba(249,115,22,.5);font-size:11px}
+  /* ── SLIDE 4: 5ステップ ── */
+  .s4 { background: linear-gradient(135deg, #0D1B2A 0%, #005F7F 100%); }
+  .s4 .header {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 108px;
+    background: linear-gradient(90deg, rgba(0,119,168,.88), rgba(0,180,216,.65));
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 0 56px;
+  }
+  .s4 .header h2 { font-size: 24px; font-weight: 900; color: #fff; }
+  .s4 .header h2 em { color: var(--yellow); font-style: normal; }
+  .s4 .flow {
+    position: absolute;
+    top: 120px; left: 30px; right: 30px;
+    display: flex; gap: 14px; align-items: stretch;
+  }
+  .s4 .fstep {
+    flex: 1;
+    background: rgba(0,180,216,.1);
+    border: 1px solid rgba(0,180,216,.25);
+    border-radius: 10px;
+    padding: 18px 12px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .s4 .fstep:not(:last-child)::after {
+    content: '▶';
+    position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+    color: var(--yellow); font-size: 14px; z-index: 5;
+  }
+  .s4 .fnum { font-size: 10px; font-weight: 700; color: var(--yellow); letter-spacing: .12em; margin-bottom: 8px; }
+  .s4 .ficon { font-size: 26px; margin-bottom: 8px; }
+  .s4 .ftitle { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 6px; }
+  .s4 .fdesc { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.5; }
+  .s4 .tagline {
+    position: absolute; bottom: 24px; left: 0; right: 0;
+    text-align: center; font-size: 15px; font-weight: 700;
+    color: var(--yellow); letter-spacing: .05em;
+  }
 
-/* ══════════════════════════════════
-   S2 不都合な真実
-══════════════════════════════════ */
-#s2{background:#fff}
-.s2-bar{
-  height:100%;background:linear-gradient(160deg,#0A1C52 0%,#1E4DB7 100%);
-  display:flex;flex-direction:column;justify-content:center;
-  padding:52px 44px;position:relative;overflow:hidden;
-}
-.s2-bar::after{
-  content:'';position:absolute;
-  right:-60px;top:50%;transform:translateY(-50%);
-  width:160px;height:160px;border-radius:50%;
-  background:rgba(255,255,255,.04);
-}
-.s2-eyebrow{
-  font-size:10px;font-weight:700;letter-spacing:3px;
-  color:var(--o2);margin-bottom:16px;text-transform:uppercase;
-}
-.s2-h2{
-  font-size:38px;font-weight:900;color:#fff;
-  line-height:1.25;letter-spacing:-1.5px;margin-bottom:16px;
-}
-.s2-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.9}
-.s2-hl{color:#fff;font-weight:700}
+  /* ── SLIDE 5: データ収集 ── */
+  .s5 { background: #0D1B2A; }
+  .s5 .lpanel {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 420px;
+    background: linear-gradient(135deg, var(--teal2) 0%, var(--teal3) 100%);
+    clip-path: polygon(0 0, 87% 0, 100% 100%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 62px 0 52px;
+  }
+  .s5 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 14px; }
+  .s5 .lpanel h2 { font-size: 26px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
+  .s5 .lpanel p { font-size: 13px; color: rgba(255,255,255,.78); line-height: 1.7; }
+  .s5 .rpanel {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 390px;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 16px;
+    padding: 0 44px 0 38px;
+  }
+  .s5 .scard {
+    background: rgba(0,180,216,.09);
+    border: 1px solid rgba(0,180,216,.25);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex; gap: 14px; align-items: flex-start;
+    border-left: 4px solid var(--teal);
+  }
+  .s5 .scard .si { font-size: 26px; flex-shrink: 0; }
+  .s5 .scard h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .s5 .scard p { font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.55; }
+  .s5 .badge {
+    margin-top: 6px;
+    background: rgba(255,214,10,.12);
+    border: 1.5px solid var(--yellow);
+    border-radius: 8px; padding: 12px 20px;
+    text-align: center;
+  }
+  .s5 .badge big { font-size: 22px; font-weight: 900; color: var(--yellow); }
+  .s5 .badge p { font-size: 12px; color: rgba(255,255,255,.68); margin-top: 3px; }
 
-.s2-right{
-  flex:1;display:flex;flex-direction:column;
-  justify-content:center;padding:40px 52px;gap:20px;
-}
-.s2-big{
-  background:var(--g1);border-radius:20px;
-  padding:32px 28px;text-align:center;
-  border:2px solid var(--bd);
-}
-.s2-big .lbl{font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500}
-.s2-big .pct{
-  font-size:88px;font-weight:900;color:var(--n2);
-  line-height:1;letter-spacing:-4px;
-}
-.s2-big .unit{font-size:44px}
-.s2-big .note{font-size:13px;color:var(--tx2);margin-top:8px;line-height:1.6}
-.s2-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.s2-card{padding:22px 18px;border-radius:16px;text-align:center}
-.s2-card.c1{background:var(--n1)}
-.s2-card.c2{background:var(--o1)}
-.s2-card .cn{
-  font-size:40px;font-weight:900;color:#fff;
-  line-height:1;margin-bottom:6px;letter-spacing:-1px;
-}
-.s2-card .cu{font-size:20px}
-.s2-card .cl{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:3px}
-.s2-card .cs{font-size:11px;color:rgba(255,255,255,.6)}
-.s2-src{font-size:10px;color:var(--tx2);opacity:.6;text-align:center}
+  /* ── SLIDE 6: 企業深堀り ── */
+  .s6 { background: #0D1B2A; }
+  .s6 .lpanel {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 380px;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 44px;
+  }
+  .s6 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 10px; }
+  .s6 .lpanel h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 20px; }
+  .s6 .flist { display: flex; flex-direction: column; gap: 11px; }
+  .s6 .fitem {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 14px;
+    background: rgba(0,180,216,.08);
+    border-left: 3px solid var(--teal);
+    border-radius: 8px;
+  }
+  .s6 .fitem .fi { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .s6 .fitem p { font-size: 12px; color: rgba(255,255,255,.85); line-height: 1.55; }
+  .s6 .fitem strong { color: var(--yellow); }
+  .s6 .rpanel {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 380px;
+    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px 24px;
+  }
+  .s6 .screenlabel {
+    font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45);
+    margin-bottom: 12px; text-transform: uppercase;
+  }
+  .browser-frame {
+    background: #1E2E3D;
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 10px 36px rgba(0,0,0,.65);
+    max-width: 100%;
+  }
+  .browser-bar {
+    background: #2A3F52; height: 26px;
+    display: flex; align-items: center;
+    padding: 0 10px; gap: 6px;
+  }
+  .bdot { width: 10px; height: 10px; border-radius: 50%; }
+  .bdot.r { background: #FF5F57; }
+  .bdot.y { background: #FEBC2E; }
+  .bdot.g { background: #28C840; }
+  .burl { flex: 1; height: 14px; background: rgba(255,255,255,.08); border-radius: 4px; margin-left: 8px; }
+  .browser-frame img {
+    display: block; width: 100%; height: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 
-/* ══════════════════════════════════
-   S3 従来リストの不満
-══════════════════════════════════ */
-#s3{background:#fff}
-.s3-accent{
-  width:8px;height:100%;
-  background:linear-gradient(180deg,var(--o1),var(--o2));
-  flex-shrink:0;
-}
-.s3-left{
-  flex:1;display:flex;flex-direction:column;justify-content:center;
-  padding:44px 36px;border-right:1px solid var(--bd);
-}
-.s3-eyebrow{
-  font-size:10px;font-weight:700;letter-spacing:3px;
-  color:var(--n2);margin-bottom:14px;text-transform:uppercase;
-}
-.s3-h2{
-  font-size:42px;font-weight:900;color:var(--dk);
-  line-height:1.15;letter-spacing:-2px;margin-bottom:18px;
-}
-.s3-h2 em{font-style:normal;color:var(--o1)}
-.s3-img{
-  border-radius:14px;overflow:hidden;
-  border:1px solid var(--bd);
-  box-shadow:0 8px 28px rgba(0,0,0,.08);
-  margin-top:6px;
-}
-.s3-img img{width:100%;display:block}
-.s3-right{
-  width:55%;display:flex;flex-direction:column;
-  justify-content:center;padding:44px 48px;gap:18px;
-}
-.s3-card{
-  display:flex;align-items:flex-start;gap:16px;
-  padding:22px 20px;border-radius:16px;background:#fff;
-  border:1.5px solid var(--bd);
-  box-shadow:0 4px 18px rgba(0,0,0,.05);
-  transition:transform .2s,box-shadow .2s;
-}
-.s3-card:hover{transform:translateX(6px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
-.s3-num{
-  width:38px;height:38px;border-radius:11px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--n1),var(--n2));
-  color:#fff;font-size:15px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;
-}
-.s3-card h3{font-size:15px;font-weight:700;color:var(--dk);margin-bottom:6px}
-.s3-card p{font-size:12px;color:var(--tx2);line-height:1.75}
+  /* ── SLIDE 7: リスト作成 ── */
+  .s7 { background: #0D1B2A; }
+  .s7 .topbar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 108px;
+    background: linear-gradient(90deg, var(--teal2), var(--teal));
+    clip-path: polygon(0 0, 100% 0, 100% 68%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 0 56px;
+  }
+  .s7 .topbar .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 4px; }
+  .s7 .topbar h2 { font-size: 24px; font-weight: 900; color: #fff; }
+  .s7 .body {
+    position: absolute; top: 118px; left: 0; right: 0; bottom: 0;
+    display: flex; padding: 18px 44px 26px; gap: 22px; align-items: stretch;
+  }
+  .s7 .fcol {
+    flex: 1;
+    background: rgba(0,180,216,.08);
+    border: 1px solid rgba(0,180,216,.24);
+    border-radius: 12px; padding: 22px 20px;
+    position: relative; overflow: hidden;
+  }
+  .s7 .fcol::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+  }
+  .s7 .fcicon { font-size: 30px; margin-bottom: 12px; }
+  .s7 .fctitle { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .s7 .fcdesc { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.7; }
+  .s7 .fchl {
+    margin-top: 14px; padding: 10px 14px;
+    background: rgba(255,214,10,.1);
+    border-left: 3px solid var(--yellow);
+    border-radius: 4px;
+    font-size: 13px; font-weight: 700; color: var(--yellow);
+  }
 
-/* ══════════════════════════════════
-   S4 ソリューション
-══════════════════════════════════ */
-#s4{background:var(--g1)}
-.s4-header{
-  padding:22px 52px;border-bottom:1px solid var(--bd);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.s4-body{
-  flex:1;display:flex;flex-direction:column;
-  padding:32px 52px 36px;
-}
-.s4-top{margin-bottom:28px}
-.s4-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--n2);margin-bottom:10px;text-transform:uppercase}
-.s4-h2{font-size:38px;font-weight:900;color:var(--dk);line-height:1.2;letter-spacing:-1.5px}
-.s4-h2 em{font-style:normal;color:var(--n2)}
+  /* ── SLIDE 8: アプローチ ── */
+  .s8 { background: linear-gradient(135deg, #0A1825 0%, var(--teal3) 100%); }
+  .s8 .lcol {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 375px;
+    background: linear-gradient(160deg, var(--teal2) 0%, #006080 100%);
+    clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 58px 0 50px;
+  }
+  .s8 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 12px; }
+  .s8 .lcol h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
+  .s8 .lcol p { font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.7; }
+  .s8 .rcol {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 352px;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 18px;
+    padding: 0 42px 0 34px;
+  }
+  .s8 .acard {
+    background: rgba(0,180,216,.1);
+    border: 1px solid rgba(0,180,216,.3);
+    border-radius: 10px; padding: 18px 20px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .s8 .acard .ai { font-size: 26px; flex-shrink: 0; }
+  .s8 .acard h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .s8 .acard p { font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.55; }
+  .s8 .abadge {
+    display: inline-block; margin-top: 6px;
+    padding: 3px 10px;
+    background: var(--yellow); color: var(--dark);
+    font-size: 11px; font-weight: 700;
+    border-radius: 20px;
+  }
 
-.s4-flow{
-  display:flex;gap:0;
-  background:#fff;border-radius:20px;overflow:hidden;
-  border:1.5px solid var(--bd);
-  box-shadow:0 8px 32px rgba(0,0,0,.06);
-  margin-bottom:22px;
-}
-.s4-step{
-  flex:1;padding:28px 16px;text-align:center;
-  position:relative;border-right:1px solid var(--bd);
-}
-.s4-step:last-child{border-right:none;background:rgba(249,115,22,.04)}
-.s4-step::after{
-  content:'▶';
-  position:absolute;right:-10px;top:50%;transform:translateY(-50%);
-  color:var(--n3);font-size:12px;z-index:1;
-  background:#fff;padding:4px 0;
-}
-.s4-step:last-child::after{display:none}
-.s4-step .sn{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,var(--n1),var(--n2));
-  color:#fff;font-size:14px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;
-  margin:0 auto 10px;
-}
-.s4-step:last-child .sn{background:linear-gradient(135deg,var(--o1),var(--o2))}
-.s4-step .si{font-size:20px;margin-bottom:8px}
-.s4-step .st{font-size:12px;font-weight:700;color:var(--dk);margin-bottom:4px}
-.s4-step .sd{font-size:10px;color:var(--tx2);line-height:1.5}
+  /* ── SLIDE 9: 架電フロー ── */
+  .s9 { background: #0D1B2A; }
+  .s9 .glow {
+    position: absolute; top: -100px; right: -100px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,180,216,.14) 0%, transparent 70%);
+  }
+  .s9 .header {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 110px;
+    background: linear-gradient(90deg, var(--teal2), rgba(0,180,216,.38));
+    clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 0 56px;
+  }
+  .s9 .header .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 4px; }
+  .s9 .header h2 { font-size: 23px; font-weight: 900; color: #fff; }
+  .s9 .body {
+    position: absolute; top: 120px; left: 44px; right: 44px; bottom: 70px;
+    display: flex; gap: 16px; align-items: stretch;
+  }
+  .s9 .fcard {
+    flex: 1;
+    background: rgba(0,180,216,.09);
+    border: 1px solid rgba(0,180,216,.24);
+    border-radius: 12px; padding: 20px 16px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .s9 .fcard .fnum {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--yellow); color: var(--dark);
+    font-size: 16px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .s9 .fcard h3 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .s9 .fcard p { font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.6; }
+  .s9 .arrow { display: flex; align-items: center; color: var(--yellow); font-size: 20px; }
+  .s9 .result {
+    position: absolute; bottom: 18px; left: 44px; right: 44px;
+    background: rgba(255,214,10,.1);
+    border: 1.5px solid rgba(255,214,10,.45);
+    border-radius: 8px; padding: 12px 20px;
+    text-align: center;
+    font-size: 14px; font-weight: 700; color: var(--yellow);
+  }
 
-.s4-tagline{
-  text-align:center;padding:20px 32px;
-  background:linear-gradient(135deg,var(--n1),var(--n2));
-  border-radius:16px;font-size:17px;font-weight:900;color:#fff;
-}
-.s4-tagline em{
-  font-style:normal;
-  background:linear-gradient(90deg,#FBBF24,#F97316);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+  /* ── SLIDE 10: 架電オプション ── */
+  .s10 { background: linear-gradient(135deg, #112233 0%, var(--teal3) 100%); }
+  .s10 .lcol {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 340px;
+    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
+    clip-path: polygon(0 0, 83% 0, 100% 100%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 0 54px 0 50px;
+  }
+  .s10 .optbadge {
+    display: inline-block; margin-bottom: 14px;
+    padding: 4px 12px;
+    background: rgba(255,214,10,.18); border: 1px solid var(--yellow);
+    border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--yellow);
+  }
+  .s10 .lcol h2 { font-size: 23px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 14px; }
+  .s10 .lcol p { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.7; }
+  .s10 .rcol {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 315px;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 14px;
+    padding: 0 40px 0 32px;
+  }
+  .s10 .orow { display: flex; gap: 14px; }
+  .s10 .ocard {
+    flex: 1;
+    background: rgba(0,180,216,.1);
+    border: 1px solid rgba(0,180,216,.25);
+    border-radius: 10px; padding: 18px 16px; text-align: center;
+  }
+  .s10 .ocard .oi { font-size: 26px; margin-bottom: 8px; }
+  .s10 .ocard h3 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .s10 .ocard p { font-size: 11px; color: rgba(255,255,255,.62); line-height: 1.5; }
 
-/* ══════════════════════════════════
-   S5 データ収集
-══════════════════════════════════ */
-#s5{background:#fff}
-.s5-left{
-  width:42%;display:flex;flex-direction:column;justify-content:center;
-  padding:44px 40px;
-  background:linear-gradient(160deg,#0A1C52 0%,#1E4DB7 100%);
-  position:relative;overflow:hidden;
-}
-.s5-left::after{
-  content:'';position:absolute;
-  right:-40px;bottom:-40px;
-  width:200px;height:200px;border-radius:50%;
-  background:rgba(255,255,255,.04);
-}
-.s5-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--o2);margin-bottom:14px;text-transform:uppercase}
-.s5-h2{font-size:42px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-2px;margin-bottom:16px}
-.s5-h2 em{font-style:normal;color:var(--o2)}
-.s5-sources{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.s5-src{
-  padding:8px 14px;border-radius:10px;
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
-  font-size:12px;font-weight:700;color:rgba(255,255,255,.85);
-}
-.s5-note{
-  font-size:11px;color:rgba(255,255,255,.45);
-  line-height:1.7;padding:14px;
-  background:rgba(255,255,255,.05);border-radius:10px;
-}
+  /* ── SLIDE 11: 導入効果 ── */
+  .s11 { background: #0D1B2A; }
+  .s11 .banner {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 118px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 0 56px;
+  }
+  .s11 .banner h2 { font-size: 26px; font-weight: 900; color: var(--dark); }
+  .s11 .banner p { font-size: 13px; color: rgba(0,0,0,.58); margin-top: 3px; }
+  .s11 .metrics {
+    position: absolute; top: 128px; left: 32px; right: 32px;
+    display: flex; gap: 14px;
+  }
+  .s11 .mc {
+    flex: 1;
+    background: rgba(0,180,216,.08);
+    border: 1px solid rgba(0,180,216,.24);
+    border-radius: 12px; padding: 22px 14px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .s11 .mc::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--yellow));
+  }
+  .s11 .mnum { font-size: 38px; font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
+  .s11 .munit { font-size: 18px; }
+  .s11 .mlabel { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.5; margin-top: 6px; }
+  .s11 .submets {
+    position: absolute; bottom: 22px; left: 32px; right: 32px;
+    background: rgba(255,214,10,.07);
+    border: 1px solid rgba(255,214,10,.28);
+    border-radius: 8px; padding: 12px 20px;
+    display: flex; justify-content: space-around; align-items: center;
+  }
+  .s11 .smi { text-align: center; }
+  .s11 .smn { font-size: 20px; font-weight: 900; color: var(--yellow); }
+  .s11 .sml { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 2px; }
+  .s11 .smdiv { width: 1px; height: 34px; background: rgba(255,255,255,.14); }
 
-.s5-right{
-  flex:1;display:flex;flex-direction:column;
-  justify-content:center;padding:44px 48px;gap:22px;
-}
-.s5-pt{
-  padding:24px 22px;border-radius:18px;
-  background:var(--g1);border:1.5px solid var(--bd);
-  box-shadow:0 4px 18px rgba(0,0,0,.05);
-}
-.s5-pt-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.s5-pt-icon{
-  width:34px;height:34px;border-radius:9px;
-  background:var(--o1);display:flex;align-items:center;justify-content:center;
-  font-size:16px;flex-shrink:0;
-}
-.s5-pt h3{font-size:14px;font-weight:700;color:var(--dk)}
-.s5-pt p{font-size:12px;color:var(--tx2);line-height:1.8}
+  /* ── SLIDE 12: ご利用の流れ ── */
+  .s12 { background: linear-gradient(135deg, #0D1B2A 0%, var(--teal3) 100%); }
+  .s12 .header {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 102px;
+    background: linear-gradient(90deg, var(--teal2), var(--teal));
+    clip-path: polygon(0 0, 100% 0, 100% 66%, 0 100%);
+    display: flex; align-items: center;
+    padding: 0 56px;
+  }
+  .s12 .header h2 { font-size: 24px; font-weight: 900; color: #fff; }
+  .s12 .stepsrow {
+    position: absolute; top: 112px; left: 36px; right: 36px;
+    display: flex; gap: 14px; align-items: stretch;
+  }
+  .s12 .sbox {
+    flex: 1;
+    background: rgba(0,180,216,.1);
+    border: 1px solid rgba(0,180,216,.24);
+    border-radius: 12px; padding: 20px 14px; text-align: center;
+  }
+  .s12 .sbox .snum {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    color: var(--dark); font-size: 17px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .s12 .sbox .sicon { font-size: 24px; margin-bottom: 8px; }
+  .s12 .sbox h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .s12 .sbox p { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.55; }
+  .s12 .sarrow { display: flex; align-items: center; padding-top: 22px; color: var(--yellow); font-size: 18px; }
+  .s12 .snote {
+    position: absolute; bottom: 22px; left: 0; right: 0;
+    text-align: center; font-size: 12px; color: rgba(255,255,255,.42);
+  }
 
-/* ══════════════════════════════════
-   SCREEN SLIDES (S6,S7,S9)
-══════════════════════════════════ */
-.sc-left{
-  width:40%;display:flex;flex-direction:column;justify-content:center;
-  padding:44px 40px;border-right:1px solid var(--bd);
-}
-.sc-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--n2);margin-bottom:12px;text-transform:uppercase}
-.sc-h2{font-size:38px;font-weight:900;color:var(--dk);line-height:1.2;letter-spacing:-1.5px;margin-bottom:14px}
-.sc-h2 em{font-style:normal;color:var(--n2)}
-.sc-desc{font-size:13px;color:var(--tx2);line-height:1.85;margin-bottom:22px}
-.sc-pts{display:flex;flex-direction:column;gap:12px}
-.sc-pt{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:14px 16px;border-radius:12px;background:var(--g1);
-  border:1px solid var(--bd);
-}
-.sc-ic{
-  width:30px;height:30px;border-radius:8px;
-  background:linear-gradient(135deg,var(--n1),var(--n2));
-  color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.sc-pt h4{font-size:12px;font-weight:700;color:var(--dk);margin-bottom:3px}
-.sc-pt p{font-size:11px;color:var(--tx2);line-height:1.6}
-.sc-right{
-  flex:1;
-  background:linear-gradient(135deg,#0D2B6E 0%,#1E4DB7 100%);
-  display:flex;align-items:center;justify-content:center;
-  padding:32px;overflow:hidden;
-}
-/* ブラウザフレームモックアップ */
-.browser-mock{
-  width:100%;max-width:560px;
-  border-radius:14px;overflow:hidden;
-  box-shadow:0 24px 64px rgba(0,0,0,.45);
-  flex-shrink:0;
-}
-.browser-bar{
-  background:#2D3142;
-  padding:10px 14px;
-  display:flex;align-items:center;gap:7px;
-  flex-shrink:0;
-}
-.browser-dot{width:10px;height:10px;border-radius:50%}
-.browser-url{
-  flex:1;margin:0 10px;
-  background:rgba(255,255,255,.1);
-  border-radius:20px;padding:3px 12px;
-  font-size:10px;color:rgba(255,255,255,.4);
-  font-family:monospace;
-}
-.browser-body{
-  overflow-y:auto;
-  max-height:440px;
-  background:#fff;
-}
-.sshot{
-  width:100%;height:auto;
-  display:block;
-  image-rendering:-webkit-optimize-contrast;
-  image-rendering:crisp-edges;
-}
-
-/* ══════════════════════════════════
-   S8 アプローチ
-══════════════════════════════════ */
-#s8{background:#fff}
-.s8-header{
-  padding:20px 52px;border-bottom:1px solid var(--bd);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.s8-body{flex:1;display:flex;flex-direction:column;padding:24px 52px 28px}
-.s8-top{
-  display:grid;grid-template-columns:1fr 1.5fr;
-  gap:28px;align-items:start;margin-bottom:20px;
-}
-.s8-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--n2);margin-bottom:10px;text-transform:uppercase}
-.s8-h2{font-size:36px;font-weight:900;color:var(--dk);line-height:1.2;letter-spacing:-1.5px;margin-bottom:10px}
-.s8-h2 em{font-style:normal;color:var(--n2)}
-.s8-desc{font-size:12px;color:var(--tx2);line-height:1.8}
-.s8-screen{
-  border-radius:12px;overflow:hidden;
-  box-shadow:0 10px 36px rgba(0,0,0,.1);border:1px solid var(--bd);
-}
-.s8-screen img{width:100%;display:block}
-.s8-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.s8-card{
-  padding:20px 20px;border-radius:16px;background:var(--g1);
-  border:1.5px solid var(--bd);
-}
-.s8-card .hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.s8-card .ic{
-  width:34px;height:34px;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
-}
-.ic-bl{background:rgba(30,77,183,.1)}
-.ic-or{background:rgba(249,115,22,.1)}
-.s8-card h3{font-size:13px;font-weight:700;color:var(--dk)}
-.s8-card p{font-size:11px;color:var(--tx2);line-height:1.75}
-
-/* ══════════════════════════════════
-   S10 導入効果
-══════════════════════════════════ */
-#s10{background:var(--g1)}
-.s10-header{
-  padding:20px 52px;border-bottom:1px solid var(--bd);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.s10-body{flex:1;display:flex;flex-direction:column;padding:24px 52px 28px}
-.s10-top{margin-bottom:20px}
-.s10-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--n2);margin-bottom:8px;text-transform:uppercase}
-.s10-h2{font-size:36px;font-weight:900;color:var(--dk);letter-spacing:-1.5px}
-.s10-sub{font-size:12px;color:var(--tx2);margin-left:16px}
-.s10-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-.s10-card{
-  padding:28px 26px;border-radius:20px;background:#fff;
-  border:1.5px solid var(--bd);
-  box-shadow:0 8px 28px rgba(0,0,0,.06);
-  position:relative;overflow:hidden;
-}
-.s10-card::before{
-  content:'';position:absolute;
-  top:0;left:0;right:0;height:4px;
-}
-.s10-card.bl::before{background:linear-gradient(90deg,var(--n1),var(--n2))}
-.s10-card.or::before{background:linear-gradient(90deg,var(--o1),var(--o2))}
-.s10-card .el{
-  font-size:10px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:10px;
-}
-.el.bl{color:var(--n2)}
-.el.or{color:var(--o1)}
-.s10-card .en{
-  font-size:64px;font-weight:900;line-height:1;
-  letter-spacing:-2px;margin-bottom:8px;
-}
-.en.bl{color:var(--n1)}
-.en.or{color:var(--o1)}
-.s10-card .es{font-size:13px;font-weight:700;color:var(--dk);margin-bottom:6px}
-.s10-card .ed{font-size:12px;color:var(--tx2);line-height:1.65}
-.s10-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.s10-metric{
-  text-align:center;padding:16px 10px;border-radius:14px;
-  background:#fff;border:1px solid var(--bd);
-  box-shadow:0 3px 12px rgba(0,0,0,.04);
-}
-.s10-metric .mn{font-size:26px;font-weight:900;color:var(--n1);margin-bottom:4px}
-.s10-metric .ml{font-size:10px;color:var(--tx2)}
-
-/* ══════════════════════════════════
-   S11 ご利用の流れ
-══════════════════════════════════ */
-#s11{background:#fff}
-.s11-header{
-  padding:20px 52px;border-bottom:1px solid var(--bd);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.s11-body{flex:1;display:flex;flex-direction:column;padding:32px 52px 36px}
-.s11-top{margin-bottom:36px}
-.s11-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--n2);margin-bottom:10px;text-transform:uppercase}
-.s11-h2{font-size:36px;font-weight:900;color:var(--dk);letter-spacing:-1.5px}
-.s11-steps{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
-  position:relative;margin-bottom:28px;
-}
-.s11-steps::before{
-  content:'';position:absolute;
-  top:33px;left:12%;right:12%;
-  height:2px;
-  background:linear-gradient(90deg,var(--n2),var(--n3));
-  z-index:0;
-}
-.s11-sc{
-  text-align:center;padding:0 18px;
-  display:flex;flex-direction:column;align-items:center;
-  position:relative;z-index:1;
-}
-.s11-dot{
-  width:66px;height:66px;border-radius:50%;
-  background:linear-gradient(135deg,var(--n1),var(--n2));
-  display:flex;align-items:center;justify-content:center;
-  margin:0 auto 20px;
-  box-shadow:0 8px 22px rgba(30,77,183,.35);
-  flex-direction:column;color:#fff;
-}
-.s11-dot:last-of-type,
-.s11-sc:last-child .s11-dot{background:linear-gradient(135deg,var(--o1),var(--o2));box-shadow:0 8px 22px rgba(249,115,22,.35)}
-.s11-dot .dn{font-size:10px;opacity:.7}
-.s11-dot .db{font-size:20px;font-weight:900}
-.s11-sc h3{font-size:15px;font-weight:700;color:var(--dk);margin-bottom:8px}
-.s11-sc p{font-size:12px;color:var(--tx2);line-height:1.7}
-.s11-footer{
-  padding:20px 32px;background:var(--g1);border-radius:16px;
-  border:1.5px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;gap:36px;
-}
-.s11-fi .fl{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--n2);margin-bottom:4px;text-transform:uppercase}
-.s11-fi .fv{font-size:15px;font-weight:700;color:var(--dk)}
-.s11-fdiv{width:1px;height:40px;background:var(--bd)}
-
-/* ══════════════════════════════════
-   S12 CTA
-══════════════════════════════════ */
-#s12{background:linear-gradient(135deg,#0A1C52 0%,#1E4DB7 60%,#0D2B6E 100%)}
-#s12::before{
-  content:'';position:absolute;
-  top:-100px;right:-100px;width:500px;height:500px;border-radius:50%;
-  background:radial-gradient(circle,rgba(251,191,36,.1),transparent 65%);
-  pointer-events:none;
-}
-#s12::after{
-  content:'';position:absolute;
-  bottom:-80px;left:-60px;width:360px;height:360px;border-radius:50%;
-  background:radial-gradient(circle,rgba(249,115,22,.08),transparent 65%);
-  pointer-events:none;
-}
-.s12-header{
-  position:relative;z-index:10;
-  padding:22px 52px;border-bottom:1px solid rgba(255,255,255,.12);
-  display:flex;justify-content:space-between;align-items:center;
-}
-.s12-body{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:0 60px 48px;text-align:center;
-  position:relative;z-index:10;
-}
-.s12-h2{
-  font-size:clamp(34px,5.5vw,68px);font-weight:900;color:#fff;
-  line-height:1.1;letter-spacing:-2px;margin-bottom:14px;
-}
-.s12-h2 em{
-  font-style:normal;
-  background:linear-gradient(90deg,#FBBF24,#F97316);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.s12-sub{font-size:16px;color:rgba(255,255,255,.65);line-height:1.8;margin-bottom:40px}
-.s12-steps{display:flex;gap:14px;margin-bottom:32px}
-.s12-step{
-  flex:1;max-width:195px;padding:22px 18px;border-radius:18px;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
-  backdrop-filter:blur(10px);text-align:center;
-}
-.s12-step .sn{
-  width:34px;height:34px;border-radius:50%;
-  background:linear-gradient(135deg,var(--o1),var(--o2));
-  color:#fff;font-size:14px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;
-  margin:0 auto 12px;
-}
-.s12-step h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.4}
-.s12-step p{font-size:11px;color:rgba(255,255,255,.55);line-height:1.5}
-.s12-contact{
-  padding:18px 44px;border-radius:16px;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
-  backdrop-filter:blur(10px);
-  display:flex;align-items:center;gap:32px;
-}
-.s12-ci .cl{font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:4px;text-transform:uppercase}
-.s12-ci .cv{font-size:16px;font-weight:700;color:#fff}
-.s12-cd{width:1px;height:36px;background:rgba(255,255,255,.15)}
-
-/* ══════════════════════════════════
-   FLEX HELPERS
-══════════════════════════════════ */
-.row{display:flex;height:100%}
-.col{display:flex;flex-direction:column;height:100%}
-.hdr{
-  padding:20px 52px;border-bottom:1px solid var(--bd);
-  display:flex;justify-content:space-between;align-items:center;
-  flex-shrink:0;
-}
-.hdr .logo{color:var(--n1)}
-.hdr .logo b{color:var(--o1)}
-.hdr .tag{color:var(--tx2)}
-.hdr-dark{border-color:rgba(255,255,255,.12)}
-.hdr-dark .logo{color:#fff}
-.hdr-dark .tag{color:rgba(255,255,255,.35)}
+  /* ── SLIDE 13: CTA ── */
+  .s13 { background: linear-gradient(135deg, var(--teal2) 0%, #0D1B2A 65%); }
+  .s13 .glow {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 620px; height: 400px;
+    background: radial-gradient(ellipse at center, rgba(0,180,216,.18) 0%, transparent 70%);
+  }
+  .s13 .topstripe {
+    position: absolute; top: 0; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange), var(--yellow));
+  }
+  .s13 .content {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px;
+  }
+  .s13 .catch { font-size: 11px; font-weight: 700; letter-spacing: .28em; color: var(--yellow); text-transform: uppercase; margin-bottom: 18px; }
+  .s13 .copy { font-size: 36px; font-weight: 900; color: #fff; line-height: 1.25; margin-bottom: 12px; }
+  .s13 .copy em { color: var(--yellow); font-style: normal; }
+  .s13 .subcopy { font-size: 15px; color: rgba(255,255,255,.72); line-height: 1.7; margin-bottom: 34px; max-width: 520px; }
+  .s13 .ctabtn {
+    display: inline-block; padding: 16px 52px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+    color: var(--dark); font-size: 17px; font-weight: 900;
+    border-radius: 50px; letter-spacing: .06em;
+    box-shadow: 0 6px 26px rgba(255,214,10,.38);
+    text-decoration: none; margin-bottom: 26px;
+  }
+  .s13 .contact { font-size: 12px; color: rgba(255,255,255,.42); letter-spacing: .08em; }
+  .s13 .logo {
+    position: absolute; bottom: 22px; right: 40px;
+    font-size: 12px; font-weight: 700; letter-spacing: .12em;
+    color: rgba(255,255,255,.28);
+  }
 </style>
 </head>
 <body>
 
-<div class="prg" id="prg"></div>
-<div class="dots" id="dots"></div>
-<nav class="nav">
-  <button class="nb" onclick="go(-1)">&#8592;</button>
-  <span class="nc" id="nc">1 / 12</span>
-  <button class="nb" onclick="go(1)">&#8594;</button>
-</nav>
-<button id="eBtn" onclick="tgl()">✏️ テキスト編集</button>
-<button id="sBtn" onclick="sav()">💾 HTMLで保存</button>
-<div id="eHint">クリックして直接編集できます</div>
+<!-- ── Toolbar ── -->
+<div id="toolbar">
+  <button id="btn-edit" onclick="toggleEdit()">✏️ 編集モード</button>
+  <button onclick="saveHTML()">💾 HTMLで保存</button>
+</div>
+<div id="counter">1 / 13</div>
+<button class="nav-btn" id="btn-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nav-btn" id="btn-next" onclick="nextSlide()">&#8594;</button>
+<div id="nav"></div>
 
-<div class="deck" id="deck">
+<!-- ── Scaler ── -->
+<div id="scaler">
 
-<!-- ══ S1 COVER ══ -->
-<div class="slide active" id="s1">
-  <div class="s1-header">
-    <div class="logo" style="color:#fff"><b>AI</b> List Master &ensp;|&ensp; BtoB営業支援SaaS</div>
-    <div class="tag">Sales Proposal 2026</div>
+<!-- ════════════ SLIDE 1: タイトル ════════════ -->
+<div class="slide s1 active">
+  <div class="diag"></div>
+  <div class="stripe"></div>
+  <div class="top-bar"></div>
+  <div class="content">
+    <p class="eyebrow editable">BtoB 営業支援 SaaS</p>
+    <h1 class="title editable">AI<em>リスト</em><br>マスター</h1>
+    <p class="subtitle editable">AIが営業リストの"質"を根本から変える</p>
+    <div class="tags">
+      <span class="tag editable">リスト収集</span>
+      <span class="tag editable">企業深堀り</span>
+      <span class="tag editable">AIマッチング</span>
+      <span class="tag editable">アプローチ自動化</span>
+    </div>
   </div>
-  <div class="s1-body">
-    <div class="s1-left">
-      <div class="s1-badge">BtoB SALES SUPPORT SaaS</div>
-      <h1 class="s1-h1">AIが営業リストの<br><em>"質"</em>を変える。</h1>
-      <p class="s1-lead">リスト作成・調査・アプローチまで、<br>ひとつのプラットフォームで完全自動化。</p>
-      <div class="s1-stats">
-        <div class="s1-stat">
-          <div class="sn">87<span>%</span></div>
-          <div class="sl">業務時間<br>削減</div>
-        </div>
-        <div class="s1-stat">
-          <div class="sn">2.4<span>倍</span></div>
-          <div class="sl">アポ獲得率<br>向上</div>
-        </div>
-        <div class="s1-stat">
-          <div class="sn">+32<span>%</span></div>
-          <div class="sl">商談<br>転換率</div>
-        </div>
+  <div class="logo editable">AIリストマスター</div>
+</div>
+
+<!-- ════════════ SLIDE 2: 営業の現実 ════════════ -->
+<div class="slide s2">
+  <div class="topband">
+    <h2 class="editable">営業マンの<em>不都合な真実</em></h2>
+  </div>
+  <div class="stats">
+    <div class="scard">
+      <div class="snum editable">35<small>%</small></div>
+      <div class="slabel editable">実際に架電・訪問など<br>営業活動に使える時間</div>
+    </div>
+    <div class="scard">
+      <div class="snum editable">39<small>%</small></div>
+      <div class="slabel editable">事務作業・リスト調査など<br>間接業務に取られる時間</div>
+    </div>
+    <div class="scard">
+      <div class="snum editable">25<small>%</small></div>
+      <div class="slabel editable">移動・待機・社内調整など<br>成果に直結しない時間</div>
+    </div>
+  </div>
+  <div class="footnote editable">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
+</div>
+
+<!-- ════════════ SLIDE 3: 3つの限界 ════════════ -->
+<div class="slide s3">
+  <div class="lcol">
+    <div class="icon-wrap">⚠️</div>
+    <h2 class="editable">従来リストの<br>"3つの限界"</h2>
+    <p class="editable">古いリストに頼り続ける限り、<br>営業の生産性は上がりません。</p>
+  </div>
+  <div class="rcol">
+    <div class="pitem">
+      <div class="pnum editable">01</div>
+      <div class="ptxt">
+        <h3 class="editable">データの鮮度・出所が不透明</h3>
+        <p class="editable">いつ収集されたか分からないデータ。架電しても「廃業済み」「担当者変更」が続出し、時間とコストが無駄になります。</p>
       </div>
     </div>
-    <div class="s1-right">
-      <div class="s1-card">
-        <div class="s1-card-title">5 STEPS — AIが営業前工程をすべて担う</div>
-        <div class="s1-flow">
-          <div class="s1-step"><div class="n">1</div><div><div class="t">データ自動構築</div><div class="d">gBiz × AIで公開情報を自動収集</div></div></div>
-          <div class="s1-arr">↓</div>
-          <div class="s1-step"><div class="n">2</div><div><div class="t">企業理解</div><div class="d">AI要約 + 複数タグを自動付与</div></div></div>
-          <div class="s1-arr">↓</div>
-          <div class="s1-step"><div class="n">3</div><div><div class="t">AIマッチング</div><div class="d">0〜100スコアで最適企業を抽出</div></div></div>
-          <div class="s1-arr">↓</div>
-          <div class="s1-step"><div class="n">4</div><div><div class="t">アプローチ自動化</div><div class="d">パーソナライズメール + 架電管理</div></div></div>
-          <div class="s1-arr">↓</div>
-          <div class="s1-step"><div class="n">5</div><div><div class="t">成果管理</div><div class="d">ダッシュボードで効果を可視化</div></div></div>
-        </div>
+    <div class="pitem">
+      <div class="pnum editable">02</div>
+      <div class="ptxt">
+        <h3 class="editable">業種1つでは企業の本質が見えない</h3>
+        <p class="editable">「飲食業」だけでは刺さる提案ができません。企業の実態・フェーズを把握しないアプローチは空振りの連続です。</p>
+      </div>
+    </div>
+    <div class="pitem">
+      <div class="pnum editable">03</div>
+      <div class="ptxt">
+        <h3 class="editable">リスト作成で本来の業務が止まる</h3>
+        <p class="editable">Webを手作業で検索・整理するのに膨大な時間を消費。結果、本来の営業時間そのものが奪われています。</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ S2 不都合な真実 ══ -->
-<div class="slide" id="s2">
-  <div class="row">
-    <div class="s2-bar" style="width:42%">
-      <div class="s2-eyebrow">営業の現実</div>
-      <h2 class="s2-h2">営業マンの<br>不都合な真実</h2>
-      <p class="s2-desc">架電や商談など、本来の営業活動に使えている時間は全体のわずか<span class="s2-hl">35%</span>。残りの65%は準備・事務・ムダな作業です。</p>
+<!-- ════════════ SLIDE 4: 5ステップ ════════════ -->
+<div class="slide s4">
+  <div class="header">
+    <h2 class="editable">AIリストマスターが実現する <em>5ステップ営業フロー</em></h2>
+  </div>
+  <div class="flow">
+    <div class="fstep">
+      <div class="fnum editable">STEP 01</div>
+      <div class="ficon">🗄️</div>
+      <div class="ftitle editable">データ<br>自動構築</div>
+      <div class="fdesc editable">AIが法人・個人店舗データを自動収集・常時最新化</div>
     </div>
-    <div class="s2-right">
-      <div class="s2-big">
-        <div class="lbl">架電などの営業活動に使える時間は全体のわずか</div>
-        <div class="pct">35<span class="unit">%</span></div>
-        <div class="note">営業担当者の時間の65%は<br>準備・事務・ムダな作業に消えている</div>
-      </div>
-      <div class="s2-cards">
-        <div class="s2-card c1">
-          <div class="cn">39.2<span class="cu">%</span></div>
-          <div class="cl">は事務作業や調査</div>
-          <div class="cs">それって営業マンがやるべき？</div>
-        </div>
-        <div class="s2-card c2">
-          <div class="cn">25.5<span class="cu">%</span></div>
-          <div class="cl">がムダな時間</div>
-          <div class="cs">非営業時間にムダと感じている</div>
-        </div>
-      </div>
-      <div class="s2-src">出典：HubSpot Japan「日本の営業に関する意識・実態調査」 / InsideSales.com調査</div>
+    <div class="fstep">
+      <div class="fnum editable">STEP 02</div>
+      <div class="ficon">🔍</div>
+      <div class="ftitle editable">企業<br>深堀り</div>
+      <div class="fdesc editable">業種・事業内容・AIタグで企業を多面的に理解</div>
+    </div>
+    <div class="fstep">
+      <div class="fnum editable">STEP 03</div>
+      <div class="ficon">🤖</div>
+      <div class="ftitle editable">AI<br>マッチング</div>
+      <div class="fdesc editable">自社商材との親和性を0〜100でスコアリング</div>
+    </div>
+    <div class="fstep">
+      <div class="fnum editable">STEP 04</div>
+      <div class="ficon">✉️</div>
+      <div class="ftitle editable">アプローチ<br>自動化</div>
+      <div class="fdesc editable">AIが最適なメール・スクリプトを自動生成</div>
+    </div>
+    <div class="fstep">
+      <div class="fnum editable">STEP 05</div>
+      <div class="ficon">📊</div>
+      <div class="ftitle editable">成果<br>管理</div>
+      <div class="fdesc editable">KPIレポートで可視化し継続改善</div>
     </div>
   </div>
+  <div class="tagline editable">「リストを買って終わり」の時代は、終わりです。</div>
 </div>
 
-<!-- ══ S3 従来リストの不満 ══ -->
-<div class="slide" id="s3">
-  <div class="row">
-    <div class="s3-accent"></div>
-    <div class="s3-left">
-      <div class="s3-eyebrow">従来の課題</div>
-      <h2 class="s3-h2">従来リストの<br><em>不満</em></h2>
-      <div class="s3-img">
-        <img src="pdf_pages/page_03.png" alt="従来リストの課題">
-      </div>
-    </div>
-    <div class="s3-right">
-      <div class="s3-card">
-        <div class="s3-num">01</div>
-        <div>
-          <h3>データの鮮度・出所が不透明</h3>
-          <p>リスト購入型では情報が古く、出所も不明確。架空企業や更新停止データが混在するリスクがあり、アプローチの無駄が発生します。</p>
-        </div>
-      </div>
-      <div class="s3-card">
-        <div class="s3-num">02</div>
-        <div>
-          <h3>業種1つで企業の本質が見えない</h3>
-          <p>従来の単一分類では、複数事業を展開する実際の企業像を捉えきれず、有望なターゲットを取りこぼしてしまいます。</p>
-        </div>
-      </div>
-      <div class="s3-card">
-        <div class="s3-num">03</div>
-        <div>
-          <h3>リスト作成で業務が止まる</h3>
-          <p>作成・マッチング・メール・架電・管理が別々のツールに分断されており、データ移行の手間が営業本来のスピードを阻害します。</p>
-        </div>
-      </div>
-    </div>
+<!-- ════════════ SLIDE 5: データ収集 ════════════ -->
+<div class="slide s5">
+  <div class="lpanel">
+    <div class="secnum editable">FEATURE 01</div>
+    <h2 class="editable">営業DBを<br>AIが自動構築</h2>
+    <p class="editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
   </div>
-</div>
-
-<!-- ══ S4 ソリューション ══ -->
-<div class="slide col" id="s4">
-  <div class="hdr">
-    <div class="logo"><b>AI</b> List Master</div>
-    <div class="tag" style="color:var(--tx2)">03 / SOLUTION</div>
-  </div>
-  <div class="s4-body">
-    <div class="s4-top">
-      <div class="s4-eyebrow">AIリストマスター とは</div>
-      <h2 class="s4-h2">リストの作成・調査・活用を、<br><em>ひとつのプラットフォームで完結</em></h2>
-    </div>
-    <div class="s4-flow">
-      <div class="s4-step">
-        <div class="si">🗄️</div>
-        <div class="sn">1</div>
-        <div class="st">データ自動構築</div>
-        <div class="sd">gBiz × AIで公開情報を自動収集</div>
-      </div>
-      <div class="s4-step">
-        <div class="si">🧠</div>
-        <div class="sn">2</div>
-        <div class="st">企業理解</div>
-        <div class="sd">AI要約 + 複数タグを自動付与</div>
-      </div>
-      <div class="s4-step">
-        <div class="si">🎯</div>
-        <div class="sn">3</div>
-        <div class="st">AIマッチング</div>
-        <div class="sd">0〜100スコアで最適企業を抽出</div>
-      </div>
-      <div class="s4-step">
-        <div class="si">📨</div>
-        <div class="sn">4</div>
-        <div class="st">アプローチ自動化</div>
-        <div class="sd">パーソナライズメール + 架電管理</div>
-      </div>
-      <div class="s4-step">
-        <div class="si">📊</div>
-        <div class="sn">5</div>
-        <div class="st">成果管理</div>
-        <div class="sd">ダッシュボードで可視化</div>
-      </div>
-    </div>
-    <div class="s4-tagline">「リストを買って終わり」の時代は<em>終わり</em>です。</div>
-  </div>
-</div>
-
-<!-- ══ S5 データ収集 ══ -->
-<div class="slide" id="s5">
-  <div class="row">
-    <div class="s5-left">
-      <div class="s5-eyebrow">データソース</div>
-      <h2 class="s5-h2">営業DBを<br><em>AIが収集</em></h2>
-      <div class="s5-sources">
-        <div class="s5-src">📊 gBizINFO</div>
-        <div class="s5-src">🏛️ 経済産業省</div>
-        <div class="s5-src">🔍 Google</div>
-        <div class="s5-src">🍽️ 食べログ</div>
-        <div class="s5-src">𝕏 Twitter/X</div>
-        <div class="s5-src">📸 Instagram</div>
-        <div class="s5-src">📰 PRTIMES</div>
-      </div>
-      <div class="s5-note">すべてのデータは政府公開情報とインターネット上の公開情報に基づいています。リスト売買や情報流出によるデータは一切含まれません。</div>
-    </div>
-    <div class="s5-right">
-      <div class="s5-pt">
-        <div class="s5-pt-hd">
-          <div class="s5-pt-icon">→</div>
-          <h3>法人リスト — 政府公開データ × AIスクレイピング</h3>
-        </div>
-        <p>経済産業省のgBiz（政府保有法人データ）を基礎に、AIがWebサイト・事業内容・連絡先・SNS情報を自動収集・構造化。常に最新の公開情報を取得しています。</p>
-      </div>
-      <div class="s5-pt">
-        <div class="s5-pt-hd">
-          <div class="s5-pt-icon">→</div>
-          <h3>個人店舗 — SNS・ポータルから新規開業を自動収集</h3>
-        </div>
-        <p>X・Instagram、PRTIMES、食べログ・ホットペッパー等から歯科医院・飲食店・美容室などの新規オープン情報を自動収集。開業タイミングを逃さない。</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ S6 企業を深堀り ══ -->
-<div class="slide" id="s6">
-  <div class="row">
-    <div class="sc-left" style="background:#fff">
-      <div class="sc-eyebrow">05 / FEATURE — 企業データ</div>
-      <h2 class="sc-h2">企業を<br><em>深堀りする</em></h2>
-      <p class="sc-desc">1社に対して業界・業種を複数タグ付け。AIが事業内容を読み取り、自然な文章で要約します。</p>
-      <div class="sc-pts">
-        <div class="sc-pt">
-          <div class="sc-ic">🏷️</div>
-          <div><h4>業界・業種の複数割当</h4><p>「マーケティング × Web制作」のような複合企業も正しくリストに含める</p></div>
-        </div>
-        <div class="sc-pt">
-          <div class="sc-ic">🤖</div>
-          <div><h4>事業内容のAI要約</h4><p>企業のWebサイトや公開情報からAIが事業内容を読み取り、自然文で要約</p></div>
-        </div>
-        <div class="sc-pt">
-          <div class="sc-ic">🎯</div>
-          <div><h4>AIタグ自動発行</h4><p>「SaaS」「BtoB」「DX推進」など業種の枠を超えた切り口で企業を発見</p></div>
-        </div>
-      </div>
-    </div>
-    <div class="sc-right">
-      <div class="browser-mock">
-        <div class="browser-bar">
-          <div class="browser-dot" style="background:#FF5F57"></div>
-          <div class="browser-dot" style="background:#FEBC2E"></div>
-          <div class="browser-dot" style="background:#28C840"></div>
-          <div class="browser-url">app.ailistmaster.jp / 企業詳細</div>
-        </div>
-        <div class="browser-body">
-          <img src="screen_企業深堀.png" alt="企業詳細画面" class="sshot">
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ S7 リスト作成 ══ -->
-<div class="slide" id="s7">
-  <div class="row">
-    <div class="sc-left" style="background:var(--g1)">
-      <div class="sc-eyebrow">06 / FEATURE — リスト作成</div>
-      <h2 class="sc-h2"><em>自然言語</em>で<br>リストを生成</h2>
-      <p class="sc-desc">「東京にあるSEO/MEOをしている会社」と日常の言葉で指示するだけ。フィルター操作は不要。</p>
-      <div class="sc-pts">
-        <div class="sc-pt">
-          <div class="sc-ic">💬</div>
-          <div><h4>自然言語でリスト生成</h4><p>日常の言葉で指示するだけでAIが最適なリストを自動作成。フィルター操作は不要。</p></div>
-        </div>
-        <div class="sc-pt">
-          <div class="sc-ic">⭐</div>
-          <div><h4>AIマッチング（0〜100スコア）</h4><p>貴社の商材と見込み客の相性をAIが自動スコアリング。データに基づいた優先順位付け。</p></div>
-        </div>
-      </div>
-    </div>
-    <div class="sc-right">
-      <div class="browser-mock">
-        <div class="browser-bar">
-          <div class="browser-dot" style="background:#FF5F57"></div>
-          <div class="browser-dot" style="background:#FEBC2E"></div>
-          <div class="browser-dot" style="background:#28C840"></div>
-          <div class="browser-url">app.ailistmaster.jp / リスト作成</div>
-        </div>
-        <div class="browser-body">
-          <img src="pdf_pages/page_07.png" alt="リスト作成画面" class="sshot">
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ S8 アプローチ自動化 ══ -->
-<div class="slide col" id="s8">
-  <div class="s8-header">
-    <div class="logo"><b>AI</b> List Master</div>
-    <div class="tag" style="color:var(--tx2)">07 / FEATURE — アプローチ自動化</div>
-  </div>
-  <div class="s8-body">
-    <div class="s8-top">
+  <div class="rpanel">
+    <div class="scard">
+      <div class="si">🏢</div>
       <div>
-        <div class="s8-eyebrow">アプローチ自動化</div>
-        <h2 class="s8-h2">「作る」だけでなく<br><em>「届ける」</em>まで</h2>
-        <p class="s8-desc">マッチング結果をもとに、相手企業ごとにパーソナライズされた営業メールをAIが自動作成。「作る」だけでなく「届ける」まで支援します。</p>
-      </div>
-      <div class="s8-screen">
-        <img src="pdf_pages/page_08.png" alt="メール自動生成画面">
+        <h3 class="editable">法人リスト（gBiz × AI）</h3>
+        <p class="editable">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p>
       </div>
     </div>
-    <div class="s8-cards">
-      <div class="s8-card">
-        <div class="hd"><div class="ic ic-bl">✉️</div><h3>AI営業メール自動生成</h3></div>
-        <p>マッチング結果をもとに、企業ごとにパーソナライズされた営業メールをAIが自動作成。件名・本文の自動生成、一括送信、送信履歴の管理に対応。</p>
+    <div class="scard">
+      <div class="si">📍</div>
+      <div>
+        <h3 class="editable">個人店舗（SNS・ポータル）</h3>
+        <p class="editable">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p>
       </div>
-      <div class="s8-card">
-        <div class="hd"><div class="ic ic-or">📞</div><h3>架電管理（オプション）</h3></div>
-        <p>架電キャンペーン作成、担当者別の架電キュー自動配分、ワンクリック結果入力、AIトークスクリプト生成。チームダッシュボードで成果をリアルタイム把握。</p>
+    </div>
+    <div class="badge">
+      <big class="editable">常時最新</big>
+      <p class="editable">AIが定期的にデータを更新。古い情報による無駄な架電を完全排除します。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 6: 企業深堀り ════════════ -->
+<div class="slide s6">
+  <div class="lpanel">
+    <div class="secnum editable">FEATURE 02</div>
+    <h2 class="editable">企業を<br>深堀りする</h2>
+    <div class="flist">
+      <div class="fitem">
+        <span class="fi">🏷️</span>
+        <p class="editable"><strong>業界・業種の複数割当</strong><br>1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p>
+      </div>
+      <div class="fitem">
+        <span class="fi">📝</span>
+        <p class="editable"><strong>事業内容のAI要約</strong><br>長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p>
+      </div>
+      <div class="fitem">
+        <span class="fi">✨</span>
+        <p class="editable"><strong>AIタグ自動発行</strong><br>「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p>
+      </div>
+    </div>
+  </div>
+  <div class="rpanel">
+    <p class="screenlabel editable">実際の画面</p>
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="bdot r"></div>
+        <div class="bdot y"></div>
+        <div class="bdot g"></div>
+        <div class="burl"></div>
+      </div>
+      <img src="screen_企業深堀.png" alt="企業深堀り画面" style="max-width:520px;">
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 7: リスト作成 ════════════ -->
+<div class="slide s7">
+  <div class="topbar">
+    <div class="secnum editable">FEATURE 03</div>
+    <h2 class="editable">自然言語でリストを即生成 × AIマッチングスコア</h2>
+  </div>
+  <div class="body">
+    <div class="fcol">
+      <div class="fcicon">💬</div>
+      <div class="fctitle editable">自然言語でリスト生成</div>
+      <div class="fcdesc editable">「東京都内のIT企業で従業員50名以上」のように話し言葉で条件を入力するだけ。複雑なフィルタ設定は不要。AIが意図を汲んで最適なリストを即座に生成します。</div>
+      <div class="fchl editable">⚡ 従来数時間かかった作業が数秒に</div>
+    </div>
+    <div class="fcol">
+      <div class="fcicon">🎯</div>
+      <div class="fctitle editable">AIマッチングスコア</div>
+      <div class="fcdesc editable">登録した自社商材情報をもとに、各企業との相性を0〜100点でスコアリング。スコアが高い企業から順にアプローチするだけで、商談転換率が劇的に向上します。</div>
+      <div class="fchl editable">📈 スコア上位企業への集中投資で効率最大化</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 8: アプローチ ════════════ -->
+<div class="slide s8">
+  <div class="lcol">
+    <div class="secnum editable">FEATURE 04</div>
+    <h2 class="editable">アプローチを<br>AIが自動化</h2>
+    <p class="editable">企業理解 × 自社商材の掛け合わせで、担当者の心に刺さるアプローチ文を自動生成。送るだけで返信率が変わります。</p>
+  </div>
+  <div class="rcol">
+    <div class="acard">
+      <div class="ai">✉️</div>
+      <div>
+        <h3 class="editable">AI営業メール自動生成</h3>
+        <p class="editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。一斉送信の時代は終わりです。</p>
+        <span class="abadge editable">返信率 +28%</span>
+      </div>
+    </div>
+    <div class="acard">
+      <div class="ai">📞</div>
+      <div>
+        <h3 class="editable">架電管理（オプション）</h3>
+        <p class="editable">架電前に企業情報・AIタグをサマリー表示。担当者と繋がった瞬間からスムーズに本題へ入れます。</p>
+        <span class="abadge editable">アポ獲得率 1.8〜2.4倍</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ S9 架電管理 ══ -->
-<div class="slide" id="s9">
-  <div class="row">
-    <div class="sc-left" style="background:#fff">
-      <div class="sc-eyebrow">08 / FEATURE — 架電管理</div>
-      <h2 class="sc-h2"><em>架電管理</em>で<br>成果を可視化</h2>
-      <p class="sc-desc">作成したリストの架電活動を管理・最適化。キャンペーン単位で進捗を一元管理し、チーム全体の架電成果を可視化します。</p>
-      <div class="sc-pts">
-        <div class="sc-pt">
-          <div class="sc-ic">📋</div>
-          <div><h4>架電実行サポート</h4><p>キャンペーン管理・コールリスト・ワンクリック結果入力・AIトークスクリプト連携</p></div>
-        </div>
-        <div class="sc-pt">
-          <div class="sc-ic">📈</div>
-          <div><h4>分析・レポート</h4><p>チームダッシュボード・個人ダッシュボード・ヒートマップ分析・KPIレポート（CSV対応）</p></div>
-        </div>
+<!-- ════════════ SLIDE 9: 架電フロー ════════════ -->
+<div class="slide s9">
+  <div class="glow"></div>
+  <div class="header">
+    <div class="secnum editable">FEATURE 04-B</div>
+    <h2 class="editable">AIが架電を変える ─ 担当者と繋がった瞬間から確度の高いトークを展開</h2>
+  </div>
+  <div class="body">
+    <div class="fcard">
+      <div class="fnum">1</div>
+      <h3 class="editable">企業情報を即サマリー</h3>
+      <p class="editable">架電前に事業内容・AIタグ・最新動向をAIが3行でまとめて表示。準備時間ゼロ。</p>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="fcard">
+      <div class="fnum">2</div>
+      <h3 class="editable">トークスクリプト自動生成</h3>
+      <p class="editable">企業理解 × 自社商材の組み合わせで最適な切り出しフレーズをリアルタイムで提案します。</p>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="fcard">
+      <div class="fnum">3</div>
+      <h3 class="editable">架電結果を自動記録</h3>
+      <p class="editable">架電後のステータス・メモをワンクリック入力。次回アクションをAIが自動で提案します。</p>
+    </div>
+  </div>
+  <div class="result editable">🎯 「担当者と繋がった瞬間から」確度の高いトークを展開。アポ率が劇的に変わります。</div>
+</div>
+
+<!-- ════════════ SLIDE 10: 架電オプション ════════════ -->
+<div class="slide s10">
+  <div class="lcol">
+    <div class="optbadge editable">OPTION</div>
+    <h2 class="editable">架電管理<br>オプション機能</h2>
+    <p class="editable">架電実行サポートから分析・KPIレポートまで、架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける組織へ。</p>
+  </div>
+  <div class="rcol">
+    <div class="orow">
+      <div class="ocard">
+        <div class="oi">📋</div>
+        <h3 class="editable">架電実行サポート</h3>
+        <p class="editable">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで</p>
+      </div>
+      <div class="ocard">
+        <div class="oi">📊</div>
+        <h3 class="editable">分析・レポート</h3>
+        <p class="editable">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握</p>
       </div>
     </div>
-    <div class="sc-right">
-      <div class="browser-mock">
-        <div class="browser-bar">
-          <div class="browser-dot" style="background:#FF5F57"></div>
-          <div class="browser-dot" style="background:#FEBC2E"></div>
-          <div class="browser-dot" style="background:#28C840"></div>
-          <div class="browser-url">app.ailistmaster.jp / 架電管理</div>
-        </div>
-        <div class="browser-body">
-          <img src="pdf_pages/page_10.png" alt="架電管理画面" class="sshot">
-        </div>
+    <div class="orow">
+      <div class="ocard" style="flex:1">
+        <div class="oi">🎯</div>
+        <h3 class="editable">KPIレポート</h3>
+        <p class="editable">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ S10 導入効果 ══ -->
-<div class="slide col" id="s10">
-  <div class="s10-header">
-    <div class="logo"><b>AI</b> List Master</div>
-    <div class="tag" style="color:var(--tx2)">09 / RESULTS</div>
+<!-- ════════════ SLIDE 11: 導入効果 ════════════ -->
+<div class="slide s11">
+  <div class="banner">
+    <h2 class="editable">導入効果 ─ 数字が証明する、変革の実績</h2>
+    <p class="editable">実際の導入企業データに基づく成果指標</p>
   </div>
-  <div class="s10-body">
-    <div class="s10-top">
-      <div class="s10-eyebrow">導入効果</div>
-      <div style="display:flex;align-items:baseline;gap:16px">
-        <h2 class="s10-h2">数字で見る、圧倒的なROI。</h2>
-        <span class="s10-sub">営業担当者2名・月間3,000社架電目標の想定シナリオ</span>
-      </div>
+  <div class="metrics">
+    <div class="mc">
+      <div class="mnum editable">87<span class="munit">%</span></div>
+      <div class="mlabel editable">業務時間削減<br>（90h→11.5h / 月）</div>
     </div>
-    <div class="s10-grid">
-      <div class="s10-card bl">
-        <div class="el bl">業務時間の削減</div>
-        <div class="en bl">87<span style="font-size:32px">%</span></div>
-        <div class="es">月間90時間 → 11.5時間</div>
-        <div class="ed">リスト作成・選定・メール・架電管理・企業調査・レポート、すべての作業時間が激減</div>
-      </div>
-      <div class="s10-card or">
-        <div class="el or">架電の精度向上</div>
-        <div class="en or">1.8〜2.4<span style="font-size:28px">倍</span></div>
-        <div class="es">アポ獲得率が大幅に向上</div>
-        <div class="ed">従来のアポ率0.5〜2% → AI活用後1.2〜4.8%に改善（協力企業での実績値）</div>
-      </div>
+    <div class="mc">
+      <div class="mnum editable" style="font-size:28px;line-height:1.15;">1.8〜<br>2.4<span class="munit">倍</span></div>
+      <div class="mlabel editable">アポ獲得率<br>向上</div>
     </div>
-    <div class="s10-metrics">
-      <div class="s10-metric"><div class="mn" style="color:var(--n2)">+28%</div><div class="ml">メール返信率向上</div></div>
-      <div class="s10-metric"><div class="mn" style="color:var(--o1)">+32%</div><div class="ml">商談転換率向上</div></div>
-      <div class="s10-metric"><div class="mn" style="color:var(--n1)">1/8</div><div class="ml">作業時間（90h→11.5h）</div></div>
-      <div class="s10-metric"><div class="mn" style="color:var(--n3)">全自動</div><div class="ml">リスト収集〜メール送信</div></div>
+    <div class="mc">
+      <div class="mnum editable">+28<span class="munit">%</span></div>
+      <div class="mlabel editable">メール返信率<br>改善</div>
     </div>
+    <div class="mc">
+      <div class="mnum editable">+32<span class="munit">%</span></div>
+      <div class="mlabel editable">商談転換率<br>向上</div>
+    </div>
+  </div>
+  <div class="submets">
+    <div class="smi"><div class="smn editable">週5h</div><div class="sml editable">リスト作業削減</div></div>
+    <div class="smdiv"></div>
+    <div class="smi"><div class="smn editable">3日以内</div><div class="sml editable">導入・稼働開始</div></div>
+    <div class="smdiv"></div>
+    <div class="smi"><div class="smn editable">即日</div><div class="sml editable">リスト自動生成</div></div>
+    <div class="smdiv"></div>
+    <div class="smi"><div class="smn editable">早期</div><div class="sml editable">ROI回収を実現</div></div>
   </div>
 </div>
 
-<!-- ══ S11 ご利用の流れ ══ -->
-<div class="slide col" id="s11">
-  <div class="s11-header">
-    <div class="logo"><b>AI</b> List Master</div>
-    <div class="tag" style="color:var(--tx2)">10 / HOW TO START</div>
+<!-- ════════════ SLIDE 12: ご利用の流れ ════════════ -->
+<div class="slide s12">
+  <div class="header">
+    <h2 class="editable">ご利用の流れ ─ 最短3日で営業が変わる</h2>
   </div>
-  <div class="s11-body">
-    <div class="s11-top">
-      <div class="s11-eyebrow">ご利用の流れ</div>
-      <h2 class="s11-h2">4ステップで営業が変わる</h2>
+  <div class="stepsrow">
+    <div class="sbox">
+      <div class="snum">❶</div>
+      <div class="sicon">🏢</div>
+      <h3 class="editable">自社情報登録</h3>
+      <p class="editable">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p>
     </div>
-    <div class="s11-steps">
-      <div class="s11-sc">
-        <div class="s11-dot"><div class="dn">STEP</div><div class="db">1</div></div>
-        <h3>自社情報を登録</h3>
-        <p>貴社の商品・サービス情報をAI List Masterに登録</p>
-      </div>
-      <div class="s11-sc">
-        <div class="s11-dot"><div class="dn">STEP</div><div class="db">2</div></div>
-        <h3>AIにリストを依頼</h3>
-        <p>自然言語で伝えるだけでAIが条件に合ったリストを自動作成</p>
-      </div>
-      <div class="s11-sc">
-        <div class="s11-dot"><div class="dn">STEP</div><div class="db">3</div></div>
-        <h3>アプローチを実行</h3>
-        <p>AIメール送信や架電キャンペーンを作成し営業開始</p>
-      </div>
-      <div class="s11-sc">
-        <div class="s11-dot" style="background:linear-gradient(135deg,var(--o1),var(--o2));box-shadow:0 8px 22px rgba(249,115,22,.35)"><div class="dn">STEP</div><div class="db">4</div></div>
-        <h3>成果を管理・改善</h3>
-        <p>ダッシュボード・レポートで分析し次の施策へ</p>
-      </div>
+    <div class="sarrow">▶</div>
+    <div class="sbox">
+      <div class="snum">❷</div>
+      <div class="sicon">🤖</div>
+      <h3 class="editable">AIにリスト依頼</h3>
+      <p class="editable">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p>
     </div>
-    <div class="s11-footer">
-      <div class="s11-fi"><div class="fl">COMPANY</div><div class="fv">株式会社〇〇〇〇</div></div>
-      <div class="s11-fdiv"></div>
-      <div class="s11-fi"><div class="fl">EMAIL</div><div class="fv">info@example.co.jp</div></div>
-      <div class="s11-fdiv"></div>
-      <div class="s11-fi"><div class="fl">TEL</div><div class="fv">03-0000-0000</div></div>
+    <div class="sarrow">▶</div>
+    <div class="sbox">
+      <div class="snum">❸</div>
+      <div class="sicon">✉️</div>
+      <h3 class="editable">アプローチ実行</h3>
+      <p class="editable">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p>
+    </div>
+    <div class="sarrow">▶</div>
+    <div class="sbox">
+      <div class="snum">❹</div>
+      <div class="sicon">📈</div>
+      <h3 class="editable">成果管理・改善</h3>
+      <p class="editable">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p>
     </div>
   </div>
+  <div class="snote editable">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
 </div>
 
-<!-- ══ S12 CTA ══ -->
-<div class="slide col" id="s12">
-  <div class="s12-header">
-    <div class="logo" style="color:#fff"><b style="color:var(--o2)">AI</b> List Master &ensp;|&ensp; BtoB営業支援SaaS</div>
-    <div class="tag">CONTACT</div>
+<!-- ════════════ SLIDE 13: CTA ════════════ -->
+<div class="slide s13">
+  <div class="glow"></div>
+  <div class="topstripe"></div>
+  <div class="content">
+    <p class="catch editable">First Step</p>
+    <h2 class="copy editable">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
+    <p class="subcopy editable">AIリストマスターは、導入翌日から営業リストの質が変わります。<br>「うちの業種でも使えるか？」その疑問、30分の相談で解決します。</p>
+    <a href="#" class="ctabtn editable">無料相談を申し込む</a>
+    <p class="contact editable">お電話・メール・Web会議 ご希望の方法でご対応します</p>
   </div>
-  <div class="s12-body">
-    <h2 class="s12-h2">まずは<em>無料相談</em>から<br>貴社の営業を変えましょう</h2>
-    <p class="s12-sub">導入のご相談・デモンストレーションは無料で承っております。<br>貴社の営業課題に合わせた活用プランをご提案いたします。</p>
-    <div class="s12-steps">
-      <div class="s12-step">
-        <div class="sn">1</div>
-        <h4>無料相談<br>お問い合わせ</h4>
-        <p>フォームまたはメールでご連絡ください</p>
-      </div>
-      <div class="s12-step">
-        <div class="sn">2</div>
-        <h4>ヒアリング<br>デモ実施</h4>
-        <p>課題をお聞きしながらデモをご覧いただきます</p>
-      </div>
-      <div class="s12-step">
-        <div class="sn">3</div>
-        <h4>ご提案<br>導入開始</h4>
-        <p>最適プランをご提案。最短1日で導入可能</p>
-      </div>
-    </div>
-    <div class="s12-contact">
-      <div class="s12-ci"><div class="cl">COMPANY</div><div class="cv">株式会社〇〇〇〇</div></div>
-      <div class="s12-cd"></div>
-      <div class="s12-ci"><div class="cl">EMAIL</div><div class="cv">info@example.co.jp</div></div>
-      <div class="s12-cd"></div>
-      <div class="s12-ci"><div class="cl">TEL</div><div class="cv">03-0000-0000</div></div>
-    </div>
-  </div>
+  <div class="logo editable">AIリストマスター</div>
 </div>
 
-</div><!-- /deck -->
+</div><!-- /scaler -->
+
 <script>
-const sls=document.querySelectorAll('.slide'),N=sls.length;
-let cur=0,busy=false,eOn=false;
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const navEl  = document.getElementById('nav');
+  const ctr    = document.getElementById('counter');
+  const scaler = document.getElementById('scaler');
+  const TOTAL  = slides.length;
+  let cur = 0;
 
-const dotsEl=document.getElementById('dots');
-sls.forEach((_,i)=>{
-  const d=document.createElement('div');
-  d.className='dot'+(i===0?' on':'');
-  d.onclick=()=>goTo(i);
-  dotsEl.appendChild(d);
-});
-
-function ui(){
-  document.getElementById('nc').textContent=(cur+1)+' / '+N;
-  document.getElementById('prg').style.width=((cur+1)/N*100)+'%';
-  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===cur));
-}
-
-function goTo(i){
-  if(busy||i===cur)return;busy=true;
-  const p=cur;
-  sls[p].classList.add('out');
-  setTimeout(()=>{
-    sls[p].classList.remove('active','out');
-    cur=i;
-    sls[cur].style.transform='translateX(40px)';
-    sls[cur].style.opacity='0';
-    sls[cur].classList.add('active');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      sls[cur].style.transform='';sls[cur].style.opacity='';
-    }));
-    ui();setTimeout(()=>{busy=false;},480);
-  },260);
-}
-window.go=d=>goTo(Math.max(0,Math.min(N-1,cur+d)));
-document.addEventListener('keydown',e=>{
-  if(eOn)return;
-  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
-  if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);
-});
-ui();
-
-// EDIT
-const ESEL='h1,h2,h3,h4,p,.s1-badge,.s1-lead,.s1-stat .sn,.s1-stat .sl,.s2-h2,.s2-desc,.s2-big .lbl,.s2-big .pct,.s2-big .note,.s2-card .cn,.s2-card .cl,.s2-card .cs,.s2-src,.s3-h2,.s3-card h3,.s3-card p,.s4-h2,.s4-step .st,.s4-step .sd,.s4-tagline,.s5-h2,.s5-src,.s5-note,.s5-pt h3,.s5-pt p,.sc-h2,.sc-desc,.sc-pt h4,.sc-pt p,.s8-h2,.s8-desc,.s8-card h3,.s8-card p,.s10-h2,.s10-sub,.s10-card .el,.s10-card .en,.s10-card .es,.s10-card .ed,.s10-metric .mn,.s10-metric .ml,.s11-h2,.s11-sc h3,.s11-sc p,.s11-fi .fl,.s11-fi .fv,.s12-h2,.s12-sub,.s12-step h4,.s12-step p,.s12-ci .cl,.s12-ci .cv,.logo,.tag,.s2-eyebrow,.s3-eyebrow,.s4-eyebrow,.s5-eyebrow,.sc-eyebrow,.s8-eyebrow,.s10-eyebrow,.s11-eyebrow';
-
-window.tgl=function(){
-  eOn=!eOn;
-  const b=document.getElementById('eBtn'),s=document.getElementById('sBtn'),h=document.getElementById('eHint');
-  document.body.classList.toggle('edit',eOn);
-  b.textContent=eOn?'✓ 編集完了':'✏️ テキスト編集';
-  b.style.background=eOn?'var(--o1)':'';
-  s.style.display=eOn?'block':'none';
-  h.style.display=eOn?'block':'none';
-  document.querySelectorAll(ESEL).forEach(el=>{
-    if(eOn)el.setAttribute('contenteditable','true');
-    else el.removeAttribute('contenteditable');
+  /* ── dots ── */
+  slides.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.onclick = () => goTo(i);
+    navEl.appendChild(d);
   });
-};
-window.sav=function(){
-  document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-  document.querySelectorAll(ESEL).forEach(el=>{if(eOn)el.setAttribute('contenteditable','true');});
-  const a=Object.assign(document.createElement('a'),{
-    href:URL.createObjectURL(new Blob([html],{type:'text/html'})),
-    download:'AIリストマスター_営業資料.html'
-  });a.click();URL.revokeObjectURL(a.href);
-};
+
+  function goTo(n) {
+    slides[cur].classList.remove('active');
+    navEl.children[cur].classList.remove('active');
+    cur = ((n % TOTAL) + TOTAL) % TOTAL;
+    slides[cur].classList.add('active');
+    navEl.children[cur].classList.add('active');
+    ctr.textContent = (cur+1) + ' / ' + TOTAL;
+  }
+
+  window.nextSlide = () => goTo(cur+1);
+  window.prevSlide = () => goTo(cur-1);
+
+  document.addEventListener('keydown', e => {
+    if (document.body.classList.contains('edit-mode')) {
+      if (document.activeElement && document.activeElement.isContentEditable) return;
+    }
+    if (e.key==='ArrowRight'||e.key==='ArrowDown') goTo(cur+1);
+    if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   goTo(cur-1);
+  });
+
+  /* ── scale ── */
+  function scale() {
+    const s = Math.min(window.innerWidth/960, window.innerHeight/540);
+    const x = (window.innerWidth  - 960*s) / 2;
+    const y = (window.innerHeight - 540*s) / 2;
+    scaler.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  }
+  scale();
+  window.addEventListener('resize', scale);
+
+  /* ── edit mode ── */
+  window.toggleEdit = function() {
+    const b   = document.body;
+    const btn = document.getElementById('btn-edit');
+    const els = document.querySelectorAll('.editable');
+    if (b.classList.contains('edit-mode')) {
+      b.classList.remove('edit-mode');
+      els.forEach(el => el.removeAttribute('contenteditable'));
+      btn.classList.remove('active');
+      btn.textContent = '✏️ 編集モード';
+    } else {
+      b.classList.add('edit-mode');
+      els.forEach(el => el.setAttribute('contenteditable','true'));
+      btn.classList.add('active');
+      btn.textContent = '✅ 編集終了';
+    }
+  };
+
+  /* ── save ── */
+  window.saveHTML = function() {
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'AIリストマスター_営業資料.html';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+})();
 </script>
 </body>
 </html>
