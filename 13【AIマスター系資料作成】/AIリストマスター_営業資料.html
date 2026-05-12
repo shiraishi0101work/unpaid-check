@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI営業リストマスター｜営業提案資料</title>
+  <title>AIリストマスター｜営業提案資料</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -1209,7 +1209,7 @@
 
         <div class="cover-meta">
           <div class="cover-meta-item">
-            <strong>AI営業リストマスター</strong>
+            <strong>AIリストマスター</strong>
             Sales Deck 2026
           </div>
           <div class="cover-meta-line"></div>
@@ -1300,7 +1300,7 @@
   <div class="content">
     <div class="eyebrow">
       <div class="eyebrow-line"></div>
-      <span class="eyebrow-text">AI営業リストマスター とは</span>
+      <span class="eyebrow-text">AIリストマスター とは</span>
       <div class="eyebrow-line"></div>
     </div>
 
@@ -1507,7 +1507,7 @@
         <tr>
           <th>比較項目</th>
           <th class="th-other">従来のDBリスト販売</th>
-          <th class="th-ours">AI営業リストマスター</th>
+          <th class="th-ours">AIリストマスター</th>
         </tr>
       </thead>
       <tbody>
@@ -1854,12 +1854,180 @@
   };
 
   document.addEventListener('keydown', (e) => {
+    if (editMode) return; // 編集中はスライド操作を無効化
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
     if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
   });
 
   updateUI();
+
+  /* ━━━━━━━━━━━━━━━━━━━━
+     EDIT MODE
+  ━━━━━━━━━━━━━━━━━━━━ */
+  let editMode = false;
+
+  // 編集対象セレクター
+  const EDITABLE_SEL = [
+    'h1','h2','h3','h4',
+    '.title-xl','.title-lg','.title-md',
+    '.lead','.cover-kicker',
+    '.eyebrow-text',
+    '.p-num','.problem-card h3',
+    '.feat-num','.feat-card h3','.feat-card p','.feat-tag',
+    '.sol-lbl','.sol-desc',
+    '.ba-label','.ba-panel h3','.ba-list li',
+    '.ba-metric .m-num','.ba-metric .m-lbl',
+    '.impact-card .i-num','.impact-card .i-lbl','.impact-card .i-desc',
+    '.tl-lbl','.tl-sub',
+    '.comp-table th','.comp-table td',
+    '.plan-name','.plan-desc','.plan-features li','.price-note',
+    '.uc-industry','.usecase-card h3','.usecase-card p','.usecase-result',
+    '.flow-step .f-lbl','.flow-step .f-auto',
+    '.cover-meta-item','.cover-meta-item strong',
+    '.cta-step h4','.cta-step p',
+    '.contact-label','.contact-val',
+    '.sol-card .sol-num',
+    '.slide-tag',
+    'p.lead','.section-lead',
+    '.feat-tags .feat-tag',
+    'li'
+  ].join(',');
+
+  function toggleEdit() {
+    editMode = !editMode;
+    const btn = document.getElementById('editToggleBtn');
+    const panel = document.getElementById('editPanel');
+
+    if (editMode) {
+      // 編集モードON
+      btn.textContent = '✓ 編集完了';
+      btn.style.background = 'linear-gradient(135deg,#00c896,#00D4FF)';
+      panel.style.display = 'flex';
+
+      document.querySelectorAll(EDITABLE_SEL).forEach(el => {
+        // span.gold / span.cyan などグラデーションテキストは親ごと
+        el.setAttribute('contenteditable', 'true');
+        el.style.outline = 'none';
+        el.style.cursor = 'text';
+        el.addEventListener('mouseenter', onHover);
+        el.addEventListener('mouseleave', onLeave);
+        el.addEventListener('focus', onFocus);
+        el.addEventListener('blur', onBlur);
+      });
+
+    } else {
+      // 編集モードOFF
+      btn.textContent = '✏️ テキスト編集';
+      btn.style.background = 'rgba(255,255,255,0.08)';
+      panel.style.display = 'none';
+
+      document.querySelectorAll('[contenteditable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+        el.style.cursor = '';
+        el.style.outline = '';
+        el.style.background = '';
+        el.style.borderRadius = '';
+        el.removeEventListener('mouseenter', onHover);
+        el.removeEventListener('mouseleave', onLeave);
+        el.removeEventListener('focus', onFocus);
+        el.removeEventListener('blur', onBlur);
+      });
+    }
+  }
+
+  function onHover(e) {
+    if (!e.target.matches(':focus')) {
+      e.target.style.background = 'rgba(0,212,255,0.08)';
+      e.target.style.borderRadius = '4px';
+    }
+  }
+  function onLeave(e) {
+    if (!e.target.matches(':focus')) {
+      e.target.style.background = '';
+      e.target.style.borderRadius = '';
+    }
+  }
+  function onFocus(e) {
+    e.target.style.background = 'rgba(0,212,255,0.13)';
+    e.target.style.borderRadius = '4px';
+    e.target.style.outline = '1.5px solid rgba(0,212,255,0.4)';
+  }
+  function onBlur(e) {
+    e.target.style.background = '';
+    e.target.style.borderRadius = '';
+    e.target.style.outline = '';
+  }
+
+  // HTML保存
+  function saveHTML() {
+    // 編集モードを一時終了して保存
+    document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    document.querySelectorAll(EDITABLE_SEL).forEach(el => {
+      if (editMode) el.setAttribute('contenteditable','true');
+    });
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'AIリストマスター_営業資料.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 </script>
+
+<!-- ━━ EDIT TOGGLE BUTTON ━━ -->
+<button id="editToggleBtn" onclick="toggleEdit()" style="
+  position:fixed;
+  top:20px; left:20px;
+  z-index:99999;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  backdrop-filter:blur(12px);
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  padding:9px 20px;
+  border-radius:40px;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  font-family:'Noto Sans JP',sans-serif;
+  transition:all 0.2s;
+">✏️ テキスト編集</button>
+
+<!-- ━━ EDIT PANEL ━━ -->
+<div id="editPanel" style="
+  display:none;
+  position:fixed;
+  top:20px; left:160px;
+  z-index:99999;
+  align-items:center;
+  gap:8px;
+">
+  <button onclick="saveHTML()" style="
+    background:linear-gradient(135deg,#C9A84C,#F0D080);
+    border:none;
+    color:#030B1A;
+    font-size:12px;
+    font-weight:700;
+    padding:9px 18px;
+    border-radius:40px;
+    cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;
+    letter-spacing:0.5px;
+  ">💾 HTMLで保存</button>
+
+  <div style="
+    background:rgba(0,212,255,0.12);
+    border:1px solid rgba(0,212,255,0.25);
+    border-radius:40px;
+    padding:8px 16px;
+    font-size:11px;
+    color:rgba(0,212,255,0.9);
+    font-weight:600;
+    letter-spacing:0.5px;
+    font-family:'Noto Sans JP',sans-serif;
+  ">クリックでテキスト編集できます</div>
+</div>
 
 </body>
 </html>
