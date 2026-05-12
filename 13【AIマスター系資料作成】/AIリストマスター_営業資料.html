@@ -821,22 +821,23 @@
     const btn = document.getElementById('btn-pdf');
     btn.textContent = '生成中...'; btn.disabled = true;
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:[960,540], hotfixes:['px_scaling'] });
+    // 16:9 標準プレゼン サイズ = 10in × 5.625in = 720pt × 405pt
+    const W=720, H=405;
+    const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:[W,H] });
     const orig = c;
     for(let i=0;i<N;i++){
-      // show slide
       sl.forEach(s=>{ s.style.opacity='0'; s.style.pointerEvents='none'; });
       sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
-      await new Promise(r=>setTimeout(r,120));
+      await new Promise(r=>setTimeout(r,150));
       const canvas = await html2canvas(sl[i],{
         scale:2, useCORS:true, allowTaint:true,
         width:960, height:540,
-        backgroundColor:null,
+        backgroundColor:'#ffffff',
         logging:false
       });
       const img = canvas.toDataURL('image/jpeg',0.95);
-      if(i>0) pdf.addPage([960,540],'landscape');
-      pdf.addImage(img,'JPEG',0,0,960,540);
+      if(i>0) pdf.addPage([W,H],'landscape');
+      pdf.addImage(img,'JPEG',0,0,W,H);
     }
     // restore
     sl.forEach(s=>{ s.style.opacity=''; s.style.pointerEvents=''; });
