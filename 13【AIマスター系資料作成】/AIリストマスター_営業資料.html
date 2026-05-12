@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI営業リストマスター｜営業提案資料</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #030B1A;
+      --bg2:       #071428;
+      --card:      rgba(255,255,255,0.042);
+      --border:    rgba(255,255,255,0.09);
+      --blue1:     #0052D4;
+      --blue2:     #4364F7;
+      --blue3:     #6FB1FC;
+      --gold1:     #C9A84C;
+      --gold2:     #F0D080;
+      --gold3:     #FFF0A0;
+      --cyan:      #00D4FF;
+      --cyan2:     #00FFD1;
+      --red:       #FF4757;
+      --w100:      #ffffff;
+      --w70:       rgba(255,255,255,0.70);
+      --w45:       rgba(255,255,255,0.45);
+      --w20:       rgba(255,255,255,0.20);
+      --w08:       rgba(255,255,255,0.08);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', sans-serif;
+      color: var(--w100);
+    }
+
+    /* ── SLIDES CONTAINER ── */
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 80px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.55s cubic-bezier(.4,0,.2,1), transform 0.55s cubic-bezier(.4,0,.2,1);
+      transform: translateX(60px);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .slide.exit-left {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    /* ── AMBIENT BACKGROUND ── */
+    .slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      z-index: 0;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAVIGATION ── */
+    .nav {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      color: var(--w70);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0,212,255,0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      color: var(--w45);
+      font-weight: 500;
+      letter-spacing: 2px;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue1), var(--cyan), var(--gold1));
+      transition: width 0.4s ease;
+      z-index: 9999;
+    }
+
+    /* ── SLIDE NUMBER TAG ── */
+    .slide-tag {
+      position: absolute;
+      top: 28px; right: 36px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--w20);
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    /* ── CONTENT WRAPPERS ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    /* ── EYEBROW ── */
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow-line {
+      width: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold1), var(--gold2));
+    }
+
+    .eyebrow-text {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--gold1), var(--gold2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    .title-xl {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: -2px;
+    }
+
+    .title-lg {
+      font-size: clamp(28px, 3.5vw, 48px);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -1.5px;
+    }
+
+    .title-md {
+      font-size: clamp(22px, 2.5vw, 36px);
+      font-weight: 900;
+      line-height: 1.35;
+      letter-spacing: -1px;
+    }
+
+    .lead {
+      font-size: 17px;
+      color: var(--w70);
+      line-height: 1.85;
+      font-weight: 400;
+    }
+
+    .gold {
+      background: linear-gradient(135deg, var(--gold1), var(--gold3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cyan {
+      background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── GLASS CARD ── */
+    .glass {
+      background: var(--card);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+    }
+
+    /* ── GOLD DIVIDER ── */
+    .gold-line {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold1), var(--gold2));
+      margin: 20px 0;
+    }
+
+    /* ────────────────────────
+       SLIDE 01 — COVER
+    ──────────────────────── */
+    #s1 .orb1 {
+      width: 700px; height: 700px;
+      top: -200px; right: -150px;
+      background: radial-gradient(circle, rgba(0,82,212,0.18), transparent 70%);
+    }
+
+    #s1 .orb2 {
+      width: 500px; height: 500px;
+      bottom: -100px; left: -100px;
+      background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%);
+    }
+
+    #s1 .cover-inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 80px;
+    }
+
+    .cover-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 18px;
+      border: 1px solid rgba(201,168,76,0.35);
+      border-radius: 40px;
+      background: rgba(201,168,76,0.06);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold2);
+      margin-bottom: 28px;
+    }
+
+    .cover-kicker::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold1);
+      animation: pulse-gold 2s infinite;
+    }
+
+    @keyframes pulse-gold {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .cover-meta {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .cover-meta-line {
+      width: 1px;
+      height: 32px;
+      background: var(--w20);
+    }
+
+    .cover-meta-item {
+      font-size: 12px;
+      color: var(--w45);
+      line-height: 1.6;
+    }
+
+    .cover-meta-item strong {
+      display: block;
+      color: var(--w70);
+      font-size: 13px;
+    }
+
+    .cover-badge-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cover-badge {
+      padding: 22px 28px;
+      border-radius: 18px;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .cover-badge .big {
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .cover-badge .lbl {
+      font-size: 12px;
+      color: var(--w60);
+      font-weight: 500;
+    }
+
+    /* ────────────────────────
+       SLIDE 02 — PROBLEM
+    ──────────────────────── */
+    #s2 .orb1 {
+      width: 600px; height: 600px;
+      top: -200px; left: -150px;
+      background: radial-gradient(circle, rgba(255,71,87,0.12), transparent 70%);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .problem-card {
+      padding: 28px 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,71,87,0.15);
+      background: rgba(255,71,87,0.05);
+      transition: all 0.25s;
+    }
+
+    .problem-card:hover {
+      border-color: rgba(255,71,87,0.35);
+      background: rgba(255,71,87,0.09);
+      transform: translateY(-3px);
+    }
+
+    .p-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .problem-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--w70);
+      line-height: 1.6;
+    }
+
+    .problem-card .p-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    /* ────────────────────────
+       SLIDE 03 — SOLUTION
+    ──────────────────────── */
+    #s3 .orb1 {
+      width: 700px; height: 700px;
+      top: -250px; right: -200px;
+      background: radial-gradient(circle, rgba(0,212,255,0.12), transparent 70%);
+    }
+
+    #s3 .orb2 {
+      width: 400px; height: 400px;
+      bottom: -100px; left: 0;
+      background: radial-gradient(circle, rgba(0,82,212,0.1), transparent 70%);
+    }
+
+    .solution-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .sol-card {
+      padding: 28px 32px;
+      border-radius: 20px;
+    }
+
+    .sol-card .sol-num {
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .sol-card .sol-unit {
+      font-size: 24px;
+    }
+
+    .sol-card .sol-lbl {
+      font-size: 14px;
+      color: var(--w70);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .sol-card .sol-desc {
+      font-size: 13px;
+      color: var(--w45);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    .flow-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 36px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .flow-step {
+      flex: 1;
+      padding: 20px 20px;
+      background: var(--card);
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step + .flow-step::before {
+      content: '▶';
+      position: absolute;
+      left: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 14px;
+    }
+
+    .flow-step .f-icon { font-size: 22px; margin-bottom: 8px; }
+    .flow-step .f-lbl { font-size: 12px; font-weight: 700; color: var(--w70); }
+    .flow-step .f-auto {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      margin-top: 4px;
+    }
+
+    /* ────────────────────────
+       SLIDE 04 — BEFORE / AFTER
+    ──────────────────────── */
+    #s4 .ba-wrap {
+      display: grid;
+      grid-template-columns: 1fr 64px 1fr;
+      align-items: center;
+      gap: 0;
+      margin-top: 32px;
+    }
+
+    .ba-panel {
+      padding: 40px 36px;
+      border-radius: 20px;
+      min-height: 360px;
+    }
+
+    .ba-panel.before {
+      background: rgba(255,71,87,0.06);
+      border: 1px solid rgba(255,71,87,0.15);
+    }
+
+    .ba-panel.after {
+      background: rgba(0,212,255,0.04);
+      border: 1px solid rgba(0,212,255,0.2);
+    }
+
+    .ba-label {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .before .ba-label { background: rgba(255,71,87,0.15); color: #ff8591; }
+    .after  .ba-label { background: rgba(0,212,255,0.12); color: var(--cyan); }
+
+    .ba-panel h3 {
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.45;
+      margin-bottom: 24px;
+    }
+
+    .before h3 { color: var(--w70); }
+    .after  h3 { color: var(--w100); }
+
+    .ba-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+    .ba-list li {
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--w70);
+      line-height: 1.5;
+    }
+
+    .ba-list li .icon { flex-shrink: 0; font-size: 16px; }
+
+    .ba-arrow-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ba-arrow-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue1), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 24px rgba(0,212,255,0.3);
+    }
+
+    .ba-metrics-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 28px;
+    }
+
+    .ba-metric {
+      flex: 1;
+      padding: 20px 16px;
+      text-align: center;
+      border-radius: 14px;
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.12);
+    }
+
+    .ba-metric .m-num {
+      font-size: 36px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .ba-metric .m-lbl { font-size: 12px; color: var(--w45); }
+
+    /* ────────────────────────
+       SLIDE 05 — FEATURES
+    ──────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+
+    .feat-card {
+      padding: 32px 28px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s;
+    }
+
+    .feat-card:hover { transform: translateY(-4px); }
+
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+
+    .feat-card.f1::before { background: linear-gradient(90deg, var(--blue1), var(--blue3)); }
+    .feat-card.f2::before { background: linear-gradient(90deg, var(--cyan), var(--cyan2)); }
+    .feat-card.f3::before { background: linear-gradient(90deg, var(--gold1), var(--gold3)); }
+    .feat-card.f4::before { background: linear-gradient(90deg, #8B5CF6, #C4B5FD); }
+
+    .feat-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+
+    .f1 .feat-num { color: var(--blue3); }
+    .f2 .feat-num { color: var(--cyan); }
+    .f3 .feat-num { color: var(--gold2); }
+    .f4 .feat-num { color: #C4B5FD; }
+
+    .feat-card h3 {
+      font-size: 19px;
+      font-weight: 900;
+      color: var(--w100);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .feat-card p {
+      font-size: 13px;
+      color: var(--w45);
+      line-height: 1.75;
+    }
+
+    .feat-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .feat-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .feat-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--w08);
+      color: var(--w70);
+    }
+
+    /* ────────────────────────
+       SLIDE 06 — COMPARISON
+    ──────────────────────── */
+    .comp-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 32px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .comp-table th {
+      padding: 18px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .comp-table th:first-child {
+      background: rgba(255,255,255,0.04);
+      color: var(--w45);
+      text-align: left;
+      width: 34%;
+    }
+
+    .comp-table th.th-other {
+      background: rgba(255,255,255,0.04);
+      color: var(--w45);
+    }
+
+    .comp-table th.th-ours {
+      background: linear-gradient(135deg, rgba(0,82,212,0.3), rgba(0,212,255,0.15));
+      border-top: 2px solid var(--cyan);
+      color: var(--cyan);
+    }
+
+    .comp-table td {
+      padding: 15px 24px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .comp-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--w70);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .comp-table td.td-other { color: var(--w45); background: rgba(255,255,255,0.01); }
+    .comp-table td.td-ours  { color: var(--w100); background: rgba(0,212,255,0.04); font-weight: 600; }
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    .c-yes { color: var(--cyan); font-weight: 900; font-size: 16px; }
+    .c-no  { color: rgba(255,255,255,0.2); font-size: 16px; }
+
+    /* ────────────────────────
+       SLIDE 07 — ROI / IMPACT
+    ──────────────────────── */
+    #s7 .orb1 {
+      width: 600px; height: 600px;
+      top: -150px; right: -100px;
+      background: radial-gradient(circle, rgba(201,168,76,0.1), transparent 70%);
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 36px;
+    }
+
+    .impact-card {
+      padding: 40px 28px;
+      border-radius: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .impact-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+    }
+
+    .impact-card.ic1::after { background: linear-gradient(90deg, var(--blue1), var(--blue3)); }
+    .impact-card.ic2::after { background: linear-gradient(90deg, var(--gold1), var(--gold3)); }
+    .impact-card.ic3::after { background: linear-gradient(90deg, var(--cyan), var(--cyan2)); }
+
+    .impact-card .i-num {
+      font-size: 68px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .impact-card.ic1 .i-num { background: linear-gradient(135deg, var(--blue2), var(--blue3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .impact-card.ic2 .i-num { background: linear-gradient(135deg, var(--gold1), var(--gold3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .impact-card.ic3 .i-num { background: linear-gradient(135deg, var(--cyan), var(--cyan2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    .impact-card .i-lbl {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--w70);
+      margin-bottom: 10px;
+    }
+
+    .impact-card .i-desc {
+      font-size: 12px;
+      color: var(--w45);
+      line-height: 1.7;
+    }
+
+    .timeline-wrap {
+      margin-top: 28px;
+      padding: 24px 32px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .tl-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .tl-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 16px; right: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--cyan), transparent);
+      z-index: 0;
+    }
+
+    .tl-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      background: rgba(0,212,255,0.1);
+      margin: 0 auto 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+      position: relative;
+      z-index: 1;
+    }
+
+    .tl-lbl { font-size: 12px; color: var(--w70); font-weight: 600; }
+    .tl-sub { font-size: 11px; color: var(--w45); margin-top: 4px; }
+
+    /* ────────────────────────
+       SLIDE 08 — PRICING
+    ──────────────────────── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .price-card {
+      padding: 32px 22px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      position: relative;
+      transition: transform 0.25s;
+    }
+
+    .price-card:hover { transform: translateY(-6px); }
+
+    .price-card.featured {
+      background: rgba(0,212,255,0.06);
+      border-color: rgba(0,212,255,0.3);
+      box-shadow: 0 0 40px rgba(0,212,255,0.1);
+    }
+
+    .popular-tag {
+      position: absolute;
+      top: -12px; left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--blue1), var(--cyan));
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: 1px;
+    }
+
+    .plan-name {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--w45);
+      margin-bottom: 6px;
+    }
+
+    .featured .plan-name { color: var(--cyan); }
+
+    .plan-desc {
+      font-size: 12px;
+      color: var(--w45);
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .plan-features li {
+      font-size: 12px;
+      color: var(--w70);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .plan-features li::before {
+      content: '◆';
+      color: var(--cyan);
+      font-size: 8px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .price-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--w20);
+      margin-top: 20px;
+    }
+
+    /* ────────────────────────
+       SLIDE 09 — USE CASES
+    ──────────────────────── */
+    .usecase-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+
+    .usecase-card {
+      padding: 32px 26px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .usecase-card .uc-industry {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold2);
+      margin-bottom: 12px;
+    }
+
+    .usecase-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--w100);
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+
+    .usecase-card p {
+      font-size: 13px;
+      color: var(--w45);
+      line-height: 1.75;
+    }
+
+    .usecase-result {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.12);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* ────────────────────────
+       SLIDE 10 — CTA
+    ──────────────────────── */
+    #s10 .orb1 {
+      width: 800px; height: 800px;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      background: radial-gradient(circle, rgba(0,82,212,0.14), rgba(201,168,76,0.06) 50%, transparent 70%);
+    }
+
+    .cta-inner {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .cta-steps {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 48px;
+    }
+
+    .cta-step {
+      flex: 1;
+      max-width: 220px;
+      padding: 28px 20px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .cta-step .step-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue1), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      margin: 0 auto 16px;
+    }
+
+    .cta-step h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--w100);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .cta-step p {
+      font-size: 12px;
+      color: var(--w45);
+      line-height: 1.6;
+    }
+
+    .cta-contact-box {
+      margin-top: 44px;
+      padding: 28px 40px;
+      border-radius: 20px;
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .cta-contact-box .contact-item {
+      text-align: center;
+    }
+
+    .cta-contact-box .contact-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      margin-bottom: 6px;
+    }
+
+    .cta-contact-box .contact-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--w100);
+    }
+
+    .cta-divider {
+      width: 1px;
+      height: 48px;
+      background: var(--border);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes float-y {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .float { animation: float-y 4s ease-in-out infinite; }
+
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .shimmer-text {
+      background: linear-gradient(90deg, var(--gold1) 0%, var(--gold3) 30%, var(--gold1) 60%, var(--gold3) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+
+    /* ── LOGO SVG ── */
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* ── SLIDE NUMBER INDICATORS ── */
+    .slide-dots {
+      position: fixed;
+      right: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--w20);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .dot.active {
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      transform: scale(1.4);
+    }
+
+    /* keyboard hint */
+    .key-hint {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      font-size: 11px;
+      color: var(--w20);
+      letter-spacing: 1px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- SLIDE DOTS -->
+<div class="slide-dots" id="slideDots"></div>
+
+<!-- NAVIGATION -->
+<nav class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">&#8592;</button>
+  <span class="slide-counter" id="slideCounter">1 / 10</span>
+  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">&#8594;</button>
+</nav>
+
+<div class="key-hint">← → キーで操作</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━
+  DECK
+━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="deck" id="deck">
+
+<!-- ━━ SLIDE 01 — COVER ━━ -->
+<div class="slide active" id="s1">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <span class="slide-tag">CONFIDENTIAL</span>
+
+  <div class="content">
+    <div class="cover-inner">
+      <div>
+        <!-- logo -->
+        <div class="logo-mark" style="margin-bottom:36px;">
+          <svg width="52" height="52" viewBox="0 0 40 40" fill="none">
+            <defs>
+              <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00D4FF"/>
+                <stop offset="100%" stop-color="#00FFD1"/>
+              </linearGradient>
+            </defs>
+            <line x1="10" y1="6"  x2="28" y2="14" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="28" y1="14" x2="10" y2="22" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="10" y1="22" x2="28" y2="30" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            <line x1="28" y1="30" x2="10" y2="38" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            <circle cx="10" cy="6"  r="5.5" fill="#00D4FF"/>
+            <circle cx="28" cy="14" r="5"   fill="#00D4FF" opacity="0.8"/>
+            <circle cx="10" cy="22" r="5.5" fill="#00E8D0"/>
+            <circle cx="28" cy="30" r="5"   fill="#00FFD1" opacity="0.8"/>
+            <circle cx="10" cy="38" r="4.5" fill="#00FFD1" opacity="0.6"/>
+          </svg>
+          <div>
+            <div style="font-size:11px;letter-spacing:3px;color:var(--w20);font-weight:700;margin-bottom:4px;">AI PLATFORM</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;">
+              <span style="background:linear-gradient(135deg,#00D4FF,#00FFD1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI</span>
+              <span style="color:var(--w100);">営業リストマスター</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cover-kicker">SALES PROPOSAL 2026</div>
+
+        <h1 class="title-xl">
+          営業の<span class="shimmer-text">前工程</span>を、<br>
+          すべてAIが<br>
+          <span class="cyan">自動化</span>する。
+        </h1>
+
+        <div class="gold-line" style="margin-top:28px;"></div>
+
+        <p class="lead" style="max-width:560px;margin-top:0;">
+          リスト収集・企業分析・優先度判定・初回メール生成まで。<br>
+          営業担当者が動き出す前に、AIがすべて準備を整えます。
+        </p>
+
+        <div class="cover-meta">
+          <div class="cover-meta-item">
+            <strong>AI営業リストマスター</strong>
+            Sales Deck 2026
+          </div>
+          <div class="cover-meta-line"></div>
+          <div class="cover-meta-item">
+            <strong>対象</strong>
+            営業責任者・経営者様
+          </div>
+        </div>
+      </div>
+
+      <!-- Right badges -->
+      <div class="cover-badge-wrap float">
+        <div class="cover-badge glass">
+          <div class="big" style="background:linear-gradient(135deg,var(--blue2),var(--blue3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">97<span style="font-size:24px;">%</span></div>
+          <div class="lbl" style="color:var(--w45);">作業時間 削減</div>
+        </div>
+        <div class="cover-badge glass">
+          <div class="big" style="background:linear-gradient(135deg,var(--gold1),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">10<span style="font-size:24px;">倍</span></div>
+          <div class="lbl" style="color:var(--w45);">営業活動量 拡大</div>
+        </div>
+        <div class="cover-badge glass">
+          <div class="big" style="background:linear-gradient(135deg,var(--cyan),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">5<span style="font-size:24px;">分</span></div>
+          <div class="lbl" style="color:var(--w45);">5時間の作業が5分で</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 02 — PROBLEM ━━ -->
+<div class="slide" id="s2">
+  <div class="orb orb1"></div>
+  <span class="slide-tag">01 PROBLEM</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">こんな課題、抱えていませんか？</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-lg" style="text-align:center;">
+      「営業の時間」のほとんどが<br>
+      <span style="background:linear-gradient(135deg,#FF4757,#FF6B81);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">準備作業</span>で消えている
+    </h2>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="p-icon">⏰</div>
+        <div class="p-num">ISSUE 01</div>
+        <h3>企業を探すのに<br>毎日何時間もかかる</h3>
+      </div>
+      <div class="problem-card">
+        <div class="p-icon">📚</div>
+        <div class="p-num">ISSUE 02</div>
+        <h3>リストの情報が古く<br>無駄なアプローチが多発</h3>
+      </div>
+      <div class="problem-card">
+        <div class="p-icon">✉️</div>
+        <div class="p-num">ISSUE 03</div>
+        <h3>メール作成に時間がかかり<br>担当者ごとにバラつく</h3>
+      </div>
+      <div class="problem-card">
+        <div class="p-icon">🏢</div>
+        <div class="p-num">ISSUE 04</div>
+        <h3>新設企業・成長企業の<br>動きを追えない</h3>
+      </div>
+      <div class="problem-card">
+        <div class="p-icon">🎯</div>
+        <div class="p-num">ISSUE 05</div>
+        <h3>優先順位が分からず<br>どこからアタックすべきか迷う</h3>
+      </div>
+      <div class="problem-card">
+        <div class="p-icon">📉</div>
+        <div class="p-num">ISSUE 06</div>
+        <h3>準備に追われ<br>クロージングに集中できない</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 03 — SOLUTION ━━ -->
+<div class="slide" id="s3">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <span class="slide-tag">02 SOLUTION</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">AI営業リストマスター とは</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-lg">
+      営業の<span class="gold">前工程をすべてAIが担当。</span><br>
+      あなたは<span class="cyan">クロージングだけ</span>に集中できる。
+    </h2>
+
+    <p class="lead" style="margin-top:16px;max-width:700px;">
+      企業情報の収集 → 差分解析 → 優先度スコアリング → 初回メール生成まで、
+      すべてを自動化する営業特化AIプラットフォームです。
+    </p>
+
+    <!-- Flow -->
+    <div class="flow-wrap" style="margin-top:28px;">
+      <div class="flow-step">
+        <div class="f-icon">🏛️</div>
+        <div class="f-lbl">企業リスト<br>自動生成</div>
+        <div class="f-auto">AUTO</div>
+      </div>
+      <div class="flow-step">
+        <div class="f-icon">🔍</div>
+        <div class="f-lbl">AI差分<br>解析</div>
+        <div class="f-auto">AUTO</div>
+      </div>
+      <div class="flow-step">
+        <div class="f-icon">⭐</div>
+        <div class="f-lbl">マッチング<br>スコア</div>
+        <div class="f-auto">AUTO</div>
+      </div>
+      <div class="flow-step">
+        <div class="f-icon">✉️</div>
+        <div class="f-lbl">営業メール<br>自動生成</div>
+        <div class="f-auto">AUTO</div>
+      </div>
+      <div class="flow-step" style="background:rgba(0,212,255,0.08);border-left:1px solid rgba(0,212,255,0.2);">
+        <div class="f-icon">🏆</div>
+        <div class="f-lbl" style="color:var(--cyan);">あなたは<br>クロージングへ</div>
+        <div class="f-auto" style="color:var(--gold2);">FOCUS</div>
+      </div>
+    </div>
+
+    <!-- Numbers -->
+    <div class="solution-grid">
+      <div class="sol-card glass">
+        <div class="sol-num" style="background:linear-gradient(135deg,var(--blue2),var(--blue3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">97<span class="sol-unit">%</span></div>
+        <div class="sol-lbl">営業前作業の削減</div>
+        <div class="sol-desc">5時間かかっていたリスト作成・整理・メール作成が5分で完了</div>
+      </div>
+      <div class="sol-card glass">
+        <div class="sol-num" style="background:linear-gradient(135deg,var(--gold1),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">10<span class="sol-unit">倍</span></div>
+        <div class="sol-lbl">営業活動量の拡大</div>
+        <div class="sol-desc">1人の担当者が動かせる企業数が最大10倍に拡大</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 04 — BEFORE/AFTER ━━ -->
+<div class="slide" id="s4">
+  <span class="slide-tag">03 TRANSFORMATION</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">BEFORE / AFTER</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      導入前後で、営業チームの<span class="gold">一日が変わる。</span>
+    </h2>
+
+    <div class="ba-wrap">
+      <!-- BEFORE -->
+      <div class="ba-panel before">
+        <span class="ba-label">BEFORE — 従来の営業</span>
+        <h3>毎日5時間以上が<br>"準備作業"に消える</h3>
+        <ul class="ba-list">
+          <li><span class="icon">✗</span> 企業を検索・手動でリスト化</li>
+          <li><span class="icon">✗</span> Webを見て情報を手集め</li>
+          <li><span class="icon">✗</span> どこからアタックか考える</li>
+          <li><span class="icon">✗</span> 1通ずつ手書きでメール作成</li>
+          <li><span class="icon">✗</span> 情報が古くなったら作り直し</li>
+        </ul>
+      </div>
+
+      <!-- ARROW -->
+      <div class="ba-arrow-col">
+        <div class="ba-arrow-btn">▶</div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="ba-panel after">
+        <span class="ba-label">AFTER — AI導入後</span>
+        <h3>AIがすべて準備を整え、<br>クロージングだけに集中できる</h3>
+        <ul class="ba-list">
+          <li><span class="icon" style="color:var(--cyan)">✓</span> 最新企業リストを<strong style="color:var(--w100)">毎日自動生成</strong></li>
+          <li><span class="icon" style="color:var(--cyan)">✓</span> 企業の変化をAIが<strong style="color:var(--w100)">自動検知・通知</strong></li>
+          <li><span class="icon" style="color:var(--cyan)">✓</span> スコアで<strong style="color:var(--w100)">優先企業が即わかる</strong></li>
+          <li><span class="icon" style="color:var(--cyan)">✓</span> 初回メールを<strong style="color:var(--w100)">AI即時生成</strong></li>
+          <li><span class="icon" style="color:var(--cyan)">✓</span> 「送る」ボタンだけ押せばいい</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ba-metrics-row">
+      <div class="ba-metric"><div class="m-num">97%</div><div class="m-lbl">作業時間 削減</div></div>
+      <div class="ba-metric"><div class="m-num">10倍</div><div class="m-lbl">営業活動量 拡大</div></div>
+      <div class="ba-metric"><div class="m-num">2〜4倍</div><div class="m-lbl">初回接触率 向上</div></div>
+      <div class="ba-metric"><div class="m-num">5分</div><div class="m-lbl">5時間→5分に短縮</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 05 — FEATURES ━━ -->
+<div class="slide" id="s5">
+  <span class="slide-tag">04 FEATURES</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">4つのコア機能</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      「集める」から「送る」まで、<span class="cyan">すべてAIが完結。</span>
+    </h2>
+
+    <div class="features-grid">
+      <!-- F1 -->
+      <div class="feat-card f1 glass">
+        <div class="feat-num">FUNCTION 01</div>
+        <div class="feat-icon">🏛️</div>
+        <h3>企業リスト 自動生成</h3>
+        <p>国税庁法人番号・公式サイト・公開情報をAIが毎日自動収集。新設企業もリアルタイムで追加。情報収集の手作業は不要。</p>
+        <div class="feat-tags">
+          <span class="feat-tag">法人番号API</span>
+          <span class="feat-tag">自動クロール</span>
+          <span class="feat-tag">毎日更新</span>
+        </div>
+      </div>
+
+      <!-- F2 -->
+      <div class="feat-card f2 glass">
+        <div class="feat-num">FUNCTION 02</div>
+        <div class="feat-icon">🔍</div>
+        <h3>AI差分解析</h3>
+        <p>採用ページ更新・新サービス公開・代表交代などの「変化」をAIが自動検知。アプローチのベストタイミングを逃しません。</p>
+        <div class="feat-tags">
+          <span class="feat-tag">サイト変化検知</span>
+          <span class="feat-tag">採用情報</span>
+          <span class="feat-tag">SNS追跡</span>
+        </div>
+      </div>
+
+      <!-- F3 -->
+      <div class="feat-card f3 glass">
+        <div class="feat-num">FUNCTION 03</div>
+        <div class="feat-icon">⭐</div>
+        <h3>マッチングスコア</h3>
+        <p>業種・成熟度・更新頻度・類似サービス導入傾向をAIが複合分析。"今アタックすべき企業"を自動で上位表示します。</p>
+        <div class="feat-tags">
+          <span class="feat-tag">優先度自動判定</span>
+          <span class="feat-tag">スコアリング</span>
+          <span class="feat-tag">業種タグ</span>
+        </div>
+      </div>
+
+      <!-- F4 -->
+      <div class="feat-card f4 glass">
+        <div class="feat-num">FUNCTION 04</div>
+        <div class="feat-icon">✉️</div>
+        <h3>営業メール 自動生成</h3>
+        <p>各企業の特徴に合わせたパーソナライズメールをAIが即時作成。SendGrid連携で一括送信・配信管理まで完全自動化。</p>
+        <div class="feat-tags">
+          <span class="feat-tag">パーソナライズ</span>
+          <span class="feat-tag">SendGrid連携</span>
+          <span class="feat-tag">一括送信</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 06 — COMPARISON ━━ -->
+<div class="slide" id="s6">
+  <span class="slide-tag">05 COMPARISON</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">従来との比較</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      従来のデータベースでは不可能な<br><span class="gold">「生きた企業データ」</span>を実現
+    </h2>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>比較項目</th>
+          <th class="th-other">従来のDBリスト販売</th>
+          <th class="th-ours">AI営業リストマスター</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>📅 情報の鮮度</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;更新遅延・常に古い情報</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;AIが毎日自動更新</td>
+        </tr>
+        <tr>
+          <td>🔄 企業変化の検知</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;変化を追跡できない</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;AI差分解析で自動検知</td>
+        </tr>
+        <tr>
+          <td>🎯 アプローチ優先度</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;手動で判断・属人化</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;マッチングスコアで自動判定</td>
+        </tr>
+        <tr>
+          <td>✉️ 営業メール生成</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;対応なし・手作成が必要</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;パーソナライズメールを即時生成</td>
+        </tr>
+        <tr>
+          <td>🏢 新設企業の発掘</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;収録まで数ヶ月のタイムラグ</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;国税庁APIで設立即日検出</td>
+        </tr>
+        <tr>
+          <td>💰 コスト効率</td>
+          <td class="td-other"><span class="c-no">✗</span>&ensp;購入直後から鮮度が下がる</td>
+          <td class="td-ours"><span class="c-yes">✓</span>&ensp;常に最新・追加費用なし</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 07 — IMPACT / ROI ━━ -->
+<div class="slide" id="s7">
+  <div class="orb orb1"></div>
+  <span class="slide-tag">06 RESULTS</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">導入効果</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      数字で見る、<span class="gold">圧倒的なROI。</span>
+    </h2>
+
+    <div class="impact-grid">
+      <div class="impact-card ic1 glass">
+        <div class="i-num">97<span style="font-size:36px;">%</span></div>
+        <div class="i-lbl">作業時間 削減</div>
+        <div class="i-desc">5時間の営業前作業が<br>わずか5分で完了</div>
+      </div>
+      <div class="impact-card ic2 glass">
+        <div class="i-num">10<span style="font-size:36px;">倍</span></div>
+        <div class="i-lbl">営業活動量 拡大</div>
+        <div class="i-desc">1人が担当できる企業数が<br>最大10倍にスケール</div>
+      </div>
+      <div class="impact-card ic3 glass">
+        <div class="i-num">4<span style="font-size:36px;">倍</span></div>
+        <div class="i-lbl">初回接触率 向上</div>
+        <div class="i-desc">最適タイミング×パーソナライズで<br>返信率が大幅改善</div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-wrap">
+      <div class="tl-step">
+        <div class="tl-dot">1</div>
+        <div class="tl-lbl">導入・設定</div>
+        <div class="tl-sub">最短1日〜</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-dot">2</div>
+        <div class="tl-lbl">リスト初期生成</div>
+        <div class="tl-sub">数万社規模で即反映</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-dot">3</div>
+        <div class="tl-lbl">自動営業開始</div>
+        <div class="tl-sub">スコア上位にアプローチ</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-dot">4</div>
+        <div class="tl-lbl">成果・改善</div>
+        <div class="tl-sub">データが蓄積し精度向上</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 08 — PRICING ━━ -->
+<div class="slide" id="s8">
+  <span class="slide-tag">07 PRICING</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">料金プラン</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      規模に応じて選べる、<span class="cyan">4つのプラン。</span>
+    </h2>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="plan-name">LITE</div>
+        <div class="plan-desc">リスト生成＋基本分析からスタート</div>
+        <ul class="plan-features">
+          <li>企業リスト自動生成</li>
+          <li>基本プロフィール作成</li>
+          <li>法人番号API連携</li>
+          <li>公開情報クロール</li>
+        </ul>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">STANDARD</div>
+        <div class="plan-desc">差分検知＋メール生成で本格運用</div>
+        <ul class="plan-features">
+          <li>LITEの全機能</li>
+          <li>AI差分解析</li>
+          <li>変化点の自動通知</li>
+          <li>初回営業メール生成</li>
+          <li>マッチングスコア</li>
+        </ul>
+      </div>
+
+      <div class="price-card featured">
+        <div class="popular-tag">人気 No.1</div>
+        <div class="plan-name">PRO</div>
+        <div class="plan-desc">一括送信＋自動レコメンドで最大化</div>
+        <ul class="plan-features">
+          <li>STANDARDの全機能</li>
+          <li>SendGrid一括送信</li>
+          <li>配信ステータス管理</li>
+          <li>自動営業レコメンド</li>
+          <li>優先度ランキング</li>
+          <li>詳細レポート</li>
+        </ul>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">ENTERPRISE</div>
+        <div class="plan-desc">大量データ処理・代理店モデル対応</div>
+        <ul class="plan-features">
+          <li>PROの全機能</li>
+          <li>大量データ処理</li>
+          <li>代理店・提携対応</li>
+          <li>専用サポート</li>
+          <li>カスタム開発対応</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="price-note">※ 価格・詳細はお問い合わせください。導入規模・業種に合わせてご提案いたします。</p>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 09 — USE CASES ━━ -->
+<div class="slide" id="s9">
+  <span class="slide-tag">08 USE CASES</span>
+
+  <div class="content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">活用シーン</span>
+      <div class="eyebrow-line"></div>
+    </div>
+
+    <h2 class="title-md" style="text-align:center;">
+      あらゆる業種の<span class="gold">営業課題を解決。</span>
+    </h2>
+
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="uc-industry">SaaS / IT企業</div>
+        <h3>新規開拓を加速させたい</h3>
+        <p>法人設立から間もない成長企業を即日発見。IT投資意欲の高いタイミングを逃さず、AIがアプローチメールまで作成。</p>
+        <div class="usecase-result">導入後、新規商談数が月3倍に</div>
+      </div>
+
+      <div class="usecase-card">
+        <div class="uc-industry">人材・採用支援</div>
+        <h3>採用ニーズのある企業だけにアプローチしたい</h3>
+        <p>採用ページ更新・求人掲載開始をAIが即検知。採用課題が顕在化したタイミングで自動アプローチ。</p>
+        <div class="usecase-result">無駄なアポが80%減少</div>
+      </div>
+
+      <div class="usecase-card">
+        <div class="uc-industry">BtoB サービス全般</div>
+        <h3>少人数チームで大量の企業にアプローチしたい</h3>
+        <p>1人の営業担当が扱える企業数を最大10倍に拡大。属人化を排除し、チーム全体の成果を底上げ。</p>
+        <div class="usecase-result">1人でも100社規模の同時アプローチ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ SLIDE 10 — CTA ━━ -->
+<div class="slide" id="s10">
+  <div class="orb orb1"></div>
+  <span class="slide-tag">NEXT STEP</span>
+
+  <div class="content">
+    <div class="cta-inner">
+      <div class="eyebrow" style="justify-content:center;">
+        <div class="eyebrow-line"></div>
+        <span class="eyebrow-text">はじめの一歩</span>
+        <div class="eyebrow-line"></div>
+      </div>
+
+      <h2 class="title-lg">
+        まずは<span class="shimmer-text">無料デモ</span>で<br>
+        その効果を体感してください。
+      </h2>
+
+      <p class="lead" style="margin-top:20px;">
+        導入のご相談・デモンストレーションは無料で承っております。<br>
+        貴社の営業課題に合わせた活用プランをご提案いたします。
+      </p>
+
+      <!-- Steps -->
+      <div class="cta-steps">
+        <div class="cta-step">
+          <div class="step-num">1</div>
+          <h4>お問い合わせ</h4>
+          <p>フォームまたはメールで<br>ご連絡ください</p>
+        </div>
+        <div class="cta-step">
+          <div class="step-num">2</div>
+          <h4>無料デモ・ヒアリング</h4>
+          <p>課題をお聞きしながら<br>デモをご覧いただきます</p>
+        </div>
+        <div class="cta-step">
+          <div class="step-num">3</div>
+          <h4>ご提案・導入</h4>
+          <p>最適なプランをご提案<br>最短1日で導入可能</p>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="cta-contact-box">
+        <div class="contact-item">
+          <div class="contact-label">COMPANY</div>
+          <div class="contact-val">株式会社〇〇〇〇</div>
+        </div>
+        <div class="cta-divider"></div>
+        <div class="contact-item">
+          <div class="contact-label">EMAIL</div>
+          <div class="contact-val">info@example.co.jp</div>
+        </div>
+        <div class="cta-divider"></div>
+        <div class="contact-item">
+          <div class="contact-label">TEL</div>
+          <div class="contact-val">03-0000-0000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  let isAnimating = false;
+
+  // Build dots
+  const dotsContainer = document.getElementById('slideDots');
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    dotsContainer.appendChild(dot);
+  });
+
+  function updateUI() {
+    // counter
+    document.getElementById('slideCounter').textContent = (current + 1) + ' / ' + total;
+    // progress
+    document.getElementById('progressBar').style.width = ((current + 1) / total * 100) + '%';
+    // dots
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function goTo(index) {
+    if (isAnimating || index === current) return;
+    isAnimating = true;
+    const dir = index > current ? 1 : -1;
+
+    slides[current].classList.add(dir > 0 ? 'exit-left' : '');
+    slides[current].style.transform = dir > 0 ? 'translateX(-60px)' : 'translateX(60px)';
+    slides[current].style.opacity = '0';
+    slides[current].style.pointerEvents = 'none';
+
+    setTimeout(() => {
+      slides[current].classList.remove('active', 'exit-left');
+      slides[current].style.transform = '';
+      slides[current].style.opacity = '';
+      slides[current].style.pointerEvents = '';
+
+      current = index;
+
+      slides[current].style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+      slides[current].style.opacity = '0';
+      slides[current].classList.add('active');
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          slides[current].style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          slides[current].style.transform = 'translateX(0)';
+          slides[current].style.opacity = '1';
+        });
+      });
+
+      updateUI();
+
+      setTimeout(() => {
+        slides[current].style.transition = '';
+        slides[current].style.transform = '';
+        slides[current].style.opacity = '';
+        isAnimating = false;
+      }, 520);
+    }, 300);
+  }
+
+  window.changeSlide = function(dir) {
+    const next = Math.max(0, Math.min(total - 1, current + dir));
+    goTo(next);
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+
+</body>
+</html>
