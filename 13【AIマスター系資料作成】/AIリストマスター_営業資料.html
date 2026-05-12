@@ -5,920 +5,574 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AIリストマスター 営業資料</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --teal:   #00B4D8;
-    --teal2:  #0077A8;
-    --teal3:  #005F7F;
-    --yellow: #FFD60A;
-    --orange: #FF8C00;
-    --dark:   #0D1B2A;
-    --darkb:  #112233;
-    --white:  #FFFFFF;
+    --blue:    #0077A8;
+    --blue-l:  #00B4D8;
+    --blue-d:  #005F7F;
+    --blue-bg: #EAF4FA;
+    --blue-bg2:#F2F8FC;
+    --bg:      #FFFFFF;
+    --bg-soft: #F5F8FC;
+    --text:    #0D1B2A;
+    --text-s:  rgba(13,27,42,.58);
+    --text-xs: rgba(13,27,42,.38);
+    --amber:   #E08A00;
+    --red:     #C44040;
+    --border:  rgba(0,119,168,.14);
   }
 
   html, body {
-    width: 100%; height: 100%;
-    background: #000;
-    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-    overflow: hidden;
-    user-select: none;
+    width:100%; height:100%;
+    background:#1C2D3D;
+    font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif;
+    overflow:hidden; user-select:none;
   }
 
-  /* ── Viewport scaling ── */
   #scaler {
-    position: fixed;
-    top: 0; left: 0;
-    width: 960px; height: 540px;
-    transform-origin: top left;
+    position:fixed; top:0; left:0;
+    width:960px; height:540px;
+    transform-origin:top left;
   }
 
-  /* ── Slides ── */
   .slide {
-    position: absolute;
-    inset: 0;
-    width: 960px; height: 540px;
-    overflow: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .4s ease;
+    position:absolute; inset:0;
+    width:960px; height:540px;
+    overflow:hidden;
+    opacity:0; pointer-events:none;
+    transition:opacity .35s ease;
+    background:var(--bg);
   }
-  .slide.active {
-    opacity: 1;
-    pointer-events: all;
-  }
+  .slide.active { opacity:1; pointer-events:all; }
 
-  /* ── UI chrome (outside scaler so it's always full viewport) ── */
+  /* ── Chrome UI ── */
   #toolbar {
-    position: fixed;
-    top: 8px; left: 50%;
-    transform: translateX(-50%);
-    display: flex; gap: 8px;
-    z-index: 200;
+    position:fixed; top:8px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:8px; z-index:200;
   }
   #toolbar button {
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1.5px solid rgba(0,180,216,.6);
-    background: rgba(13,27,42,.9);
-    color: #fff;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background .2s;
+    padding:5px 14px; border-radius:20px;
+    border:1.5px solid rgba(255,255,255,.22);
+    background:rgba(13,27,42,.88);
+    color:#fff; font-size:12px; cursor:pointer;
+    font-family:inherit; transition:background .2s;
   }
-  #toolbar button:hover { background: rgba(0,180,216,.35); }
-  #toolbar button.active { background: var(--teal); border-color: var(--teal); }
-
-  #counter {
-    position: fixed;
-    top: 10px; right: 16px;
-    color: rgba(255,255,255,.4);
-    font-size: 12px;
-    z-index: 200;
-  }
-
+  #toolbar button:hover { background:rgba(0,119,168,.5); }
+  #toolbar button.active { background:var(--blue); border-color:var(--blue); }
+  #counter { position:fixed; top:10px; right:16px; color:rgba(255,255,255,.38); font-size:12px; z-index:200; }
   .nav-btn {
-    position: fixed;
-    top: 50%; transform: translateY(-50%);
-    background: rgba(0,180,216,.12);
-    border: 1.5px solid rgba(0,180,216,.35);
-    color: #fff;
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .2s;
+    position:fixed; top:50%; transform:translateY(-50%);
+    background:rgba(0,0,0,.22); border:1.5px solid rgba(255,255,255,.18);
+    color:#fff; width:40px; height:40px; border-radius:50%;
+    font-size:18px; cursor:pointer; z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s;
   }
-  .nav-btn:hover { background: rgba(0,180,216,.4); }
-  #btn-prev { left: 10px; }
-  #btn-next { right: 10px; }
+  .nav-btn:hover { background:rgba(0,119,168,.55); }
+  #btn-prev { left:8px; } #btn-next { right:8px; }
+  #nav { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:7px; z-index:200; }
+  .dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.28); cursor:pointer; transition:background .25s,transform .25s; }
+  .dot.active { background:#fff; transform:scale(1.4); }
 
-  #nav {
-    position: fixed;
-    bottom: 14px; left: 50%;
-    transform: translateX(-50%);
-    display: flex; gap: 8px; align-items: center;
-    z-index: 200;
-  }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: rgba(255,255,255,.3);
-    cursor: pointer;
-    transition: background .25s, transform .25s;
-  }
-  .dot.active { background: var(--yellow); transform: scale(1.45); }
+  /* Edit mode */
+  .editable { outline:none; }
+  body.edit-mode .editable { outline:1.5px dashed rgba(0,119,168,.45); cursor:text; border-radius:2px; }
+  body.edit-mode .editable:focus { outline:2px solid var(--blue); background:rgba(0,119,168,.05); border-radius:3px; }
 
-  /* ── Edit mode ── */
-  .editable { outline: none; }
-  body.edit-mode .editable {
-    outline: 1.5px dashed rgba(255,214,10,.55);
-    cursor: text;
-    border-radius: 2px;
-  }
-  body.edit-mode .editable:focus {
-    outline: 2px solid var(--yellow);
-    background: rgba(255,214,10,.06);
-    border-radius: 3px;
-  }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE DESIGNS
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-  /* ── SLIDE 1: Title ── */
-  .s1 { background: linear-gradient(135deg, #0D1B2A 0%, #005F7F 65%, #0077A8 100%); }
-  .s1 .diag {
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,180,216,.07) 0%, transparent 55%);
-    clip-path: polygon(0 0, 58% 0, 40% 100%, 0 100%);
-  }
-  .s1 .stripe {
-    position: absolute; bottom: 0; right: 0;
-    width: 440px; height: 440px;
-    background: repeating-linear-gradient(-55deg, transparent, transparent 18px, rgba(0,180,216,.06) 18px, rgba(0,180,216,.06) 20px);
-    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
-  }
-  .s1 .top-bar {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange));
-  }
-  .s1 .content {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 72px;
-  }
-  .s1 .eyebrow {
-    font-size: 11px; font-weight: 700; letter-spacing: .28em;
-    color: var(--yellow); text-transform: uppercase; margin-bottom: 18px;
-  }
-  .s1 .title {
-    font-size: 68px; font-weight: 900; color: #fff;
-    line-height: 1.0; letter-spacing: -.02em; margin-bottom: 12px;
-  }
-  .s1 .title em { color: var(--yellow); font-style: normal; }
-  .s1 .subtitle {
-    font-size: 18px; color: rgba(255,255,255,.75);
-    font-weight: 400; letter-spacing: .04em; margin-bottom: 38px;
-  }
-  .s1 .tags { display: flex; gap: 10px; flex-wrap: wrap; }
-  .s1 .tag {
-    padding: 5px 16px;
-    border: 1.5px solid rgba(0,180,216,.45);
-    border-radius: 20px;
-    font-size: 12px; color: rgba(255,255,255,.75);
-    letter-spacing: .07em;
-  }
-  .s1 .logo {
-    position: absolute; bottom: 28px; right: 48px;
-    font-size: 12px; font-weight: 700; letter-spacing: .12em;
-    color: rgba(255,255,255,.3);
-  }
-
-  /* ── SLIDE 2: 営業の現実 ── */
-  .s2 { background: #0D1B2A; }
-  .s2 .topband {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 130px;
-    background: linear-gradient(90deg, var(--teal2), var(--teal));
-    clip-path: polygon(0 0, 100% 0, 100% 68%, 0 100%);
-    display: flex; align-items: center;
-    padding: 0 56px;
-  }
-  .s2 .topband h2 {
-    font-size: 28px; font-weight: 900; color: #fff;
-    line-height: 1.2;
-  }
-  .s2 .topband h2 em { color: var(--yellow); font-style: normal; }
-  .s2 .stats {
-    position: absolute;
-    top: 145px; left: 40px; right: 40px;
-    display: flex; gap: 20px;
-  }
-  .s2 .scard {
-    flex: 1;
-    background: rgba(0,180,216,.09);
-    border: 1px solid rgba(0,180,216,.28);
-    border-radius: 12px;
-    padding: 28px 18px 22px;
-    text-align: center;
-    position: relative; overflow: hidden;
-  }
-  .s2 .scard::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange));
-  }
-  .s2 .snum { font-size: 56px; font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 6px; }
-  .s2 .snum small { font-size: 24px; }
-  .s2 .slabel { font-size: 13px; color: rgba(255,255,255,.78); line-height: 1.55; }
-  .s2 .footnote {
-    position: absolute; bottom: 22px; left: 0; right: 0;
-    text-align: center; font-size: 12px; color: rgba(255,255,255,.38);
-  }
-
-  /* ── SLIDE 3: 3つの限界 ── */
-  .s3 { background: linear-gradient(160deg, #112233 0%, #0A1A28 100%); }
-  .s3 .lcol {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 340px;
-    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
-    clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 52px 0 50px;
-  }
-  .s3 .lcol .icon-wrap {
-    width: 50px; height: 50px;
-    background: rgba(255,255,255,.14);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; margin-bottom: 18px;
-  }
-  .s3 .lcol h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 12px; }
-  .s3 .lcol p { font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.7; }
-  .s3 .rcol {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 308px;
-    display: flex; flex-direction: column;
-    justify-content: center; gap: 18px;
-    padding: 0 48px 0 44px;
-  }
-  .s3 .pitem {
-    display: flex; gap: 16px; align-items: flex-start;
-    padding: 16px 18px;
-    background: rgba(0,180,216,.07);
-    border: 1px solid rgba(0,180,216,.2);
-    border-left: 4px solid var(--yellow);
-    border-radius: 10px;
-  }
-  .s3 .pnum { font-size: 26px; font-weight: 900; color: var(--yellow); line-height: 1; width: 32px; flex-shrink: 0; }
-  .s3 .ptxt h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .s3 .ptxt p { font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.55; }
-
-  /* ── REASON SLIDES 共通 ── */
-  .reason { background: #0D1B2A; }
-  .reason .side-accent {
-    position: absolute; top: 0; left: 0; bottom: 0; width: 5px;
-    background: linear-gradient(180deg, var(--yellow), var(--orange));
-  }
-  .reason .lpanel {
-    position: absolute; top: 0; left: 0; bottom: 0; width: 400px;
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 0 52px 0 52px;
-  }
-  .reason .rnum {
-    font-size: 90px; font-weight: 900; color: rgba(0,180,216,.1);
-    line-height: 1; letter-spacing: -.04em; margin-bottom: 2px;
-  }
-  .reason .rlabel {
-    font-size: 10px; font-weight: 700; letter-spacing: .28em;
-    color: var(--yellow); margin-bottom: 18px;
-    text-transform: uppercase;
-  }
-  .reason .rtitle {
-    font-size: 21px; font-weight: 900; color: #fff;
-    line-height: 1.4; margin-bottom: 18px;
-    padding-left: 14px;
-    border-left: 4px solid var(--yellow);
-  }
-  .reason .rbody { font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.8; }
-  .reason .rpanel {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 400px;
-    background: linear-gradient(135deg, rgba(0,95,127,.3) 0%, #0D1B2A 100%);
-    border-left: 1px solid rgba(0,180,216,.18);
-    display: flex; align-items: center; justify-content: center;
-    padding: 30px 32px;
-  }
-
-  /* 棒グラフ（理由03 時間比較） */
-  .bar-chart { width: 100%; }
-  .bc-item { margin-bottom: 22px; }
-  .bc-item:last-child { margin-bottom: 0; }
-  .bc-name { font-size: 13px; color: rgba(255,255,255,.65); margin-bottom: 8px; letter-spacing: .03em; }
-  .bc-track { height: 48px; background: rgba(255,255,255,.05); border-radius: 8px; overflow: hidden; position: relative; }
-  .bc-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding: 0 16px; transition: width 1s ease; }
-  .bc-fill.manual { background: linear-gradient(90deg, rgba(220,60,60,.55), rgba(255,140,0,.4)); width: 90%; }
-  .bc-fill.ai     { background: linear-gradient(90deg, var(--teal2), var(--teal)); width: 4%; min-width: 60px; }
-  .bc-fill span { font-size: 15px; font-weight: 900; color: #fff; white-space: nowrap; }
-  .bc-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 5px; }
-
-  /* コスト比較（理由04） */
-  .cost-compare { display: flex; gap: 24px; align-items: flex-end; width: 100%; }
-  .cc-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
-  .cc-bar-area { width: 100%; display: flex; align-items: flex-end; justify-content: center; height: 240px; }
-  .cc-bar { width: 70px; border-radius: 8px 8px 0 0; }
-  .cc-bar.old { background: linear-gradient(180deg, rgba(220,60,60,.5), rgba(220,60,60,.15)); height: 100%; }
-  .cc-bar.ai  { background: linear-gradient(180deg, var(--teal), var(--teal2)); height: 35%; }
-  .cc-label { text-align: center; margin-top: 12px; font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.55; }
-  .cc-amount { font-size: 15px; font-weight: 900; color: var(--yellow); margin-top: 6px; }
-  .cc-divider { display: flex; align-items: center; color: rgba(255,255,255,.3); font-size: 22px; padding-bottom: 120px; }
-
-  /* 一元管理フロー図（理由02） */
-  .flow-diagram { width: 100%; }
-  .fd-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-  .fd-row:last-child { margin-bottom: 0; }
-  .fd-box {
-    flex: 1; padding: 14px 16px;
-    background: rgba(0,180,216,.1);
-    border: 1px solid rgba(0,180,216,.3);
-    border-radius: 8px; text-align: center;
-  }
-  .fd-box.highlight {
-    background: rgba(255,214,10,.1);
-    border-color: rgba(255,214,10,.4);
-  }
-  .fd-box .fb-num { font-size: 10px; font-weight: 700; color: var(--yellow); letter-spacing: .15em; margin-bottom: 4px; }
-  .fd-box .fb-title { font-size: 13px; font-weight: 700; color: #fff; }
-  .fd-box .fb-sub { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 3px; line-height: 1.4; }
-  .fd-arrow { color: var(--yellow); font-size: 18px; flex-shrink: 0; }
-  .fd-unified {
-    margin-top: 16px; padding: 14px 20px;
-    background: linear-gradient(90deg, rgba(255,214,10,.15), rgba(255,140,0,.1));
-    border: 1.5px solid rgba(255,214,10,.45);
-    border-radius: 8px; text-align: center;
-  }
-  .fd-unified .fu-label { font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 4px; letter-spacing: .1em; }
-  .fd-unified .fu-text { font-size: 15px; font-weight: 900; color: var(--yellow); }
-
-  /* ── SLIDE 5: データ収集 ── */
-  .s5 { background: #0D1B2A; }
-  .s5 .lpanel {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 420px;
-    background: linear-gradient(135deg, var(--teal2) 0%, var(--teal3) 100%);
-    clip-path: polygon(0 0, 87% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 62px 0 52px;
-  }
-  .s5 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 14px; }
-  .s5 .lpanel h2 { font-size: 26px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
-  .s5 .lpanel p { font-size: 13px; color: rgba(255,255,255,.78); line-height: 1.7; }
-  .s5 .rpanel {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 390px;
-    display: flex; flex-direction: column;
-    justify-content: center; gap: 16px;
-    padding: 0 44px 0 38px;
-  }
-  .s5 .scard {
-    background: rgba(0,180,216,.09);
-    border: 1px solid rgba(0,180,216,.25);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex; gap: 14px; align-items: flex-start;
-    border-left: 4px solid var(--teal);
-  }
-  .s5 .scard .si { font-size: 26px; flex-shrink: 0; }
-  .s5 .scard h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .s5 .scard p { font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.55; }
-  .s5 .badge {
-    margin-top: 6px;
-    background: rgba(255,214,10,.12);
-    border: 1.5px solid var(--yellow);
-    border-radius: 8px; padding: 12px 20px;
-    text-align: center;
-  }
-  .s5 .badge big { font-size: 22px; font-weight: 900; color: var(--yellow); }
-  .s5 .badge p { font-size: 12px; color: rgba(255,255,255,.68); margin-top: 3px; }
-
-  /* ── SLIDE 6: 企業深堀り ── */
-  .s6 { background: #0D1B2A; }
-  .s6 .lpanel {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 380px;
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 44px;
-  }
-  .s6 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 10px; }
-  .s6 .lpanel h2 { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 20px; }
-  .s6 .flist { display: flex; flex-direction: column; gap: 11px; }
-  .s6 .fitem {
-    padding: 12px 14px;
-    background: rgba(0,180,216,.08);
-    border-left: 3px solid var(--teal);
-    border-radius: 8px;
-  }
-  .s6 .fitem p { font-size: 12px; color: rgba(255,255,255,.85); line-height: 1.55; }
-  .s6 .fitem strong { color: var(--yellow); }
-  .s6 .rpanel {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 380px;
-    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 24px 24px;
-  }
-  .s6 .screenlabel {
-    font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45);
-    margin-bottom: 12px; text-transform: uppercase;
-  }
+  /* ── Browser Frame ── */
   .browser-frame {
-    background: #1E2E3D;
-    border-radius: 10px; overflow: hidden;
-    box-shadow: 0 10px 36px rgba(0,0,0,.65);
-    max-width: 100%;
+    background:#EDF2F7; border-radius:10px; overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.07);
+    max-width:100%;
   }
   .browser-bar {
-    background: #2A3F52; height: 26px;
-    display: flex; align-items: center;
-    padding: 0 10px; gap: 6px;
+    background:#DDE4ED; height:26px;
+    display:flex; align-items:center; padding:0 10px; gap:6px;
   }
-  .bdot { width: 10px; height: 10px; border-radius: 50%; }
-  .bdot.r { background: #FF5F57; }
-  .bdot.y { background: #FEBC2E; }
-  .bdot.g { background: #28C840; }
-  .burl { flex: 1; height: 14px; background: rgba(255,255,255,.08); border-radius: 4px; margin-left: 8px; }
-  .browser-frame img {
-    display: block; width: 100%; height: auto;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+  .bdot { width:10px; height:10px; border-radius:50%; }
+  .bdot.r{background:#FF5F57;} .bdot.y{background:#FEBC2E;} .bdot.g{background:#28C840;}
+  .burl { flex:1; height:13px; background:rgba(0,0,0,.1); border-radius:4px; margin-left:8px; }
+  .browser-frame img { display:block; width:100%; height:auto; image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges; }
+  .screen-label { font-size:10px; letter-spacing:.18em; color:var(--text-xs); text-transform:uppercase; margin-bottom:8px; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 1: タイトル
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s1 { background:#FFFFFF; }
+  .s1 .bg-r {
+    position:absolute; top:0; right:0; bottom:0; width:400px;
+    background:linear-gradient(145deg,var(--blue-bg) 0%,#C8E5F5 100%);
+    clip-path:polygon(18% 0,100% 0,100% 100%,0 100%);
+  }
+  .s1 .top-line {
+    position:absolute; top:0; left:0; right:0; height:5px;
+    background:linear-gradient(90deg,var(--blue),var(--blue-l));
+  }
+  .s1 .content {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 72px;
+  }
+  .s1 .eyebrow {
+    font-size:10.5px; font-weight:700; letter-spacing:.32em;
+    color:var(--blue); text-transform:uppercase; margin-bottom:22px;
+  }
+  .s1 .title {
+    font-size:78px; font-weight:900; color:var(--text);
+    line-height:.95; letter-spacing:-.03em; margin-bottom:16px;
+  }
+  .s1 .title em { color:var(--blue); font-style:normal; }
+  .s1 .subtitle { font-size:17px; color:var(--text-s); letter-spacing:.04em; margin-bottom:36px; }
+  .s1 .tags { display:flex; gap:10px; flex-wrap:wrap; }
+  .s1 .tag {
+    padding:5px 16px;
+    border:1.5px solid var(--border); border-radius:20px;
+    font-size:12px; color:var(--blue); background:var(--blue-bg2);
+    letter-spacing:.06em;
+  }
+  .s1 .logo {
+    position:absolute; bottom:24px; right:40px;
+    font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--text-xs);
+  }
+  .s1 .illust {
+    position:absolute; right:52px; top:50%; transform:translateY(-50%);
   }
 
-  /* ── SLIDE 7: リスト作成 ── */
-  .s7 { background: #0D1B2A; }
-  .s7 .lpanel {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 360px;
-    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
-    clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 56px 0 50px;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 2: 営業マンの現実
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s2 { background:var(--bg-soft); }
+  .s2 .hdr {
+    position:absolute; top:0; left:0; right:0; height:116px;
+    background:var(--blue);
+    clip-path:polygon(0 0,100% 0,100% 72%,0 100%);
+    display:flex; align-items:center; padding:0 56px 20px;
   }
-  .s7 .lpanel .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 12px; }
-  .s7 .lpanel h2 { font-size: 22px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 18px; }
-  .s7 .flist { display: flex; flex-direction: column; gap: 12px; }
-  .s7 .fitem {
-    padding: 12px 14px;
-    background: rgba(255,255,255,.1);
-    border-left: 3px solid var(--yellow);
-    border-radius: 6px;
+  .s2 .hdr h2 { font-size:26px; font-weight:900; color:#fff; line-height:1.3; }
+  .s2 .hdr h2 em { color:#FFD870; font-style:normal; }
+  .s2 .stats {
+    position:absolute; top:128px; left:32px; right:32px;
+    display:flex; gap:18px;
   }
-  .s7 .fitem h3 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-  .s7 .fitem p { font-size: 11px; color: rgba(255,255,255,.75); line-height: 1.55; }
-  .s7 .rpanel {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 335px;
-    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 20px 22px;
-    gap: 10px;
-  }
-  .s7 .screenlabel { font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45); text-transform: uppercase; }
-
-  /* ── SLIDE 8: アプローチ ── */
-  .s8 { background: linear-gradient(135deg, #0A1825 0%, var(--teal3) 100%); }
-  .s8 .lcol {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 360px;
-    background: linear-gradient(160deg, var(--teal2) 0%, #006080 100%);
-    clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 56px 0 50px;
-  }
-  .s8 .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 12px; }
-  .s8 .lcol h2 { font-size: 22px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 14px; }
-  .s8 .lcol p { font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.7; }
-  .s8 .lcol .pts { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-  .s8 .lcol .pt {
-    display: flex; gap: 10px; align-items: center;
-    padding: 9px 12px;
-    background: rgba(255,255,255,.1);
-    border-left: 3px solid var(--yellow);
-    border-radius: 5px;
-  }
-  .s8 .lcol .pt span { font-size: 13px; font-weight: 700; color: var(--yellow); flex-shrink: 0; }
-  .s8 .lcol .pt p { font-size: 11px; color: rgba(255,255,255,.8); line-height: 1.4; }
-  .s8 .rcol {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 336px;
-    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 20px 20px;
-    gap: 10px;
-  }
-  .s8 .screenlabel { font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45); text-transform: uppercase; }
-
-  /* ── SLIDE 9: 架電管理 ── */
-  .s9 { background: #0D1B2A; }
-  .s9 .lpanel {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 360px;
-    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
-    clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 56px 0 50px;
-  }
-  .s9 .lpanel .secnum { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: var(--yellow); margin-bottom: 12px; }
-  .s9 .lpanel h2 { font-size: 22px; font-weight: 900; color: #fff; line-height: 1.3; margin-bottom: 16px; }
-  .s9 .lpanel p { font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.7; margin-bottom: 16px; }
-  .s9 .flow-steps { display: flex; flex-direction: column; gap: 8px; }
-  .s9 .fs-item {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 9px 12px;
-    background: rgba(255,255,255,.1);
-    border-left: 3px solid var(--yellow);
-    border-radius: 5px;
-  }
-  .s9 .fs-item .fsnum {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--yellow); color: var(--dark);
-    font-size: 11px; font-weight: 900;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-top: 1px;
-  }
-  .s9 .fs-item p { font-size: 11px; color: rgba(255,255,255,.85); line-height: 1.5; }
-  .s9 .rpanel {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 336px;
-    background: linear-gradient(135deg, var(--teal3) 0%, #112233 100%);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 20px 18px;
-    gap: 10px;
-  }
-  .s9 .screenlabel { font-size: 10px; letter-spacing: .18em; color: rgba(255,255,255,.45); text-transform: uppercase; }
-
-  /* ── SLIDE 10: 架電オプション ── */
-  .s10 { background: linear-gradient(135deg, #112233 0%, var(--teal3) 100%); }
-  .s10 .lcol {
-    position: absolute; top: 0; left: 0; bottom: 0;
-    width: 340px;
-    background: linear-gradient(160deg, var(--teal2) 0%, var(--teal3) 100%);
-    clip-path: polygon(0 0, 83% 0, 100% 100%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 0 54px 0 50px;
-  }
-  .s10 .optbadge {
-    display: inline-block; margin-bottom: 14px;
-    padding: 4px 12px;
-    background: rgba(255,214,10,.18); border: 1px solid var(--yellow);
-    border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--yellow);
-  }
-  .s10 .lcol h2 { font-size: 23px; font-weight: 900; color: #fff; line-height: 1.35; margin-bottom: 14px; }
-  .s10 .lcol p { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.7; }
-  .s10 .rcol {
-    position: absolute; top: 0; right: 0; bottom: 0; left: 315px;
-    display: flex; flex-direction: column;
-    justify-content: center; gap: 14px;
-    padding: 0 40px 0 32px;
-  }
-  .s10 .orow { display: flex; gap: 14px; }
-  .s10 .ocard {
-    flex: 1;
-    background: rgba(0,180,216,.1);
-    border: 1px solid rgba(0,180,216,.25);
-    border-radius: 10px; padding: 18px 16px; text-align: center;
-  }
-  .s10 .ocard .oi { font-size: 26px; margin-bottom: 8px; }
-  .s10 .ocard h3 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-  .s10 .ocard p { font-size: 11px; color: rgba(255,255,255,.62); line-height: 1.5; }
-
-  /* ── SLIDE 11: 導入効果 ── */
-  .s11 { background: #0D1B2A; }
-  .s11 .banner {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 118px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange));
-    clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%);
-    display: flex; flex-direction: column;
-    justify-content: center; padding: 0 56px;
-  }
-  .s11 .banner h2 { font-size: 26px; font-weight: 900; color: var(--dark); }
-  .s11 .banner p { font-size: 13px; color: rgba(0,0,0,.58); margin-top: 3px; }
-  .s11 .metrics {
-    position: absolute; top: 128px; left: 32px; right: 32px;
-    display: flex; gap: 14px;
-  }
-  .s11 .mc {
-    flex: 1;
-    background: rgba(0,180,216,.08);
-    border: 1px solid rgba(0,180,216,.24);
-    border-radius: 12px; padding: 22px 14px;
-    text-align: center; position: relative; overflow: hidden;
-  }
-  .s11 .mc::after {
-    content: '';
-    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--teal), var(--yellow));
-  }
-  .s11 .mnum { font-size: 38px; font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
-  .s11 .munit { font-size: 18px; }
-  .s11 .mlabel { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.5; margin-top: 6px; }
-  .s11 .submets {
-    position: absolute; bottom: 22px; left: 32px; right: 32px;
-    background: rgba(255,214,10,.07);
-    border: 1px solid rgba(255,214,10,.28);
-    border-radius: 8px; padding: 12px 20px;
-    display: flex; justify-content: space-around; align-items: center;
-  }
-  .s11 .smi { text-align: center; }
-  .s11 .smn { font-size: 20px; font-weight: 900; color: var(--yellow); }
-  .s11 .sml { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 2px; }
-  .s11 .smdiv { width: 1px; height: 34px; background: rgba(255,255,255,.14); }
-
-  /* ── SLIDE 12: ご利用の流れ ── */
-  .s12 { background: linear-gradient(135deg, #0D1B2A 0%, var(--teal3) 100%); }
-  .s12 .header {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 102px;
-    background: linear-gradient(90deg, var(--teal2), var(--teal));
-    clip-path: polygon(0 0, 100% 0, 100% 66%, 0 100%);
-    display: flex; align-items: center;
-    padding: 0 56px;
-  }
-  .s12 .header h2 { font-size: 24px; font-weight: 900; color: #fff; }
-  .s12 .stepsrow {
-    position: absolute; top: 112px; left: 36px; right: 36px;
-    display: flex; gap: 14px; align-items: stretch;
-  }
-  .s12 .sbox {
-    flex: 1;
-    background: rgba(0,180,216,.1);
-    border: 1px solid rgba(0,180,216,.24);
-    border-radius: 12px; padding: 20px 14px; text-align: center;
-  }
-  .s12 .sbox .snum {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--yellow), var(--orange));
-    color: var(--dark); font-size: 17px; font-weight: 900;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 10px;
-  }
-  .s12 .sbox .sicon { font-size: 24px; margin-bottom: 8px; }
-  .s12 .sbox h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-  .s12 .sbox p { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.55; }
-  .s12 .sarrow { display: flex; align-items: center; padding-top: 22px; color: var(--yellow); font-size: 18px; }
-  .s12 .snote {
-    position: absolute; bottom: 22px; left: 0; right: 0;
-    text-align: center; font-size: 12px; color: rgba(255,255,255,.42);
-  }
-
-  /* ── SLIDE 13: CTA ── */
-  .s13 { background: linear-gradient(135deg, var(--teal2) 0%, #0D1B2A 65%); }
-  .s13 .glow {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 620px; height: 400px;
-    background: radial-gradient(ellipse at center, rgba(0,180,216,.18) 0%, transparent 70%);
-  }
-  .s13 .topstripe {
-    position: absolute; top: 0; left: 0; right: 0; height: 6px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange), var(--yellow));
-  }
-  .s13 .content {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center; padding: 40px;
-  }
-  .s13 .catch { font-size: 11px; font-weight: 700; letter-spacing: .28em; color: var(--yellow); text-transform: uppercase; margin-bottom: 18px; }
-  .s13 .copy { font-size: 36px; font-weight: 900; color: #fff; line-height: 1.25; margin-bottom: 12px; }
-  .s13 .copy em { color: var(--yellow); font-style: normal; }
-  .s13 .subcopy { font-size: 15px; color: rgba(255,255,255,.72); line-height: 1.7; margin-bottom: 34px; max-width: 520px; }
-  .s13 .ctabtn {
-    display: inline-block; padding: 16px 52px;
-    background: linear-gradient(90deg, var(--yellow), var(--orange));
-    color: var(--dark); font-size: 17px; font-weight: 900;
-    border-radius: 50px; letter-spacing: .06em;
-    box-shadow: 0 6px 26px rgba(255,214,10,.38);
-    text-decoration: none; margin-bottom: 26px;
-  }
-  .s13 .contact { font-size: 12px; color: rgba(255,255,255,.42); letter-spacing: .08em; }
-  .s13 .logo {
-    position: absolute; bottom: 22px; right: 40px;
-    font-size: 12px; font-weight: 700; letter-spacing: .12em;
-    color: rgba(255,255,255,.28);
-  }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     DESIGN POLISH — 全体デザイン強化
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-  /* ─ Slide 1: タイトルをより迫力あるものに ─ */
-  .s1 { background: linear-gradient(150deg, #081420 0%, #004A6B 55%, #0077A8 100%); }
-  .s1 .diag {
-    clip-path: polygon(0 0, 52% 0, 32% 100%, 0 100%);
-    background: linear-gradient(135deg, rgba(0,180,216,.12) 0%, transparent 60%);
-  }
-  .s1 .stripe {
-    background: repeating-linear-gradient(-52deg, transparent, transparent 22px, rgba(0,180,216,.05) 22px, rgba(0,180,216,.05) 24px);
-  }
-  .s1 .content { padding: 0 80px; }
-  .s1 .eyebrow { font-size: 11px; letter-spacing: .35em; margin-bottom: 22px; }
-  .s1 .title { font-size: 90px; letter-spacing: -.03em; line-height: .95; }
-  .s1 .subtitle { font-size: 20px; letter-spacing: .07em; margin-bottom: 44px; }
-  .s1 .tag { border-radius: 4px; font-size: 11.5px; letter-spacing: .1em; }
-
-  /* ─ Slide 2: 統計数字を圧倒的に大きく ─ */
-  .s2 .topband { height: 138px; }
-  .s2 .topband h2 { font-size: 32px; }
-  .s2 .stats { top: 154px; left: 34px; right: 34px; gap: 18px; }
   .s2 .scard {
-    padding: 38px 22px 28px;
-    background: rgba(0,180,216,.07);
-    border: none;
-    border-top: 4px solid var(--yellow);
-    border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    flex:1; background:#fff; border-radius:14px;
+    padding:26px 20px 22px; text-align:center;
+    box-shadow:0 4px 20px rgba(0,0,0,.08);
+    border-top:4px solid var(--blue);
   }
-  .s2 .scard::before { display: none; }
-  .s2 .snum { font-size: 86px; letter-spacing: -.03em; }
-  .s2 .snum small { font-size: 38px; }
-  .s2 .slabel { font-size: 13.5px; line-height: 1.7; }
-
-  /* ─ Slide 3: 課題スライドのタイポ強化 ─ */
-  .s3 .lcol h2 { font-size: 28px; line-height: 1.3; }
-  .s3 .lcol .icon-wrap { display: none; }
-  .s3 .pitem { border: none; border-left: 4px solid var(--yellow); padding: 16px 20px; }
-  .s3 .ptxt h3 { font-size: 14.5px; }
-  .s3 .ptxt p { font-size: 12.5px; line-height: 1.65; }
-
-  /* ─ Reason slides: 数字を全面背景透かしに ─ */
-  .reason .rnum {
-    position: absolute;
-    right: -30px; bottom: -60px;
-    font-size: 320px; font-weight: 900;
-    color: rgba(0,180,216,.055);
-    line-height: 1; letter-spacing: -.06em;
-    pointer-events: none;
-    z-index: 0;
+  .s2 .snum {
+    font-size:68px; font-weight:900; color:var(--blue);
+    line-height:1; margin-bottom:10px; letter-spacing:-.03em;
   }
-  .reason .lpanel { z-index: 1; padding: 0 56px 0 50px; }
-  .reason .rpanel { z-index: 1; }
-  .reason .side-accent { z-index: 2; width: 6px; }
-  .reason .rtitle { font-size: 27px; line-height: 1.35; border-left-width: 5px; }
-  .reason .rbody { font-size: 13.5px; line-height: 1.9; color: rgba(255,255,255,.78); }
-  .reason .rlabel { font-size: 10.5px; letter-spacing: .32em; }
-
-  /* ─ Feature slides: 見出し強化 ─ */
-  .s5 .lpanel h2 { font-size: 30px; }
-  .s5 .lpanel p { font-size: 13.5px; }
-  .s5 .scard { border: none; border-left: 4px solid var(--teal); box-shadow: none; }
-  .s6 .lpanel h2 { font-size: 28px; }
-  .s7 .lpanel h2 { font-size: 24px; line-height: 1.3; }
-  .s8 .lcol h2 { font-size: 26px; }
-  .s9 .lpanel h2 { font-size: 26px; }
-  .s10 .lcol h2 { font-size: 25px; }
-
-  /* ─ Slide 11: 数字の迫力アップ ─ */
-  .s11 .banner h2 { font-size: 30px; }
-  .s11 .metrics { top: 130px; left: 28px; right: 28px; gap: 12px; }
-  .s11 .mc { border: none; border-bottom: 3px solid; border-image: linear-gradient(90deg, var(--teal), var(--yellow)) 1; border-radius: 12px 12px 0 0; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
-  .s11 .mc::after { display: none; }
-  .s11 .mnum { font-size: 48px; }
-  .s11 .mlabel { font-size: 12.5px; }
-
-  /* ─ Slide 12: ステップ強化 ─ */
-  .s12 .header h2 { font-size: 26px; }
-  .s12 .sbox { border: none; border-top: 3px solid rgba(0,180,216,.4); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
-  .s12 .sbox .snum {
-    width: 42px; height: 42px;
-    font-size: 17px;
-    background: linear-gradient(135deg, var(--yellow), var(--orange));
-    box-shadow: 0 4px 14px rgba(255,214,10,.4);
+  .s2 .snum small { font-size:32px; }
+  .s2 .slabel { font-size:13px; color:var(--text-s); line-height:1.65; }
+  .s2 .footnote {
+    position:absolute; bottom:20px; left:0; right:0;
+    text-align:center; font-size:11.5px; color:var(--text-xs);
   }
 
-  /* ─ Slide 13: CTAを大胆に ─ */
-  .s13 .copy { font-size: 40px; line-height: 1.2; }
-  .s13 .subcopy { font-size: 15.5px; line-height: 1.8; }
-  .s13 .ctabtn {
-    font-size: 18px;
-    padding: 18px 60px;
-    box-shadow: 0 8px 32px rgba(255,214,10,.45);
-    letter-spacing: .08em;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 3: 3つの限界
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s3 { background:#FFFFFF; }
+  .s3 .lcol {
+    position:absolute; top:0; left:0; bottom:0; width:292px;
+    background:var(--blue);
+    clip-path:polygon(0 0,85% 0,100% 100%,0 100%);
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 54px 0 44px;
   }
-
-  /* ─ 共通: ブラウザフレームの影強化 ─ */
-  .browser-frame {
-    box-shadow: 0 16px 60px rgba(0,0,0,.75), 0 0 0 1px rgba(0,180,216,.15);
+  .s3 .lcol h2 { font-size:21px; font-weight:900; color:#fff; line-height:1.45; margin-bottom:14px; }
+  .s3 .lcol p { font-size:12.5px; color:rgba(255,255,255,.78); line-height:1.75; }
+  .s3 .rcol {
+    position:absolute; top:0; right:0; bottom:0; left:264px;
+    display:flex; flex-direction:column; justify-content:center;
+    gap:16px; padding:0 44px 0 36px;
   }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     HYBRID DESIGN — オクトン × AIリストマスター
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-  /* ─ Reason slides: 白背景・ダークテキスト（オクトン方式）─ */
-  .reason { background: #FFFFFF; }
-  .reason .side-accent { background: linear-gradient(180deg, var(--teal2), var(--teal)); }
-  .reason .rnum { color: rgba(0,119,168,.045); }
-  .reason .rlabel { color: var(--teal2); }
-  .reason .rtitle { color: #0D1B2A; border-left-color: var(--teal2); }
-  .reason .rbody { color: rgba(13,27,42,.68); }
-  .reason .rpanel {
-    background: #EEF6FB;
-    border-left: 1px solid rgba(0,119,168,.12);
-  }
-  /* フロー図 → 白背景用 */
-  .fd-box { background: #FFFFFF; border-color: rgba(0,119,168,.22); box-shadow: 0 2px 10px rgba(0,0,0,.07); }
-  .fd-box .fb-num { color: var(--teal2); }
-  .fd-box .fb-title { color: #0D1B2A; }
-  .fd-box .fb-sub { color: rgba(13,27,42,.55); }
-  .fd-arrow { color: var(--teal2); }
-  .fd-unified { background: rgba(0,119,168,.07); border-color: rgba(0,119,168,.3); }
-  .fd-unified .fu-label { color: rgba(13,27,42,.5); }
-  .fd-unified .fu-text { color: var(--teal2); }
-  /* 棒グラフ → 白背景用 */
-  .bc-name { color: rgba(13,27,42,.65); }
-  .bc-track { background: rgba(0,0,0,.06); }
-  .bc-sub { color: rgba(13,27,42,.42); }
-  /* コスト比較 → 白背景用 */
-  .cc-label { color: rgba(13,27,42,.65); }
-  .cc-divider { color: rgba(13,27,42,.22); padding-bottom: 100px; }
-  .cc-amount { color: var(--teal2); }
-  /* 白背景でのブラウザフレーム */
-  .reason .browser-frame {
-    box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 0 0 1px rgba(0,119,168,.15);
-  }
-
-  /* ─ S3: 課題カードを白丸角に（オクトン方式 on 暗背景）─ */
   .s3 .pitem {
-    background: rgba(255,255,255,.93);
-    border: none;
-    border-left: 5px solid var(--teal2);
-    border-radius: 10px;
-    box-shadow: 0 4px 18px rgba(0,0,0,.22);
+    display:flex; gap:18px; align-items:flex-start;
+    padding:18px 20px;
+    background:#fff; border:1px solid rgba(0,0,0,.07);
+    border-left:5px solid var(--blue); border-radius:10px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);
   }
-  .s3 .pnum { color: var(--teal2); }
-  .s3 .ptxt h3 { color: #0D1B2A; }
-  .s3 .ptxt p { color: rgba(13,27,42,.62); }
+  .s3 .pnum { font-size:28px; font-weight:900; color:var(--blue); line-height:1; width:34px; flex-shrink:0; }
+  .s3 .ptxt h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .s3 .ptxt p { font-size:12px; color:var(--text-s); line-height:1.6; }
 
-  /* ─ Feature slides 右パネル: 白に近い明るい背景 ─ */
-  .s5 .rpanel {
-    background: #EEF6FB;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     REASON SLIDES (4-7)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .reason { background:#FFFFFF; }
+  .reason .l-stripe {
+    position:absolute; top:0; left:0; bottom:0; width:6px;
+    background:linear-gradient(180deg,var(--blue),var(--blue-l));
+    z-index:2;
   }
-  .s5 .scard {
-    background: #FFFFFF;
-    border-left: 4px solid var(--teal2);
-    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  .reason .wm {
+    position:absolute; right:-16px; bottom:-44px;
+    font-size:290px; font-weight:900;
+    color:rgba(0,119,168,.038);
+    line-height:1; letter-spacing:-.06em;
+    pointer-events:none; z-index:0;
   }
-  .s5 .scard h3 { color: #0D1B2A; }
-  .s5 .scard p { color: rgba(13,27,42,.62); }
-  .s5 .badge {
-    background: rgba(0,119,168,.07);
-    border-color: var(--teal2);
+  .reason .lpanel {
+    position:absolute; top:0; left:0; bottom:0; width:420px;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 50px 0 54px; z-index:1;
   }
-  .s5 .badge big { color: var(--teal2); }
-  .s5 .badge p { color: rgba(13,27,42,.62); }
-
-  .s6 .rpanel { background: #EEF6FB; border-left: 1px solid rgba(0,119,168,.12); }
-  .s6 .screenlabel { color: rgba(13,27,42,.45); }
-  .s6 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
-
-  .s7 .rpanel { background: #EEF6FB; }
-  .s7 .screenlabel { color: rgba(13,27,42,.45); }
-  .s7 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
-
-  .s8 .rcol { background: #EEF6FB; border-left: 1px solid rgba(0,119,168,.12); }
-  .s8 .screenlabel { color: rgba(13,27,42,.45); }
-  .s8 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
-
-  .s9 .rpanel { background: #EEF6FB; }
-  .s9 .screenlabel { color: rgba(13,27,42,.45); }
-  .s9 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
-
-  /* ─ 共通: スライドに微妙な光沢を追加 ─ */
-  .slide::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
-    pointer-events: none;
-    z-index: 10;
+  .reason .rlabel {
+    font-size:10px; font-weight:700; letter-spacing:.32em;
+    color:var(--blue); text-transform:uppercase; margin-bottom:14px;
   }
+  .reason .rtitle {
+    font-size:25px; font-weight:900; color:var(--text);
+    line-height:1.35; margin-bottom:18px;
+    padding-left:14px; border-left:4px solid var(--blue);
+  }
+  .reason .rbody { font-size:13px; color:var(--text-s); line-height:1.9; }
+  .reason .rpanel {
+    position:absolute; top:0; right:0; bottom:0; left:420px;
+    background:var(--blue-bg);
+    border-left:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    padding:28px 30px; z-index:1;
+  }
+
+  /* 棒グラフ 理由03 */
+  .bar-chart { width:100%; }
+  .bc-item { margin-bottom:22px; }
+  .bc-item:last-child { margin-bottom:0; }
+  .bc-name { font-size:12.5px; color:var(--text-s); margin-bottom:8px; }
+  .bc-track { height:50px; background:rgba(0,0,0,.06); border-radius:8px; overflow:hidden; }
+  .bc-fill { height:100%; border-radius:8px; display:flex; align-items:center; padding:0 16px; }
+  .bc-fill.manual { background:linear-gradient(90deg,#B83030,#D06020); width:90%; }
+  .bc-fill.ai     { background:linear-gradient(90deg,var(--blue-d),var(--blue-l)); width:5%; min-width:72px; }
+  .bc-fill span { font-size:14px; font-weight:900; color:#fff; white-space:nowrap; }
+  .bc-sub { font-size:11px; color:var(--text-xs); margin-top:5px; }
+  .bc-callout {
+    margin-top:20px; padding:14px 20px;
+    background:var(--blue-bg); border:1.5px solid var(--border);
+    border-radius:8px; text-align:center;
+  }
+  .bc-callout .bc-sub2 { font-size:12px; color:var(--text-s); margin-bottom:5px; }
+  .bc-callout .bc-main { font-size:16px; font-weight:900; color:var(--blue); }
+
+  /* コスト比較 理由04 */
+  .cost-compare { display:flex; gap:20px; align-items:flex-end; width:100%; }
+  .cc-col { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .cc-bar-area { width:100%; display:flex; align-items:flex-end; justify-content:center; height:210px; }
+  .cc-bar { width:80px; border-radius:8px 8px 0 0; }
+  .cc-bar.old { background:linear-gradient(180deg,#C83030 0%,rgba(200,48,48,.2) 100%); height:100%; }
+  .cc-bar.ai  { background:linear-gradient(180deg,var(--blue) 0%,var(--blue-l) 100%); height:33%; }
+  .cc-label { text-align:center; margin-top:14px; font-size:12px; color:var(--text-s); line-height:1.6; }
+  .cc-amount { font-size:13px; font-weight:700; color:var(--text); margin-top:6px; }
+  .cc-divider { display:flex; align-items:center; color:var(--text-xs); font-size:20px; padding-bottom:105px; }
+
+  /* 一元管理フロー図 理由02 */
+  .flow-diagram { width:100%; }
+  .fd-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .fd-row:last-child { margin-bottom:0; }
+  .fd-box {
+    flex:1; padding:14px 16px;
+    background:#fff; border:1px solid var(--border);
+    border-radius:8px; text-align:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .fd-box .fb-num { font-size:10px; font-weight:700; color:var(--blue); letter-spacing:.15em; margin-bottom:4px; }
+  .fd-box .fb-title { font-size:13px; font-weight:700; color:var(--text); }
+  .fd-box .fb-sub { font-size:11px; color:var(--text-s); margin-top:3px; line-height:1.4; }
+  .fd-arrow { color:var(--blue); font-size:16px; flex-shrink:0; }
+  .fd-unified {
+    margin-top:14px; padding:14px 20px;
+    background:var(--blue-bg); border:1.5px solid var(--border);
+    border-radius:8px; text-align:center;
+  }
+  .fd-unified .fu-label { font-size:11px; color:var(--text-s); margin-bottom:4px; }
+  .fd-unified .fu-text { font-size:14px; font-weight:900; color:var(--blue); }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     FEATURE SLIDES (8-12): 共通
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .feature { background:#FFFFFF; display:flex; }
+  .feature .fl {
+    width:390px; flex-shrink:0;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 44px; position:relative;
+  }
+  .feature .fl::before {
+    content:''; position:absolute; top:0; left:0; bottom:0; width:5px;
+    background:linear-gradient(180deg,var(--blue),var(--blue-l));
+  }
+  .feature .fr {
+    flex:1; background:var(--blue-bg);
+    border-left:1px solid var(--border);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:22px 26px;
+  }
+  .feature .sec-num {
+    font-size:10px; font-weight:700; letter-spacing:.28em;
+    color:var(--blue); text-transform:uppercase; margin-bottom:12px;
+  }
+  .feature h2 {
+    font-size:23px; font-weight:900; color:var(--text);
+    line-height:1.35; margin-bottom:18px;
+    padding-left:14px; border-left:4px solid var(--blue);
+  }
+  .feature .f-body { font-size:13px; color:var(--text-s); line-height:1.8; margin-bottom:16px; }
+  .feature .flist { display:flex; flex-direction:column; gap:10px; }
+  .feature .fitem {
+    padding:12px 14px;
+    background:var(--blue-bg2);
+    border-left:3px solid var(--blue);
+    border-radius:0 6px 6px 0;
+  }
+  .feature .fitem h3 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .feature .fitem p { font-size:12px; color:var(--text-s); line-height:1.55; }
+  .feature .fitem strong { color:var(--blue); font-weight:700; }
+  .feature .f-pts { display:flex; flex-direction:column; gap:10px; }
+  .feature .f-pt {
+    display:flex; gap:10px; align-items:flex-start;
+    padding:10px 14px;
+    background:var(--blue-bg2);
+    border-left:3px solid var(--blue);
+    border-radius:0 6px 6px 0;
+  }
+  .feature .f-pt p { font-size:12px; color:var(--text); line-height:1.5; }
+  .feature .f-pt strong { color:var(--blue); }
+  .feature .f-steps { display:flex; flex-direction:column; gap:9px; }
+  .feature .f-step {
+    display:flex; gap:10px; align-items:flex-start;
+    padding:10px 14px;
+    background:var(--blue-bg2);
+    border-left:3px solid var(--blue);
+    border-radius:0 6px 6px 0;
+  }
+  .feature .f-step .fs-n {
+    width:22px; height:22px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    font-size:11px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .feature .f-step p { font-size:12px; color:var(--text); line-height:1.5; }
+  .feature .f-step strong { color:var(--blue); }
+  .feature .fcards { display:flex; flex-direction:column; gap:12px; width:100%; }
+  .feature .fcard {
+    background:#fff; border-radius:10px; padding:16px 18px;
+    border-left:4px solid var(--blue);
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+  }
+  .feature .fcard h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .feature .fcard p { font-size:12px; color:var(--text-s); line-height:1.55; }
+  .feature .badge {
+    padding:14px 18px;
+    background:var(--blue-bg); border:1.5px solid var(--border);
+    border-radius:8px; text-align:center;
+  }
+  .feature .badge .badge-big { font-size:20px; font-weight:900; color:var(--blue); }
+  .feature .badge .badge-sub { font-size:12px; color:var(--text-s); margin-top:3px; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 13: 架電オプション
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-opt { background:var(--bg-soft); }
+  .s-opt .s-head {
+    position:absolute; top:0; left:0; right:0; height:92px;
+    background:var(--blue);
+    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
+    display:flex; align-items:center; padding:0 52px 22px;
+    gap:16px;
+  }
+  .s-opt .opt-badge {
+    padding:3px 12px;
+    background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4);
+    border-radius:20px; font-size:10px; font-weight:700;
+    color:#fff; letter-spacing:.14em;
+  }
+  .s-opt .s-head h2 { font-size:22px; font-weight:900; color:#fff; }
+  .s-opt .cards-grid {
+    position:absolute; top:104px; left:28px; right:28px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;
+  }
+  .s-opt .ocard {
+    background:#fff; border-radius:12px; padding:20px 18px;
+    box-shadow:0 3px 14px rgba(0,0,0,.08);
+    border-top:3px solid var(--blue);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .s-opt .ocard .oico { margin-bottom:4px; }
+  .s-opt .ocard h3 { font-size:14px; font-weight:700; color:var(--text); }
+  .s-opt .ocard p { font-size:12px; color:var(--text-s); line-height:1.6; }
+  .s-opt .note {
+    position:absolute; bottom:20px; left:28px; right:28px;
+    text-align:center; font-size:12px; color:var(--text-s);
+    padding:12px 24px; background:#fff;
+    border-radius:8px; border:1px solid var(--border);
+    box-shadow:0 2px 8px rgba(0,0,0,.05);
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 14: 導入効果
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-results { background:var(--bg-soft); }
+  .s-results .s-head {
+    position:absolute; top:0; left:0; right:0; height:92px;
+    background:var(--blue);
+    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 52px 22px;
+  }
+  .s-results .s-head h2 { font-size:24px; font-weight:900; color:#fff; }
+  .s-results .s-head p { font-size:12px; color:rgba(255,255,255,.72); margin-top:3px; }
+  .s-results .metrics {
+    position:absolute; top:106px; left:24px; right:24px;
+    display:flex; gap:12px;
+  }
+  .s-results .mc {
+    flex:1; background:#fff; border-radius:12px;
+    padding:22px 14px; text-align:center;
+    box-shadow:0 3px 14px rgba(0,0,0,.08);
+    border-top:3px solid var(--blue);
+  }
+  .s-results .mnum {
+    font-size:42px; font-weight:900; color:var(--blue);
+    line-height:1; margin-bottom:4px;
+  }
+  .s-results .mnum .mu { font-size:22px; }
+  .s-results .mlabel { font-size:12px; color:var(--text-s); line-height:1.55; margin-top:6px; }
+  .s-results .submets {
+    position:absolute; bottom:20px; left:24px; right:24px;
+    background:#fff; border:1px solid var(--border);
+    border-radius:10px; padding:14px 20px;
+    display:flex; justify-content:space-around; align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
+  }
+  .s-results .smi { text-align:center; }
+  .s-results .smn { font-size:18px; font-weight:900; color:var(--blue); }
+  .s-results .sml { font-size:11px; color:var(--text-xs); margin-top:2px; }
+  .s-results .smdiv { width:1px; height:30px; background:var(--border); }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 15: ご利用の流れ
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-flow { background:#fff; }
+  .s-flow .s-head {
+    position:absolute; top:0; left:0; right:0; height:92px;
+    background:var(--blue);
+    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
+    display:flex; align-items:center;
+    padding:0 52px 22px;
+  }
+  .s-flow .s-head h2 { font-size:22px; font-weight:900; color:#fff; }
+  .s-flow .stepsrow {
+    position:absolute; top:106px; left:24px; right:24px;
+    display:flex; gap:10px; align-items:stretch;
+  }
+  .s-flow .sbox {
+    flex:1; background:#fff;
+    border:1px solid var(--border); border-top:3px solid var(--blue);
+    border-radius:12px; padding:22px 14px; text-align:center;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);
+  }
+  .s-flow .sn {
+    width:40px; height:40px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    font-size:18px; font-weight:900;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 12px;
+  }
+  .s-flow .sbox h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .s-flow .sbox p { font-size:12px; color:var(--text-s); line-height:1.6; }
+  .s-flow .sarrow { display:flex; align-items:center; padding-top:20px; color:var(--blue); font-size:18px; }
+  .s-flow .snote {
+    position:absolute; bottom:20px; left:0; right:0;
+    text-align:center; font-size:12px; color:var(--text-xs);
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SLIDE 16: CTA
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-cta { background:linear-gradient(140deg,#004D72 0%,#0077A8 55%,#00A8D4 100%); }
+  .s-cta .stripe { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#FFD870,#FFB300,#FFD870); }
+  .s-cta .ring1 {
+    position:absolute; right:-70px; top:-70px;
+    width:360px; height:360px;
+    border:55px solid rgba(255,255,255,.06); border-radius:50%;
+  }
+  .s-cta .ring2 {
+    position:absolute; right:50px; bottom:-90px;
+    width:260px; height:260px;
+    border:38px solid rgba(255,255,255,.04); border-radius:50%;
+  }
+  .s-cta .content {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center; padding:40px 60px;
+  }
+  .s-cta .catch { font-size:10.5px; font-weight:700; letter-spacing:.32em; color:rgba(255,255,255,.65); text-transform:uppercase; margin-bottom:18px; }
+  .s-cta .copy { font-size:36px; font-weight:900; color:#fff; line-height:1.28; margin-bottom:12px; }
+  .s-cta .copy em { color:#FFD870; font-style:normal; }
+  .s-cta .subcopy { font-size:14px; color:rgba(255,255,255,.78); line-height:1.8; margin-bottom:30px; max-width:500px; }
+  .s-cta .ctabtn {
+    display:inline-block; padding:16px 52px;
+    background:#fff; color:var(--blue);
+    font-size:16px; font-weight:900; border-radius:50px;
+    letter-spacing:.06em; box-shadow:0 6px 24px rgba(0,0,0,.2);
+    text-decoration:none; margin-bottom:20px; font-family:inherit;
+  }
+  .s-cta .contact { font-size:12px; color:rgba(255,255,255,.5); letter-spacing:.08em; }
+  .s-cta .logo { position:absolute; bottom:22px; right:38px; font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.3); }
 </style>
 </head>
 <body>
 
-<!-- ── Toolbar ── -->
 <div id="toolbar">
-  <button id="btn-edit" onclick="toggleEdit()">✏️ 編集モード</button>
-  <button onclick="saveHTML()">💾 HTMLで保存</button>
+  <button id="btn-edit" onclick="toggleEdit()">編集モード</button>
+  <button onclick="saveHTML()">HTMLで保存</button>
 </div>
-<div id="counter">1 / 13</div>
+<div id="counter">1 / 16</div>
 <button class="nav-btn" id="btn-prev" onclick="prevSlide()">&#8592;</button>
 <button class="nav-btn" id="btn-next" onclick="nextSlide()">&#8594;</button>
 <div id="nav"></div>
 
-<!-- ── Scaler ── -->
 <div id="scaler">
 
-<!-- ════════════ SLIDE 1: タイトル ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 1: タイトル
+═══════════════════════════════════════ -->
 <div class="slide s1 active">
-  <div class="diag"></div>
-  <div class="stripe"></div>
-  <div class="top-bar"></div>
+  <div class="bg-r">
+    <!-- AIネットワーク イラスト -->
+    <svg viewBox="0 0 340 440" fill="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:.55;">
+      <circle cx="170" cy="220" r="32" fill="#0077A8" opacity=".5"/>
+      <circle cx="80"  cy="130" r="18" fill="#00B4D8" opacity=".45"/>
+      <circle cx="260" cy="130" r="18" fill="#00B4D8" opacity=".45"/>
+      <circle cx="60"  cy="300" r="14" fill="#0077A8" opacity=".35"/>
+      <circle cx="280" cy="310" r="14" fill="#0077A8" opacity=".35"/>
+      <circle cx="170" cy="60"  r="11" fill="#00B4D8" opacity=".3"/>
+      <circle cx="170" cy="380" r="11" fill="#00B4D8" opacity=".3"/>
+      <circle cx="310" cy="200" r="8"  fill="#0077A8" opacity=".25"/>
+      <circle cx="30"  cy="210" r="8"  fill="#0077A8" opacity=".25"/>
+      <line x1="170" y1="220" x2="80"  y2="130" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="260" y2="130" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="60"  y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="280" y2="310" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="170" y2="60"  stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="170" y2="380" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
+      <line x1="170" y1="220" x2="310" y2="200" stroke="#0077A8" stroke-width="1" opacity=".25"/>
+      <line x1="170" y1="220" x2="30"  y2="210" stroke="#0077A8" stroke-width="1" opacity=".25"/>
+      <line x1="80"  y1="130" x2="170" y2="60"  stroke="#00B4D8" stroke-width="1" opacity=".2"/>
+      <line x1="260" y1="130" x2="310" y2="200" stroke="#00B4D8" stroke-width="1" opacity=".2"/>
+      <text x="170" y="228" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">AI</text>
+    </svg>
+  </div>
+  <div class="top-line"></div>
   <div class="content">
     <p class="eyebrow editable">BtoB 営業支援 SaaS</p>
     <h1 class="title editable">AI<em>リスト</em><br>マスター</h1>
@@ -933,21 +587,32 @@
   <div class="logo editable">AIリストマスター</div>
 </div>
 
-<!-- ════════════ SLIDE 2: 営業の現実 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 2: 営業の現実
+═══════════════════════════════════════ -->
 <div class="slide s2">
-  <div class="topband">
+  <div class="hdr">
     <h2 class="editable">営業マンの<em>不都合な真実</em></h2>
   </div>
   <div class="stats">
     <div class="scard">
+      <div style="margin-bottom:8px;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="16" stroke="#0077A8" stroke-width="2"/><path d="M18 9v9l6 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </div>
       <div class="snum editable">35<small>%</small></div>
       <div class="slabel editable">実際に架電・訪問など<br>営業活動に使える時間</div>
     </div>
     <div class="scard">
+      <div style="margin-bottom:8px;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="4" y="8" width="28" height="22" rx="3" stroke="#0077A8" stroke-width="2"/><path d="M4 14h28" stroke="#0077A8" stroke-width="2"/><circle cx="11" cy="24" r="2" fill="#0077A8"/><circle cx="18" cy="24" r="2" fill="#0077A8"/><circle cx="25" cy="24" r="2" fill="#0077A8"/></svg>
+      </div>
       <div class="snum editable">39<small>%</small></div>
       <div class="slabel editable">事務作業・リスト調査など<br>間接業務に取られる時間</div>
     </div>
     <div class="scard">
+      <div style="margin-bottom:8px;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="14" stroke="#0077A8" stroke-width="2"/><path d="M18 11v7l4 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><path d="M8 8l4 4" stroke="#0077A8" stroke-width="2" stroke-linecap="round" opacity=".4"/><path d="M28 8l-4 4" stroke="#0077A8" stroke-width="2" stroke-linecap="round" opacity=".4"/></svg>
+      </div>
       <div class="snum editable">25<small>%</small></div>
       <div class="slabel editable">移動・待機・社内調整など<br>成果に直結しない時間</div>
     </div>
@@ -955,10 +620,11 @@
   <div class="footnote editable">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
 </div>
 
-<!-- ════════════ SLIDE 3: 3つの限界 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 3: 3つの限界
+═══════════════════════════════════════ -->
 <div class="slide s3">
   <div class="lcol">
-    <div class="icon-wrap"></div>
     <h2 class="editable">従来リストの<br>"3つの限界"</h2>
     <p class="editable">古いリストに頼り続ける限り、<br>営業の生産性は上がりません。</p>
   </div>
@@ -987,10 +653,12 @@
   </div>
 </div>
 
-<!-- ════════════ SLIDE 4: 理由01 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 4: 理由01
+═══════════════════════════════════════ -->
 <div class="slide reason">
-  <div class="side-accent"></div>
-  <div class="rnum">01</div>
+  <div class="l-stripe"></div>
+  <div class="wm">01</div>
   <div class="lpanel">
     <div class="rlabel editable">Reason 01</div>
     <h2 class="rtitle editable">確度の高い先だけに<br>架電できる</h2>
@@ -999,20 +667,20 @@
   <div class="rpanel">
     <div class="browser-frame">
       <div class="browser-bar">
-        <div class="bdot r"></div>
-        <div class="bdot y"></div>
-        <div class="bdot g"></div>
+        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
         <div class="burl"></div>
       </div>
-      <img src="pptx_images/image27.png" alt="マッチングスコア" style="max-width:520px;">
+      <img src="pptx_images/image27.png" alt="マッチングスコア" style="max-width:510px;">
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 5: 理由02 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 5: 理由02
+═══════════════════════════════════════ -->
 <div class="slide reason">
-  <div class="side-accent"></div>
-  <div class="rnum">02</div>
+  <div class="l-stripe"></div>
+  <div class="wm">02</div>
   <div class="lpanel">
     <div class="rlabel editable">Reason 02</div>
     <h2 class="rtitle editable">アポリスト作成から<br>顧客管理まで一元管理</h2>
@@ -1026,13 +694,13 @@
           <div class="fb-title editable">アポリスト作成</div>
           <div class="fb-sub editable">AIが商材マッチング済みリストを自動生成</div>
         </div>
-        <div class="fd-arrow">▶</div>
+        <div class="fd-arrow">&#9654;</div>
         <div class="fd-box">
           <div class="fb-num editable">STEP 02</div>
           <div class="fb-title editable">アプローチ実行</div>
           <div class="fb-sub editable">メール・架電でアプローチ。履歴を即記録</div>
         </div>
-        <div class="fd-arrow">▶</div>
+        <div class="fd-arrow">&#9654;</div>
         <div class="fd-box">
           <div class="fb-num editable">STEP 03</div>
           <div class="fb-title editable">顧客管理</div>
@@ -1047,10 +715,12 @@
   </div>
 </div>
 
-<!-- ════════════ SLIDE 6: 理由03 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 6: 理由03
+═══════════════════════════════════════ -->
 <div class="slide reason">
-  <div class="side-accent"></div>
-  <div class="rnum">03</div>
+  <div class="l-stripe"></div>
+  <div class="wm">03</div>
   <div class="lpanel">
     <div class="rlabel editable">Reason 03</div>
     <h2 class="rtitle editable">リスト作成時間を大幅削減<br>架電に集中できる</h2>
@@ -1072,18 +742,20 @@
         </div>
         <div class="bc-sub editable">条件を入力するだけ。あとはAIが全自動</div>
       </div>
-      <div style="margin-top:22px; padding:14px 18px; background:rgba(255,214,10,.1); border:1.5px solid rgba(255,214,10,.4); border-radius:8px; text-align:center;">
-        <div style="font-size:13px; color:rgba(255,255,255,.6); margin-bottom:4px;" class="editable">削減できる時間を架電に充てると</div>
-        <div style="font-size:18px; font-weight:900; color:var(--yellow);" class="editable">架電件数・アポ獲得数が大幅に増加</div>
+      <div class="bc-callout">
+        <div class="bc-sub2 editable">削減できる時間を架電に充てると</div>
+        <div class="bc-main editable">架電件数・アポ獲得数が大幅に増加</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 7: 理由04 ════════════ -->
+<!-- ═══════════════════════════════════════
+     SLIDE 7: 理由04
+═══════════════════════════════════════ -->
 <div class="slide reason">
-  <div class="side-accent"></div>
-  <div class="rnum">04</div>
+  <div class="l-stripe"></div>
+  <div class="wm">04</div>
   <div class="lpanel">
     <div class="rlabel editable">Reason 04</div>
     <h2 class="rtitle editable">人を雇うより、<br>はるかに安価</h2>
@@ -1092,75 +764,97 @@
   <div class="rpanel">
     <div class="cost-compare">
       <div class="cc-col">
-        <div class="cc-bar-area">
-          <div class="cc-bar old"></div>
-        </div>
+        <div class="cc-bar-area"><div class="cc-bar old"></div></div>
         <div class="cc-label editable">リスト作成<br>専任スタッフ採用</div>
         <div class="cc-amount editable">採用費＋月給＋育成コスト</div>
       </div>
       <div class="cc-divider">VS</div>
       <div class="cc-col">
-        <div class="cc-bar-area">
-          <div class="cc-bar ai"></div>
-        </div>
+        <div class="cc-bar-area"><div class="cc-bar ai"></div></div>
         <div class="cc-label editable">AIリスト<br>マスター</div>
-        <div class="cc-amount editable">月額サブスク<br>のみ</div>
+        <div class="cc-amount editable">月額サブスクのみ</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 5: データ収集 ════════════ -->
-<div class="slide s5">
-  <div class="lpanel">
-    <div class="secnum editable">FEATURE 01</div>
+<!-- ═══════════════════════════════════════
+     SLIDE 8: FEATURE 01 データ収集
+═══════════════════════════════════════ -->
+<div class="slide feature">
+  <div class="fl">
+    <div class="sec-num editable">FEATURE 01</div>
     <h2 class="editable">営業DBを<br>AIが自動構築</h2>
-    <p class="editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
-  </div>
-  <div class="rpanel">
-    <div class="scard">
-      <div>
+    <p class="f-body editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
+    <div class="fcards">
+      <div class="fcard">
         <h3 class="editable">法人リスト（gBiz × AI）</h3>
         <p class="editable">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p>
       </div>
-    </div>
-    <div class="scard">
-      <div>
+      <div class="fcard">
         <h3 class="editable">個人店舗（SNS・ポータル）</h3>
         <p class="editable">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p>
       </div>
     </div>
-    <div class="badge">
-      <big class="editable">常時最新</big>
-      <p class="editable">AIが定期的にデータを更新。古い情報による無駄な架電を完全排除します。</p>
-    </div>
+  </div>
+  <div class="fr">
+    <!-- データ収集イラスト -->
+    <svg width="260" height="260" viewBox="0 0 260 260" fill="none">
+      <!-- クラウド -->
+      <path d="M80 108 Q68 108 68 96 Q68 78 86 78 Q86 56 108 56 Q120 44 138 56 Q156 44 172 62 Q188 62 188 80 Q200 80 200 96 Q200 108 188 108 Z" fill="#EAF4FA" stroke="#0077A8" stroke-width="2.5"/>
+      <text x="134" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="#0077A8" font-family="sans-serif">gBiz / SNS</text>
+      <!-- 矢印 -->
+      <line x1="130" y1="112" x2="130" y2="148" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <path d="M120 140 L130 152 L140 140" stroke="#0077A8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- DB -->
+      <ellipse cx="130" cy="168" rx="38" ry="10" fill="#0077A8" opacity=".2"/>
+      <rect x="92" y="160" width="76" height="28" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="130" cy="188" rx="38" ry="10" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="130" cy="160" rx="38" ry="10" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <text x="130" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#0077A8" font-family="sans-serif">営業DB</text>
+      <!-- 右矢印 -->
+      <line x1="170" y1="174" x2="204" y2="174" stroke="#0077A8" stroke-width="2" stroke-dasharray="4 3"/>
+      <path d="M196 166 L208 174 L196 182" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- リスト -->
+      <rect x="208" y="152" width="42" height="44" rx="5" fill="#EAF4FA" stroke="#0077A8" stroke-width="1.5"/>
+      <line x1="215" y1="164" x2="243" y2="164" stroke="#0077A8" stroke-width="1.5"/>
+      <line x1="215" y1="172" x2="243" y2="172" stroke="#0077A8" stroke-width="1.5"/>
+      <line x1="215" y1="180" x2="236" y2="180" stroke="#0077A8" stroke-width="1.5"/>
+      <text x="229" y="206" text-anchor="middle" font-size="10" fill="#0077A8" font-family="sans-serif" font-weight="700">営業リスト</text>
+      <!-- 常時更新バッジ -->
+      <rect x="74" y="208" width="112" height="28" rx="14" fill="#0077A8"/>
+      <text x="130" y="227" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="sans-serif">常時最新データを自動更新</text>
+    </svg>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 6: 企業深堀り ════════════ -->
-<div class="slide s6">
-  <div class="lpanel">
-    <div class="secnum editable">FEATURE 02</div>
+<!-- ═══════════════════════════════════════
+     SLIDE 9: FEATURE 02 企業深堀り
+═══════════════════════════════════════ -->
+<div class="slide feature">
+  <div class="fl">
+    <div class="sec-num editable">FEATURE 02</div>
     <h2 class="editable">企業を<br>深堀りする</h2>
     <div class="flist">
       <div class="fitem">
-        <p class="editable"><strong>業界・業種の複数割当</strong><br>1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p>
+        <h3 class="editable">業界・業種の複数割当</h3>
+        <p class="editable">1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p>
       </div>
       <div class="fitem">
-        <p class="editable"><strong>事業内容のAI要約</strong><br>長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p>
+        <h3 class="editable">事業内容のAI要約</h3>
+        <p class="editable">長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p>
       </div>
       <div class="fitem">
-        <p class="editable"><strong>AIタグ自動発行</strong><br>「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p>
+        <h3 class="editable">AIタグ自動発行</h3>
+        <p class="editable">「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p>
       </div>
     </div>
   </div>
-  <div class="rpanel">
-    <p class="screenlabel editable">実際の画面</p>
+  <div class="fr">
+    <p class="screen-label editable">実際の画面</p>
     <div class="browser-frame">
       <div class="browser-bar">
-        <div class="bdot r"></div>
-        <div class="bdot y"></div>
-        <div class="bdot g"></div>
+        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
         <div class="burl"></div>
       </div>
       <img src="screen_企業深堀.png" alt="企業深堀り画面" style="max-width:520px;">
@@ -1168,15 +862,17 @@
   </div>
 </div>
 
-<!-- ════════════ SLIDE 7: リスト作成 ════════════ -->
-<div class="slide s7">
-  <div class="lpanel">
-    <div class="secnum editable">FEATURE 03</div>
+<!-- ═══════════════════════════════════════
+     SLIDE 10: FEATURE 03 リスト作成
+═══════════════════════════════════════ -->
+<div class="slide feature">
+  <div class="fl">
+    <div class="sec-num editable">FEATURE 03</div>
     <h2 class="editable">自然言語でリスト生成<br>× AIマッチングスコア</h2>
     <div class="flist">
       <div class="fitem">
         <h3 class="editable">話し言葉で条件を指定</h3>
-        <p class="editable">「東京都内のIT企業で50名以上」と入力するだけ。複雑な設定ゼロ。AIが意図を汲んで即座にリストを生成します。</p>
+        <p class="editable">「東京都内のIT企業で50名以上」と入力するだけ。AIが意図を汲んで即座にリストを生成します。</p>
       </div>
       <div class="fitem">
         <h3 class="editable">AIマッチングスコア 0〜100</h3>
@@ -1188,135 +884,142 @@
       </div>
     </div>
   </div>
-  <div class="rpanel">
-    <p class="screenlabel editable">実際の画面</p>
+  <div class="fr">
+    <p class="screen-label editable">実際の画面</p>
     <div class="browser-frame">
       <div class="browser-bar">
-        <div class="bdot r"></div>
-        <div class="bdot y"></div>
-        <div class="bdot g"></div>
+        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
         <div class="burl"></div>
       </div>
-      <img src="pptx_images/image20.png" alt="AI詳細検索画面" style="max-width:580px;">
+      <img src="pptx_images/image20.png" alt="AI詳細検索画面" style="max-width:570px;">
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 8: アプローチ ════════════ -->
-<div class="slide s8">
-  <div class="lcol">
-    <div class="secnum editable">FEATURE 04</div>
+<!-- ═══════════════════════════════════════
+     SLIDE 11: FEATURE 04 AIメール
+═══════════════════════════════════════ -->
+<div class="slide feature">
+  <div class="fl">
+    <div class="sec-num editable">FEATURE 04</div>
     <h2 class="editable">AIが営業メールを<br>自動生成する</h2>
-    <p class="editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。一斉送信の時代は終わりです。</p>
-    <div class="pts">
-      <div class="pt">
+    <p class="f-body editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。</p>
+    <div class="f-pts">
+      <div class="f-pt">
         <p class="editable"><strong>件名・本文を自動生成</strong><br>企業ごとに最適な文面をAIが作成</p>
       </div>
-      <div class="pt">
+      <div class="f-pt">
         <p class="editable"><strong>返信率 +28%</strong><br>パーソナライズで反応率が劇的改善</p>
       </div>
-      <div class="pt">
+      <div class="f-pt">
         <p class="editable"><strong>1クリックで送信準備完了</strong><br>確認・編集後そのまま送れる</p>
       </div>
     </div>
   </div>
-  <div class="rcol">
-    <p class="screenlabel editable">実際の画面</p>
+  <div class="fr">
+    <p class="screen-label editable">実際の画面</p>
     <div class="browser-frame">
       <div class="browser-bar">
-        <div class="bdot r"></div>
-        <div class="bdot y"></div>
-        <div class="bdot g"></div>
+        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
         <div class="burl"></div>
       </div>
-      <img src="pptx_images/image46.png" alt="AIメール自動生成画面" style="max-width:580px;">
+      <img src="pptx_images/image46.png" alt="AIメール自動生成画面" style="max-width:570px;">
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 9: 架電管理 ════════════ -->
-<div class="slide s9">
-  <div class="lpanel">
-    <div class="secnum editable">FEATURE 05</div>
+<!-- ═══════════════════════════════════════
+     SLIDE 12: FEATURE 05 架電管理
+═══════════════════════════════════════ -->
+<div class="slide feature">
+  <div class="fl">
+    <div class="sec-num editable">FEATURE 05</div>
     <h2 class="editable">架電管理で<br>アポ率を変える</h2>
-    <p class="editable">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
-    <div class="flow-steps">
-      <div class="fs-item">
-        <div class="fsnum">1</div>
-        <p class="editable"><strong>企業情報を即サマリー表示</strong>　架電前に事業内容・AIタグをAIが3行で整理。準備ゼロ。</p>
+    <p class="f-body editable">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
+    <div class="f-steps">
+      <div class="f-step">
+        <div class="fs-n">1</div>
+        <p class="editable"><strong>企業情報を即サマリー表示</strong><br>架電前に事業内容・AIタグをAIが3行で整理。準備ゼロ。</p>
       </div>
-      <div class="fs-item">
-        <div class="fsnum">2</div>
-        <p class="editable"><strong>AIがトークスクリプト自動生成</strong>　企業理解 × 自社商材で最適な切り出しフレーズを提案。</p>
+      <div class="f-step">
+        <div class="fs-n">2</div>
+        <p class="editable"><strong>AIがトークスクリプト自動生成</strong><br>企業理解 × 自社商材で最適な切り出しフレーズを提案。</p>
       </div>
-      <div class="fs-item">
-        <div class="fsnum">3</div>
-        <p class="editable"><strong>架電結果をワンクリック記録</strong>　ステータス管理・次回アクションをAIが自動で提案します。</p>
+      <div class="f-step">
+        <div class="fs-n">3</div>
+        <p class="editable"><strong>架電結果をワンクリック記録</strong><br>ステータス管理・次回アクションをAIが自動で提案します。</p>
       </div>
     </div>
   </div>
-  <div class="rpanel">
-    <p class="screenlabel editable">実際の画面</p>
+  <div class="fr">
+    <p class="screen-label editable">実際の画面</p>
     <div class="browser-frame">
       <div class="browser-bar">
-        <div class="bdot r"></div>
-        <div class="bdot y"></div>
-        <div class="bdot g"></div>
+        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
         <div class="burl"></div>
       </div>
-      <img src="pptx_images/image34.png" alt="架電管理画面" style="max-width:580px;">
+      <img src="pptx_images/image34.png" alt="架電管理画面" style="max-width:570px;">
     </div>
   </div>
 </div>
 
-<!-- ════════════ SLIDE 10: 架電オプション ════════════ -->
-<div class="slide s10">
-  <div class="lcol">
-    <div class="optbadge editable">OPTION</div>
-    <h2 class="editable">架電管理<br>オプション機能</h2>
-    <p class="editable">架電実行サポートから分析・KPIレポートまで、架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける組織へ。</p>
+<!-- ═══════════════════════════════════════
+     SLIDE 13: 架電オプション
+═══════════════════════════════════════ -->
+<div class="slide s-opt">
+  <div class="s-head">
+    <span class="opt-badge editable">OPTION</span>
+    <h2 class="editable">架電管理オプション機能</h2>
   </div>
-  <div class="rcol">
-    <div class="orow">
-      <div class="ocard">
-        <h3 class="editable">架電実行サポート</h3>
-        <p class="editable">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで</p>
+  <div class="cards-grid">
+    <div class="ocard">
+      <div class="oico">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><path d="M10 22 Q10 16 16 12 Q22 16 22 22" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="16" cy="10" r="3" fill="#0077A8"/></svg>
       </div>
-      <div class="ocard">
-        <h3 class="editable">分析・レポート</h3>
-        <p class="editable">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握</p>
-      </div>
+      <h3 class="editable">架電実行サポート</h3>
+      <p class="editable">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで実現します。</p>
     </div>
-    <div class="orow">
-      <div class="ocard" style="flex:1">
-        <h3 class="editable">KPIレポート</h3>
-        <p class="editable">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます</p>
+    <div class="ocard">
+      <div class="oico">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><rect x="7" y="18" width="4" height="8" rx="1" fill="#0077A8"/><rect x="14" y="12" width="4" height="14" rx="1" fill="#0077A8"/><rect x="21" y="7" width="4" height="19" rx="1" fill="#0077A8" opacity=".6"/></svg>
       </div>
+      <h3 class="editable">分析・レポート</h3>
+      <p class="editable">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握できます。</p>
+    </div>
+    <div class="ocard">
+      <div class="oico">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><circle cx="16" cy="16" r="9" stroke="#0077A8" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="#0077A8"/><path d="M16 5v3M16 24v3M5 16h3M24 16h3" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="editable">KPIレポート</h3>
+      <p class="editable">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます。</p>
     </div>
   </div>
+  <div class="note editable">架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける営業組織へ。</div>
 </div>
 
-<!-- ════════════ SLIDE 11: 導入効果 ════════════ -->
-<div class="slide s11">
-  <div class="banner">
-    <h2 class="editable">導入効果 ─ 数字が証明する、変革の実績</h2>
+<!-- ═══════════════════════════════════════
+     SLIDE 14: 導入効果
+═══════════════════════════════════════ -->
+<div class="slide s-results">
+  <div class="s-head">
+    <h2 class="editable">導入効果 ── 数字が証明する、変革の実績</h2>
     <p class="editable">実際の導入企業データに基づく成果指標</p>
   </div>
   <div class="metrics">
     <div class="mc">
-      <div class="mnum editable">87<span class="munit">%</span></div>
+      <div class="mnum editable">87<span class="mu">%</span></div>
       <div class="mlabel editable">業務時間削減<br>（90h→11.5h / 月）</div>
     </div>
     <div class="mc">
-      <div class="mnum editable" style="font-size:28px;line-height:1.15;">1.8〜<br>2.4<span class="munit">倍</span></div>
+      <div class="mnum" style="font-size:28px;line-height:1.2;"><span class="editable">1.8〜<br>2.4</span><span class="mu">倍</span></div>
       <div class="mlabel editable">アポ獲得率<br>向上</div>
     </div>
     <div class="mc">
-      <div class="mnum editable">+28<span class="munit">%</span></div>
+      <div class="mnum editable">+28<span class="mu">%</span></div>
       <div class="mlabel editable">メール返信率<br>改善</div>
     </div>
     <div class="mc">
-      <div class="mnum editable">+32<span class="munit">%</span></div>
+      <div class="mnum editable">+32<span class="mu">%</span></div>
       <div class="mlabel editable">商談転換率<br>向上</div>
     </div>
   </div>
@@ -1331,32 +1034,34 @@
   </div>
 </div>
 
-<!-- ════════════ SLIDE 12: ご利用の流れ ════════════ -->
-<div class="slide s12">
-  <div class="header">
-    <h2 class="editable">ご利用の流れ ─ 最短3日で営業が変わる</h2>
+<!-- ═══════════════════════════════════════
+     SLIDE 15: ご利用の流れ
+═══════════════════════════════════════ -->
+<div class="slide s-flow">
+  <div class="s-head">
+    <h2 class="editable">ご利用の流れ ── 最短3日で営業が変わる</h2>
   </div>
   <div class="stepsrow">
     <div class="sbox">
-      <div class="snum">1</div>
+      <div class="sn">1</div>
       <h3 class="editable">自社情報登録</h3>
       <p class="editable">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p>
     </div>
-    <div class="sarrow">▶</div>
+    <div class="sarrow">&#9654;</div>
     <div class="sbox">
-      <div class="snum">2</div>
+      <div class="sn">2</div>
       <h3 class="editable">AIにリスト依頼</h3>
       <p class="editable">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p>
     </div>
-    <div class="sarrow">▶</div>
+    <div class="sarrow">&#9654;</div>
     <div class="sbox">
-      <div class="snum">3</div>
+      <div class="sn">3</div>
       <h3 class="editable">アプローチ実行</h3>
       <p class="editable">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p>
     </div>
-    <div class="sarrow">▶</div>
+    <div class="sarrow">&#9654;</div>
     <div class="sbox">
-      <div class="snum">4</div>
+      <div class="sn">4</div>
       <h3 class="editable">成果管理・改善</h3>
       <p class="editable">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p>
     </div>
@@ -1364,10 +1069,13 @@
   <div class="snote editable">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
 </div>
 
-<!-- ════════════ SLIDE 13: CTA ════════════ -->
-<div class="slide s13">
-  <div class="glow"></div>
-  <div class="topstripe"></div>
+<!-- ═══════════════════════════════════════
+     SLIDE 16: CTA
+═══════════════════════════════════════ -->
+<div class="slide s-cta">
+  <div class="stripe"></div>
+  <div class="ring1"></div>
+  <div class="ring2"></div>
   <div class="content">
     <p class="catch editable">First Step</p>
     <h2 class="copy editable">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
@@ -1389,7 +1097,6 @@
   const TOTAL  = slides.length;
   let cur = 0;
 
-  /* ── dots ── */
   slides.forEach((_,i) => {
     const d = document.createElement('div');
     d.className = 'dot' + (i===0?' active':'');
@@ -1417,7 +1124,6 @@
     if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   goTo(cur-1);
   });
 
-  /* ── scale ── */
   function scale() {
     const s = Math.min(window.innerWidth/960, window.innerHeight/540);
     const x = (window.innerWidth  - 960*s) / 2;
@@ -1427,7 +1133,6 @@
   scale();
   window.addEventListener('resize', scale);
 
-  /* ── edit mode ── */
   window.toggleEdit = function() {
     const b   = document.body;
     const btn = document.getElementById('btn-edit');
@@ -1436,16 +1141,15 @@
       b.classList.remove('edit-mode');
       els.forEach(el => el.removeAttribute('contenteditable'));
       btn.classList.remove('active');
-      btn.textContent = '✏️ 編集モード';
+      btn.textContent = '編集モード';
     } else {
       b.classList.add('edit-mode');
       els.forEach(el => el.setAttribute('contenteditable','true'));
       btn.classList.add('active');
-      btn.textContent = '✅ 編集終了';
+      btn.textContent = '編集終了';
     }
   };
 
-  /* ── save ── */
   window.saveHTML = function() {
     const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
     const blob = new Blob([html], {type:'text/html;charset=utf-8'});
