@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AIリストマスター 営業資料</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --N:#1C2D4A;--B:#1E5CF6;--BL:#4A8FE8;
+  --BG:#EEF5FF;--W:#fff;--G:#D4A521;
+  --S:rgba(28,45,74,.6);--XS:rgba(28,45,74,.38);
+}
+html,body{width:100%;height:100%;background:#111827;
+  font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif;
+  overflow:hidden;user-select:none;}
+#scaler{position:fixed;top:0;left:0;width:960px;height:720px;transform-origin:top left;}
+.slide{position:absolute;inset:0;width:960px;height:720px;overflow:hidden;background:#fff;
+  opacity:0;pointer-events:none;transition:opacity .35s;}
+.slide.active{opacity:1;pointer-events:all;}
+
+/* ── Toolbar ── */
+#toolbar{position:fixed;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:200;}
+#toolbar button{padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.2);
+  background:rgba(17,24,39,.88);color:#fff;font-size:12px;cursor:pointer;font-family:inherit;transition:.2s;}
+#toolbar button:hover{background:rgba(30,92,246,.6);}
+#toolbar button.active{background:var(--B);}
+#counter{position:fixed;top:10px;right:16px;color:rgba(255,255,255,.4);font-size:12px;z-index:200;}
+.nb{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.2);
+  border:1.5px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;border-radius:50%;
+  font-size:18px;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.nb:hover{background:rgba(30,92,246,.55);}
+#btn-prev{left:8px;}#btn-next{right:8px;}
+#nav{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:200;}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:.25s;}
+.dot.active{background:#fff;transform:scale(1.4);}
+.e{outline:none;}
+body.em .e{outline:1.5px dashed rgba(30,92,246,.5);cursor:text;border-radius:2px;}
+body.em .e:focus{outline:2px solid var(--B);background:rgba(30,92,246,.05);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━
+   S1: 表紙
+━━━━━━━━━━━━━━━━━━━━━━━ */
+.s1{background:#fff;}
+
+/* 右上デコ */
+.s1 .dtr1{position:absolute;top:0;right:0;width:280px;height:200px;
+  background:rgba(148,192,255,.12);clip-path:polygon(38% 0%,100% 0%,100% 100%,0% 100%);}
+.s1 .dtr2{position:absolute;top:0;right:0;width:220px;height:155px;
+  background:rgba(100,160,255,.2);clip-path:polygon(48% 0%,100% 0%,100% 100%,0% 100%);}
+.s1 .dtr3{position:absolute;top:0;right:0;width:165px;height:115px;
+  background:rgba(60,130,255,.32);clip-path:polygon(58% 0%,100% 0%,100% 100%,0% 100%);}
+.s1 .dtr4{position:absolute;top:0;right:0;width:118px;height:82px;
+  background:rgba(30,92,246,.42);clip-path:polygon(68% 0%,100% 0%,100% 100%,0% 100%);}
+
+/* ロゴ */
+.s1 .logo{position:absolute;top:22px;left:28px;display:flex;align-items:center;gap:9px;z-index:20;}
+.s1 .logo-t{font-size:16px;font-weight:700;color:var(--N);}
+
+/* 左コンテンツ */
+.s1 .lc{position:absolute;top:72px;left:28px;width:400px;z-index:10;}
+.s1 .sub{font-size:13.5px;font-weight:500;color:var(--N);margin-bottom:8px;}
+.s1 .title{font-size:58px;font-weight:900;color:var(--N);line-height:1.08;letter-spacing:-.02em;margin-bottom:14px;}
+.s1 .title .ai{color:var(--B);}
+.s1 .badge{
+  display:inline-block;background:var(--B);color:#fff;
+  font-size:13px;font-weight:700;padding:9px 20px;
+  border-radius:7px;letter-spacing:.03em;margin-bottom:30px;}
+.s1 .feats{list-style:none;display:flex;flex-direction:column;gap:20px;}
+.s1 .feats li{display:flex;align-items:center;gap:14px;font-size:15.5px;font-weight:700;color:var(--N);}
+.s1 .fic{width:46px;height:46px;border-radius:50%;background:var(--N);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.s1 .fic svg{width:22px;height:22px;}
+
+/* 都市シルエット */
+.s1 .city{position:absolute;bottom:162px;left:0;width:480px;height:190px;
+  pointer-events:none;z-index:1;opacity:.5;}
+
+/* ラップトップ領域 */
+.s1 .rc{position:absolute;top:44px;right:-10px;width:545px;height:510px;z-index:10;}
+
+/* 下部統計バー */
+.s1 .bot{
+  position:absolute;bottom:0;left:0;right:0;height:162px;
+  background:#F6F9FF;border-top:1.5px solid rgba(28,45,74,.1);
+  display:flex;align-items:center;padding:0 36px;z-index:10;}
+.s1 .stats{display:flex;align-items:center;flex:1;gap:0;}
+.s1 .stat{
+  display:flex;flex-direction:column;align-items:center;
+  flex:1;padding:0 8px;position:relative;}
+.s1 .stat::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:1px;height:64px;background:rgba(28,45,74,.14);}
+.s1 .stat:last-child::after{display:none;}
+.s1 .stat-inner{display:flex;align-items:center;gap:4px;margin-bottom:5px;}
+.s1 .sn{font-size:44px;font-weight:900;color:var(--B);line-height:1;}
+.s1 .su{font-size:24px;font-weight:900;color:var(--B);align-self:flex-end;padding-bottom:3px;}
+.s1 .sl{font-size:11px;color:var(--S);font-weight:500;}
+.s1 .sec{display:flex;align-items:center;gap:12px;padding-left:28px;
+  border-left:1px solid rgba(28,45,74,.14);max-width:195px;}
+.s1 .sec-t{font-size:13px;font-weight:700;color:var(--N);display:block;margin-bottom:4px;}
+.s1 .sec-s{font-size:10.5px;color:var(--S);line-height:1.7;}
+.s1 .fn{position:absolute;bottom:5px;left:36px;font-size:10px;color:var(--XS);z-index:11;}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <button id="btn-edit" onclick="toggleEdit()">編集モード</button>
+  <button id="btn-pdf" onclick="exportPDF()">PDFで保存</button>
+  <button onclick="saveHTML()">HTMLで保存</button>
+</div>
+<div id="counter">1 / 1</div>
+<button class="nb" id="btn-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nb" id="btn-next" onclick="nextSlide()">&#8594;</button>
+<div id="nav"></div>
+
+<div id="scaler">
+
+<!-- ══ S1: 表紙 ══ -->
+<div class="slide s1 active">
+  <!-- 右上デコ -->
+  <div class="dtr1"></div><div class="dtr2"></div>
+  <div class="dtr3"></div><div class="dtr4"></div>
+
+  <!-- ロゴ -->
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <path d="M2 24L13 3L24 24H19.5L13 11L6.5 24H2Z" fill="#1E5CF6"/>
+      <path d="M7.5 19H18.5" stroke="#1E5CF6" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-t e">AIリストマスター</span>
+  </div>
+
+  <!-- 左コンテンツ -->
+  <div class="lc">
+    <p class="sub e">あなたにピッタリのリストをAIが提案！</p>
+    <h1 class="title e"><span class="ai">AI</span> リストマスター</h1>
+    <div class="badge e">AIが自動でアポリストを生成する営業支援システム</div>
+    <ul class="feats">
+      <li>
+        <div class="fic">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="5.5" stroke="white" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="2.2" fill="white"/>
+            <line x1="12" y1="3" x2="12" y2="6.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="e">AIが最適なターゲットを自動抽出</span>
+      </li>
+      <li>
+        <div class="fic">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="13" width="4" height="8" rx="1" fill="white"/>
+            <rect x="10" y="8.5" width="4" height="12.5" rx="1" fill="white"/>
+            <rect x="17" y="4" width="4" height="17" rx="1" fill="white"/>
+            <path d="M4.5 10.5L11 6.5L18 3.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="e">営業効率を最大化し、成果へ直結</span>
+      </li>
+      <li>
+        <div class="fic">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.6"/>
+            <path d="M12 7.5v5l3.2 3.2" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="e">リスト作成時間を大幅に削減</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 都市シルエット SVG -->
+  <svg class="city" viewBox="0 0 480 190" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <linearGradient id="cityG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#9EC4E8"/>
+        <stop offset="100%" stop-color="#C8DFF5"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="100" width="480" height="90" fill="#D8EAF8" opacity=".4"/>
+    <rect x="10" y="70" width="28" height="120" fill="url(#cityG)"/>
+    <rect x="42" y="50" width="18" height="140" fill="url(#cityG)"/>
+    <rect x="64" y="35" width="32" height="155" fill="url(#cityG)"/>
+    <rect x="100" y="55" width="22" height="135" fill="url(#cityG)"/>
+    <rect x="126" y="28" width="36" height="162" fill="url(#cityG)"/>
+    <rect x="166" y="60" width="24" height="130" fill="url(#cityG)"/>
+    <rect x="194" y="42" width="20" height="148" fill="url(#cityG)"/>
+    <rect x="218" y="30" width="34" height="160" fill="url(#cityG)"/>
+    <rect x="256" y="58" width="26" height="132" fill="url(#cityG)"/>
+    <rect x="286" y="44" width="20" height="146" fill="url(#cityG)"/>
+    <rect x="310" y="52" width="32" height="138" fill="url(#cityG)"/>
+    <rect x="346" y="70" width="22" height="120" fill="url(#cityG)"/>
+    <rect x="372" y="55" width="28" height="135" fill="url(#cityG)"/>
+    <rect x="404" y="65" width="22" height="125" fill="url(#cityG)"/>
+    <rect x="430" y="50" width="18" height="140" fill="url(#cityG)"/>
+    <rect x="452" y="75" width="20" height="115" fill="url(#cityG)"/>
+    <!-- window dots -->
+    <rect x="130" y="38" width="5" height="7" rx="1" fill="rgba(255,255,255,.5)"/>
+    <rect x="140" y="38" width="5" height="7" rx="1" fill="rgba(255,255,255,.5)"/>
+    <rect x="130" y="52" width="5" height="7" rx="1" fill="rgba(255,255,255,.5)"/>
+    <rect x="140" y="52" width="5" height="7" rx="1" fill="rgba(255,255,255,.5)"/>
+    <rect x="222" y="40" width="5" height="7" rx="1" fill="rgba(255,255,255,.4)"/>
+    <rect x="232" y="40" width="5" height="7" rx="1" fill="rgba(255,255,255,.4)"/>
+  </svg>
+
+  <!-- ラップトップ SVG モックアップ -->
+  <div class="rc">
+    <svg width="545" height="510" viewBox="0 0 545 510" fill="none">
+      <!-- Shadow -->
+      <ellipse cx="272" cy="496" rx="210" ry="14" fill="rgba(0,0,0,.14)"/>
+      <!-- Base -->
+      <rect x="72" y="406" width="402" height="24" rx="5" fill="#C4C8CC"/>
+      <rect x="72" y="420" width="402" height="10" rx="0" fill="#B0B5B9"/>
+      <rect x="148" y="404" width="250" height="6" rx="3" fill="#A8ACB0"/>
+      <!-- Touchpad -->
+      <rect x="190" y="432" width="166" height="44" rx="6" fill="#D0D5D8"/>
+      <rect x="195" y="437" width="156" height="34" rx="4" fill="#C4CAD0"/>
+      <!-- Screen lid outer -->
+      <rect x="82" y="52" width="382" height="360" rx="12" fill="#2E3033"/>
+      <!-- Screen bezel -->
+      <rect x="88" y="58" width="370" height="348" rx="9" fill="#1A1C1E"/>
+      <!-- Screen inner -->
+      <rect x="94" y="62" width="358" height="340" rx="7" fill="#F4F6FA"/>
+
+      <!-- ====== APP UI ====== -->
+      <!-- App header -->
+      <rect x="94" y="62" width="358" height="30" rx="7" fill="#FFFFFF"/>
+      <rect x="94" y="82" width="358" height="10" fill="#FFFFFF"/>
+
+      <!-- App logo -->
+      <path d="M100 80 L106 69 L112 80 H109 L106 74 L103 80 H100Z" fill="#1E5CF6"/>
+      <line x1="101.5" y1="78" x2="110.5" y2="78" stroke="#1E5CF6" stroke-width="1.5"/>
+      <text x="116" y="80" font-family="sans-serif" font-size="8" font-weight="700" fill="#1C2D4A">AIリストマスター</text>
+
+      <!-- Tabs -->
+      <rect x="182" y="68" width="58" height="16" rx="4" fill="#1E5CF6"/>
+      <text x="185" y="79" font-family="sans-serif" font-size="6.5" fill="white" font-weight="700">ダッシュボード</text>
+      <text x="244" y="79" font-family="sans-serif" font-size="6.5" fill="#888">マネージャー</text>
+      <text x="295" y="79" font-family="sans-serif" font-size="6.5" fill="#888">ToDo</text>
+
+      <!-- Right header -->
+      <text x="324" y="79" font-family="sans-serif" font-size="5.5" fill="#999">今月 ▾</text>
+      <text x="348" y="79" font-family="sans-serif" font-size="5.5" fill="#999">全キャンペーン ▾</text>
+      <text x="396" y="79" font-family="sans-serif" font-size="5.5" fill="#999">チーム全体 ▾</text>
+      <circle cx="435" cy="76" r="8" fill="#1E5CF6"/>
+      <text x="432" y="79" font-family="sans-serif" font-size="7.5" font-weight="700" fill="white">k</text>
+      <text x="444" y="79" font-family="sans-serif" font-size="5.5" fill="#666">kato</text>
+
+      <!-- Sidebar bg -->
+      <rect x="94" y="92" width="74" height="310" fill="#F8F9FC"/>
+      <line x1="168" y1="92" x2="168" y2="402" stroke="#E8ECF2" stroke-width="1"/>
+
+      <!-- Sidebar content -->
+      <text x="100" y="104" font-family="sans-serif" font-size="5.5" fill="#BBB" letter-spacing="1">リスト機能</text>
+      <circle cx="98" cy="113" r="2.5" fill="#1E5CF6"/>
+      <text x="103" y="116" font-family="sans-serif" font-size="6.5" fill="#333" font-weight="500">企業データ</text>
+      <text x="103" y="124" font-family="sans-serif" font-size="5" fill="#AAA">リスト検索・作成</text>
+      <circle cx="98" cy="133" r="2.5" fill="#777"/>
+      <text x="103" y="136" font-family="sans-serif" font-size="6.5" fill="#333" font-weight="500">AIマッチング</text>
+      <text x="103" y="144" font-family="sans-serif" font-size="5" fill="#AAA">優先性分析・トーク生成</text>
+      <text x="100" y="156" font-family="sans-serif" font-size="6.5" fill="#777">自社情報</text>
+      <text x="100" y="168" font-family="sans-serif" font-size="6.5" fill="#777">履歴/レポート</text>
+      <text x="100" y="182" font-family="sans-serif" font-size="5.5" fill="#BBB" letter-spacing="1">営業機能</text>
+      <!-- Active nav item -->
+      <rect x="94" y="186" width="74" height="16" fill="#EEF4FF"/>
+      <rect x="94" y="186" width="3" height="16" fill="#1E5CF6" rx="1"/>
+      <text x="100" y="197" font-family="sans-serif" font-size="6.5" font-weight="700" fill="#1E5CF6">ダッシュボード</text>
+      <text x="100" y="210" font-family="sans-serif" font-size="6.5" fill="#666">キャンペーン</text>
+      <text x="100" y="222" font-family="sans-serif" font-size="6.5" fill="#666">営業リスト</text>
+      <text x="100" y="234" font-family="sans-serif" font-size="6.5" fill="#666">レポート/分析</text>
+      <text x="100" y="246" font-family="sans-serif" font-size="6.5" fill="#666">営業設定</text>
+
+      <!-- Main area bg -->
+      <rect x="169" y="92" width="283" height="310" fill="#F2F5FA"/>
+
+      <!-- KPI cards row -->
+      <!-- Card 1 -->
+      <rect x="174" y="96" width="86" height="56" rx="5" fill="white"/>
+      <rect x="179" y="101" width="12" height="12" rx="2" fill="#E8F0FE"/>
+      <text x="193" y="111" font-family="sans-serif" font-size="6" fill="#888">架電社数</text>
+      <text x="232" y="111" font-family="sans-serif" font-size="5.5" fill="#AAA">今日</text>
+      <text x="179" y="130" font-family="sans-serif" font-size="20" font-weight="900" fill="#1C2D4A">6</text>
+      <text x="179" y="146" font-family="sans-serif" font-size="5" fill="#BBB">述べ 6回</text>
+
+      <!-- Card 2 -->
+      <rect x="266" y="96" width="86" height="56" rx="5" fill="white"/>
+      <text x="272" y="111" font-family="sans-serif" font-size="6" fill="#888">最終CV到達率</text>
+      <text x="324" y="111" font-family="sans-serif" font-size="5.5" fill="#AAA">今日</text>
+      <text x="272" y="130" font-family="sans-serif" font-size="18" font-weight="900" fill="#16A34A">0.0%</text>
+      <text x="272" y="146" font-family="sans-serif" font-size="5" fill="#BBB">最終CV 0 / 6社</text>
+
+      <!-- Card 3 -->
+      <rect x="358" y="96" width="89" height="56" rx="5" fill="white"/>
+      <text x="364" y="111" font-family="sans-serif" font-size="6" fill="#888">最終CV・売上</text>
+      <text x="418" y="111" font-family="sans-serif" font-size="5.5" fill="#AAA">今日</text>
+      <text x="364" y="130" font-family="sans-serif" font-size="18" font-weight="900" fill="#7C3AED">¥0</text>
+      <text x="364" y="146" font-family="sans-serif" font-size="5" fill="#BBB">最終CV 0社</text>
+
+      <!-- Greeting banner -->
+      <rect x="174" y="158" width="273" height="42" rx="5" fill="white"/>
+      <circle cx="186" cy="178" r="8" fill="#1E5CF6"/>
+      <text x="183" y="181" font-family="sans-serif" font-size="8" font-weight="900" fill="white">k</text>
+      <text x="198" y="174" font-family="sans-serif" font-size="8" font-weight="700" fill="#1C2D4A">katoさん、今日も頑張りましょう！</text>
+      <text x="198" y="186" font-family="sans-serif" font-size="5.5" fill="#999">2026/05/12・残り 5.2時間</text>
+
+      <!-- Today stats row -->
+      <rect x="174" y="206" width="86" height="40" rx="5" fill="white"/>
+      <text x="179" y="217" font-family="sans-serif" font-size="5.5" fill="#888">今日の架電</text>
+      <text x="179" y="234" font-family="sans-serif" font-size="14" font-weight="900" fill="#1C2D4A">6</text>
+      <text x="191" y="234" font-family="sans-serif" font-size="5.5" fill="#AAA">/50社</text>
+
+      <rect x="266" y="206" width="86" height="40" rx="5" fill="white"/>
+      <text x="271" y="217" font-family="sans-serif" font-size="5.5" fill="#888">売り</text>
+      <text x="271" y="234" font-family="sans-serif" font-size="14" font-weight="900" fill="#F59E0B">616</text>
+      <text x="290" y="234" font-family="sans-serif" font-size="5" fill="#AAA">124台ペース</text>
+
+      <rect x="358" y="206" width="89" height="40" rx="5" fill="white"/>
+      <text x="364" y="217" font-family="sans-serif" font-size="5.5" fill="#888">TODO</text>
+      <text x="364" y="234" font-family="sans-serif" font-size="14" font-weight="900" fill="#EF4444">616</text>
+      <text x="381" y="234" font-family="sans-serif" font-size="5" fill="#AAA">架電・折返・フォロー</text>
+
+      <!-- Lower panels -->
+      <!-- コール予定 -->
+      <rect x="174" y="252" width="130" height="96" rx="5" fill="white"/>
+      <text x="180" y="264" font-family="sans-serif" font-size="7" font-weight="700" fill="#1C2D4A">📞 コール予定</text>
+      <line x1="174" y1="270" x2="304" y2="270" stroke="#F0F0F0" stroke-width="1"/>
+      <text x="180" y="284" font-family="sans-serif" font-size="6" fill="#AAA">今日の予定はありません</text>
+      <text x="180" y="298" font-family="sans-serif" font-size="6" fill="#1E5CF6">今日（木）の予定</text>
+      <text x="180" y="310" font-family="sans-serif" font-size="5.5" fill="#BBB">・</text>
+
+      <!-- 見込み企業一覧 -->
+      <rect x="310" y="252" width="137" height="96" rx="5" fill="white"/>
+      <rect x="310" y="252" width="137" height="18" rx="5" fill="#FFFBEB"/>
+      <rect x="310" y="260" width="137" height="10" fill="#FFFBEB"/>
+      <text x="316" y="264" font-family="sans-serif" font-size="6.5" font-weight="700" fill="#B45309">⚠ 見込み企業一覧</text>
+      <circle cx="444" cy="260" r="6" fill="#EF4444"/>
+      <text x="441" y="263" font-family="sans-serif" font-size="6" fill="white" font-weight="700">6</text>
+
+      <text x="316" y="280" font-family="sans-serif" font-size="6.5" font-weight="700" fill="#1C2D4A">DPAA株式会社</text>
+      <text x="316" y="289" font-family="sans-serif" font-size="5" fill="#999">見込みカテゴリ: 継続フォロー</text>
+      <rect x="399" y="276" width="24" height="11" rx="3" fill="#1E5CF6"/>
+      <text x="402" y="284" font-family="sans-serif" font-size="5.5" fill="white">架電</text>
+      <text x="375" y="284" font-family="sans-serif" font-size="5.5" fill="#AAA">04/01</text>
+      <line x1="310" y1="295" x2="447" y2="295" stroke="#F0F0F0" stroke-width="1"/>
+
+      <text x="316" y="305" font-family="sans-serif" font-size="6.5" font-weight="700" fill="#1C2D4A">TMAコンサルティング株式会社</text>
+      <text x="316" y="314" font-family="sans-serif" font-size="5" fill="#999">見込みカテゴリ: 継続フォロー</text>
+      <rect x="410" y="302" width="24" height="11" rx="3" fill="#1E5CF6"/>
+      <text x="413" y="310" font-family="sans-serif" font-size="5.5" fill="white">架電</text>
+      <line x1="310" y1="320" x2="447" y2="320" stroke="#F0F0F0" stroke-width="1"/>
+
+      <text x="316" y="330" font-family="sans-serif" font-size="6.5" font-weight="700" fill="#1C2D4A">ジュービー株式会社</text>
+      <text x="316" y="339" font-family="sans-serif" font-size="5" fill="#999">見込みカテゴリ: 継続フォロー</text>
+      <rect x="410" y="327" width="24" height="11" rx="3" fill="#1E5CF6"/>
+      <text x="413" y="335" font-family="sans-serif" font-size="5.5" fill="white">架電</text>
+
+      <!-- Keyboard area -->
+      <rect x="82" y="410" width="382" height="4" fill="#C8CDD0"/>
+      <rect x="82" y="412" width="382" height="2" fill="#B0B5B8"/>
+    </svg>
+  </div>
+
+  <!-- 下部統計バー -->
+  <div class="bot">
+    <div class="stats">
+      <!-- stat 1 -->
+      <div class="stat">
+        <div class="stat-inner">
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M15 48 C9 42 5 35 5 27 C5 20 8 14 11 10 C10 17 9 24 10 30 C11 37 12 44 15 48Z" fill="#C49018" opacity=".7"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+          <div style="text-align:center;">
+            <span class="sn e">87</span><span class="su e">%</span>
+          </div>
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none" style="transform:scaleX(-1)">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M15 48 C9 42 5 35 5 27 C5 20 8 14 11 10 C10 17 9 24 10 30 C11 37 12 44 15 48Z" fill="#C49018" opacity=".7"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+        </div>
+        <div class="sl e">営業効率　向上※</div>
+      </div>
+
+      <!-- stat 2 -->
+      <div class="stat">
+        <div class="stat-inner">
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+          <div style="text-align:center;">
+            <span class="sn e">2〜3</span><span class="su e">倍</span>
+          </div>
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none" style="transform:scaleX(-1)">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+        </div>
+        <div class="sl e">アポ獲得数　アップ※</div>
+      </div>
+
+      <!-- stat 3 -->
+      <div class="stat">
+        <div class="stat-inner">
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-size:14px;font-weight:900;color:var(--B);line-height:1;" class="e">最短</div>
+            <div><span class="sn e">3日で</span></div>
+          </div>
+          <svg width="30" height="50" viewBox="0 0 30 50" fill="none" style="transform:scaleX(-1)">
+            <path d="M15 48 C10 44 5 38 4 30 C4 22 7 16 12 12 C12 18 11 24 12 30 C13 36 14 42 15 48Z" fill="#D4A521"/>
+            <path d="M6 22 C4 18 3 13 5 9 C7 9 9 11 9 15 C9 18 8 20 6 22Z" fill="#D4A521"/>
+            <path d="M8 16 C6 12 5 8 7 5 C9 5 11 7 10 11 C10 13 9 15 8 16Z" fill="#C49018"/>
+            <path d="M10 11 C9 7 9 4 11 2 C13 3 14 5 13 9 C12 11 11 11 10 11Z" fill="#D4A521"/>
+          </svg>
+        </div>
+        <div class="sl e">運用開始※</div>
+      </div>
+    </div>
+
+    <!-- セキュリティ -->
+    <div class="sec">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none" style="flex-shrink:0">
+        <path d="M22 4L6 11v11c0 9.4 6.8 18.2 16 20 9.2-1.8 16-10.6 16-20V11L22 4z"
+          fill="#1E5CF6" opacity=".15" stroke="#1E5CF6" stroke-width="2"/>
+        <path d="M14 22l6 6L30 16" stroke="#1E5CF6" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <span class="sec-t e">安心・安全のセキュリティ</span>
+        <span class="sec-s e">ISMS取得基準に準拠した<br>セキュアな環境でデータを保護</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="fn e">※ 弊社導入企業の実績に基づく</div>
+</div>
+
+</div><!-- /scaler -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  const sl=document.querySelectorAll('.slide'),
+        nv=document.getElementById('nav'),
+        ct=document.getElementById('counter'),
+        sc=document.getElementById('scaler'),N=sl.length;
+  let c=0;
+  sl.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' active':'');
+    d.onclick=()=>go(i);nv.appendChild(d);
+  });
+  function go(n){
+    sl[c].classList.remove('active');nv.children[c].classList.remove('active');
+    c=((n%N)+N)%N;
+    sl[c].classList.add('active');nv.children[c].classList.add('active');
+    ct.textContent=(c+1)+' / '+N;
+  }
+  window.nextSlide=()=>go(c+1);
+  window.prevSlide=()=>go(c-1);
+  document.addEventListener('keydown',e=>{
+    if(document.body.classList.contains('em')&&document.activeElement?.isContentEditable)return;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')go(c+1);
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(c-1);
+  });
+  function scale(){
+    const s=Math.min(window.innerWidth/960,window.innerHeight/720),
+          x=(window.innerWidth-960*s)/2,
+          y=(window.innerHeight-720*s)/2;
+    sc.style.transform=`translate(${x}px,${y}px) scale(${s})`;
+  }
+  scale();window.addEventListener('resize',scale);
+
+  window.toggleEdit=function(){
+    const b=document.body,btn=document.getElementById('btn-edit'),
+          els=document.querySelectorAll('.e');
+    if(b.classList.contains('em')){
+      b.classList.remove('em');
+      els.forEach(e=>e.removeAttribute('contenteditable'));
+      btn.classList.remove('active');btn.textContent='編集モード';
+    }else{
+      b.classList.add('em');
+      els.forEach(e=>e.setAttribute('contenteditable','true'));
+      btn.classList.add('active');btn.textContent='編集終了';
+    }
+  };
+
+  window.saveHTML=function(){
+    const blob=new Blob(['<!DOCTYPE html>\n'+document.documentElement.outerHTML],
+      {type:'text/html;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='AIリストマスター_営業資料_v2.html';
+    a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+
+  window.exportPDF=async function(){
+    const btn=document.getElementById('btn-pdf');
+    btn.textContent='生成中...';btn.disabled=true;
+    const {jsPDF}=window.jspdf;
+    const W=960,H=720;
+    const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:[W,H]});
+    const orig=c;
+    const saved=sc.style.transform;
+    sc.style.transform='translate(0px,0px) scale(1)';
+    document.body.style.overflow='visible';
+    await new Promise(r=>setTimeout(r,100));
+    for(let i=0;i<N;i++){
+      sl.forEach(s=>{s.style.opacity='0';s.style.pointerEvents='none';});
+      sl[i].style.opacity='1';sl[i].style.pointerEvents='all';
+      await new Promise(r=>setTimeout(r,200));
+      const canvas=await html2canvas(sl[i],{
+        scale:2,useCORS:true,allowTaint:true,
+        width:960,height:720,windowWidth:960,windowHeight:720,
+        x:0,y:0,scrollX:0,scrollY:0,backgroundColor:'#ffffff',logging:false,
+        ignoreElements:el=>el.id==='toolbar'||el.id==='nav'||el.id==='counter'||el.classList.contains('nb')
+      });
+      const img=canvas.toDataURL('image/jpeg',0.96);
+      if(i>0)pdf.addPage([W,H],'landscape');
+      pdf.addImage(img,'JPEG',0,0,W,H,undefined,'FAST');
+    }
+    sc.style.transform=saved;
+    document.body.style.overflow='';
+    sl.forEach(s=>{s.style.opacity='';s.style.pointerEvents='';});
+    go(orig);
+    pdf.save('AIリストマスター_営業資料_v2.pdf');
+    btn.textContent='PDFで保存';btn.disabled=false;
+  };
+})();
+</script>
+</body>
+</html>
