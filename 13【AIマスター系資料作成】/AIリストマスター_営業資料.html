@@ -6,528 +6,333 @@
 <title>AIリストマスター 営業資料</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
   :root {
-    --blue:    #0077A8;
-    --blue-l:  #00B4D8;
-    --blue-d:  #005F7F;
-    --blue-bg: #EAF4FA;
-    --blue-bg2:#F2F8FC;
-    --bg:      #FFFFFF;
-    --bg-soft: #F5F8FC;
-    --text:    #0D1B2A;
-    --text-s:  rgba(13,27,42,.58);
-    --text-xs: rgba(13,27,42,.38);
-    --amber:   #E08A00;
-    --red:     #C44040;
-    --border:  rgba(0,119,168,.14);
+    --blue:   #0077A8;
+    --blue-l: #00B4D8;
+    --blue-d: #005272;
+    --bg-blue:#EAF4FA;
+    --bg2:    #F2F8FC;
+    --bg:     #FFFFFF;
+    --soft:   #F4F7FB;
+    --dark:   #0D1B2A;
+    --sub:    rgba(13,27,42,.58);
+    --xs:     rgba(13,27,42,.36);
+    --bdr:    rgba(0,119,168,.14);
+    --red-b:  #B83030;
+    --red-t:  #D06020;
   }
 
-  html, body {
-    width:100%; height:100%;
-    background:#1C2D3D;
-    font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif;
-    overflow:hidden; user-select:none;
-  }
+  html,body { width:100%; height:100%; background:#192736; font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif; overflow:hidden; user-select:none; }
 
-  #scaler {
-    position:fixed; top:0; left:0;
-    width:960px; height:540px;
-    transform-origin:top left;
-  }
+  #scaler { position:fixed; top:0; left:0; width:960px; height:540px; transform-origin:top left; }
 
-  .slide {
-    position:absolute; inset:0;
-    width:960px; height:540px;
-    overflow:hidden;
-    opacity:0; pointer-events:none;
-    transition:opacity .35s ease;
-    background:var(--bg);
-  }
+  .slide { position:absolute; inset:0; width:960px; height:540px; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .35s; background:#fff; }
   .slide.active { opacity:1; pointer-events:all; }
 
-  /* ── Chrome UI ── */
-  #toolbar {
-    position:fixed; top:8px; left:50%;
-    transform:translateX(-50%);
-    display:flex; gap:8px; z-index:200;
-  }
-  #toolbar button {
-    padding:5px 14px; border-radius:20px;
-    border:1.5px solid rgba(255,255,255,.22);
-    background:rgba(13,27,42,.88);
-    color:#fff; font-size:12px; cursor:pointer;
-    font-family:inherit; transition:background .2s;
-  }
+  /* ─ Chrome ─ */
+  #toolbar { position:fixed; top:8px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
+  #toolbar button { padding:5px 14px; border-radius:20px; border:1.5px solid rgba(255,255,255,.2); background:rgba(13,27,42,.88); color:#fff; font-size:12px; cursor:pointer; font-family:inherit; transition:background .2s; }
   #toolbar button:hover { background:rgba(0,119,168,.5); }
   #toolbar button.active { background:var(--blue); border-color:var(--blue); }
   #counter { position:fixed; top:10px; right:16px; color:rgba(255,255,255,.38); font-size:12px; z-index:200; }
-  .nav-btn {
-    position:fixed; top:50%; transform:translateY(-50%);
-    background:rgba(0,0,0,.22); border:1.5px solid rgba(255,255,255,.18);
-    color:#fff; width:40px; height:40px; border-radius:50%;
-    font-size:18px; cursor:pointer; z-index:200;
-    display:flex; align-items:center; justify-content:center;
-    transition:background .2s;
-  }
+  .nav-btn { position:fixed; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.22); border:1.5px solid rgba(255,255,255,.18); color:#fff; width:40px; height:40px; border-radius:50%; font-size:18px; cursor:pointer; z-index:200; display:flex; align-items:center; justify-content:center; transition:background .2s; }
   .nav-btn:hover { background:rgba(0,119,168,.55); }
   #btn-prev { left:8px; } #btn-next { right:8px; }
   #nav { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:7px; z-index:200; }
   .dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.28); cursor:pointer; transition:background .25s,transform .25s; }
   .dot.active { background:#fff; transform:scale(1.4); }
-
-  /* Edit mode */
   .editable { outline:none; }
-  body.edit-mode .editable { outline:1.5px dashed rgba(0,119,168,.45); cursor:text; border-radius:2px; }
-  body.edit-mode .editable:focus { outline:2px solid var(--blue); background:rgba(0,119,168,.05); border-radius:3px; }
+  body.edit-mode .editable { outline:1.5px dashed rgba(0,119,168,.5); cursor:text; border-radius:2px; }
+  body.edit-mode .editable:focus { outline:2px solid var(--blue); background:rgba(0,119,168,.05); }
 
-  /* ── Browser Frame ── */
-  .browser-frame {
-    background:#EDF2F7; border-radius:10px; overflow:hidden;
-    box-shadow:0 6px 24px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.07);
-    max-width:100%;
-  }
-  .browser-bar {
-    background:#DDE4ED; height:26px;
-    display:flex; align-items:center; padding:0 10px; gap:6px;
-  }
-  .bdot { width:10px; height:10px; border-radius:50%; }
-  .bdot.r{background:#FF5F57;} .bdot.y{background:#FEBC2E;} .bdot.g{background:#28C840;}
-  .burl { flex:1; height:13px; background:rgba(0,0,0,.1); border-radius:4px; margin-left:8px; }
-  .browser-frame img { display:block; width:100%; height:auto; image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges; }
-  .screen-label { font-size:10px; letter-spacing:.18em; color:var(--text-xs); text-transform:uppercase; margin-bottom:8px; }
+  /* ─ Browser ─ */
+  .bf { background:#EDF2F7; border-radius:10px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.07); max-width:100%; }
+  .bb { background:#DDE4ED; height:26px; display:flex; align-items:center; padding:0 10px; gap:6px; }
+  .bd { width:10px; height:10px; border-radius:50%; }
+  .bd.r{background:#FF5F57;} .bd.y{background:#FEBC2E;} .bd.g{background:#28C840;}
+  .bu { flex:1; height:13px; background:rgba(0,0,0,.1); border-radius:4px; margin-left:8px; }
+  .bf img { display:block; width:100%; height:auto; image-rendering:crisp-edges; }
+  .sc-lbl { font-size:10px; letter-spacing:.18em; color:var(--xs); text-transform:uppercase; margin-bottom:8px; }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 1: タイトル
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s1 { background:#FFFFFF; }
-  .s1 .bg-r {
-    position:absolute; top:0; right:0; bottom:0; width:400px;
-    background:linear-gradient(145deg,var(--blue-bg) 0%,#C8E5F5 100%);
-    clip-path:polygon(18% 0,100% 0,100% 100%,0 100%);
+  /* ─ Dot grid ─ */
+  .dot-bg { background-image:radial-gradient(rgba(0,119,168,.09) 1px,transparent 1px); background-size:22px 22px; }
+
+  /* ════════════════════════════════════
+     S1 タイトル
+  ════════════════════════════════════ */
+  .s1 { background:#fff; }
+  .s1 .r-panel {
+    position:absolute; top:0; right:0; bottom:0; width:420px;
+    background:linear-gradient(140deg,#D4EDF9 0%,#B2D9F0 100%);
+    clip-path:polygon(16% 0,100% 0,100% 100%,0 100%);
   }
-  .s1 .top-line {
-    position:absolute; top:0; left:0; right:0; height:5px;
-    background:linear-gradient(90deg,var(--blue),var(--blue-l));
+  .s1 .r-panel svg { position:absolute; inset:0; width:100%; height:100%; }
+  .s1 .top-bar { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,var(--blue),var(--blue-l)); }
+  .s1 .badge {
+    position:absolute; top:28px; left:72px;
+    padding:4px 16px; border-radius:20px;
+    background:var(--bg-blue); border:1.5px solid var(--bdr);
+    font-size:10.5px; font-weight:700; letter-spacing:.28em; color:var(--blue);
   }
-  .s1 .content {
-    position:absolute; inset:0;
+  .s1 .content { position:absolute; top:70px; left:72px; right:440px; bottom:40px; display:flex; flex-direction:column; justify-content:center; }
+  .s1 h1 { font-size:86px; font-weight:900; color:var(--dark); line-height:.92; letter-spacing:-.04em; margin-bottom:18px; }
+  .s1 h1 em { color:var(--blue); font-style:normal; }
+  .s1 .sub { font-size:16px; color:var(--sub); letter-spacing:.04em; margin-bottom:30px; line-height:1.6; }
+  .s1 .tags { display:flex; gap:9px; flex-wrap:wrap; }
+  .s1 .tag { padding:5px 14px; border:1.5px solid var(--bdr); border-radius:20px; font-size:12px; color:var(--blue); background:var(--bg2); }
+  .s1 .logo { position:absolute; bottom:22px; right:36px; font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--xs); }
+
+  /* ════════════════════════════════════
+     S2 営業の現実
+  ════════════════════════════════════ */
+  .s2 { background:var(--soft); }
+  .s2 .hd {
+    position:absolute; top:0; left:0; right:0; height:126px;
+    background:linear-gradient(100deg,var(--blue-d) 0%,var(--blue) 60%,var(--blue-l) 100%);
+    clip-path:polygon(0 0,100% 0,100% 74%,0 100%);
+    display:flex; align-items:center; padding:0 56px 24px;
+  }
+  .s2 .hd-inner { display:flex; flex-direction:column; }
+  .s2 .hd-lbl { font-size:10px; font-weight:700; letter-spacing:.3em; color:rgba(255,255,255,.65); text-transform:uppercase; margin-bottom:6px; }
+  .s2 .hd h2 { font-size:26px; font-weight:900; color:#fff; }
+  .s2 .hd h2 em { color:#FFD870; font-style:normal; }
+  .s2 .stats { position:absolute; top:136px; left:30px; right:30px; display:flex; gap:16px; }
+  .s2 .sc {
+    flex:1; background:#fff; border-radius:16px; padding:22px 18px 20px;
+    text-align:center; box-shadow:0 6px 28px rgba(0,0,0,.1);
+    position:relative; overflow:hidden;
+  }
+  .s2 .sc::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--blue),var(--blue-l)); }
+  .s2 .ico { margin-bottom:10px; }
+  .s2 .num { font-size:76px; font-weight:900; color:var(--blue); line-height:1; margin-bottom:8px; letter-spacing:-.03em; }
+  .s2 .num small { font-size:36px; }
+  .s2 .lbl { font-size:12.5px; color:var(--sub); line-height:1.7; }
+  .s2 .fn { position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:11px; color:var(--xs); }
+
+  /* ════════════════════════════════════
+     S3 3つの限界
+  ════════════════════════════════════ */
+  .s3 { background:#fff; }
+  .s3 .lc {
+    position:absolute; top:0; left:0; bottom:0; width:300px;
+    background:linear-gradient(160deg,var(--blue-d) 0%,var(--blue) 100%);
+    clip-path:polygon(0 0,84% 0,100% 100%,0 100%);
     display:flex; flex-direction:column; justify-content:center;
-    padding:0 72px;
+    padding:0 52px 0 44px;
   }
-  .s1 .eyebrow {
-    font-size:10.5px; font-weight:700; letter-spacing:.32em;
-    color:var(--blue); text-transform:uppercase; margin-bottom:22px;
+  .s3 .lc-ico { margin-bottom:18px; }
+  .s3 .lc h2 { font-size:21px; font-weight:900; color:#fff; line-height:1.45; margin-bottom:14px; }
+  .s3 .lc p { font-size:12.5px; color:rgba(255,255,255,.75); line-height:1.75; }
+  .s3 .rc { position:absolute; top:0; right:0; bottom:0; left:272px; display:flex; flex-direction:column; justify-content:center; gap:16px; padding:0 42px 0 34px; }
+  .s3 .pi {
+    display:flex; gap:16px; align-items:flex-start;
+    padding:18px 20px; background:#fff;
+    border:1px solid rgba(0,0,0,.07); border-left:5px solid var(--blue);
+    border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.08);
   }
-  .s1 .title {
-    font-size:78px; font-weight:900; color:var(--text);
-    line-height:.95; letter-spacing:-.03em; margin-bottom:16px;
-  }
-  .s1 .title em { color:var(--blue); font-style:normal; }
-  .s1 .subtitle { font-size:17px; color:var(--text-s); letter-spacing:.04em; margin-bottom:36px; }
-  .s1 .tags { display:flex; gap:10px; flex-wrap:wrap; }
-  .s1 .tag {
-    padding:5px 16px;
-    border:1.5px solid var(--border); border-radius:20px;
-    font-size:12px; color:var(--blue); background:var(--blue-bg2);
-    letter-spacing:.06em;
-  }
-  .s1 .logo {
-    position:absolute; bottom:24px; right:40px;
-    font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--text-xs);
-  }
-  .s1 .illust {
-    position:absolute; right:52px; top:50%; transform:translateY(-50%);
-  }
+  .s3 .pn { font-size:28px; font-weight:900; color:var(--blue); line-height:1; width:34px; flex-shrink:0; }
+  .s3 .pt h3 { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:4px; }
+  .s3 .pt p  { font-size:12px; color:var(--sub); line-height:1.6; }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 2: 営業マンの現実
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s2 { background:var(--bg-soft); }
-  .s2 .hdr {
-    position:absolute; top:0; left:0; right:0; height:116px;
-    background:var(--blue);
-    clip-path:polygon(0 0,100% 0,100% 72%,0 100%);
-    display:flex; align-items:center; padding:0 56px 20px;
-  }
-  .s2 .hdr h2 { font-size:26px; font-weight:900; color:#fff; line-height:1.3; }
-  .s2 .hdr h2 em { color:#FFD870; font-style:normal; }
-  .s2 .stats {
-    position:absolute; top:128px; left:32px; right:32px;
-    display:flex; gap:18px;
-  }
-  .s2 .scard {
-    flex:1; background:#fff; border-radius:14px;
-    padding:26px 20px 22px; text-align:center;
-    box-shadow:0 4px 20px rgba(0,0,0,.08);
-    border-top:4px solid var(--blue);
-  }
-  .s2 .snum {
-    font-size:68px; font-weight:900; color:var(--blue);
-    line-height:1; margin-bottom:10px; letter-spacing:-.03em;
-  }
-  .s2 .snum small { font-size:32px; }
-  .s2 .slabel { font-size:13px; color:var(--text-s); line-height:1.65; }
-  .s2 .footnote {
-    position:absolute; bottom:20px; left:0; right:0;
-    text-align:center; font-size:11.5px; color:var(--text-xs);
-  }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 3: 3つの限界
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s3 { background:#FFFFFF; }
-  .s3 .lcol {
-    position:absolute; top:0; left:0; bottom:0; width:292px;
-    background:var(--blue);
-    clip-path:polygon(0 0,85% 0,100% 100%,0 100%);
-    display:flex; flex-direction:column; justify-content:center;
-    padding:0 54px 0 44px;
-  }
-  .s3 .lcol h2 { font-size:21px; font-weight:900; color:#fff; line-height:1.45; margin-bottom:14px; }
-  .s3 .lcol p { font-size:12.5px; color:rgba(255,255,255,.78); line-height:1.75; }
-  .s3 .rcol {
-    position:absolute; top:0; right:0; bottom:0; left:264px;
-    display:flex; flex-direction:column; justify-content:center;
-    gap:16px; padding:0 44px 0 36px;
-  }
-  .s3 .pitem {
-    display:flex; gap:18px; align-items:flex-start;
-    padding:18px 20px;
-    background:#fff; border:1px solid rgba(0,0,0,.07);
-    border-left:5px solid var(--blue); border-radius:10px;
-    box-shadow:0 3px 14px rgba(0,0,0,.07);
-  }
-  .s3 .pnum { font-size:28px; font-weight:900; color:var(--blue); line-height:1; width:34px; flex-shrink:0; }
-  .s3 .ptxt h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
-  .s3 .ptxt p { font-size:12px; color:var(--text-s); line-height:1.6; }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     REASON SLIDES (4-7)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .reason { background:#FFFFFF; }
-  .reason .l-stripe {
-    position:absolute; top:0; left:0; bottom:0; width:6px;
-    background:linear-gradient(180deg,var(--blue),var(--blue-l));
-    z-index:2;
-  }
-  .reason .wm {
-    position:absolute; right:-16px; bottom:-44px;
-    font-size:290px; font-weight:900;
-    color:rgba(0,119,168,.038);
+  /* ════════════════════════════════════
+     REASON (4-7)
+  ════════════════════════════════════ */
+  .rsn { background:#fff; }
+  .rsn .stripe { position:absolute; top:0; left:0; bottom:0; width:6px; background:linear-gradient(180deg,var(--blue),var(--blue-l)); z-index:2; }
+  .rsn .wm {
+    position:absolute; right:-28px; bottom:-60px;
+    font-size:380px; font-weight:900;
+    color:rgba(0,119,168,.032);
     line-height:1; letter-spacing:-.06em;
     pointer-events:none; z-index:0;
   }
-  .reason .lpanel {
+  .rsn .lp {
     position:absolute; top:0; left:0; bottom:0; width:420px;
     display:flex; flex-direction:column; justify-content:center;
-    padding:0 50px 0 54px; z-index:1;
+    padding:0 50px 0 56px; z-index:1;
   }
-  .reason .rlabel {
-    font-size:10px; font-weight:700; letter-spacing:.32em;
-    color:var(--blue); text-transform:uppercase; margin-bottom:14px;
+  .rsn .num-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:44px; height:44px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    font-size:15px; font-weight:900; margin-bottom:16px;
   }
-  .reason .rtitle {
-    font-size:25px; font-weight:900; color:var(--text);
+  .rsn .rlbl { font-size:10px; font-weight:700; letter-spacing:.32em; color:var(--blue); text-transform:uppercase; margin-bottom:12px; }
+  .rsn .rt {
+    font-size:25px; font-weight:900; color:var(--dark);
     line-height:1.35; margin-bottom:18px;
     padding-left:14px; border-left:4px solid var(--blue);
   }
-  .reason .rbody { font-size:13px; color:var(--text-s); line-height:1.9; }
-  .reason .rpanel {
+  .rsn .rb { font-size:13px; color:var(--sub); line-height:1.9; }
+  .rsn .rp {
     position:absolute; top:0; right:0; bottom:0; left:420px;
-    background:var(--blue-bg);
-    border-left:1px solid var(--border);
+    background:var(--bg-blue); border-left:1px solid var(--bdr);
     display:flex; align-items:center; justify-content:center;
-    padding:28px 30px; z-index:1;
+    padding:26px 28px; z-index:1;
   }
 
-  /* 棒グラフ 理由03 */
-  .bar-chart { width:100%; }
-  .bc-item { margin-bottom:22px; }
-  .bc-item:last-child { margin-bottom:0; }
-  .bc-name { font-size:12.5px; color:var(--text-s); margin-bottom:8px; }
-  .bc-track { height:50px; background:rgba(0,0,0,.06); border-radius:8px; overflow:hidden; }
-  .bc-fill { height:100%; border-radius:8px; display:flex; align-items:center; padding:0 16px; }
-  .bc-fill.manual { background:linear-gradient(90deg,#B83030,#D06020); width:90%; }
-  .bc-fill.ai     { background:linear-gradient(90deg,var(--blue-d),var(--blue-l)); width:5%; min-width:72px; }
-  .bc-fill span { font-size:14px; font-weight:900; color:#fff; white-space:nowrap; }
-  .bc-sub { font-size:11px; color:var(--text-xs); margin-top:5px; }
-  .bc-callout {
-    margin-top:20px; padding:14px 20px;
-    background:var(--blue-bg); border:1.5px solid var(--border);
-    border-radius:8px; text-align:center;
-  }
-  .bc-callout .bc-sub2 { font-size:12px; color:var(--text-s); margin-bottom:5px; }
-  .bc-callout .bc-main { font-size:16px; font-weight:900; color:var(--blue); }
+  /* 棒グラフ */
+  .bc { width:100%; }
+  .bc-i { margin-bottom:22px; }
+  .bc-i:last-child { margin-bottom:0; }
+  .bc-n { font-size:12.5px; color:var(--sub); margin-bottom:8px; }
+  .bc-t { height:50px; background:rgba(0,0,0,.06); border-radius:8px; overflow:hidden; }
+  .bc-f { height:100%; border-radius:8px; display:flex; align-items:center; padding:0 16px; }
+  .bc-f.m { background:linear-gradient(90deg,var(--red-b),var(--red-t)); width:90%; }
+  .bc-f.a { background:linear-gradient(90deg,var(--blue-d),var(--blue-l)); width:5%; min-width:72px; }
+  .bc-f span { font-size:14px; font-weight:900; color:#fff; white-space:nowrap; }
+  .bc-s { font-size:11px; color:var(--xs); margin-top:5px; }
+  .bc-box { margin-top:20px; padding:14px 20px; background:#fff; border:1.5px solid var(--bdr); border-radius:10px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.07); }
+  .bc-box .b1 { font-size:12px; color:var(--sub); margin-bottom:5px; }
+  .bc-box .b2 { font-size:16px; font-weight:900; color:var(--blue); }
 
-  /* コスト比較 理由04 */
-  .cost-compare { display:flex; gap:20px; align-items:flex-end; width:100%; }
-  .cc-col { flex:1; display:flex; flex-direction:column; align-items:center; }
-  .cc-bar-area { width:100%; display:flex; align-items:flex-end; justify-content:center; height:210px; }
-  .cc-bar { width:80px; border-radius:8px 8px 0 0; }
-  .cc-bar.old { background:linear-gradient(180deg,#C83030 0%,rgba(200,48,48,.2) 100%); height:100%; }
-  .cc-bar.ai  { background:linear-gradient(180deg,var(--blue) 0%,var(--blue-l) 100%); height:33%; }
-  .cc-label { text-align:center; margin-top:14px; font-size:12px; color:var(--text-s); line-height:1.6; }
-  .cc-amount { font-size:13px; font-weight:700; color:var(--text); margin-top:6px; }
-  .cc-divider { display:flex; align-items:center; color:var(--text-xs); font-size:20px; padding-bottom:105px; }
+  /* コスト比較 */
+  .cc { display:flex; gap:18px; align-items:flex-end; width:100%; }
+  .cc-c { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .cc-a { width:100%; display:flex; align-items:flex-end; justify-content:center; height:205px; }
+  .cc-b { width:80px; border-radius:10px 10px 0 0; }
+  .cc-b.o { background:linear-gradient(180deg,#C83030,rgba(200,48,48,.18)); height:100%; }
+  .cc-b.n { background:linear-gradient(180deg,var(--blue),var(--blue-l)); height:32%; }
+  .cc-l { text-align:center; margin-top:14px; font-size:12px; color:var(--sub); line-height:1.6; }
+  .cc-m { font-size:13px; font-weight:700; color:var(--dark); margin-top:6px; }
+  .cc-v { display:flex; align-items:center; color:var(--xs); font-size:20px; padding-bottom:100px; }
 
-  /* 一元管理フロー図 理由02 */
-  .flow-diagram { width:100%; }
-  .fd-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-  .fd-row:last-child { margin-bottom:0; }
-  .fd-box {
-    flex:1; padding:14px 16px;
-    background:#fff; border:1px solid var(--border);
-    border-radius:8px; text-align:center;
-    box-shadow:0 2px 8px rgba(0,0,0,.06);
-  }
-  .fd-box .fb-num { font-size:10px; font-weight:700; color:var(--blue); letter-spacing:.15em; margin-bottom:4px; }
-  .fd-box .fb-title { font-size:13px; font-weight:700; color:var(--text); }
-  .fd-box .fb-sub { font-size:11px; color:var(--text-s); margin-top:3px; line-height:1.4; }
-  .fd-arrow { color:var(--blue); font-size:16px; flex-shrink:0; }
-  .fd-unified {
-    margin-top:14px; padding:14px 20px;
-    background:var(--blue-bg); border:1.5px solid var(--border);
-    border-radius:8px; text-align:center;
-  }
-  .fd-unified .fu-label { font-size:11px; color:var(--text-s); margin-bottom:4px; }
-  .fd-unified .fu-text { font-size:14px; font-weight:900; color:var(--blue); }
+  /* フロー図 */
+  .fd { width:100%; }
+  .fd-r { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .fd-b { flex:1; padding:13px 14px; background:#fff; border:1px solid var(--bdr); border-radius:8px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .fd-b .n { font-size:10px; font-weight:700; color:var(--blue); letter-spacing:.15em; margin-bottom:4px; }
+  .fd-b .t { font-size:13px; font-weight:700; color:var(--dark); }
+  .fd-b .s { font-size:11px; color:var(--sub); margin-top:3px; line-height:1.4; }
+  .fd-arr { color:var(--blue); font-size:16px; flex-shrink:0; }
+  .fd-u { margin-top:14px; padding:14px 20px; background:#fff; border:1.5px solid var(--bdr); border-radius:10px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.07); }
+  .fd-u .ul { font-size:11px; color:var(--sub); margin-bottom:4px; }
+  .fd-u .ut { font-size:14px; font-weight:900; color:var(--blue); }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     FEATURE SLIDES (8-12): 共通
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .feature { background:#FFFFFF; display:flex; }
-  .feature .fl {
-    width:390px; flex-shrink:0;
+  /* ════════════════════════════════════
+     FEATURE (8-12)
+  ════════════════════════════════════ */
+  .ft { background:#fff; display:flex; }
+  .ft .fl {
+    width:385px; flex-shrink:0;
     display:flex; flex-direction:column; justify-content:center;
-    padding:0 44px; position:relative;
+    padding:40px 44px 40px 52px; position:relative;
   }
-  .feature .fl::before {
-    content:''; position:absolute; top:0; left:0; bottom:0; width:5px;
-    background:linear-gradient(180deg,var(--blue),var(--blue-l));
-  }
-  .feature .fr {
-    flex:1; background:var(--blue-bg);
-    border-left:1px solid var(--border);
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
+  .ft .fl::before { content:''; position:absolute; top:0; left:0; bottom:0; width:5px; background:linear-gradient(180deg,var(--blue),var(--blue-l)); }
+  .ft .fl::after { content:''; position:absolute; top:0; right:0; bottom:0; width:1px; background:var(--bdr); }
+  .ft .fr {
+    flex:1; background:var(--bg-blue);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:22px 26px;
   }
-  .feature .sec-num {
-    font-size:10px; font-weight:700; letter-spacing:.28em;
-    color:var(--blue); text-transform:uppercase; margin-bottom:12px;
+  .ft .sn {
+    display:inline-flex; align-items:center; gap:8px;
+    margin-bottom:14px;
   }
-  .feature h2 {
-    font-size:23px; font-weight:900; color:var(--text);
-    line-height:1.35; margin-bottom:18px;
-    padding-left:14px; border-left:4px solid var(--blue);
-  }
-  .feature .f-body { font-size:13px; color:var(--text-s); line-height:1.8; margin-bottom:16px; }
-  .feature .flist { display:flex; flex-direction:column; gap:10px; }
-  .feature .fitem {
-    padding:12px 14px;
-    background:var(--blue-bg2);
-    border-left:3px solid var(--blue);
-    border-radius:0 6px 6px 0;
-  }
-  .feature .fitem h3 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:3px; }
-  .feature .fitem p { font-size:12px; color:var(--text-s); line-height:1.55; }
-  .feature .fitem strong { color:var(--blue); font-weight:700; }
-  .feature .f-pts { display:flex; flex-direction:column; gap:10px; }
-  .feature .f-pt {
-    display:flex; gap:10px; align-items:flex-start;
-    padding:10px 14px;
-    background:var(--blue-bg2);
-    border-left:3px solid var(--blue);
-    border-radius:0 6px 6px 0;
-  }
-  .feature .f-pt p { font-size:12px; color:var(--text); line-height:1.5; }
-  .feature .f-pt strong { color:var(--blue); }
-  .feature .f-steps { display:flex; flex-direction:column; gap:9px; }
-  .feature .f-step {
-    display:flex; gap:10px; align-items:flex-start;
-    padding:10px 14px;
-    background:var(--blue-bg2);
-    border-left:3px solid var(--blue);
-    border-radius:0 6px 6px 0;
-  }
-  .feature .f-step .fs-n {
-    width:22px; height:22px; border-radius:50%;
+  .ft .sn-badge {
+    padding:3px 10px; border-radius:4px;
     background:var(--blue); color:#fff;
-    font-size:11px; font-weight:900;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
+    font-size:10px; font-weight:700; letter-spacing:.2em;
   }
-  .feature .f-step p { font-size:12px; color:var(--text); line-height:1.5; }
-  .feature .f-step strong { color:var(--blue); }
-  .feature .fcards { display:flex; flex-direction:column; gap:12px; width:100%; }
-  .feature .fcard {
-    background:#fff; border-radius:10px; padding:16px 18px;
-    border-left:4px solid var(--blue);
-    box-shadow:0 2px 10px rgba(0,0,0,.07);
-  }
-  .feature .fcard h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
-  .feature .fcard p { font-size:12px; color:var(--text-s); line-height:1.55; }
-  .feature .badge {
-    padding:14px 18px;
-    background:var(--blue-bg); border:1.5px solid var(--border);
-    border-radius:8px; text-align:center;
-  }
-  .feature .badge .badge-big { font-size:20px; font-weight:900; color:var(--blue); }
-  .feature .badge .badge-sub { font-size:12px; color:var(--text-s); margin-top:3px; }
+  .ft h2 { font-size:23px; font-weight:900; color:var(--dark); line-height:1.35; margin-bottom:18px; padding-left:14px; border-left:4px solid var(--blue); }
+  .ft .fb { font-size:13px; color:var(--sub); line-height:1.82; margin-bottom:16px; }
+  .ft .fl-list { display:flex; flex-direction:column; gap:10px; }
+  .ft .fi { padding:11px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
+  .ft .fi h3 { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:3px; }
+  .ft .fi p  { font-size:12px; color:var(--sub); line-height:1.55; }
+  .ft .fi strong { color:var(--blue); font-weight:700; }
+  .ft .fpts { display:flex; flex-direction:column; gap:9px; }
+  .ft .fpt { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
+  .ft .fpt p { font-size:12px; color:var(--dark); line-height:1.5; }
+  .ft .fpt strong { color:var(--blue); }
+  .ft .fst { display:flex; flex-direction:column; gap:8px; }
+  .ft .fs  { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
+  .ft .fsn { width:22px; height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ft .fs p { font-size:12px; color:var(--dark); line-height:1.5; }
+  .ft .fs strong { color:var(--blue); }
+  .ft .fcds { display:flex; flex-direction:column; gap:11px; width:100%; }
+  .ft .fcd { background:#fff; border-radius:10px; padding:15px 18px; border-left:4px solid var(--blue); box-shadow:0 2px 10px rgba(0,0,0,.07); }
+  .ft .fcd h3 { font-size:13.5px; font-weight:700; color:var(--dark); margin-bottom:4px; }
+  .ft .fcd p  { font-size:12px; color:var(--sub); line-height:1.55; }
+  .ft .fbdg { padding:13px 18px; background:#fff; border:1.5px solid var(--bdr); border-radius:9px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .ft .fbdg .bb { font-size:19px; font-weight:900; color:var(--blue); }
+  .ft .fbdg .bs { font-size:12px; color:var(--sub); margin-top:3px; }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 13: 架電オプション
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s-opt { background:var(--bg-soft); }
-  .s-opt .s-head {
-    position:absolute; top:0; left:0; right:0; height:92px;
-    background:var(--blue);
+  /* ════════════════════════════════════
+     S-OPT 架電オプション
+  ════════════════════════════════════ */
+  .s-opt { background:var(--soft); }
+  .s-opt .hd {
+    position:absolute; top:0; left:0; right:0; height:96px;
+    background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l));
     clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
-    display:flex; align-items:center; padding:0 52px 22px;
-    gap:16px;
+    display:flex; align-items:center; padding:0 52px 26px; gap:14px;
   }
-  .s-opt .opt-badge {
-    padding:3px 12px;
-    background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4);
-    border-radius:20px; font-size:10px; font-weight:700;
-    color:#fff; letter-spacing:.14em;
-  }
-  .s-opt .s-head h2 { font-size:22px; font-weight:900; color:#fff; }
-  .s-opt .cards-grid {
-    position:absolute; top:104px; left:28px; right:28px;
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;
-  }
-  .s-opt .ocard {
-    background:#fff; border-radius:12px; padding:20px 18px;
-    box-shadow:0 3px 14px rgba(0,0,0,.08);
-    border-top:3px solid var(--blue);
-    display:flex; flex-direction:column; gap:8px;
-  }
-  .s-opt .ocard .oico { margin-bottom:4px; }
-  .s-opt .ocard h3 { font-size:14px; font-weight:700; color:var(--text); }
-  .s-opt .ocard p { font-size:12px; color:var(--text-s); line-height:1.6; }
-  .s-opt .note {
-    position:absolute; bottom:20px; left:28px; right:28px;
-    text-align:center; font-size:12px; color:var(--text-s);
-    padding:12px 24px; background:#fff;
-    border-radius:8px; border:1px solid var(--border);
-    box-shadow:0 2px 8px rgba(0,0,0,.05);
-  }
+  .s-opt .ob { padding:3px 12px; border-radius:20px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4); font-size:10px; font-weight:700; color:#fff; letter-spacing:.16em; }
+  .s-opt .hd h2 { font-size:22px; font-weight:900; color:#fff; }
+  .s-opt .cg { position:absolute; top:108px; left:26px; right:26px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .s-opt .oc { background:#fff; border-radius:14px; padding:22px 18px; box-shadow:0 4px 20px rgba(0,0,0,.09); border-top:3px solid var(--blue); display:flex; flex-direction:column; gap:9px; }
+  .s-opt .oi { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:10px; background:var(--bg-blue); }
+  .s-opt .oc h3 { font-size:14px; font-weight:700; color:var(--dark); }
+  .s-opt .oc p  { font-size:12px; color:var(--sub); line-height:1.65; }
+  .s-opt .nt { position:absolute; bottom:18px; left:26px; right:26px; text-align:center; font-size:12px; color:var(--sub); padding:11px 22px; background:#fff; border-radius:8px; border:1px solid var(--bdr); box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 14: 導入効果
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s-results { background:var(--bg-soft); }
-  .s-results .s-head {
-    position:absolute; top:0; left:0; right:0; height:92px;
-    background:var(--blue);
+  /* ════════════════════════════════════
+     S-RES 導入効果
+  ════════════════════════════════════ */
+  .s-res { background:var(--soft); }
+  .s-res .hd {
+    position:absolute; top:0; left:0; right:0; height:96px;
+    background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l));
     clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
     display:flex; flex-direction:column; justify-content:center;
-    padding:0 52px 22px;
+    padding:0 52px 26px;
   }
-  .s-results .s-head h2 { font-size:24px; font-weight:900; color:#fff; }
-  .s-results .s-head p { font-size:12px; color:rgba(255,255,255,.72); margin-top:3px; }
-  .s-results .metrics {
-    position:absolute; top:106px; left:24px; right:24px;
-    display:flex; gap:12px;
-  }
-  .s-results .mc {
-    flex:1; background:#fff; border-radius:12px;
-    padding:22px 14px; text-align:center;
-    box-shadow:0 3px 14px rgba(0,0,0,.08);
-    border-top:3px solid var(--blue);
-  }
-  .s-results .mnum {
-    font-size:42px; font-weight:900; color:var(--blue);
-    line-height:1; margin-bottom:4px;
-  }
-  .s-results .mnum .mu { font-size:22px; }
-  .s-results .mlabel { font-size:12px; color:var(--text-s); line-height:1.55; margin-top:6px; }
-  .s-results .submets {
-    position:absolute; bottom:20px; left:24px; right:24px;
-    background:#fff; border:1px solid var(--border);
-    border-radius:10px; padding:14px 20px;
-    display:flex; justify-content:space-around; align-items:center;
-    box-shadow:0 2px 10px rgba(0,0,0,.06);
-  }
-  .s-results .smi { text-align:center; }
-  .s-results .smn { font-size:18px; font-weight:900; color:var(--blue); }
-  .s-results .sml { font-size:11px; color:var(--text-xs); margin-top:2px; }
-  .s-results .smdiv { width:1px; height:30px; background:var(--border); }
+  .s-res .hd h2 { font-size:24px; font-weight:900; color:#fff; }
+  .s-res .hd p  { font-size:12px; color:rgba(255,255,255,.7); margin-top:3px; }
+  .s-res .mcs { position:absolute; top:108px; left:22px; right:22px; display:flex; gap:12px; }
+  .s-res .mc { flex:1; background:#fff; border-radius:14px; padding:20px 12px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.09); border-top:3px solid var(--blue); }
+  .s-res .mn { font-size:42px; font-weight:900; color:var(--blue); line-height:1; margin-bottom:4px; }
+  .s-res .mn .mu { font-size:22px; }
+  .s-res .ml { font-size:12px; color:var(--sub); line-height:1.55; margin-top:6px; }
+  .s-res .sm { position:absolute; bottom:18px; left:22px; right:22px; background:#fff; border:1px solid var(--bdr); border-radius:12px; padding:14px 20px; display:flex; justify-content:space-around; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+  .s-res .si { text-align:center; }
+  .s-res .sn { font-size:18px; font-weight:900; color:var(--blue); }
+  .s-res .sl { font-size:11px; color:var(--xs); margin-top:2px; }
+  .s-res .sd { width:1px; height:30px; background:var(--bdr); }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 15: ご利用の流れ
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s-flow { background:#fff; }
-  .s-flow .s-head {
-    position:absolute; top:0; left:0; right:0; height:92px;
-    background:var(--blue);
-    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
-    display:flex; align-items:center;
-    padding:0 52px 22px;
-  }
-  .s-flow .s-head h2 { font-size:22px; font-weight:900; color:#fff; }
-  .s-flow .stepsrow {
-    position:absolute; top:106px; left:24px; right:24px;
-    display:flex; gap:10px; align-items:stretch;
-  }
-  .s-flow .sbox {
-    flex:1; background:#fff;
-    border:1px solid var(--border); border-top:3px solid var(--blue);
-    border-radius:12px; padding:22px 14px; text-align:center;
-    box-shadow:0 3px 14px rgba(0,0,0,.07);
-  }
-  .s-flow .sn {
-    width:40px; height:40px; border-radius:50%;
-    background:var(--blue); color:#fff;
-    font-size:18px; font-weight:900;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 12px;
-  }
-  .s-flow .sbox h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; }
-  .s-flow .sbox p { font-size:12px; color:var(--text-s); line-height:1.6; }
-  .s-flow .sarrow { display:flex; align-items:center; padding-top:20px; color:var(--blue); font-size:18px; }
-  .s-flow .snote {
-    position:absolute; bottom:20px; left:0; right:0;
-    text-align:center; font-size:12px; color:var(--text-xs);
-  }
+  /* ════════════════════════════════════
+     S-FLOW 流れ
+  ════════════════════════════════════ */
+  .s-fl { background:#fff; }
+  .s-fl .hd { position:absolute; top:0; left:0; right:0; height:96px; background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l)); clip-path:polygon(0 0,100% 0,100% 66%,0 100%); display:flex; align-items:center; padding:0 52px 26px; }
+  .s-fl .hd h2 { font-size:22px; font-weight:900; color:#fff; }
+  .s-fl .sr { position:absolute; top:108px; left:22px; right:22px; display:flex; gap:10px; align-items:stretch; }
+  .s-fl .sb { flex:1; background:#fff; border:1px solid var(--bdr); border-top:4px solid var(--blue); border-radius:14px; padding:22px 14px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+  .s-fl .nc { width:42px; height:42px; border-radius:50%; background:var(--blue); color:#fff; font-size:19px; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  .s-fl .sb h3 { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+  .s-fl .sb p  { font-size:12px; color:var(--sub); line-height:1.6; }
+  .s-fl .sa { display:flex; align-items:center; padding-top:22px; color:var(--blue); font-size:18px; }
+  .s-fl .nt { position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:12px; color:var(--xs); }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     SLIDE 16: CTA
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .s-cta { background:linear-gradient(140deg,#004D72 0%,#0077A8 55%,#00A8D4 100%); }
-  .s-cta .stripe { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#FFD870,#FFB300,#FFD870); }
-  .s-cta .ring1 {
-    position:absolute; right:-70px; top:-70px;
-    width:360px; height:360px;
-    border:55px solid rgba(255,255,255,.06); border-radius:50%;
-  }
-  .s-cta .ring2 {
-    position:absolute; right:50px; bottom:-90px;
-    width:260px; height:260px;
-    border:38px solid rgba(255,255,255,.04); border-radius:50%;
-  }
-  .s-cta .content {
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    text-align:center; padding:40px 60px;
-  }
-  .s-cta .catch { font-size:10.5px; font-weight:700; letter-spacing:.32em; color:rgba(255,255,255,.65); text-transform:uppercase; margin-bottom:18px; }
-  .s-cta .copy { font-size:36px; font-weight:900; color:#fff; line-height:1.28; margin-bottom:12px; }
-  .s-cta .copy em { color:#FFD870; font-style:normal; }
-  .s-cta .subcopy { font-size:14px; color:rgba(255,255,255,.78); line-height:1.8; margin-bottom:30px; max-width:500px; }
-  .s-cta .ctabtn {
-    display:inline-block; padding:16px 52px;
-    background:#fff; color:var(--blue);
-    font-size:16px; font-weight:900; border-radius:50px;
-    letter-spacing:.06em; box-shadow:0 6px 24px rgba(0,0,0,.2);
-    text-decoration:none; margin-bottom:20px; font-family:inherit;
-  }
-  .s-cta .contact { font-size:12px; color:rgba(255,255,255,.5); letter-spacing:.08em; }
-  .s-cta .logo { position:absolute; bottom:22px; right:38px; font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.3); }
+  /* ════════════════════════════════════
+     S-CTA
+  ════════════════════════════════════ */
+  .s-cta { background:linear-gradient(140deg,#003E58 0%,#005F7F 40%,#0088B8 80%,#00A8D4 100%); }
+  .s-cta .stripe { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#FFD040,#FFA000,#FFD040); }
+  .s-cta .r1 { position:absolute; right:-60px; top:-60px; width:340px; height:340px; border:52px solid rgba(255,255,255,.06); border-radius:50%; }
+  .s-cta .r2 { position:absolute; right:60px; bottom:-80px; width:240px; height:240px; border:36px solid rgba(255,255,255,.04); border-radius:50%; }
+  .s-cta .r3 { position:absolute; left:-40px; bottom:-40px; width:200px; height:200px; border:28px solid rgba(255,255,255,.03); border-radius:50%; }
+  .s-cta .ct { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 70px; }
+  .s-cta .ca { font-size:10.5px; font-weight:700; letter-spacing:.32em; color:rgba(255,255,255,.62); text-transform:uppercase; margin-bottom:18px; }
+  .s-cta .cp { font-size:36px; font-weight:900; color:#fff; line-height:1.28; margin-bottom:12px; }
+  .s-cta .cp em { color:#FFD870; font-style:normal; }
+  .s-cta .cs { font-size:14px; color:rgba(255,255,255,.78); line-height:1.82; margin-bottom:30px; max-width:500px; }
+  .s-cta .btn { display:inline-block; padding:16px 52px; background:#fff; color:var(--blue); font-size:16px; font-weight:900; border-radius:50px; letter-spacing:.06em; box-shadow:0 8px 28px rgba(0,0,0,.22); text-decoration:none; margin-bottom:18px; font-family:inherit; }
+  .s-cta .cn { font-size:12px; color:rgba(255,255,255,.48); letter-spacing:.08em; }
+  .s-cta .lg { position:absolute; bottom:22px; right:36px; font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.28); }
 </style>
 </head>
 <body>
@@ -543,40 +348,54 @@
 
 <div id="scaler">
 
-<!-- ═══════════════════════════════════════
-     SLIDE 1: タイトル
-═══════════════════════════════════════ -->
+<!-- ══════════ S1: タイトル ══════════ -->
 <div class="slide s1 active">
-  <div class="bg-r">
-    <!-- AIネットワーク イラスト -->
-    <svg viewBox="0 0 340 440" fill="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:.55;">
-      <circle cx="170" cy="220" r="32" fill="#0077A8" opacity=".5"/>
-      <circle cx="80"  cy="130" r="18" fill="#00B4D8" opacity=".45"/>
-      <circle cx="260" cy="130" r="18" fill="#00B4D8" opacity=".45"/>
-      <circle cx="60"  cy="300" r="14" fill="#0077A8" opacity=".35"/>
-      <circle cx="280" cy="310" r="14" fill="#0077A8" opacity=".35"/>
-      <circle cx="170" cy="60"  r="11" fill="#00B4D8" opacity=".3"/>
-      <circle cx="170" cy="380" r="11" fill="#00B4D8" opacity=".3"/>
-      <circle cx="310" cy="200" r="8"  fill="#0077A8" opacity=".25"/>
-      <circle cx="30"  cy="210" r="8"  fill="#0077A8" opacity=".25"/>
-      <line x1="170" y1="220" x2="80"  y2="130" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="260" y2="130" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="60"  y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="280" y2="310" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="170" y2="60"  stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="170" y2="380" stroke="#0077A8" stroke-width="1.5" opacity=".35"/>
-      <line x1="170" y1="220" x2="310" y2="200" stroke="#0077A8" stroke-width="1" opacity=".25"/>
-      <line x1="170" y1="220" x2="30"  y2="210" stroke="#0077A8" stroke-width="1" opacity=".25"/>
-      <line x1="80"  y1="130" x2="170" y2="60"  stroke="#00B4D8" stroke-width="1" opacity=".2"/>
-      <line x1="260" y1="130" x2="310" y2="200" stroke="#00B4D8" stroke-width="1" opacity=".2"/>
-      <text x="170" y="228" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">AI</text>
+  <div class="r-panel">
+    <svg viewBox="0 0 420 540" fill="none">
+      <!-- 大きな装飾円弧 -->
+      <circle cx="320" cy="270" r="180" stroke="#0077A8" stroke-width="1" opacity=".18"/>
+      <circle cx="320" cy="270" r="130" stroke="#0077A8" stroke-width="1" opacity=".14"/>
+      <circle cx="320" cy="270" r="80" stroke="#0077A8" stroke-width="1" opacity=".12"/>
+      <!-- AIネットワーク -->
+      <circle cx="200" cy="200" r="30" fill="#0077A8" opacity=".55"/>
+      <circle cx="110" cy="140" r="16" fill="#00B4D8" opacity=".5"/>
+      <circle cx="300" cy="140" r="16" fill="#00B4D8" opacity=".5"/>
+      <circle cx="90"  cy="300" r="13" fill="#0077A8" opacity=".4"/>
+      <circle cx="310" cy="300" r="13" fill="#0077A8" opacity=".4"/>
+      <circle cx="200" cy="70"  r="10" fill="#00B4D8" opacity=".35"/>
+      <circle cx="200" cy="330" r="10" fill="#00B4D8" opacity=".35"/>
+      <circle cx="350" cy="220" r="8"  fill="#0077A8" opacity=".3"/>
+      <circle cx="50"  cy="220" r="8"  fill="#0077A8" opacity=".3"/>
+      <line x1="200" y1="200" x2="110" y2="140" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="300" y2="140" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="90"  y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="310" y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="200" y2="70"  stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="200" y2="330" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
+      <line x1="200" y1="200" x2="350" y2="220" stroke="#0077A8" stroke-width="1" opacity=".28"/>
+      <line x1="200" y1="200" x2="50"  y2="220" stroke="#0077A8" stroke-width="1" opacity=".28"/>
+      <text x="200" y="210" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">AI</text>
+      <!-- ドット群 -->
+      <circle cx="160" cy="380" r="4" fill="#0077A8" opacity=".22"/>
+      <circle cx="185" cy="390" r="3" fill="#0077A8" opacity=".18"/>
+      <circle cx="240" cy="380" r="4" fill="#0077A8" opacity=".22"/>
+      <circle cx="265" cy="395" r="3" fill="#0077A8" opacity=".16"/>
+      <circle cx="320" cy="370" r="5" fill="#0077A8" opacity=".2"/>
+      <circle cx="350" cy="390" r="3" fill="#0077A8" opacity=".15"/>
+      <circle cx="130" cy="420" r="3" fill="#0077A8" opacity=".15"/>
+      <circle cx="380" cy="420" r="4" fill="#0077A8" opacity=".14"/>
+      <!-- 上部ドット -->
+      <circle cx="130" cy="80"  r="4" fill="#0077A8" opacity=".2"/>
+      <circle cx="310" cy="70"  r="5" fill="#0077A8" opacity=".2"/>
+      <circle cx="370" cy="100" r="3" fill="#0077A8" opacity=".16"/>
+      <circle cx="80"  cy="110" r="3" fill="#0077A8" opacity=".16"/>
     </svg>
   </div>
-  <div class="top-line"></div>
+  <div class="top-bar"></div>
+  <div class="badge editable">BtoB 営業支援 SaaS</div>
   <div class="content">
-    <p class="eyebrow editable">BtoB 営業支援 SaaS</p>
-    <h1 class="title editable">AI<em>リスト</em><br>マスター</h1>
-    <p class="subtitle editable">AIが営業リストの"質"を根本から変える</p>
+    <h1 class="editable">AI<em>リスト</em><br>マスター</h1>
+    <p class="sub editable">AIが営業リストの"質"を根本から変える</p>
     <div class="tags">
       <span class="tag editable">リスト収集</span>
       <span class="tag editable">企業深堀り</span>
@@ -587,577 +406,423 @@
   <div class="logo editable">AIリストマスター</div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 2: 営業の現実
-═══════════════════════════════════════ -->
+<!-- ══════════ S2: 営業の現実 ══════════ -->
 <div class="slide s2">
-  <div class="hdr">
-    <h2 class="editable">営業マンの<em>不都合な真実</em></h2>
+  <div class="hd">
+    <div class="hd-inner">
+      <div class="hd-lbl">Sales Reality</div>
+      <h2 class="editable">営業マンの<em>不都合な真実</em></h2>
+    </div>
   </div>
   <div class="stats">
-    <div class="scard">
-      <div style="margin-bottom:8px;">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="16" stroke="#0077A8" stroke-width="2"/><path d="M18 9v9l6 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <div class="sc">
+      <div class="ico">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="17" stroke="#0077A8" stroke-width="2.5"/><path d="M19 10v9l7 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="snum editable">35<small>%</small></div>
-      <div class="slabel editable">実際に架電・訪問など<br>営業活動に使える時間</div>
+      <div class="num editable">35<small>%</small></div>
+      <div class="lbl editable">実際に架電・訪問など<br>営業活動に使える時間</div>
     </div>
-    <div class="scard">
-      <div style="margin-bottom:8px;">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="4" y="8" width="28" height="22" rx="3" stroke="#0077A8" stroke-width="2"/><path d="M4 14h28" stroke="#0077A8" stroke-width="2"/><circle cx="11" cy="24" r="2" fill="#0077A8"/><circle cx="18" cy="24" r="2" fill="#0077A8"/><circle cx="25" cy="24" r="2" fill="#0077A8"/></svg>
+    <div class="sc">
+      <div class="ico">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="22" rx="3" stroke="#0077A8" stroke-width="2.5"/><line x1="5" y1="16" x2="33" y2="16" stroke="#0077A8" stroke-width="2.5"/><circle cx="12" cy="25" r="2.5" fill="#0077A8"/><circle cx="19" cy="25" r="2.5" fill="#0077A8"/><circle cx="26" cy="25" r="2.5" fill="#0077A8"/></svg>
       </div>
-      <div class="snum editable">39<small>%</small></div>
-      <div class="slabel editable">事務作業・リスト調査など<br>間接業務に取られる時間</div>
+      <div class="num editable">39<small>%</small></div>
+      <div class="lbl editable">事務作業・リスト調査など<br>間接業務に取られる時間</div>
     </div>
-    <div class="scard">
-      <div style="margin-bottom:8px;">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="14" stroke="#0077A8" stroke-width="2"/><path d="M18 11v7l4 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><path d="M8 8l4 4" stroke="#0077A8" stroke-width="2" stroke-linecap="round" opacity=".4"/><path d="M28 8l-4 4" stroke="#0077A8" stroke-width="2" stroke-linecap="round" opacity=".4"/></svg>
+    <div class="sc">
+      <div class="ico">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><path d="M8 30 L8 20 Q8 8 19 8 Q30 8 30 20 L30 30" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="30" x2="33" y2="30" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><path d="M19 14 v6 l4 3" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
-      <div class="snum editable">25<small>%</small></div>
-      <div class="slabel editable">移動・待機・社内調整など<br>成果に直結しない時間</div>
+      <div class="num editable">25<small>%</small></div>
+      <div class="lbl editable">移動・待機・社内調整など<br>成果に直結しない時間</div>
     </div>
   </div>
-  <div class="footnote editable">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
+  <div class="fn editable">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 3: 3つの限界
-═══════════════════════════════════════ -->
+<!-- ══════════ S3: 3つの限界 ══════════ -->
 <div class="slide s3">
-  <div class="lcol">
+  <div class="lc">
+    <div class="lc-ico">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/><path d="M24 14 v12" stroke="#FFD870" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="33" r="2.5" fill="#FFD870"/></svg>
+    </div>
     <h2 class="editable">従来リストの<br>"3つの限界"</h2>
     <p class="editable">古いリストに頼り続ける限り、<br>営業の生産性は上がりません。</p>
   </div>
-  <div class="rcol">
-    <div class="pitem">
-      <div class="pnum editable">01</div>
-      <div class="ptxt">
+  <div class="rc">
+    <div class="pi">
+      <div class="pn editable">01</div>
+      <div class="pt">
         <h3 class="editable">データの鮮度・出所が不透明</h3>
         <p class="editable">いつ収集されたか分からないデータ。架電しても「廃業済み」「担当者変更」が続出し、時間とコストが無駄になります。</p>
       </div>
     </div>
-    <div class="pitem">
-      <div class="pnum editable">02</div>
-      <div class="ptxt">
+    <div class="pi">
+      <div class="pn editable">02</div>
+      <div class="pt">
         <h3 class="editable">業種1つでは企業の本質が見えない</h3>
         <p class="editable">「飲食業」だけでは刺さる提案ができません。企業の実態・フェーズを把握しないアプローチは空振りの連続です。</p>
       </div>
     </div>
-    <div class="pitem">
-      <div class="pnum editable">03</div>
-      <div class="ptxt">
+    <div class="pi">
+      <div class="pn editable">03</div>
+      <div class="pt">
         <h3 class="editable">リスト作成で本来の業務が止まる</h3>
-        <p class="editable">Webを手作業で検索・整理するのに膨大な時間を消費。結果、本来の営業時間そのものが奪われています。</p>
+        <p class="editable">Webを手作業で検索・整理するのに膨大な時間を消費。本来の営業時間そのものが奪われています。</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 4: 理由01
-═══════════════════════════════════════ -->
-<div class="slide reason">
-  <div class="l-stripe"></div>
+<!-- ══════════ S4: 理由01 ══════════ -->
+<div class="slide rsn">
+  <div class="stripe"></div>
   <div class="wm">01</div>
-  <div class="lpanel">
-    <div class="rlabel editable">Reason 01</div>
-    <h2 class="rtitle editable">確度の高い先だけに<br>架電できる</h2>
-    <p class="rbody editable">自社の取扱商材を登録するだけで、AIが「この商材と相性の良い企業」を自動でリストアップします。闇雲に架電するのではなく、受注確率の高い先だけに絞って営業活動を集中投下できます。<br><br>マッチングスコアが高いほど、成約率が上がります。</p>
+  <div class="lp">
+    <div class="rlbl editable">Reason 01</div>
+    <h2 class="rt editable">確度の高い先だけに<br>架電できる</h2>
+    <p class="rb editable">自社の取扱商材を登録するだけで、AIが「この商材と相性の良い企業」を自動でリストアップします。闇雲に架電するのではなく、受注確率の高い先だけに絞って営業活動を集中投下できます。<br><br>マッチングスコアが高いほど、成約率が上がります。</p>
   </div>
-  <div class="rpanel">
-    <div class="browser-frame">
-      <div class="browser-bar">
-        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
-        <div class="burl"></div>
-      </div>
+  <div class="rp">
+    <div class="bf">
+      <div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div>
       <img src="pptx_images/image27.png" alt="マッチングスコア" style="max-width:510px;">
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 5: 理由02
-═══════════════════════════════════════ -->
-<div class="slide reason">
-  <div class="l-stripe"></div>
+<!-- ══════════ S5: 理由02 ══════════ -->
+<div class="slide rsn">
+  <div class="stripe"></div>
   <div class="wm">02</div>
-  <div class="lpanel">
-    <div class="rlabel editable">Reason 02</div>
-    <h2 class="rtitle editable">アポリスト作成から<br>顧客管理まで一元管理</h2>
-    <p class="rbody editable">リストへのアプローチ履歴を入力するだけで、顧客管理も自動で完結。複数のツールを行き来する手間がなく、アポリスト作成・架電・履歴管理・商談フォローまでを一画面で管理できます。</p>
+  <div class="lp">
+    <div class="rlbl editable">Reason 02</div>
+    <h2 class="rt editable">アポリスト作成から<br>顧客管理まで一元管理</h2>
+    <p class="rb editable">リストへのアプローチ履歴を入力するだけで、顧客管理も自動で完結。複数のツールを行き来する手間がなく、アポリスト作成・架電・履歴管理・商談フォローまでを一画面で管理できます。</p>
   </div>
-  <div class="rpanel">
-    <div class="flow-diagram">
-      <div class="fd-row">
-        <div class="fd-box">
-          <div class="fb-num editable">STEP 01</div>
-          <div class="fb-title editable">アポリスト作成</div>
-          <div class="fb-sub editable">AIが商材マッチング済みリストを自動生成</div>
-        </div>
-        <div class="fd-arrow">&#9654;</div>
-        <div class="fd-box">
-          <div class="fb-num editable">STEP 02</div>
-          <div class="fb-title editable">アプローチ実行</div>
-          <div class="fb-sub editable">メール・架電でアプローチ。履歴を即記録</div>
-        </div>
-        <div class="fd-arrow">&#9654;</div>
-        <div class="fd-box">
-          <div class="fb-num editable">STEP 03</div>
-          <div class="fb-title editable">顧客管理</div>
-          <div class="fb-sub editable">商談進捗・フォロー状況をリストで一括管理</div>
-        </div>
+  <div class="rp">
+    <div class="fd">
+      <div class="fd-r">
+        <div class="fd-b"><div class="n editable">STEP 01</div><div class="t editable">アポリスト作成</div><div class="s editable">AIが商材マッチング済みリストを自動生成</div></div>
+        <div class="fd-arr">&#9654;</div>
+        <div class="fd-b"><div class="n editable">STEP 02</div><div class="t editable">アプローチ実行</div><div class="s editable">メール・架電でアプローチ。履歴を即記録</div></div>
+        <div class="fd-arr">&#9654;</div>
+        <div class="fd-b"><div class="n editable">STEP 03</div><div class="t editable">顧客管理</div><div class="s editable">商談進捗・フォロー状況をリストで一括管理</div></div>
       </div>
-      <div class="fd-unified">
-        <div class="fu-label editable">すべてAIリストマスター上で完結</div>
-        <div class="fu-text editable">ツールの切り替えゼロ ── 一画面で営業全体を管理</div>
+      <div class="fd-u">
+        <div class="ul editable">すべてAIリストマスター上で完結</div>
+        <div class="ut editable">ツールの切り替えゼロ ── 一画面で営業全体を管理</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 6: 理由03
-═══════════════════════════════════════ -->
-<div class="slide reason">
-  <div class="l-stripe"></div>
+<!-- ══════════ S6: 理由03 ══════════ -->
+<div class="slide rsn">
+  <div class="stripe"></div>
   <div class="wm">03</div>
-  <div class="lpanel">
-    <div class="rlabel editable">Reason 03</div>
-    <h2 class="rtitle editable">リスト作成時間を大幅削減<br>架電に集中できる</h2>
-    <p class="rbody editable">テレアポ業界では、100件リストの手作業作成に平均4〜8時間かかるとされています。AIリストマスターなら数十秒で完了。浮いた時間をそのまま架電・商談活動に充てることができます。</p>
+  <div class="lp">
+    <div class="rlbl editable">Reason 03</div>
+    <h2 class="rt editable">リスト作成時間を大幅削減<br>架電に集中できる</h2>
+    <p class="rb editable">テレアポ業界では、100件リストの手作業作成に平均4〜8時間かかるとされています。AIリストマスターなら数十秒で完了。浮いた時間をそのまま架電・商談活動に充てることができます。</p>
   </div>
-  <div class="rpanel">
-    <div class="bar-chart">
-      <div class="bc-item">
-        <div class="bc-name editable">手作業でのリスト作成（100件）</div>
-        <div class="bc-track">
-          <div class="bc-fill manual"><span class="editable">平均 4〜8時間</span></div>
-        </div>
-        <div class="bc-sub editable">検索・確認・入力・整理…すべて人力</div>
+  <div class="rp">
+    <div class="bc">
+      <div class="bc-i">
+        <div class="bc-n editable">手作業でのリスト作成（100件）</div>
+        <div class="bc-t"><div class="bc-f m"><span class="editable">平均 4〜8時間</span></div></div>
+        <div class="bc-s editable">検索・確認・入力・整理…すべて人力</div>
       </div>
-      <div class="bc-item">
-        <div class="bc-name editable">AIリストマスターでのリスト作成（100件）</div>
-        <div class="bc-track">
-          <div class="bc-fill ai"><span class="editable">数十秒</span></div>
-        </div>
-        <div class="bc-sub editable">条件を入力するだけ。あとはAIが全自動</div>
+      <div class="bc-i">
+        <div class="bc-n editable">AIリストマスターでのリスト作成（100件）</div>
+        <div class="bc-t"><div class="bc-f a"><span class="editable">数十秒</span></div></div>
+        <div class="bc-s editable">条件を入力するだけ。あとはAIが全自動</div>
       </div>
-      <div class="bc-callout">
-        <div class="bc-sub2 editable">削減できる時間を架電に充てると</div>
-        <div class="bc-main editable">架電件数・アポ獲得数が大幅に増加</div>
+      <div class="bc-box">
+        <div class="b1 editable">削減できる時間を架電に充てると</div>
+        <div class="b2 editable">架電件数・アポ獲得数が大幅に増加</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 7: 理由04
-═══════════════════════════════════════ -->
-<div class="slide reason">
-  <div class="l-stripe"></div>
+<!-- ══════════ S7: 理由04 ══════════ -->
+<div class="slide rsn">
+  <div class="stripe"></div>
   <div class="wm">04</div>
-  <div class="lpanel">
-    <div class="rlabel editable">Reason 04</div>
-    <h2 class="rtitle editable">人を雇うより、<br>はるかに安価</h2>
-    <p class="rbody editable">リスト作成専任スタッフを採用・育成するコストと比較して、AIリストマスターは圧倒的に低コストです。品質・スピード・コストのすべてを同時に改善できます。<br><br>人材不足の今、AIが最も現実的な解決策です。</p>
+  <div class="lp">
+    <div class="rlbl editable">Reason 04</div>
+    <h2 class="rt editable">人を雇うより、<br>はるかに安価</h2>
+    <p class="rb editable">リスト作成専任スタッフを採用・育成するコストと比較して、AIリストマスターは圧倒的に低コストです。品質・スピード・コストのすべてを同時に改善できます。<br><br>人材不足の今、AIが最も現実的な解決策です。</p>
   </div>
-  <div class="rpanel">
-    <div class="cost-compare">
-      <div class="cc-col">
-        <div class="cc-bar-area"><div class="cc-bar old"></div></div>
-        <div class="cc-label editable">リスト作成<br>専任スタッフ採用</div>
-        <div class="cc-amount editable">採用費＋月給＋育成コスト</div>
+  <div class="rp">
+    <div class="cc">
+      <div class="cc-c">
+        <div class="cc-a"><div class="cc-b o"></div></div>
+        <div class="cc-l editable">リスト作成<br>専任スタッフ採用</div>
+        <div class="cc-m editable">採用費＋月給＋育成コスト</div>
       </div>
-      <div class="cc-divider">VS</div>
-      <div class="cc-col">
-        <div class="cc-bar-area"><div class="cc-bar ai"></div></div>
-        <div class="cc-label editable">AIリスト<br>マスター</div>
-        <div class="cc-amount editable">月額サブスクのみ</div>
+      <div class="cc-v">VS</div>
+      <div class="cc-c">
+        <div class="cc-a"><div class="cc-b n"></div></div>
+        <div class="cc-l editable">AIリスト<br>マスター</div>
+        <div class="cc-m editable">月額サブスクのみ</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 8: FEATURE 01 データ収集
-═══════════════════════════════════════ -->
-<div class="slide feature">
+<!-- ══════════ S8: FEATURE 01 ══════════ -->
+<div class="slide ft">
   <div class="fl">
-    <div class="sec-num editable">FEATURE 01</div>
+    <div class="sn"><span class="sn-badge">FEATURE 01</span></div>
     <h2 class="editable">営業DBを<br>AIが自動構築</h2>
-    <p class="f-body editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
-    <div class="fcards">
-      <div class="fcard">
-        <h3 class="editable">法人リスト（gBiz × AI）</h3>
-        <p class="editable">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p>
-      </div>
-      <div class="fcard">
-        <h3 class="editable">個人店舗（SNS・ポータル）</h3>
-        <p class="editable">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p>
-      </div>
+    <p class="fb editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
+    <div class="fcds">
+      <div class="fcd"><h3 class="editable">法人リスト（gBiz × AI）</h3><p class="editable">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p></div>
+      <div class="fcd"><h3 class="editable">個人店舗（SNS・ポータル）</h3><p class="editable">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p></div>
     </div>
   </div>
   <div class="fr">
-    <!-- データ収集イラスト -->
-    <svg width="260" height="260" viewBox="0 0 260 260" fill="none">
+    <!-- データ収集フロー -->
+    <svg width="280" height="300" viewBox="0 0 280 300" fill="none">
       <!-- クラウド -->
-      <path d="M80 108 Q68 108 68 96 Q68 78 86 78 Q86 56 108 56 Q120 44 138 56 Q156 44 172 62 Q188 62 188 80 Q200 80 200 96 Q200 108 188 108 Z" fill="#EAF4FA" stroke="#0077A8" stroke-width="2.5"/>
-      <text x="134" y="98" text-anchor="middle" font-size="11" font-weight="700" fill="#0077A8" font-family="sans-serif">gBiz / SNS</text>
+      <path d="M70 95 Q56 95 56 82 Q56 64 74 64 Q74 40 97 40 Q110 28 128 40 Q148 28 166 46 Q184 46 184 64 Q196 64 196 82 Q196 95 182 95 Z" fill="#D4EDF9" stroke="#0077A8" stroke-width="2.5"/>
+      <text x="126" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#0077A8" font-family="sans-serif">gBiz / SNS</text>
       <!-- 矢印 -->
-      <line x1="130" y1="112" x2="130" y2="148" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="4 3"/>
-      <path d="M120 140 L130 152 L140 140" stroke="#0077A8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="126" y1="98" x2="126" y2="135" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <polygon points="116,128 126,142 136,128" fill="#0077A8"/>
       <!-- DB -->
-      <ellipse cx="130" cy="168" rx="38" ry="10" fill="#0077A8" opacity=".2"/>
-      <rect x="92" y="160" width="76" height="28" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <ellipse cx="130" cy="188" rx="38" ry="10" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <ellipse cx="130" cy="160" rx="38" ry="10" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <text x="130" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#0077A8" font-family="sans-serif">営業DB</text>
-      <!-- 右矢印 -->
-      <line x1="170" y1="174" x2="204" y2="174" stroke="#0077A8" stroke-width="2" stroke-dasharray="4 3"/>
-      <path d="M196 166 L208 174 L196 182" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="126" cy="160" rx="44" ry="12" fill="#0077A8" opacity=".25"/>
+      <rect x="82" y="150" width="88" height="34" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="126" cy="184" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="126" cy="150" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <text x="126" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#0077A8" font-family="sans-serif">営業DB</text>
+      <!-- 矢印 右 -->
+      <line x1="172" y1="168" x2="208" y2="168" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <polygon points="202,158 216,168 202,178" fill="#0077A8"/>
       <!-- リスト -->
-      <rect x="208" y="152" width="42" height="44" rx="5" fill="#EAF4FA" stroke="#0077A8" stroke-width="1.5"/>
-      <line x1="215" y1="164" x2="243" y2="164" stroke="#0077A8" stroke-width="1.5"/>
-      <line x1="215" y1="172" x2="243" y2="172" stroke="#0077A8" stroke-width="1.5"/>
-      <line x1="215" y1="180" x2="236" y2="180" stroke="#0077A8" stroke-width="1.5"/>
-      <text x="229" y="206" text-anchor="middle" font-size="10" fill="#0077A8" font-family="sans-serif" font-weight="700">営業リスト</text>
-      <!-- 常時更新バッジ -->
-      <rect x="74" y="208" width="112" height="28" rx="14" fill="#0077A8"/>
-      <text x="130" y="227" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="sans-serif">常時最新データを自動更新</text>
+      <rect x="216" y="148" width="50" height="52" rx="6" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <line x1="224" y1="162" x2="258" y2="162" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <line x1="224" y1="172" x2="258" y2="172" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <line x1="224" y1="182" x2="248" y2="182" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <text x="241" y="214" text-anchor="middle" font-size="11" fill="#0077A8" font-family="sans-serif" font-weight="700">営業リスト</text>
+      <!-- バッジ -->
+      <rect x="50" y="228" width="176" height="32" rx="16" fill="#0077A8"/>
+      <text x="138" y="249" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="sans-serif">常時最新データを自動更新</text>
     </svg>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 9: FEATURE 02 企業深堀り
-═══════════════════════════════════════ -->
-<div class="slide feature">
+<!-- ══════════ S9: FEATURE 02 ══════════ -->
+<div class="slide ft">
   <div class="fl">
-    <div class="sec-num editable">FEATURE 02</div>
+    <div class="sn"><span class="sn-badge">FEATURE 02</span></div>
     <h2 class="editable">企業を<br>深堀りする</h2>
-    <div class="flist">
-      <div class="fitem">
-        <h3 class="editable">業界・業種の複数割当</h3>
-        <p class="editable">1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p>
-      </div>
-      <div class="fitem">
-        <h3 class="editable">事業内容のAI要約</h3>
-        <p class="editable">長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p>
-      </div>
-      <div class="fitem">
-        <h3 class="editable">AIタグ自動発行</h3>
-        <p class="editable">「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p>
-      </div>
+    <div class="fl-list">
+      <div class="fi"><h3 class="editable">業界・業種の複数割当</h3><p class="editable">1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p></div>
+      <div class="fi"><h3 class="editable">事業内容のAI要約</h3><p class="editable">長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p></div>
+      <div class="fi"><h3 class="editable">AIタグ自動発行</h3><p class="editable">「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="screen-label editable">実際の画面</p>
-    <div class="browser-frame">
-      <div class="browser-bar">
-        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
-        <div class="burl"></div>
-      </div>
-      <img src="screen_企業深堀.png" alt="企業深堀り画面" style="max-width:520px;">
-    </div>
+    <p class="sc-lbl editable">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="screen_企業深堀.png" alt="企業深堀り" style="max-width:520px;"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 10: FEATURE 03 リスト作成
-═══════════════════════════════════════ -->
-<div class="slide feature">
+<!-- ══════════ S10: FEATURE 03 ══════════ -->
+<div class="slide ft">
   <div class="fl">
-    <div class="sec-num editable">FEATURE 03</div>
+    <div class="sn"><span class="sn-badge">FEATURE 03</span></div>
     <h2 class="editable">自然言語でリスト生成<br>× AIマッチングスコア</h2>
-    <div class="flist">
-      <div class="fitem">
-        <h3 class="editable">話し言葉で条件を指定</h3>
-        <p class="editable">「東京都内のIT企業で50名以上」と入力するだけ。AIが意図を汲んで即座にリストを生成します。</p>
-      </div>
-      <div class="fitem">
-        <h3 class="editable">AIマッチングスコア 0〜100</h3>
-        <p class="editable">自社商材との親和性をスコア化。上位企業から順にアプローチするだけで商談転換率が劇的に向上。</p>
-      </div>
-      <div class="fitem">
-        <h3 class="editable">作業時間を数時間から数秒に</h3>
-        <p class="editable">従来の手作業リスト作成が、AIで即完了。営業時間を本来の活動へ集中できます。</p>
-      </div>
+    <div class="fl-list">
+      <div class="fi"><h3 class="editable">話し言葉で条件を指定</h3><p class="editable">「東京都内のIT企業で50名以上」と入力するだけ。AIが意図を汲んで即座にリストを生成します。</p></div>
+      <div class="fi"><h3 class="editable">AIマッチングスコア 0〜100</h3><p class="editable">自社商材との親和性をスコア化。上位企業から順にアプローチするだけで商談転換率が劇的に向上。</p></div>
+      <div class="fi"><h3 class="editable">作業時間を数時間から数秒に</h3><p class="editable">従来の手作業リスト作成が、AIで即完了。営業時間を本来の活動へ集中できます。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="screen-label editable">実際の画面</p>
-    <div class="browser-frame">
-      <div class="browser-bar">
-        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
-        <div class="burl"></div>
-      </div>
-      <img src="pptx_images/image20.png" alt="AI詳細検索画面" style="max-width:570px;">
-    </div>
+    <p class="sc-lbl editable">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image20.png" alt="AI詳細検索" style="max-width:570px;"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 11: FEATURE 04 AIメール
-═══════════════════════════════════════ -->
-<div class="slide feature">
+<!-- ══════════ S11: FEATURE 04 ══════════ -->
+<div class="slide ft">
   <div class="fl">
-    <div class="sec-num editable">FEATURE 04</div>
+    <div class="sn"><span class="sn-badge">FEATURE 04</span></div>
     <h2 class="editable">AIが営業メールを<br>自動生成する</h2>
-    <p class="f-body editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。</p>
-    <div class="f-pts">
-      <div class="f-pt">
-        <p class="editable"><strong>件名・本文を自動生成</strong><br>企業ごとに最適な文面をAIが作成</p>
-      </div>
-      <div class="f-pt">
-        <p class="editable"><strong>返信率 +28%</strong><br>パーソナライズで反応率が劇的改善</p>
-      </div>
-      <div class="f-pt">
-        <p class="editable"><strong>1クリックで送信準備完了</strong><br>確認・編集後そのまま送れる</p>
-      </div>
+    <p class="fb editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。</p>
+    <div class="fpts">
+      <div class="fpt"><p class="editable"><strong>件名・本文を自動生成</strong><br>企業ごとに最適な文面をAIが作成</p></div>
+      <div class="fpt"><p class="editable"><strong>返信率 +28%</strong><br>パーソナライズで反応率が劇的改善</p></div>
+      <div class="fpt"><p class="editable"><strong>1クリックで送信準備完了</strong><br>確認・編集後そのまま送れる</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="screen-label editable">実際の画面</p>
-    <div class="browser-frame">
-      <div class="browser-bar">
-        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
-        <div class="burl"></div>
-      </div>
-      <img src="pptx_images/image46.png" alt="AIメール自動生成画面" style="max-width:570px;">
-    </div>
+    <p class="sc-lbl editable">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image46.png" alt="AIメール" style="max-width:570px;"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 12: FEATURE 05 架電管理
-═══════════════════════════════════════ -->
-<div class="slide feature">
+<!-- ══════════ S12: FEATURE 05 ══════════ -->
+<div class="slide ft">
   <div class="fl">
-    <div class="sec-num editable">FEATURE 05</div>
+    <div class="sn"><span class="sn-badge">FEATURE 05</span></div>
     <h2 class="editable">架電管理で<br>アポ率を変える</h2>
-    <p class="f-body editable">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
-    <div class="f-steps">
-      <div class="f-step">
-        <div class="fs-n">1</div>
-        <p class="editable"><strong>企業情報を即サマリー表示</strong><br>架電前に事業内容・AIタグをAIが3行で整理。準備ゼロ。</p>
-      </div>
-      <div class="f-step">
-        <div class="fs-n">2</div>
-        <p class="editable"><strong>AIがトークスクリプト自動生成</strong><br>企業理解 × 自社商材で最適な切り出しフレーズを提案。</p>
-      </div>
-      <div class="f-step">
-        <div class="fs-n">3</div>
-        <p class="editable"><strong>架電結果をワンクリック記録</strong><br>ステータス管理・次回アクションをAIが自動で提案します。</p>
-      </div>
+    <p class="fb editable">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
+    <div class="fst">
+      <div class="fs"><div class="fsn">1</div><p class="editable"><strong>企業情報を即サマリー表示</strong><br>架電前に事業内容・AIタグをAIが3行で整理。</p></div>
+      <div class="fs"><div class="fsn">2</div><p class="editable"><strong>AIがトークスクリプト自動生成</strong><br>企業理解 × 自社商材で最適な切り出しフレーズを提案。</p></div>
+      <div class="fs"><div class="fsn">3</div><p class="editable"><strong>架電結果をワンクリック記録</strong><br>ステータス管理・次回アクションをAIが自動で提案します。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="screen-label editable">実際の画面</p>
-    <div class="browser-frame">
-      <div class="browser-bar">
-        <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
-        <div class="burl"></div>
-      </div>
-      <img src="pptx_images/image34.png" alt="架電管理画面" style="max-width:570px;">
-    </div>
+    <p class="sc-lbl editable">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image34.png" alt="架電管理" style="max-width:570px;"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 13: 架電オプション
-═══════════════════════════════════════ -->
+<!-- ══════════ S13: 架電オプション ══════════ -->
 <div class="slide s-opt">
-  <div class="s-head">
-    <span class="opt-badge editable">OPTION</span>
+  <div class="hd">
+    <span class="ob editable">OPTION</span>
     <h2 class="editable">架電管理オプション機能</h2>
   </div>
-  <div class="cards-grid">
-    <div class="ocard">
-      <div class="oico">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><path d="M10 22 Q10 16 16 12 Q22 16 22 22" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="16" cy="10" r="3" fill="#0077A8"/></svg>
+  <div class="cg">
+    <div class="oc">
+      <div class="oi">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M7 19 Q7 12 13 9 Q19 12 19 19" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="7" r="3" fill="#0077A8"/></svg>
       </div>
       <h3 class="editable">架電実行サポート</h3>
       <p class="editable">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで実現します。</p>
     </div>
-    <div class="ocard">
-      <div class="oico">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><rect x="7" y="18" width="4" height="8" rx="1" fill="#0077A8"/><rect x="14" y="12" width="4" height="14" rx="1" fill="#0077A8"/><rect x="21" y="7" width="4" height="19" rx="1" fill="#0077A8" opacity=".6"/></svg>
+    <div class="oc">
+      <div class="oi">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="15" width="4" height="8" rx="1" fill="#0077A8"/><rect x="11" y="10" width="4" height="13" rx="1" fill="#0077A8"/><rect x="18" y="5" width="4" height="18" rx="1" fill="#0077A8" opacity=".65"/></svg>
       </div>
       <h3 class="editable">分析・レポート</h3>
       <p class="editable">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握できます。</p>
     </div>
-    <div class="ocard">
-      <div class="oico">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="6" fill="#EAF4FA"/><circle cx="16" cy="16" r="9" stroke="#0077A8" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="#0077A8"/><path d="M16 5v3M16 24v3M5 16h3M24 16h3" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="oc">
+      <div class="oi">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="8" stroke="#0077A8" stroke-width="2"/><circle cx="13" cy="13" r="3.5" fill="#0077A8"/><path d="M13 4v2M13 20v2M4 13h2M20 13h2" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
       <h3 class="editable">KPIレポート</h3>
       <p class="editable">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます。</p>
     </div>
   </div>
-  <div class="note editable">架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける営業組織へ。</div>
+  <div class="nt editable">架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける営業組織へ。</div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 14: 導入効果
-═══════════════════════════════════════ -->
-<div class="slide s-results">
-  <div class="s-head">
+<!-- ══════════ S14: 導入効果 ══════════ -->
+<div class="slide s-res">
+  <div class="hd">
     <h2 class="editable">導入効果 ── 数字が証明する、変革の実績</h2>
     <p class="editable">実際の導入企業データに基づく成果指標</p>
   </div>
-  <div class="metrics">
-    <div class="mc">
-      <div class="mnum editable">87<span class="mu">%</span></div>
-      <div class="mlabel editable">業務時間削減<br>（90h→11.5h / 月）</div>
-    </div>
-    <div class="mc">
-      <div class="mnum" style="font-size:28px;line-height:1.2;"><span class="editable">1.8〜<br>2.4</span><span class="mu">倍</span></div>
-      <div class="mlabel editable">アポ獲得率<br>向上</div>
-    </div>
-    <div class="mc">
-      <div class="mnum editable">+28<span class="mu">%</span></div>
-      <div class="mlabel editable">メール返信率<br>改善</div>
-    </div>
-    <div class="mc">
-      <div class="mnum editable">+32<span class="mu">%</span></div>
-      <div class="mlabel editable">商談転換率<br>向上</div>
-    </div>
+  <div class="mcs">
+    <div class="mc"><div class="mn editable">87<span class="mu">%</span></div><div class="ml editable">業務時間削減<br>（90h→11.5h / 月）</div></div>
+    <div class="mc"><div class="mn" style="font-size:28px;line-height:1.2;"><span class="editable">1.8〜<br>2.4</span><span class="mu">倍</span></div><div class="ml editable">アポ獲得率<br>向上</div></div>
+    <div class="mc"><div class="mn editable">+28<span class="mu">%</span></div><div class="ml editable">メール返信率<br>改善</div></div>
+    <div class="mc"><div class="mn editable">+32<span class="mu">%</span></div><div class="ml editable">商談転換率<br>向上</div></div>
   </div>
-  <div class="submets">
-    <div class="smi"><div class="smn editable">週5h</div><div class="sml editable">リスト作業削減</div></div>
-    <div class="smdiv"></div>
-    <div class="smi"><div class="smn editable">3日以内</div><div class="sml editable">導入・稼働開始</div></div>
-    <div class="smdiv"></div>
-    <div class="smi"><div class="smn editable">即日</div><div class="sml editable">リスト自動生成</div></div>
-    <div class="smdiv"></div>
-    <div class="smi"><div class="smn editable">早期</div><div class="sml editable">ROI回収を実現</div></div>
+  <div class="sm">
+    <div class="si"><div class="sn editable">週5h</div><div class="sl editable">リスト作業削減</div></div>
+    <div class="sd"></div>
+    <div class="si"><div class="sn editable">3日以内</div><div class="sl editable">導入・稼働開始</div></div>
+    <div class="sd"></div>
+    <div class="si"><div class="sn editable">即日</div><div class="sl editable">リスト自動生成</div></div>
+    <div class="sd"></div>
+    <div class="si"><div class="sn editable">早期</div><div class="sl editable">ROI回収を実現</div></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 15: ご利用の流れ
-═══════════════════════════════════════ -->
-<div class="slide s-flow">
-  <div class="s-head">
-    <h2 class="editable">ご利用の流れ ── 最短3日で営業が変わる</h2>
+<!-- ══════════ S15: ご利用の流れ ══════════ -->
+<div class="slide s-fl">
+  <div class="hd"><h2 class="editable">ご利用の流れ ── 最短3日で営業が変わる</h2></div>
+  <div class="sr">
+    <div class="sb"><div class="nc">1</div><h3 class="editable">自社情報登録</h3><p class="editable">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p></div>
+    <div class="sa">&#9654;</div>
+    <div class="sb"><div class="nc">2</div><h3 class="editable">AIにリスト依頼</h3><p class="editable">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p></div>
+    <div class="sa">&#9654;</div>
+    <div class="sb"><div class="nc">3</div><h3 class="editable">アプローチ実行</h3><p class="editable">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p></div>
+    <div class="sa">&#9654;</div>
+    <div class="sb"><div class="nc">4</div><h3 class="editable">成果管理・改善</h3><p class="editable">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p></div>
   </div>
-  <div class="stepsrow">
-    <div class="sbox">
-      <div class="sn">1</div>
-      <h3 class="editable">自社情報登録</h3>
-      <p class="editable">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p>
-    </div>
-    <div class="sarrow">&#9654;</div>
-    <div class="sbox">
-      <div class="sn">2</div>
-      <h3 class="editable">AIにリスト依頼</h3>
-      <p class="editable">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p>
-    </div>
-    <div class="sarrow">&#9654;</div>
-    <div class="sbox">
-      <div class="sn">3</div>
-      <h3 class="editable">アプローチ実行</h3>
-      <p class="editable">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p>
-    </div>
-    <div class="sarrow">&#9654;</div>
-    <div class="sbox">
-      <div class="sn">4</div>
-      <h3 class="editable">成果管理・改善</h3>
-      <p class="editable">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p>
-    </div>
-  </div>
-  <div class="snote editable">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
+  <div class="nt editable">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SLIDE 16: CTA
-═══════════════════════════════════════ -->
+<!-- ══════════ S16: CTA ══════════ -->
 <div class="slide s-cta">
   <div class="stripe"></div>
-  <div class="ring1"></div>
-  <div class="ring2"></div>
-  <div class="content">
-    <p class="catch editable">First Step</p>
-    <h2 class="copy editable">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
-    <p class="subcopy editable">AIリストマスターは、導入翌日から営業リストの質が変わります。<br>「うちの業種でも使えるか？」その疑問、30分の相談で解決します。</p>
-    <a href="#" class="ctabtn editable">無料相談を申し込む</a>
-    <p class="contact editable">お電話・メール・Web会議 ご希望の方法でご対応します</p>
+  <div class="r1"></div><div class="r2"></div><div class="r3"></div>
+  <div class="ct">
+    <p class="ca editable">First Step</p>
+    <h2 class="cp editable">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
+    <p class="cs editable">AIリストマスターは、導入翌日から営業リストの質が変わります。<br>「うちの業種でも使えるか？」その疑問、30分の相談で解決します。</p>
+    <a href="#" class="btn editable">無料相談を申し込む</a>
+    <p class="cn editable">お電話・メール・Web会議 ご希望の方法でご対応します</p>
   </div>
-  <div class="logo editable">AIリストマスター</div>
+  <div class="lg editable">AIリストマスター</div>
 </div>
 
 </div><!-- /scaler -->
 
 <script>
 (function(){
-  const slides = document.querySelectorAll('.slide');
-  const navEl  = document.getElementById('nav');
-  const ctr    = document.getElementById('counter');
-  const scaler = document.getElementById('scaler');
-  const TOTAL  = slides.length;
-  let cur = 0;
-
-  slides.forEach((_,i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i===0?' active':'');
-    d.onclick = () => goTo(i);
-    navEl.appendChild(d);
+  const slides=document.querySelectorAll('.slide');
+  const nav=document.getElementById('nav');
+  const ctr=document.getElementById('counter');
+  const sc=document.getElementById('scaler');
+  const N=slides.length;
+  let c=0;
+  slides.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' active':'');
+    d.onclick=()=>go(i);
+    nav.appendChild(d);
   });
-
-  function goTo(n) {
-    slides[cur].classList.remove('active');
-    navEl.children[cur].classList.remove('active');
-    cur = ((n % TOTAL) + TOTAL) % TOTAL;
-    slides[cur].classList.add('active');
-    navEl.children[cur].classList.add('active');
-    ctr.textContent = (cur+1) + ' / ' + TOTAL;
+  function go(n){
+    slides[c].classList.remove('active');
+    nav.children[c].classList.remove('active');
+    c=((n%N)+N)%N;
+    slides[c].classList.add('active');
+    nav.children[c].classList.add('active');
+    ctr.textContent=(c+1)+' / '+N;
   }
-
-  window.nextSlide = () => goTo(cur+1);
-  window.prevSlide = () => goTo(cur-1);
-
-  document.addEventListener('keydown', e => {
-    if (document.body.classList.contains('edit-mode')) {
-      if (document.activeElement && document.activeElement.isContentEditable) return;
-    }
-    if (e.key==='ArrowRight'||e.key==='ArrowDown') goTo(cur+1);
-    if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   goTo(cur-1);
+  window.nextSlide=()=>go(c+1);
+  window.prevSlide=()=>go(c-1);
+  document.addEventListener('keydown',e=>{
+    if(document.body.classList.contains('edit-mode')&&document.activeElement?.isContentEditable)return;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')go(c+1);
+    if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(c-1);
   });
-
-  function scale() {
-    const s = Math.min(window.innerWidth/960, window.innerHeight/540);
-    const x = (window.innerWidth  - 960*s) / 2;
-    const y = (window.innerHeight - 540*s) / 2;
-    scaler.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  function scale(){
+    const s=Math.min(window.innerWidth/960,window.innerHeight/540);
+    const x=(window.innerWidth-960*s)/2;
+    const y=(window.innerHeight-540*s)/2;
+    sc.style.transform=`translate(${x}px,${y}px) scale(${s})`;
   }
-  scale();
-  window.addEventListener('resize', scale);
-
-  window.toggleEdit = function() {
-    const b   = document.body;
-    const btn = document.getElementById('btn-edit');
-    const els = document.querySelectorAll('.editable');
-    if (b.classList.contains('edit-mode')) {
+  scale(); window.addEventListener('resize',scale);
+  window.toggleEdit=function(){
+    const b=document.body,btn=document.getElementById('btn-edit'),els=document.querySelectorAll('.editable');
+    if(b.classList.contains('edit-mode')){
       b.classList.remove('edit-mode');
-      els.forEach(el => el.removeAttribute('contenteditable'));
-      btn.classList.remove('active');
-      btn.textContent = '編集モード';
-    } else {
+      els.forEach(e=>e.removeAttribute('contenteditable'));
+      btn.classList.remove('active'); btn.textContent='編集モード';
+    }else{
       b.classList.add('edit-mode');
-      els.forEach(el => el.setAttribute('contenteditable','true'));
-      btn.classList.add('active');
-      btn.textContent = '編集終了';
+      els.forEach(e=>e.setAttribute('contenteditable','true'));
+      btn.classList.add('active'); btn.textContent='編集終了';
     }
   };
-
-  window.saveHTML = function() {
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'AIリストマスター_営業資料.html';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  window.saveHTML=function(){
+    const blob=new Blob(['<!DOCTYPE html>\n'+document.documentElement.outerHTML],{type:'text/html;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='AIリストマスター_営業資料.html'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   };
 })();
 </script>
