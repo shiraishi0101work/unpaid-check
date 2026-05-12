@@ -804,6 +804,89 @@
     box-shadow: 0 16px 60px rgba(0,0,0,.75), 0 0 0 1px rgba(0,180,216,.15);
   }
 
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     HYBRID DESIGN — オクトン × AIリストマスター
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* ─ Reason slides: 白背景・ダークテキスト（オクトン方式）─ */
+  .reason { background: #FFFFFF; }
+  .reason .side-accent { background: linear-gradient(180deg, var(--teal2), var(--teal)); }
+  .reason .rnum { color: rgba(0,119,168,.045); }
+  .reason .rlabel { color: var(--teal2); }
+  .reason .rtitle { color: #0D1B2A; border-left-color: var(--teal2); }
+  .reason .rbody { color: rgba(13,27,42,.68); }
+  .reason .rpanel {
+    background: #EEF6FB;
+    border-left: 1px solid rgba(0,119,168,.12);
+  }
+  /* フロー図 → 白背景用 */
+  .fd-box { background: #FFFFFF; border-color: rgba(0,119,168,.22); box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+  .fd-box .fb-num { color: var(--teal2); }
+  .fd-box .fb-title { color: #0D1B2A; }
+  .fd-box .fb-sub { color: rgba(13,27,42,.55); }
+  .fd-arrow { color: var(--teal2); }
+  .fd-unified { background: rgba(0,119,168,.07); border-color: rgba(0,119,168,.3); }
+  .fd-unified .fu-label { color: rgba(13,27,42,.5); }
+  .fd-unified .fu-text { color: var(--teal2); }
+  /* 棒グラフ → 白背景用 */
+  .bc-name { color: rgba(13,27,42,.65); }
+  .bc-track { background: rgba(0,0,0,.06); }
+  .bc-sub { color: rgba(13,27,42,.42); }
+  /* コスト比較 → 白背景用 */
+  .cc-label { color: rgba(13,27,42,.65); }
+  .cc-divider { color: rgba(13,27,42,.22); padding-bottom: 100px; }
+  .cc-amount { color: var(--teal2); }
+  /* 白背景でのブラウザフレーム */
+  .reason .browser-frame {
+    box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 0 0 1px rgba(0,119,168,.15);
+  }
+
+  /* ─ S3: 課題カードを白丸角に（オクトン方式 on 暗背景）─ */
+  .s3 .pitem {
+    background: rgba(255,255,255,.93);
+    border: none;
+    border-left: 5px solid var(--teal2);
+    border-radius: 10px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.22);
+  }
+  .s3 .pnum { color: var(--teal2); }
+  .s3 .ptxt h3 { color: #0D1B2A; }
+  .s3 .ptxt p { color: rgba(13,27,42,.62); }
+
+  /* ─ Feature slides 右パネル: 白に近い明るい背景 ─ */
+  .s5 .rpanel {
+    background: #EEF6FB;
+  }
+  .s5 .scard {
+    background: #FFFFFF;
+    border-left: 4px solid var(--teal2);
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  .s5 .scard h3 { color: #0D1B2A; }
+  .s5 .scard p { color: rgba(13,27,42,.62); }
+  .s5 .badge {
+    background: rgba(0,119,168,.07);
+    border-color: var(--teal2);
+  }
+  .s5 .badge big { color: var(--teal2); }
+  .s5 .badge p { color: rgba(13,27,42,.62); }
+
+  .s6 .rpanel { background: #EEF6FB; border-left: 1px solid rgba(0,119,168,.12); }
+  .s6 .screenlabel { color: rgba(13,27,42,.45); }
+  .s6 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
+
+  .s7 .rpanel { background: #EEF6FB; }
+  .s7 .screenlabel { color: rgba(13,27,42,.45); }
+  .s7 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
+
+  .s8 .rcol { background: #EEF6FB; border-left: 1px solid rgba(0,119,168,.12); }
+  .s8 .screenlabel { color: rgba(13,27,42,.45); }
+  .s8 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
+
+  .s9 .rpanel { background: #EEF6FB; }
+  .s9 .screenlabel { color: rgba(13,27,42,.45); }
+  .s9 .browser-frame { box-shadow: 0 8px 28px rgba(0,0,0,.13), 0 0 0 1px rgba(0,119,168,.15); }
+
   /* ─ 共通: スライドに微妙な光沢を追加 ─ */
   .slide::after {
     content: '';
