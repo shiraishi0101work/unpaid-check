@@ -6,333 +6,306 @@
 <title>AIリストマスター 営業資料</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-  :root {
-    --blue:   #0077A8;
-    --blue-l: #00B4D8;
-    --blue-d: #005272;
-    --bg-blue:#EAF4FA;
-    --bg2:    #F2F8FC;
-    --bg:     #FFFFFF;
-    --soft:   #F4F7FB;
-    --dark:   #0D1B2A;
-    --sub:    rgba(13,27,42,.58);
-    --xs:     rgba(13,27,42,.36);
-    --bdr:    rgba(0,119,168,.14);
-    --red-b:  #B83030;
-    --red-t:  #D06020;
+  :root{
+    --B:#0077A8; --BL:#00B4D8; --BD:#004E72;
+    --BG:#EAF4FA; --BG2:#F2F8FC;
+    --W:#FFFFFF; --D:#0D1B2A;
+    --S:rgba(13,27,42,.58); --XS:rgba(13,27,42,.36);
+    --Y:#FFB800; --YL:#FFD870;
+    --R:#C83030;
   }
 
-  html,body { width:100%; height:100%; background:#192736; font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif; overflow:hidden; user-select:none; }
+  html,body{width:100%;height:100%;background:#14222E;
+    font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic UI',sans-serif;
+    overflow:hidden;user-select:none;}
+  #scaler{position:fixed;top:0;left:0;width:960px;height:540px;transform-origin:top left;}
+  .slide{position:absolute;inset:0;width:960px;height:540px;overflow:hidden;
+    opacity:0;pointer-events:none;transition:opacity .35s;background:#fff;}
+  .slide.active{opacity:1;pointer-events:all;}
 
-  #scaler { position:fixed; top:0; left:0; width:960px; height:540px; transform-origin:top left; }
+  /* ── Chrome ── */
+  #toolbar{position:fixed;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:200;}
+  #toolbar button{padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.2);
+    background:rgba(13,27,42,.88);color:#fff;font-size:12px;cursor:pointer;font-family:inherit;transition:background .2s;}
+  #toolbar button:hover{background:rgba(0,119,168,.5);}
+  #toolbar button.active{background:var(--B);}
+  #counter{position:fixed;top:10px;right:16px;color:rgba(255,255,255,.38);font-size:12px;z-index:200;}
+  .nb{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.22);
+    border:1.5px solid rgba(255,255,255,.18);color:#fff;width:40px;height:40px;border-radius:50%;
+    font-size:18px;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+  .nb:hover{background:rgba(0,119,168,.55);}
+  #btn-prev{left:8px;}#btn-next{right:8px;}
+  #nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:200;}
+  .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28);cursor:pointer;transition:background .25s,transform .25s;}
+  .dot.active{background:#fff;transform:scale(1.4);}
+  .e{outline:none;}
+  body.em .e{outline:1.5px dashed rgba(0,119,168,.5);cursor:text;border-radius:2px;}
+  body.em .e:focus{outline:2px solid var(--B);background:rgba(0,119,168,.05);}
 
-  .slide { position:absolute; inset:0; width:960px; height:540px; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .35s; background:#fff; }
-  .slide.active { opacity:1; pointer-events:all; }
+  /* ── Browser frame ── */
+  .bf{background:#EDF2F7;border-radius:10px;overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.07);max-width:100%;}
+  .bb{background:#DDE4ED;height:26px;display:flex;align-items:center;padding:0 10px;gap:6px;}
+  .bd{width:10px;height:10px;border-radius:50%;}
+  .bd.r{background:#FF5F57;}.bd.y{background:#FEBC2E;}.bd.g{background:#28C840;}
+  .bu{flex:1;height:13px;background:rgba(0,0,0,.1);border-radius:4px;margin-left:8px;}
+  .bf img{display:block;width:100%;height:auto;image-rendering:crisp-edges;}
 
-  /* ─ Chrome ─ */
-  #toolbar { position:fixed; top:8px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:200; }
-  #toolbar button { padding:5px 14px; border-radius:20px; border:1.5px solid rgba(255,255,255,.2); background:rgba(13,27,42,.88); color:#fff; font-size:12px; cursor:pointer; font-family:inherit; transition:background .2s; }
-  #toolbar button:hover { background:rgba(0,119,168,.5); }
-  #toolbar button.active { background:var(--blue); border-color:var(--blue); }
-  #counter { position:fixed; top:10px; right:16px; color:rgba(255,255,255,.38); font-size:12px; z-index:200; }
-  .nav-btn { position:fixed; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.22); border:1.5px solid rgba(255,255,255,.18); color:#fff; width:40px; height:40px; border-radius:50%; font-size:18px; cursor:pointer; z-index:200; display:flex; align-items:center; justify-content:center; transition:background .2s; }
-  .nav-btn:hover { background:rgba(0,119,168,.55); }
-  #btn-prev { left:8px; } #btn-next { right:8px; }
-  #nav { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:7px; z-index:200; }
-  .dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.28); cursor:pointer; transition:background .25s,transform .25s; }
-  .dot.active { background:#fff; transform:scale(1.4); }
-  .editable { outline:none; }
-  body.edit-mode .editable { outline:1.5px dashed rgba(0,119,168,.5); cursor:text; border-radius:2px; }
-  body.edit-mode .editable:focus { outline:2px solid var(--blue); background:rgba(0,119,168,.05); }
-
-  /* ─ Browser ─ */
-  .bf { background:#EDF2F7; border-radius:10px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.07); max-width:100%; }
-  .bb { background:#DDE4ED; height:26px; display:flex; align-items:center; padding:0 10px; gap:6px; }
-  .bd { width:10px; height:10px; border-radius:50%; }
-  .bd.r{background:#FF5F57;} .bd.y{background:#FEBC2E;} .bd.g{background:#28C840;}
-  .bu { flex:1; height:13px; background:rgba(0,0,0,.1); border-radius:4px; margin-left:8px; }
-  .bf img { display:block; width:100%; height:auto; image-rendering:crisp-edges; }
-  .sc-lbl { font-size:10px; letter-spacing:.18em; color:var(--xs); text-transform:uppercase; margin-bottom:8px; }
-
-  /* ─ Dot grid ─ */
-  .dot-bg { background-image:radial-gradient(rgba(0,119,168,.09) 1px,transparent 1px); background-size:22px 22px; }
-
-  /* ════════════════════════════════════
-     S1 タイトル
-  ════════════════════════════════════ */
-  .s1 { background:#fff; }
-  .s1 .r-panel {
-    position:absolute; top:0; right:0; bottom:0; width:420px;
-    background:linear-gradient(140deg,#D4EDF9 0%,#B2D9F0 100%);
-    clip-path:polygon(16% 0,100% 0,100% 100%,0 100%);
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S1: タイトル — チラシヒーロー
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s1{background:#fff;}
+  .s1 .lp{
+    position:absolute;top:0;left:0;bottom:0;width:480px;
+    background:linear-gradient(145deg,var(--BD) 0%,var(--B) 60%,var(--BL) 100%);
+    clip-path:polygon(0 0,92% 0,100% 100%,0 100%);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:0 72px 0 56px;
   }
-  .s1 .r-panel svg { position:absolute; inset:0; width:100%; height:100%; }
-  .s1 .top-bar { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,var(--blue),var(--blue-l)); }
-  .s1 .badge {
-    position:absolute; top:28px; left:72px;
-    padding:4px 16px; border-radius:20px;
-    background:var(--bg-blue); border:1.5px solid var(--bdr);
-    font-size:10.5px; font-weight:700; letter-spacing:.28em; color:var(--blue);
+  .s1 .lp .eyebrow{font-size:10px;font-weight:700;letter-spacing:.35em;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:20px;}
+  .s1 h1{font-size:76px;font-weight:900;color:#fff;line-height:.92;letter-spacing:-.04em;margin-bottom:18px;}
+  .s1 h1 em{color:var(--YL);font-style:normal;}
+  .s1 .tagline{font-size:15px;color:rgba(255,255,255,.82);line-height:1.7;margin-bottom:28px;}
+  .s1 .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .s1 .chip{padding:5px 14px;border:1.5px solid rgba(255,255,255,.3);border-radius:20px;font-size:11.5px;color:rgba(255,255,255,.85);}
+  .s1 .rp{position:absolute;top:0;right:0;bottom:0;left:455px;
+    display:flex;flex-direction:column;justify-content:center;padding:0 44px;}
+  .s1 .kv-lbl{font-size:10px;font-weight:700;letter-spacing:.25em;color:var(--B);text-transform:uppercase;margin-bottom:20px;}
+  .s1 .kv-list{display:flex;flex-direction:column;gap:14px;}
+  .s1 .kv{display:flex;align-items:flex-start;gap:14px;}
+  .s1 .kv-num{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--B);color:#fff;font-size:14px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
-  .s1 .content { position:absolute; top:70px; left:72px; right:440px; bottom:40px; display:flex; flex-direction:column; justify-content:center; }
-  .s1 h1 { font-size:86px; font-weight:900; color:var(--dark); line-height:.92; letter-spacing:-.04em; margin-bottom:18px; }
-  .s1 h1 em { color:var(--blue); font-style:normal; }
-  .s1 .sub { font-size:16px; color:var(--sub); letter-spacing:.04em; margin-bottom:30px; line-height:1.6; }
-  .s1 .tags { display:flex; gap:9px; flex-wrap:wrap; }
-  .s1 .tag { padding:5px 14px; border:1.5px solid var(--bdr); border-radius:20px; font-size:12px; color:var(--blue); background:var(--bg2); }
-  .s1 .logo { position:absolute; bottom:22px; right:36px; font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--xs); }
+  .s1 .kv-txt h3{font-size:14px;font-weight:700;color:var(--D);margin-bottom:2px;}
+  .s1 .kv-txt p{font-size:12px;color:var(--S);line-height:1.5;}
+  .s1 .logo{position:absolute;bottom:22px;right:36px;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--XS);}
 
-  /* ════════════════════════════════════
-     S2 営業の現実
-  ════════════════════════════════════ */
-  .s2 { background:var(--soft); }
-  .s2 .hd {
-    position:absolute; top:0; left:0; right:0; height:126px;
-    background:linear-gradient(100deg,var(--blue-d) 0%,var(--blue) 60%,var(--blue-l) 100%);
-    clip-path:polygon(0 0,100% 0,100% 74%,0 100%);
-    display:flex; align-items:center; padding:0 56px 24px;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S2: 統計 — 暗背景 大インパクト
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s2{background:linear-gradient(140deg,#081420 0%,#0D2035 60%,#0A2840 100%);}
+  .s2 .hd{
+    position:absolute;top:0;left:0;right:0;height:112px;
+    background:linear-gradient(100deg,var(--BD),var(--B),var(--BL));
+    clip-path:polygon(0 0,100% 0,100% 72%,0 100%);
+    display:flex;align-items:center;padding:0 56px 22px;
   }
-  .s2 .hd-inner { display:flex; flex-direction:column; }
-  .s2 .hd-lbl { font-size:10px; font-weight:700; letter-spacing:.3em; color:rgba(255,255,255,.65); text-transform:uppercase; margin-bottom:6px; }
-  .s2 .hd h2 { font-size:26px; font-weight:900; color:#fff; }
-  .s2 .hd h2 em { color:#FFD870; font-style:normal; }
-  .s2 .stats { position:absolute; top:136px; left:30px; right:30px; display:flex; gap:16px; }
-  .s2 .sc {
-    flex:1; background:#fff; border-radius:16px; padding:22px 18px 20px;
-    text-align:center; box-shadow:0 6px 28px rgba(0,0,0,.1);
-    position:relative; overflow:hidden;
+  .s2 .hd h2{font-size:26px;font-weight:900;color:#fff;}
+  .s2 .hd h2 em{color:var(--YL);font-style:normal;}
+  .s2 .stats{position:absolute;top:120px;left:30px;right:30px;display:flex;gap:16px;}
+  .s2 .sc{
+    flex:1;border-radius:16px;padding:26px 18px 22px;text-align:center;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    position:relative;overflow:hidden;
   }
-  .s2 .sc::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--blue),var(--blue-l)); }
-  .s2 .ico { margin-bottom:10px; }
-  .s2 .num { font-size:76px; font-weight:900; color:var(--blue); line-height:1; margin-bottom:8px; letter-spacing:-.03em; }
-  .s2 .num small { font-size:36px; }
-  .s2 .lbl { font-size:12.5px; color:var(--sub); line-height:1.7; }
-  .s2 .fn { position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:11px; color:var(--xs); }
+  .s2 .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--B),var(--BL));}
+  .s2 .sc .ico{margin-bottom:10px;}
+  .s2 .sc .num{font-size:76px;font-weight:900;color:#fff;line-height:1;margin-bottom:8px;letter-spacing:-.03em;}
+  .s2 .sc .num small{font-size:36px;}
+  .s2 .sc .lbl{font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.7;}
+  .s2 .fn{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:11px;color:rgba(255,255,255,.3);}
 
-  /* ════════════════════════════════════
-     S3 3つの限界
-  ════════════════════════════════════ */
-  .s3 { background:#fff; }
-  .s3 .lc {
-    position:absolute; top:0; left:0; bottom:0; width:300px;
-    background:linear-gradient(160deg,var(--blue-d) 0%,var(--blue) 100%);
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S3: 3つの限界
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s3{background:#fff;}
+  .s3 .lc{
+    position:absolute;top:0;left:0;bottom:0;width:300px;
+    background:linear-gradient(160deg,var(--BD) 0%,var(--B) 100%);
     clip-path:polygon(0 0,84% 0,100% 100%,0 100%);
-    display:flex; flex-direction:column; justify-content:center;
-    padding:0 52px 0 44px;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:0 50px 0 44px;
   }
-  .s3 .lc-ico { margin-bottom:18px; }
-  .s3 .lc h2 { font-size:21px; font-weight:900; color:#fff; line-height:1.45; margin-bottom:14px; }
-  .s3 .lc p { font-size:12.5px; color:rgba(255,255,255,.75); line-height:1.75; }
-  .s3 .rc { position:absolute; top:0; right:0; bottom:0; left:272px; display:flex; flex-direction:column; justify-content:center; gap:16px; padding:0 42px 0 34px; }
-  .s3 .pi {
-    display:flex; gap:16px; align-items:flex-start;
-    padding:18px 20px; background:#fff;
-    border:1px solid rgba(0,0,0,.07); border-left:5px solid var(--blue);
-    border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.08);
-  }
-  .s3 .pn { font-size:28px; font-weight:900; color:var(--blue); line-height:1; width:34px; flex-shrink:0; }
-  .s3 .pt h3 { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:4px; }
-  .s3 .pt p  { font-size:12px; color:var(--sub); line-height:1.6; }
+  .s3 .lc svg{margin-bottom:16px;}
+  .s3 .lc h2{font-size:21px;font-weight:900;color:#fff;line-height:1.45;margin-bottom:14px;}
+  .s3 .lc p{font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.75;}
+  .s3 .rc{position:absolute;top:0;right:0;bottom:0;left:272px;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:0 40px 0 34px;}
+  .s3 .pi{display:flex;gap:16px;align-items:flex-start;padding:18px 20px;background:#fff;border:1px solid rgba(0,0,0,.07);border-left:5px solid var(--B);border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.08);}
+  .s3 .pn{font-size:28px;font-weight:900;color:var(--B);line-height:1;width:34px;flex-shrink:0;}
+  .s3 .pt h3{font-size:14px;font-weight:700;color:var(--D);margin-bottom:4px;}
+  .s3 .pt p{font-size:12px;color:var(--S);line-height:1.6;}
 
-  /* ════════════════════════════════════
-     REASON (4-7)
-  ════════════════════════════════════ */
-  .rsn { background:#fff; }
-  .rsn .stripe { position:absolute; top:0; left:0; bottom:0; width:6px; background:linear-gradient(180deg,var(--blue),var(--blue-l)); z-index:2; }
-  .rsn .wm {
-    position:absolute; right:-28px; bottom:-60px;
-    font-size:380px; font-weight:900;
-    color:rgba(0,119,168,.032);
-    line-height:1; letter-spacing:-.06em;
-    pointer-events:none; z-index:0;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     REASON (4-7) — チラシ強化版
+     左:カラー+大見出し / 右:証拠
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .rsn{background:#fff;}
+  .rsn .lp{
+    position:absolute;top:0;left:0;bottom:0;width:440px;
+    background:linear-gradient(150deg,var(--BD) 0%,var(--B) 55%,var(--BL) 100%);
+    clip-path:polygon(0 0,92% 0,100% 100%,0 100%);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:0 68px 0 50px;
   }
-  .rsn .lp {
-    position:absolute; top:0; left:0; bottom:0; width:420px;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:0 50px 0 56px; z-index:1;
+  .rsn .rnbadge{
+    display:inline-flex;align-items:center;
+    padding:4px 14px;border-radius:20px;
+    background:rgba(255,255,255,.18);
+    font-size:10px;font-weight:700;letter-spacing:.28em;color:rgba(255,255,255,.85);
+    text-transform:uppercase;margin-bottom:20px;align-self:flex-start;
   }
-  .rsn .num-badge {
-    display:inline-flex; align-items:center; justify-content:center;
-    width:44px; height:44px; border-radius:50%;
-    background:var(--blue); color:#fff;
-    font-size:15px; font-weight:900; margin-bottom:16px;
+  .rsn .rhead{font-size:28px;font-weight:900;color:#fff;line-height:1.28;margin-bottom:18px;}
+  .rsn .rhead em{color:var(--YL);font-style:normal;}
+  .rsn .rbody{font-size:13px;color:rgba(255,255,255,.78);line-height:1.88;}
+  .rsn .wm{
+    position:absolute;right:-18px;bottom:-52px;
+    font-size:340px;font-weight:900;color:rgba(255,255,255,.04);
+    line-height:1;letter-spacing:-.06em;pointer-events:none;z-index:0;
   }
-  .rsn .rlbl { font-size:10px; font-weight:700; letter-spacing:.32em; color:var(--blue); text-transform:uppercase; margin-bottom:12px; }
-  .rsn .rt {
-    font-size:25px; font-weight:900; color:var(--dark);
-    line-height:1.35; margin-bottom:18px;
-    padding-left:14px; border-left:4px solid var(--blue);
-  }
-  .rsn .rb { font-size:13px; color:var(--sub); line-height:1.9; }
-  .rsn .rp {
-    position:absolute; top:0; right:0; bottom:0; left:420px;
-    background:var(--bg-blue); border-left:1px solid var(--bdr);
-    display:flex; align-items:center; justify-content:center;
-    padding:26px 28px; z-index:1;
+  .rsn .rp{
+    position:absolute;top:0;right:0;bottom:0;left:408px;
+    background:#F4F7FB;border-left:1px solid rgba(0,119,168,.12);
+    display:flex;align-items:center;justify-content:center;padding:26px 26px;
   }
 
   /* 棒グラフ */
-  .bc { width:100%; }
-  .bc-i { margin-bottom:22px; }
-  .bc-i:last-child { margin-bottom:0; }
-  .bc-n { font-size:12.5px; color:var(--sub); margin-bottom:8px; }
-  .bc-t { height:50px; background:rgba(0,0,0,.06); border-radius:8px; overflow:hidden; }
-  .bc-f { height:100%; border-radius:8px; display:flex; align-items:center; padding:0 16px; }
-  .bc-f.m { background:linear-gradient(90deg,var(--red-b),var(--red-t)); width:90%; }
-  .bc-f.a { background:linear-gradient(90deg,var(--blue-d),var(--blue-l)); width:5%; min-width:72px; }
-  .bc-f span { font-size:14px; font-weight:900; color:#fff; white-space:nowrap; }
-  .bc-s { font-size:11px; color:var(--xs); margin-top:5px; }
-  .bc-box { margin-top:20px; padding:14px 20px; background:#fff; border:1.5px solid var(--bdr); border-radius:10px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.07); }
-  .bc-box .b1 { font-size:12px; color:var(--sub); margin-bottom:5px; }
-  .bc-box .b2 { font-size:16px; font-weight:900; color:var(--blue); }
+  .bc{width:100%;}
+  .bci{margin-bottom:22px;}
+  .bci:last-child{margin-bottom:0;}
+  .bcn{font-size:12.5px;color:var(--S);margin-bottom:8px;}
+  .bct{height:50px;background:rgba(0,0,0,.06);border-radius:8px;overflow:hidden;}
+  .bcf{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 16px;}
+  .bcf.m{background:linear-gradient(90deg,#B83030,#D06020);width:90%;}
+  .bcf.a{background:linear-gradient(90deg,var(--BD),var(--BL));width:5%;min-width:72px;}
+  .bcf span{font-size:14px;font-weight:900;color:#fff;white-space:nowrap;}
+  .bcs{font-size:11px;color:var(--XS);margin-top:5px;}
+  .bcbox{margin-top:20px;padding:14px 20px;background:#fff;border:1.5px solid rgba(0,119,168,.2);border-radius:10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+  .bcbox .b1{font-size:12px;color:var(--S);margin-bottom:5px;}
+  .bcbox .b2{font-size:16px;font-weight:900;color:var(--B);}
 
   /* コスト比較 */
-  .cc { display:flex; gap:18px; align-items:flex-end; width:100%; }
-  .cc-c { flex:1; display:flex; flex-direction:column; align-items:center; }
-  .cc-a { width:100%; display:flex; align-items:flex-end; justify-content:center; height:205px; }
-  .cc-b { width:80px; border-radius:10px 10px 0 0; }
-  .cc-b.o { background:linear-gradient(180deg,#C83030,rgba(200,48,48,.18)); height:100%; }
-  .cc-b.n { background:linear-gradient(180deg,var(--blue),var(--blue-l)); height:32%; }
-  .cc-l { text-align:center; margin-top:14px; font-size:12px; color:var(--sub); line-height:1.6; }
-  .cc-m { font-size:13px; font-weight:700; color:var(--dark); margin-top:6px; }
-  .cc-v { display:flex; align-items:center; color:var(--xs); font-size:20px; padding-bottom:100px; }
+  .cc{display:flex;gap:18px;align-items:flex-end;width:100%;}
+  .ccc{flex:1;display:flex;flex-direction:column;align-items:center;}
+  .cca{width:100%;display:flex;align-items:flex-end;justify-content:center;height:205px;}
+  .ccb{width:80px;border-radius:10px 10px 0 0;}
+  .ccb.o{background:linear-gradient(180deg,#C83030,rgba(200,48,48,.18));height:100%;}
+  .ccb.n{background:linear-gradient(180deg,var(--B),var(--BL));height:32%;}
+  .ccl{text-align:center;margin-top:14px;font-size:12px;color:var(--S);line-height:1.6;}
+  .ccm{font-size:13px;font-weight:700;color:var(--D);margin-top:6px;}
+  .ccv{display:flex;align-items:center;color:var(--XS);font-size:20px;padding-bottom:100px;}
 
-  /* フロー図 */
-  .fd { width:100%; }
-  .fd-r { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-  .fd-b { flex:1; padding:13px 14px; background:#fff; border:1px solid var(--bdr); border-radius:8px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
-  .fd-b .n { font-size:10px; font-weight:700; color:var(--blue); letter-spacing:.15em; margin-bottom:4px; }
-  .fd-b .t { font-size:13px; font-weight:700; color:var(--dark); }
-  .fd-b .s { font-size:11px; color:var(--sub); margin-top:3px; line-height:1.4; }
-  .fd-arr { color:var(--blue); font-size:16px; flex-shrink:0; }
-  .fd-u { margin-top:14px; padding:14px 20px; background:#fff; border:1.5px solid var(--bdr); border-radius:10px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,.07); }
-  .fd-u .ul { font-size:11px; color:var(--sub); margin-bottom:4px; }
-  .fd-u .ut { font-size:14px; font-weight:900; color:var(--blue); }
+  /* フロー */
+  .fd{width:100%;}
+  .fdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .fdb{flex:1;padding:13px 14px;background:#fff;border:1px solid rgba(0,119,168,.15);border-radius:8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .fdb .n{font-size:10px;font-weight:700;color:var(--B);letter-spacing:.15em;margin-bottom:4px;}
+  .fdb .t{font-size:13px;font-weight:700;color:var(--D);}
+  .fdb .s{font-size:11px;color:var(--S);margin-top:3px;line-height:1.4;}
+  .fda{color:var(--B);font-size:16px;flex-shrink:0;}
+  .fdu{margin-top:14px;padding:14px 20px;background:#fff;border:1.5px solid rgba(0,119,168,.2);border-radius:10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+  .fdu .ul{font-size:11px;color:var(--S);margin-bottom:4px;}
+  .fdu .ut{font-size:14px;font-weight:900;color:var(--B);}
 
-  /* ════════════════════════════════════
-     FEATURE (8-12)
-  ════════════════════════════════════ */
-  .ft { background:#fff; display:flex; }
-  .ft .fl {
-    width:385px; flex-shrink:0;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:40px 44px 40px 52px; position:relative;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     FEATURE (8-12) — スクリーン強調
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .ft{background:#fff;display:flex;}
+  .ft .fl{
+    width:370px;flex-shrink:0;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:36px 42px 36px 50px;position:relative;
   }
-  .ft .fl::before { content:''; position:absolute; top:0; left:0; bottom:0; width:5px; background:linear-gradient(180deg,var(--blue),var(--blue-l)); }
-  .ft .fl::after { content:''; position:absolute; top:0; right:0; bottom:0; width:1px; background:var(--bdr); }
-  .ft .fr {
-    flex:1; background:var(--bg-blue);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:22px 26px;
+  .ft .fl::before{content:'';position:absolute;top:0;left:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--B),var(--BL));}
+  .ft .fr{
+    flex:1;background:var(--BG);
+    border-left:1px solid rgba(0,119,168,.12);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:20px 24px;
   }
-  .ft .sn {
-    display:inline-flex; align-items:center; gap:8px;
+  .ft .snbadge{
+    display:inline-block;padding:4px 12px;border-radius:4px;
+    background:var(--B);color:#fff;font-size:10px;font-weight:700;letter-spacing:.2em;
     margin-bottom:14px;
   }
-  .ft .sn-badge {
-    padding:3px 10px; border-radius:4px;
-    background:var(--blue); color:#fff;
-    font-size:10px; font-weight:700; letter-spacing:.2em;
-  }
-  .ft h2 { font-size:23px; font-weight:900; color:var(--dark); line-height:1.35; margin-bottom:18px; padding-left:14px; border-left:4px solid var(--blue); }
-  .ft .fb { font-size:13px; color:var(--sub); line-height:1.82; margin-bottom:16px; }
-  .ft .fl-list { display:flex; flex-direction:column; gap:10px; }
-  .ft .fi { padding:11px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
-  .ft .fi h3 { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:3px; }
-  .ft .fi p  { font-size:12px; color:var(--sub); line-height:1.55; }
-  .ft .fi strong { color:var(--blue); font-weight:700; }
-  .ft .fpts { display:flex; flex-direction:column; gap:9px; }
-  .ft .fpt { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
-  .ft .fpt p { font-size:12px; color:var(--dark); line-height:1.5; }
-  .ft .fpt strong { color:var(--blue); }
-  .ft .fst { display:flex; flex-direction:column; gap:8px; }
-  .ft .fs  { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; background:var(--bg2); border-left:3px solid var(--blue); border-radius:0 7px 7px 0; }
-  .ft .fsn { width:22px; height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .ft .fs p { font-size:12px; color:var(--dark); line-height:1.5; }
-  .ft .fs strong { color:var(--blue); }
-  .ft .fcds { display:flex; flex-direction:column; gap:11px; width:100%; }
-  .ft .fcd { background:#fff; border-radius:10px; padding:15px 18px; border-left:4px solid var(--blue); box-shadow:0 2px 10px rgba(0,0,0,.07); }
-  .ft .fcd h3 { font-size:13.5px; font-weight:700; color:var(--dark); margin-bottom:4px; }
-  .ft .fcd p  { font-size:12px; color:var(--sub); line-height:1.55; }
-  .ft .fbdg { padding:13px 18px; background:#fff; border:1.5px solid var(--bdr); border-radius:9px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.07); }
-  .ft .fbdg .bb { font-size:19px; font-weight:900; color:var(--blue); }
-  .ft .fbdg .bs { font-size:12px; color:var(--sub); margin-top:3px; }
+  .ft h2{font-size:22px;font-weight:900;color:var(--D);line-height:1.35;margin-bottom:16px;padding-left:14px;border-left:4px solid var(--B);}
+  .ft .fb{font-size:13px;color:var(--S);line-height:1.82;margin-bottom:14px;}
+  .ft .fll{display:flex;flex-direction:column;gap:9px;}
+  .ft .fi{padding:10px 14px;background:#F2F8FC;border-left:3px solid var(--B);border-radius:0 7px 7px 0;}
+  .ft .fi h3{font-size:13px;font-weight:700;color:var(--D);margin-bottom:2px;}
+  .ft .fi p{font-size:12px;color:var(--S);line-height:1.55;}
+  .ft .fi strong{color:var(--B);}
+  .ft .fpts{display:flex;flex-direction:column;gap:8px;}
+  .ft .fpt{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#F2F8FC;border-left:3px solid var(--B);border-radius:0 7px 7px 0;}
+  .ft .fpt p{font-size:12px;color:var(--D);line-height:1.5;}
+  .ft .fpt strong{color:var(--B);}
+  .ft .fst{display:flex;flex-direction:column;gap:8px;}
+  .ft .fs{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#F2F8FC;border-left:3px solid var(--B);border-radius:0 7px 7px 0;}
+  .ft .fsn{width:22px;height:22px;border-radius:50%;background:var(--B);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ft .fs p{font-size:12px;color:var(--D);line-height:1.5;}
+  .ft .fs strong{color:var(--B);}
+  .ft .fcds{display:flex;flex-direction:column;gap:10px;}
+  .ft .fcd{background:#fff;border-radius:10px;padding:14px 18px;border-left:4px solid var(--B);box-shadow:0 2px 10px rgba(0,0,0,.07);}
+  .ft .fcd h3{font-size:13.5px;font-weight:700;color:var(--D);margin-bottom:4px;}
+  .ft .fcd p{font-size:12px;color:var(--S);line-height:1.55;}
+  .sc-lbl{font-size:10px;letter-spacing:.18em;color:var(--XS);text-transform:uppercase;margin-bottom:8px;}
 
-  /* ════════════════════════════════════
-     S-OPT 架電オプション
-  ════════════════════════════════════ */
-  .s-opt { background:var(--soft); }
-  .s-opt .hd {
-    position:absolute; top:0; left:0; right:0; height:96px;
-    background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l));
-    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
-    display:flex; align-items:center; padding:0 52px 26px; gap:14px;
-  }
-  .s-opt .ob { padding:3px 12px; border-radius:20px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4); font-size:10px; font-weight:700; color:#fff; letter-spacing:.16em; }
-  .s-opt .hd h2 { font-size:22px; font-weight:900; color:#fff; }
-  .s-opt .cg { position:absolute; top:108px; left:26px; right:26px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-  .s-opt .oc { background:#fff; border-radius:14px; padding:22px 18px; box-shadow:0 4px 20px rgba(0,0,0,.09); border-top:3px solid var(--blue); display:flex; flex-direction:column; gap:9px; }
-  .s-opt .oi { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:10px; background:var(--bg-blue); }
-  .s-opt .oc h3 { font-size:14px; font-weight:700; color:var(--dark); }
-  .s-opt .oc p  { font-size:12px; color:var(--sub); line-height:1.65; }
-  .s-opt .nt { position:absolute; bottom:18px; left:26px; right:26px; text-align:center; font-size:12px; color:var(--sub); padding:11px 22px; background:#fff; border-radius:8px; border:1px solid var(--bdr); box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S-OPT
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-opt{background:#F4F7FB;}
+  .s-opt .hd{position:absolute;top:0;left:0;right:0;height:96px;background:linear-gradient(100deg,var(--BD),var(--B),var(--BL));clip-path:polygon(0 0,100% 0,100% 66%,0 100%);display:flex;align-items:center;padding:0 52px 26px;gap:14px;}
+  .s-opt .ob{padding:4px 12px;border-radius:20px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);font-size:10px;font-weight:700;color:#fff;letter-spacing:.16em;}
+  .s-opt .hd h2{font-size:22px;font-weight:900;color:#fff;}
+  .s-opt .cg{position:absolute;top:108px;left:26px;right:26px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  .s-opt .oc{background:#fff;border-radius:14px;padding:22px 18px;box-shadow:0 4px 20px rgba(0,0,0,.09);border-top:3px solid var(--B);display:flex;flex-direction:column;gap:9px;}
+  .s-opt .oi{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--BG);}
+  .s-opt .oc h3{font-size:14px;font-weight:700;color:var(--D);}
+  .s-opt .oc p{font-size:12px;color:var(--S);line-height:1.65;}
+  .s-opt .nt{position:absolute;bottom:18px;left:26px;right:26px;text-align:center;font-size:12px;color:var(--S);padding:11px 22px;background:#fff;border-radius:8px;border:1px solid rgba(0,119,168,.14);box-shadow:0 2px 8px rgba(0,0,0,.05);}
 
-  /* ════════════════════════════════════
-     S-RES 導入効果
-  ════════════════════════════════════ */
-  .s-res { background:var(--soft); }
-  .s-res .hd {
-    position:absolute; top:0; left:0; right:0; height:96px;
-    background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l));
-    clip-path:polygon(0 0,100% 0,100% 66%,0 100%);
-    display:flex; flex-direction:column; justify-content:center;
-    padding:0 52px 26px;
-  }
-  .s-res .hd h2 { font-size:24px; font-weight:900; color:#fff; }
-  .s-res .hd p  { font-size:12px; color:rgba(255,255,255,.7); margin-top:3px; }
-  .s-res .mcs { position:absolute; top:108px; left:22px; right:22px; display:flex; gap:12px; }
-  .s-res .mc { flex:1; background:#fff; border-radius:14px; padding:20px 12px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.09); border-top:3px solid var(--blue); }
-  .s-res .mn { font-size:42px; font-weight:900; color:var(--blue); line-height:1; margin-bottom:4px; }
-  .s-res .mn .mu { font-size:22px; }
-  .s-res .ml { font-size:12px; color:var(--sub); line-height:1.55; margin-top:6px; }
-  .s-res .sm { position:absolute; bottom:18px; left:22px; right:22px; background:#fff; border:1px solid var(--bdr); border-radius:12px; padding:14px 20px; display:flex; justify-content:space-around; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,.06); }
-  .s-res .si { text-align:center; }
-  .s-res .sn { font-size:18px; font-weight:900; color:var(--blue); }
-  .s-res .sl { font-size:11px; color:var(--xs); margin-top:2px; }
-  .s-res .sd { width:1px; height:30px; background:var(--bdr); }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S-RES 導入効果 — 暗背景 迫力
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-res{background:linear-gradient(140deg,#081420 0%,#0D2035 60%,#0A2840 100%);}
+  .s-res .hd{position:absolute;top:0;left:0;right:0;height:96px;background:linear-gradient(100deg,var(--BD),var(--B),var(--BL));clip-path:polygon(0 0,100% 0,100% 66%,0 100%);display:flex;flex-direction:column;justify-content:center;padding:0 52px 26px;}
+  .s-res .hd h2{font-size:24px;font-weight:900;color:#fff;}
+  .s-res .hd p{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;}
+  .s-res .mcs{position:absolute;top:108px;left:22px;right:22px;display:flex;gap:12px;}
+  .s-res .mc{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 12px;text-align:center;position:relative;overflow:hidden;}
+  .s-res .mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--B),var(--BL));}
+  .s-res .mn{font-size:44px;font-weight:900;color:#fff;line-height:1;margin-bottom:4px;}
+  .s-res .mn .mu{font-size:22px;color:var(--YL);}
+  .s-res .ml{font-size:12px;color:rgba(255,255,255,.62);line-height:1.55;margin-top:6px;}
+  .s-res .sm{position:absolute;bottom:18px;left:22px;right:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 20px;display:flex;justify-content:space-around;align-items:center;}
+  .s-res .si{text-align:center;}
+  .s-res .sn{font-size:18px;font-weight:900;color:var(--YL);}
+  .s-res .sl{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
+  .s-res .sd{width:1px;height:30px;background:rgba(255,255,255,.12);}
 
-  /* ════════════════════════════════════
-     S-FLOW 流れ
-  ════════════════════════════════════ */
-  .s-fl { background:#fff; }
-  .s-fl .hd { position:absolute; top:0; left:0; right:0; height:96px; background:linear-gradient(100deg,var(--blue-d),var(--blue),var(--blue-l)); clip-path:polygon(0 0,100% 0,100% 66%,0 100%); display:flex; align-items:center; padding:0 52px 26px; }
-  .s-fl .hd h2 { font-size:22px; font-weight:900; color:#fff; }
-  .s-fl .sr { position:absolute; top:108px; left:22px; right:22px; display:flex; gap:10px; align-items:stretch; }
-  .s-fl .sb { flex:1; background:#fff; border:1px solid var(--bdr); border-top:4px solid var(--blue); border-radius:14px; padding:22px 14px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.08); }
-  .s-fl .nc { width:42px; height:42px; border-radius:50%; background:var(--blue); color:#fff; font-size:19px; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-  .s-fl .sb h3 { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:8px; }
-  .s-fl .sb p  { font-size:12px; color:var(--sub); line-height:1.6; }
-  .s-fl .sa { display:flex; align-items:center; padding-top:22px; color:var(--blue); font-size:18px; }
-  .s-fl .nt { position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:12px; color:var(--xs); }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     S-FL 流れ
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-fl{background:#fff;}
+  .s-fl .hd{position:absolute;top:0;left:0;right:0;height:96px;background:linear-gradient(100deg,var(--BD),var(--B),var(--BL));clip-path:polygon(0 0,100% 0,100% 66%,0 100%);display:flex;align-items:center;padding:0 52px 26px;}
+  .s-fl .hd h2{font-size:22px;font-weight:900;color:#fff;}
+  .s-fl .sr{position:absolute;top:108px;left:22px;right:22px;display:flex;gap:10px;align-items:stretch;}
+  .s-fl .sb{flex:1;background:#fff;border:1px solid rgba(0,119,168,.15);border-top:4px solid var(--B);border-radius:14px;padding:22px 14px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08);}
+  .s-fl .nc{width:42px;height:42px;border-radius:50%;background:var(--B);color:#fff;font-size:19px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+  .s-fl .sb h3{font-size:14px;font-weight:700;color:var(--D);margin-bottom:8px;}
+  .s-fl .sb p{font-size:12px;color:var(--S);line-height:1.6;}
+  .s-fl .sa{display:flex;align-items:center;padding-top:22px;color:var(--B);font-size:18px;}
+  .s-fl .nt{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:12px;color:var(--XS);}
 
-  /* ════════════════════════════════════
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      S-CTA
-  ════════════════════════════════════ */
-  .s-cta { background:linear-gradient(140deg,#003E58 0%,#005F7F 40%,#0088B8 80%,#00A8D4 100%); }
-  .s-cta .stripe { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#FFD040,#FFA000,#FFD040); }
-  .s-cta .r1 { position:absolute; right:-60px; top:-60px; width:340px; height:340px; border:52px solid rgba(255,255,255,.06); border-radius:50%; }
-  .s-cta .r2 { position:absolute; right:60px; bottom:-80px; width:240px; height:240px; border:36px solid rgba(255,255,255,.04); border-radius:50%; }
-  .s-cta .r3 { position:absolute; left:-40px; bottom:-40px; width:200px; height:200px; border:28px solid rgba(255,255,255,.03); border-radius:50%; }
-  .s-cta .ct { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 70px; }
-  .s-cta .ca { font-size:10.5px; font-weight:700; letter-spacing:.32em; color:rgba(255,255,255,.62); text-transform:uppercase; margin-bottom:18px; }
-  .s-cta .cp { font-size:36px; font-weight:900; color:#fff; line-height:1.28; margin-bottom:12px; }
-  .s-cta .cp em { color:#FFD870; font-style:normal; }
-  .s-cta .cs { font-size:14px; color:rgba(255,255,255,.78); line-height:1.82; margin-bottom:30px; max-width:500px; }
-  .s-cta .btn { display:inline-block; padding:16px 52px; background:#fff; color:var(--blue); font-size:16px; font-weight:900; border-radius:50px; letter-spacing:.06em; box-shadow:0 8px 28px rgba(0,0,0,.22); text-decoration:none; margin-bottom:18px; font-family:inherit; }
-  .s-cta .cn { font-size:12px; color:rgba(255,255,255,.48); letter-spacing:.08em; }
-  .s-cta .lg { position:absolute; bottom:22px; right:36px; font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.28); }
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .s-cta{background:linear-gradient(140deg,#003E58 0%,#005F7F 40%,#0088B8 80%,#00A8D4 100%);}
+  .s-cta .str{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FFD040,#FFA000,#FFD040);}
+  .s-cta .r1{position:absolute;right:-60px;top:-60px;width:340px;height:340px;border:52px solid rgba(255,255,255,.06);border-radius:50%;}
+  .s-cta .r2{position:absolute;right:60px;bottom:-80px;width:240px;height:240px;border:36px solid rgba(255,255,255,.04);border-radius:50%;}
+  .s-cta .r3{position:absolute;left:-40px;bottom:-40px;width:200px;height:200px;border:28px solid rgba(255,255,255,.03);border-radius:50%;}
+  .s-cta .ct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 70px;}
+  .s-cta .ca{font-size:10.5px;font-weight:700;letter-spacing:.32em;color:rgba(255,255,255,.62);text-transform:uppercase;margin-bottom:18px;}
+  .s-cta .cp{font-size:36px;font-weight:900;color:#fff;line-height:1.28;margin-bottom:12px;}
+  .s-cta .cp em{color:var(--YL);font-style:normal;}
+  .s-cta .cs{font-size:14px;color:rgba(255,255,255,.78);line-height:1.82;margin-bottom:30px;max-width:500px;}
+  .s-cta .btn{display:inline-block;padding:16px 52px;background:#fff;color:var(--B);font-size:16px;font-weight:900;border-radius:50px;letter-spacing:.06em;box-shadow:0 8px 28px rgba(0,0,0,.22);text-decoration:none;margin-bottom:18px;font-family:inherit;}
+  .s-cta .cn{font-size:12px;color:rgba(255,255,255,.48);letter-spacing:.08em;}
+  .s-cta .lg{position:absolute;bottom:22px;right:36px;font-size:11px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.28);}
 </style>
 </head>
 <body>
@@ -342,147 +315,98 @@
   <button onclick="saveHTML()">HTMLで保存</button>
 </div>
 <div id="counter">1 / 16</div>
-<button class="nav-btn" id="btn-prev" onclick="prevSlide()">&#8592;</button>
-<button class="nav-btn" id="btn-next" onclick="nextSlide()">&#8594;</button>
+<button class="nb" id="btn-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nb" id="btn-next" onclick="nextSlide()">&#8594;</button>
 <div id="nav"></div>
 
 <div id="scaler">
 
-<!-- ══════════ S1: タイトル ══════════ -->
+<!-- ══ S1: タイトル ══ -->
 <div class="slide s1 active">
-  <div class="r-panel">
-    <svg viewBox="0 0 420 540" fill="none">
-      <!-- 大きな装飾円弧 -->
-      <circle cx="320" cy="270" r="180" stroke="#0077A8" stroke-width="1" opacity=".18"/>
-      <circle cx="320" cy="270" r="130" stroke="#0077A8" stroke-width="1" opacity=".14"/>
-      <circle cx="320" cy="270" r="80" stroke="#0077A8" stroke-width="1" opacity=".12"/>
-      <!-- AIネットワーク -->
-      <circle cx="200" cy="200" r="30" fill="#0077A8" opacity=".55"/>
-      <circle cx="110" cy="140" r="16" fill="#00B4D8" opacity=".5"/>
-      <circle cx="300" cy="140" r="16" fill="#00B4D8" opacity=".5"/>
-      <circle cx="90"  cy="300" r="13" fill="#0077A8" opacity=".4"/>
-      <circle cx="310" cy="300" r="13" fill="#0077A8" opacity=".4"/>
-      <circle cx="200" cy="70"  r="10" fill="#00B4D8" opacity=".35"/>
-      <circle cx="200" cy="330" r="10" fill="#00B4D8" opacity=".35"/>
-      <circle cx="350" cy="220" r="8"  fill="#0077A8" opacity=".3"/>
-      <circle cx="50"  cy="220" r="8"  fill="#0077A8" opacity=".3"/>
-      <line x1="200" y1="200" x2="110" y2="140" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="300" y2="140" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="90"  y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="310" y2="300" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="200" y2="70"  stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="200" y2="330" stroke="#0077A8" stroke-width="1.5" opacity=".4"/>
-      <line x1="200" y1="200" x2="350" y2="220" stroke="#0077A8" stroke-width="1" opacity=".28"/>
-      <line x1="200" y1="200" x2="50"  y2="220" stroke="#0077A8" stroke-width="1" opacity=".28"/>
-      <text x="200" y="210" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">AI</text>
-      <!-- ドット群 -->
-      <circle cx="160" cy="380" r="4" fill="#0077A8" opacity=".22"/>
-      <circle cx="185" cy="390" r="3" fill="#0077A8" opacity=".18"/>
-      <circle cx="240" cy="380" r="4" fill="#0077A8" opacity=".22"/>
-      <circle cx="265" cy="395" r="3" fill="#0077A8" opacity=".16"/>
-      <circle cx="320" cy="370" r="5" fill="#0077A8" opacity=".2"/>
-      <circle cx="350" cy="390" r="3" fill="#0077A8" opacity=".15"/>
-      <circle cx="130" cy="420" r="3" fill="#0077A8" opacity=".15"/>
-      <circle cx="380" cy="420" r="4" fill="#0077A8" opacity=".14"/>
-      <!-- 上部ドット -->
-      <circle cx="130" cy="80"  r="4" fill="#0077A8" opacity=".2"/>
-      <circle cx="310" cy="70"  r="5" fill="#0077A8" opacity=".2"/>
-      <circle cx="370" cy="100" r="3" fill="#0077A8" opacity=".16"/>
-      <circle cx="80"  cy="110" r="3" fill="#0077A8" opacity=".16"/>
-    </svg>
-  </div>
-  <div class="top-bar"></div>
-  <div class="badge editable">BtoB 営業支援 SaaS</div>
-  <div class="content">
-    <h1 class="editable">AI<em>リスト</em><br>マスター</h1>
-    <p class="sub editable">AIが営業リストの"質"を根本から変える</p>
-    <div class="tags">
-      <span class="tag editable">リスト収集</span>
-      <span class="tag editable">企業深堀り</span>
-      <span class="tag editable">AIマッチング</span>
-      <span class="tag editable">アプローチ自動化</span>
+  <div class="lp">
+    <p class="eyebrow e">BtoB 営業支援 SaaS</p>
+    <h1 class="e">AI<em>リスト</em><br>マスター</h1>
+    <p class="tagline e">AIが営業リストの"質"を根本から変える<br>受注確率の高い先だけに、架電できる</p>
+    <div class="chips">
+      <span class="chip e">リスト自動収集</span>
+      <span class="chip e">AIマッチング</span>
+      <span class="chip e">架電管理</span>
     </div>
   </div>
-  <div class="logo editable">AIリストマスター</div>
+  <div class="rp">
+    <p class="kv-lbl e">選ばれる3つの理由</p>
+    <div class="kv-list">
+      <div class="kv">
+        <div class="kv-num">1</div>
+        <div class="kv-txt">
+          <h3 class="e">確度の高い先だけに架電できる</h3>
+          <p class="e">AIが商材にマッチする企業を自動リストアップ</p>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="kv-num">2</div>
+        <div class="kv-txt">
+          <h3 class="e">リスト作成〜顧客管理まで一元化</h3>
+          <p class="e">ツール切り替え不要。全工程を一画面で管理</p>
+        </div>
+      </div>
+      <div class="kv">
+        <div class="kv-num">3</div>
+        <div class="kv-txt">
+          <h3 class="e">人を雇うより、圧倒的に安価</h3>
+          <p class="e">月額サブスクのみ。ROIを早期に回収できる</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="logo e">AIリストマスター</div>
 </div>
 
-<!-- ══════════ S2: 営業の現実 ══════════ -->
+<!-- ══ S2: 統計 ══ -->
 <div class="slide s2">
-  <div class="hd">
-    <div class="hd-inner">
-      <div class="hd-lbl">Sales Reality</div>
-      <h2 class="editable">営業マンの<em>不都合な真実</em></h2>
-    </div>
-  </div>
+  <div class="hd"><h2 class="e">営業マンの<em>不都合な真実</em></h2></div>
   <div class="stats">
     <div class="sc">
-      <div class="ico">
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="17" stroke="#0077A8" stroke-width="2.5"/><path d="M19 10v9l7 4" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="num editable">35<small>%</small></div>
-      <div class="lbl editable">実際に架電・訪問など<br>営業活動に使える時間</div>
+      <div class="ico"><svg width="38" height="38" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="17" stroke="#00B4D8" stroke-width="2.5" opacity=".7"/><path d="M19 10v9l7 4" stroke="#00B4D8" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <div class="num e">35<small>%</small></div>
+      <div class="lbl e">実際に架電・訪問など<br>営業活動に使える時間</div>
     </div>
     <div class="sc">
-      <div class="ico">
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="22" rx="3" stroke="#0077A8" stroke-width="2.5"/><line x1="5" y1="16" x2="33" y2="16" stroke="#0077A8" stroke-width="2.5"/><circle cx="12" cy="25" r="2.5" fill="#0077A8"/><circle cx="19" cy="25" r="2.5" fill="#0077A8"/><circle cx="26" cy="25" r="2.5" fill="#0077A8"/></svg>
-      </div>
-      <div class="num editable">39<small>%</small></div>
-      <div class="lbl editable">事務作業・リスト調査など<br>間接業務に取られる時間</div>
+      <div class="ico"><svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="22" rx="3" stroke="#00B4D8" stroke-width="2.5" opacity=".7"/><line x1="5" y1="16" x2="33" y2="16" stroke="#00B4D8" stroke-width="2.5"/><circle cx="12" cy="25" r="2.5" fill="#00B4D8" opacity=".7"/><circle cx="19" cy="25" r="2.5" fill="#00B4D8" opacity=".7"/><circle cx="26" cy="25" r="2.5" fill="#00B4D8" opacity=".7"/></svg></div>
+      <div class="num e">39<small>%</small></div>
+      <div class="lbl e">事務作業・リスト調査など<br>間接業務に取られる時間</div>
     </div>
     <div class="sc">
-      <div class="ico">
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><path d="M8 30 L8 20 Q8 8 19 8 Q30 8 30 20 L30 30" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="30" x2="33" y2="30" stroke="#0077A8" stroke-width="2.5" stroke-linecap="round"/><path d="M19 14 v6 l4 3" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
-      </div>
-      <div class="num editable">25<small>%</small></div>
-      <div class="lbl editable">移動・待機・社内調整など<br>成果に直結しない時間</div>
+      <div class="ico"><svg width="38" height="38" viewBox="0 0 38 38" fill="none"><path d="M8 30 L8 20 Q8 8 19 8 Q30 8 30 20 L30 30" stroke="#00B4D8" stroke-width="2.5" stroke-linecap="round" opacity=".7"/><line x1="5" y1="30" x2="33" y2="30" stroke="#00B4D8" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></svg></div>
+      <div class="num e">25<small>%</small></div>
+      <div class="lbl e">移動・待機・社内調整など<br>成果に直結しない時間</div>
     </div>
   </div>
-  <div class="fn editable">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
+  <div class="fn e">出典：営業職の業務時間実態調査（AIリストマスター調べ）</div>
 </div>
 
-<!-- ══════════ S3: 3つの限界 ══════════ -->
+<!-- ══ S3: 3つの限界 ══ -->
 <div class="slide s3">
   <div class="lc">
-    <div class="lc-ico">
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/><path d="M24 14 v12" stroke="#FFD870" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="33" r="2.5" fill="#FFD870"/></svg>
-    </div>
-    <h2 class="editable">従来リストの<br>"3つの限界"</h2>
-    <p class="editable">古いリストに頼り続ける限り、<br>営業の生産性は上がりません。</p>
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/><path d="M24 14v12" stroke="#FFD870" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="33" r="2.5" fill="#FFD870"/></svg>
+    <h2 class="e">従来リストの<br>"3つの限界"</h2>
+    <p class="e">古いリストに頼り続ける限り、<br>営業の生産性は上がりません。</p>
   </div>
   <div class="rc">
-    <div class="pi">
-      <div class="pn editable">01</div>
-      <div class="pt">
-        <h3 class="editable">データの鮮度・出所が不透明</h3>
-        <p class="editable">いつ収集されたか分からないデータ。架電しても「廃業済み」「担当者変更」が続出し、時間とコストが無駄になります。</p>
-      </div>
-    </div>
-    <div class="pi">
-      <div class="pn editable">02</div>
-      <div class="pt">
-        <h3 class="editable">業種1つでは企業の本質が見えない</h3>
-        <p class="editable">「飲食業」だけでは刺さる提案ができません。企業の実態・フェーズを把握しないアプローチは空振りの連続です。</p>
-      </div>
-    </div>
-    <div class="pi">
-      <div class="pn editable">03</div>
-      <div class="pt">
-        <h3 class="editable">リスト作成で本来の業務が止まる</h3>
-        <p class="editable">Webを手作業で検索・整理するのに膨大な時間を消費。本来の営業時間そのものが奪われています。</p>
-      </div>
-    </div>
+    <div class="pi"><div class="pn e">01</div><div class="pt"><h3 class="e">データの鮮度・出所が不透明</h3><p class="e">いつ収集されたか分からないデータ。架電しても「廃業済み」「担当者変更」が続出し、時間とコストが無駄になります。</p></div></div>
+    <div class="pi"><div class="pn e">02</div><div class="pt"><h3 class="e">業種1つでは企業の本質が見えない</h3><p class="e">「飲食業」だけでは刺さる提案ができません。企業の実態・フェーズを把握しないアプローチは空振りの連続です。</p></div></div>
+    <div class="pi"><div class="pn e">03</div><div class="pt"><h3 class="e">リスト作成で本来の業務が止まる</h3><p class="e">Webを手作業で検索・整理するのに膨大な時間を消費。本来の営業時間そのものが奪われています。</p></div></div>
   </div>
 </div>
 
-<!-- ══════════ S4: 理由01 ══════════ -->
+<!-- ══ S4: 理由01 ══ -->
 <div class="slide rsn">
-  <div class="stripe"></div>
-  <div class="wm">01</div>
   <div class="lp">
-    <div class="rlbl editable">Reason 01</div>
-    <h2 class="rt editable">確度の高い先だけに<br>架電できる</h2>
-    <p class="rb editable">自社の取扱商材を登録するだけで、AIが「この商材と相性の良い企業」を自動でリストアップします。闇雲に架電するのではなく、受注確率の高い先だけに絞って営業活動を集中投下できます。<br><br>マッチングスコアが高いほど、成約率が上がります。</p>
+    <div class="rnbadge e">Reason 01</div>
+    <h2 class="rhead e">受注確率の高い先だけに<br><em>ピンポイントで架電</em>できる</h2>
+    <p class="rbody e">自社の取扱商材を登録するだけで、AIが「この商材と相性の良い企業」を自動でリストアップします。マッチングスコアが高いほど成約率が上がり、無駄な架電が激減します。</p>
   </div>
+  <div class="wm">01</div>
   <div class="rp">
     <div class="bf">
       <div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div>
@@ -491,281 +415,237 @@
   </div>
 </div>
 
-<!-- ══════════ S5: 理由02 ══════════ -->
+<!-- ══ S5: 理由02 ══ -->
 <div class="slide rsn">
-  <div class="stripe"></div>
-  <div class="wm">02</div>
   <div class="lp">
-    <div class="rlbl editable">Reason 02</div>
-    <h2 class="rt editable">アポリスト作成から<br>顧客管理まで一元管理</h2>
-    <p class="rb editable">リストへのアプローチ履歴を入力するだけで、顧客管理も自動で完結。複数のツールを行き来する手間がなく、アポリスト作成・架電・履歴管理・商談フォローまでを一画面で管理できます。</p>
+    <div class="rnbadge e">Reason 02</div>
+    <h2 class="rhead e">アポリスト作成から顧客管理まで<br><em>一画面で完結</em></h2>
+    <p class="rbody e">リストへのアプローチ履歴を入力するだけで顧客管理も自動完結。複数ツールを行き来する手間がなく、架電・メール・商談フォローまでをすべて一元管理できます。</p>
   </div>
+  <div class="wm">02</div>
   <div class="rp">
     <div class="fd">
-      <div class="fd-r">
-        <div class="fd-b"><div class="n editable">STEP 01</div><div class="t editable">アポリスト作成</div><div class="s editable">AIが商材マッチング済みリストを自動生成</div></div>
-        <div class="fd-arr">&#9654;</div>
-        <div class="fd-b"><div class="n editable">STEP 02</div><div class="t editable">アプローチ実行</div><div class="s editable">メール・架電でアプローチ。履歴を即記録</div></div>
-        <div class="fd-arr">&#9654;</div>
-        <div class="fd-b"><div class="n editable">STEP 03</div><div class="t editable">顧客管理</div><div class="s editable">商談進捗・フォロー状況をリストで一括管理</div></div>
+      <div class="fdr">
+        <div class="fdb"><div class="n e">STEP 01</div><div class="t e">アポリスト作成</div><div class="s e">AIが商材マッチング済みリストを自動生成</div></div>
+        <div class="fda">&#9654;</div>
+        <div class="fdb"><div class="n e">STEP 02</div><div class="t e">アプローチ実行</div><div class="s e">メール・架電でアプローチ。履歴を即記録</div></div>
+        <div class="fda">&#9654;</div>
+        <div class="fdb"><div class="n e">STEP 03</div><div class="t e">顧客管理</div><div class="s e">商談進捗・フォロー状況を一括管理</div></div>
       </div>
-      <div class="fd-u">
-        <div class="ul editable">すべてAIリストマスター上で完結</div>
-        <div class="ut editable">ツールの切り替えゼロ ── 一画面で営業全体を管理</div>
-      </div>
+      <div class="fdu"><div class="ul e">すべてAIリストマスター上で完結</div><div class="ut e">ツールの切り替えゼロ ── 一画面で営業全体を管理</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ S6: 理由03 ══════════ -->
+<!-- ══ S6: 理由03 ══ -->
 <div class="slide rsn">
-  <div class="stripe"></div>
-  <div class="wm">03</div>
   <div class="lp">
-    <div class="rlbl editable">Reason 03</div>
-    <h2 class="rt editable">リスト作成時間を大幅削減<br>架電に集中できる</h2>
-    <p class="rb editable">テレアポ業界では、100件リストの手作業作成に平均4〜8時間かかるとされています。AIリストマスターなら数十秒で完了。浮いた時間をそのまま架電・商談活動に充てることができます。</p>
+    <div class="rnbadge e">Reason 03</div>
+    <h2 class="rhead e">リスト作成<em>4〜8時間</em>が<br>数十秒で完了する</h2>
+    <p class="rbody e">テレアポ業界では、100件リストの手作業作成に平均4〜8時間かかるとされています。AIリストマスターなら数十秒で完了。浮いた時間をすべて架電・商談活動に充てることができます。</p>
   </div>
+  <div class="wm">03</div>
   <div class="rp">
     <div class="bc">
-      <div class="bc-i">
-        <div class="bc-n editable">手作業でのリスト作成（100件）</div>
-        <div class="bc-t"><div class="bc-f m"><span class="editable">平均 4〜8時間</span></div></div>
-        <div class="bc-s editable">検索・確認・入力・整理…すべて人力</div>
-      </div>
-      <div class="bc-i">
-        <div class="bc-n editable">AIリストマスターでのリスト作成（100件）</div>
-        <div class="bc-t"><div class="bc-f a"><span class="editable">数十秒</span></div></div>
-        <div class="bc-s editable">条件を入力するだけ。あとはAIが全自動</div>
-      </div>
-      <div class="bc-box">
-        <div class="b1 editable">削減できる時間を架電に充てると</div>
-        <div class="b2 editable">架電件数・アポ獲得数が大幅に増加</div>
-      </div>
+      <div class="bci"><div class="bcn e">手作業でのリスト作成（100件）</div><div class="bct"><div class="bcf m"><span class="e">平均 4〜8時間</span></div></div><div class="bcs e">検索・確認・入力・整理…すべて人力</div></div>
+      <div class="bci"><div class="bcn e">AIリストマスターでのリスト作成（100件）</div><div class="bct"><div class="bcf a"><span class="e">数十秒</span></div></div><div class="bcs e">条件を入力するだけ。あとはAIが全自動</div></div>
+      <div class="bcbox"><div class="b1 e">削減できる時間を架電に充てると</div><div class="b2 e">架電件数・アポ獲得数が大幅に増加</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ S7: 理由04 ══════════ -->
+<!-- ══ S7: 理由04 ══ -->
 <div class="slide rsn">
-  <div class="stripe"></div>
-  <div class="wm">04</div>
   <div class="lp">
-    <div class="rlbl editable">Reason 04</div>
-    <h2 class="rt editable">人を雇うより、<br>はるかに安価</h2>
-    <p class="rb editable">リスト作成専任スタッフを採用・育成するコストと比較して、AIリストマスターは圧倒的に低コストです。品質・スピード・コストのすべてを同時に改善できます。<br><br>人材不足の今、AIが最も現実的な解決策です。</p>
+    <div class="rnbadge e">Reason 04</div>
+    <h2 class="rhead e">専任スタッフを雇うより<br><em>圧倒的に安価</em></h2>
+    <p class="rbody e">リスト作成専任スタッフを採用・育成するコストと比較して、AIリストマスターは月額サブスクのみ。品質・スピード・コストのすべてを同時に改善できます。人材不足の今、AIが最も現実的な解決策です。</p>
   </div>
+  <div class="wm">04</div>
   <div class="rp">
     <div class="cc">
-      <div class="cc-c">
-        <div class="cc-a"><div class="cc-b o"></div></div>
-        <div class="cc-l editable">リスト作成<br>専任スタッフ採用</div>
-        <div class="cc-m editable">採用費＋月給＋育成コスト</div>
-      </div>
-      <div class="cc-v">VS</div>
-      <div class="cc-c">
-        <div class="cc-a"><div class="cc-b n"></div></div>
-        <div class="cc-l editable">AIリスト<br>マスター</div>
-        <div class="cc-m editable">月額サブスクのみ</div>
-      </div>
+      <div class="ccc"><div class="cca"><div class="ccb o"></div></div><div class="ccl e">リスト作成<br>専任スタッフ採用</div><div class="ccm e">採用費＋月給＋育成コスト</div></div>
+      <div class="ccv">VS</div>
+      <div class="ccc"><div class="cca"><div class="ccb n"></div></div><div class="ccl e">AIリスト<br>マスター</div><div class="ccm e">月額サブスクのみ</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ S8: FEATURE 01 ══════════ -->
+<!-- ══ S8: FEATURE 01 ══ -->
 <div class="slide ft">
   <div class="fl">
-    <div class="sn"><span class="sn-badge">FEATURE 01</span></div>
-    <h2 class="editable">営業DBを<br>AIが自動構築</h2>
-    <p class="fb editable">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
+    <div class="snbadge e">FEATURE 01</div>
+    <h2 class="e">営業DBを<br>AIが自動構築</h2>
+    <p class="fb e">gBiz情報やSNS・ポータルサイトから、AIが最新の企業データを自動収集。手作業ゼロで、常に鮮度の高い営業リストが手元に届きます。</p>
     <div class="fcds">
-      <div class="fcd"><h3 class="editable">法人リスト（gBiz × AI）</h3><p class="editable">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p></div>
-      <div class="fcd"><h3 class="editable">個人店舗（SNS・ポータル）</h3><p class="editable">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p></div>
+      <div class="fcd"><h3 class="e">法人リスト（gBiz × AI）</h3><p class="e">国内法人データをgBiz情報と組み合わせ、AIが精査・整理。登記情報との照合で信頼性を確保します。</p></div>
+      <div class="fcd"><h3 class="e">個人店舗（SNS・ポータル）</h3><p class="e">Google マップ・各種ポータルから個人事業主・小規模店舗を網羅収集。BtoB / BtoC 両方に対応。</p></div>
     </div>
   </div>
   <div class="fr">
-    <!-- データ収集フロー -->
-    <svg width="280" height="300" viewBox="0 0 280 300" fill="none">
-      <!-- クラウド -->
-      <path d="M70 95 Q56 95 56 82 Q56 64 74 64 Q74 40 97 40 Q110 28 128 40 Q148 28 166 46 Q184 46 184 64 Q196 64 196 82 Q196 95 182 95 Z" fill="#D4EDF9" stroke="#0077A8" stroke-width="2.5"/>
-      <text x="126" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#0077A8" font-family="sans-serif">gBiz / SNS</text>
-      <!-- 矢印 -->
-      <line x1="126" y1="98" x2="126" y2="135" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
-      <polygon points="116,128 126,142 136,128" fill="#0077A8"/>
-      <!-- DB -->
-      <ellipse cx="126" cy="160" rx="44" ry="12" fill="#0077A8" opacity=".25"/>
-      <rect x="82" y="150" width="88" height="34" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <ellipse cx="126" cy="184" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <ellipse cx="126" cy="150" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <text x="126" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#0077A8" font-family="sans-serif">営業DB</text>
-      <!-- 矢印 右 -->
-      <line x1="172" y1="168" x2="208" y2="168" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
-      <polygon points="202,158 216,168 202,178" fill="#0077A8"/>
-      <!-- リスト -->
-      <rect x="216" y="148" width="50" height="52" rx="6" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
-      <line x1="224" y1="162" x2="258" y2="162" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
-      <line x1="224" y1="172" x2="258" y2="172" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
-      <line x1="224" y1="182" x2="248" y2="182" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
-      <text x="241" y="214" text-anchor="middle" font-size="11" fill="#0077A8" font-family="sans-serif" font-weight="700">営業リスト</text>
-      <!-- バッジ -->
-      <rect x="50" y="228" width="176" height="32" rx="16" fill="#0077A8"/>
-      <text x="138" y="249" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="sans-serif">常時最新データを自動更新</text>
+    <svg width="290" height="300" viewBox="0 0 290 300" fill="none">
+      <path d="M75 95 Q61 95 61 82 Q61 64 79 64 Q79 40 102 40 Q115 28 133 40 Q153 28 171 46 Q189 46 189 64 Q201 64 201 82 Q201 95 187 95 Z" fill="#D4EDF9" stroke="#0077A8" stroke-width="2.5"/>
+      <text x="131" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#0077A8" font-family="sans-serif">gBiz / SNS</text>
+      <line x1="131" y1="98" x2="131" y2="135" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <polygon points="121,128 131,142 141,128" fill="#0077A8"/>
+      <ellipse cx="131" cy="160" rx="44" ry="12" fill="#0077A8" opacity=".25"/>
+      <rect x="87" y="150" width="88" height="34" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="131" cy="184" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <ellipse cx="131" cy="150" rx="44" ry="12" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <text x="131" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#0077A8" font-family="sans-serif">営業DB</text>
+      <line x1="177" y1="168" x2="213" y2="168" stroke="#0077A8" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <polygon points="207,158 221,168 207,178" fill="#0077A8"/>
+      <rect x="221" y="148" width="52" height="52" rx="6" fill="#EAF4FA" stroke="#0077A8" stroke-width="2"/>
+      <line x1="229" y1="163" x2="265" y2="163" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <line x1="229" y1="173" x2="265" y2="173" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <line x1="229" y1="183" x2="253" y2="183" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/>
+      <text x="247" y="216" text-anchor="middle" font-size="11" fill="#0077A8" font-family="sans-serif" font-weight="700">営業リスト</text>
+      <rect x="55" y="234" width="180" height="34" rx="17" fill="#0077A8"/>
+      <text x="145" y="256" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="sans-serif">常時最新データを自動更新</text>
     </svg>
   </div>
 </div>
 
-<!-- ══════════ S9: FEATURE 02 ══════════ -->
+<!-- ══ S9: FEATURE 02 ══ -->
 <div class="slide ft">
   <div class="fl">
-    <div class="sn"><span class="sn-badge">FEATURE 02</span></div>
-    <h2 class="editable">企業を<br>深堀りする</h2>
-    <div class="fl-list">
-      <div class="fi"><h3 class="editable">業界・業種の複数割当</h3><p class="editable">1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p></div>
-      <div class="fi"><h3 class="editable">事業内容のAI要約</h3><p class="editable">長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p></div>
-      <div class="fi"><h3 class="editable">AIタグ自動発行</h3><p class="editable">「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p></div>
+    <div class="snbadge e">FEATURE 02</div>
+    <h2 class="e">企業を<br>深堀りする</h2>
+    <div class="fll">
+      <div class="fi"><h3 class="e">業界・業種の複数割当</h3><p class="e">1社に複数業種タグを付与。多角的なターゲティングで精度が上がります。</p></div>
+      <div class="fi"><h3 class="e">事業内容のAI要約</h3><p class="e">長い会社概要をAIが3行に要約。担当者が即座に企業像を把握できます。</p></div>
+      <div class="fi"><h3 class="e">AIタグ自動発行</h3><p class="e">「EC強化中」「採用拡大」などフェーズを示すタグをAIが自動生成します。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="sc-lbl editable">実際の画面</p>
-    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="screen_企業深堀.png" alt="企業深堀り" style="max-width:520px;"></div>
+    <p class="sc-lbl e">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="screen_企業深堀.png" alt="企業深堀り" style="max-width:530px;"></div>
   </div>
 </div>
 
-<!-- ══════════ S10: FEATURE 03 ══════════ -->
+<!-- ══ S10: FEATURE 03 ══ -->
 <div class="slide ft">
   <div class="fl">
-    <div class="sn"><span class="sn-badge">FEATURE 03</span></div>
-    <h2 class="editable">自然言語でリスト生成<br>× AIマッチングスコア</h2>
-    <div class="fl-list">
-      <div class="fi"><h3 class="editable">話し言葉で条件を指定</h3><p class="editable">「東京都内のIT企業で50名以上」と入力するだけ。AIが意図を汲んで即座にリストを生成します。</p></div>
-      <div class="fi"><h3 class="editable">AIマッチングスコア 0〜100</h3><p class="editable">自社商材との親和性をスコア化。上位企業から順にアプローチするだけで商談転換率が劇的に向上。</p></div>
-      <div class="fi"><h3 class="editable">作業時間を数時間から数秒に</h3><p class="editable">従来の手作業リスト作成が、AIで即完了。営業時間を本来の活動へ集中できます。</p></div>
+    <div class="snbadge e">FEATURE 03</div>
+    <h2 class="e">自然言語でリスト生成<br>× AIマッチングスコア</h2>
+    <div class="fll">
+      <div class="fi"><h3 class="e">話し言葉で条件を指定</h3><p class="e">「東京都内のIT企業で50名以上」と入力するだけ。AIが意図を汲んで即座にリストを生成します。</p></div>
+      <div class="fi"><h3 class="e">AIマッチングスコア 0〜100</h3><p class="e">自社商材との親和性をスコア化。上位から順にアプローチするだけで商談転換率が劇的向上。</p></div>
+      <div class="fi"><h3 class="e">作業時間を数時間から数秒に</h3><p class="e">従来の手作業リスト作成が、AIで即完了。営業時間を本来の活動へ集中できます。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="sc-lbl editable">実際の画面</p>
-    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image20.png" alt="AI詳細検索" style="max-width:570px;"></div>
+    <p class="sc-lbl e">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image20.png" alt="AI詳細検索" style="max-width:575px;"></div>
   </div>
 </div>
 
-<!-- ══════════ S11: FEATURE 04 ══════════ -->
+<!-- ══ S11: FEATURE 04 ══ -->
 <div class="slide ft">
   <div class="fl">
-    <div class="sn"><span class="sn-badge">FEATURE 04</span></div>
-    <h2 class="editable">AIが営業メールを<br>自動生成する</h2>
-    <p class="fb editable">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。</p>
+    <div class="snbadge e">FEATURE 04</div>
+    <h2 class="e">AIが営業メールを<br>自動生成する</h2>
+    <p class="fb e">企業の事業内容・AIタグをもとに、その会社だけに刺さるパーソナライズドメールをワンクリックで生成。</p>
     <div class="fpts">
-      <div class="fpt"><p class="editable"><strong>件名・本文を自動生成</strong><br>企業ごとに最適な文面をAIが作成</p></div>
-      <div class="fpt"><p class="editable"><strong>返信率 +28%</strong><br>パーソナライズで反応率が劇的改善</p></div>
-      <div class="fpt"><p class="editable"><strong>1クリックで送信準備完了</strong><br>確認・編集後そのまま送れる</p></div>
+      <div class="fpt"><p class="e"><strong>件名・本文を自動生成</strong><br>企業ごとに最適な文面をAIが作成</p></div>
+      <div class="fpt"><p class="e"><strong>返信率 +28%</strong><br>パーソナライズで反応率が劇的改善</p></div>
+      <div class="fpt"><p class="e"><strong>1クリックで送信準備完了</strong><br>確認・編集後そのまま送れる</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="sc-lbl editable">実際の画面</p>
-    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image46.png" alt="AIメール" style="max-width:570px;"></div>
+    <p class="sc-lbl e">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image46.png" alt="AIメール" style="max-width:575px;"></div>
   </div>
 </div>
 
-<!-- ══════════ S12: FEATURE 05 ══════════ -->
+<!-- ══ S12: FEATURE 05 ══ -->
 <div class="slide ft">
   <div class="fl">
-    <div class="sn"><span class="sn-badge">FEATURE 05</span></div>
-    <h2 class="editable">架電管理で<br>アポ率を変える</h2>
-    <p class="fb editable">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
+    <div class="snbadge e">FEATURE 05</div>
+    <h2 class="e">架電管理で<br>アポ率を変える</h2>
+    <p class="fb e">担当者と繋がった瞬間から確度の高いトークを展開。架電業務をまるごとデジタル化します。</p>
     <div class="fst">
-      <div class="fs"><div class="fsn">1</div><p class="editable"><strong>企業情報を即サマリー表示</strong><br>架電前に事業内容・AIタグをAIが3行で整理。</p></div>
-      <div class="fs"><div class="fsn">2</div><p class="editable"><strong>AIがトークスクリプト自動生成</strong><br>企業理解 × 自社商材で最適な切り出しフレーズを提案。</p></div>
-      <div class="fs"><div class="fsn">3</div><p class="editable"><strong>架電結果をワンクリック記録</strong><br>ステータス管理・次回アクションをAIが自動で提案します。</p></div>
+      <div class="fs"><div class="fsn">1</div><p class="e"><strong>企業情報を即サマリー表示</strong><br>架電前に事業内容・AIタグをAIが3行で整理。</p></div>
+      <div class="fs"><div class="fsn">2</div><p class="e"><strong>AIがトークスクリプト自動生成</strong><br>企業理解 × 自社商材で最適な切り出しフレーズを提案。</p></div>
+      <div class="fs"><div class="fsn">3</div><p class="e"><strong>架電結果をワンクリック記録</strong><br>ステータス管理・次回アクションをAIが自動で提案。</p></div>
     </div>
   </div>
   <div class="fr">
-    <p class="sc-lbl editable">実際の画面</p>
-    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image34.png" alt="架電管理" style="max-width:570px;"></div>
+    <p class="sc-lbl e">実際の画面</p>
+    <div class="bf"><div class="bb"><div class="bd r"></div><div class="bd y"></div><div class="bd g"></div><div class="bu"></div></div><img src="pptx_images/image34.png" alt="架電管理" style="max-width:575px;"></div>
   </div>
 </div>
 
-<!-- ══════════ S13: 架電オプション ══════════ -->
+<!-- ══ S13: 架電オプション ══ -->
 <div class="slide s-opt">
-  <div class="hd">
-    <span class="ob editable">OPTION</span>
-    <h2 class="editable">架電管理オプション機能</h2>
-  </div>
+  <div class="hd"><span class="ob e">OPTION</span><h2 class="e">架電管理オプション機能</h2></div>
   <div class="cg">
     <div class="oc">
-      <div class="oi">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M7 19 Q7 12 13 9 Q19 12 19 19" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="7" r="3" fill="#0077A8"/></svg>
-      </div>
-      <h3 class="editable">架電実行サポート</h3>
-      <p class="editable">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで実現します。</p>
+      <div class="oi"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M7 19 Q7 12 13 9 Q19 12 19 19" stroke="#0077A8" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="7" r="3" fill="#0077A8"/></svg></div>
+      <h3 class="e">架電実行サポート</h3>
+      <p class="e">架電リストの優先順位付け・結果記録・次回アクション管理をワンストップで実現します。</p>
     </div>
     <div class="oc">
-      <div class="oi">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="15" width="4" height="8" rx="1" fill="#0077A8"/><rect x="11" y="10" width="4" height="13" rx="1" fill="#0077A8"/><rect x="18" y="5" width="4" height="18" rx="1" fill="#0077A8" opacity=".65"/></svg>
-      </div>
-      <h3 class="editable">分析・レポート</h3>
-      <p class="editable">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握できます。</p>
+      <div class="oi"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="15" width="4" height="8" rx="1" fill="#0077A8"/><rect x="11" y="10" width="4" height="13" rx="1" fill="#0077A8"/><rect x="18" y="5" width="4" height="18" rx="1" fill="#0077A8" opacity=".65"/></svg></div>
+      <h3 class="e">分析・レポート</h3>
+      <p class="e">接触率・アポ率・担当者別成績をリアルタイムで可視化。改善ポイントを即把握できます。</p>
     </div>
     <div class="oc">
-      <div class="oi">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="8" stroke="#0077A8" stroke-width="2"/><circle cx="13" cy="13" r="3.5" fill="#0077A8"/><path d="M13 4v2M13 20v2M4 13h2M20 13h2" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg>
-      </div>
-      <h3 class="editable">KPIレポート</h3>
-      <p class="editable">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます。</p>
+      <div class="oi"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="8" stroke="#0077A8" stroke-width="2"/><circle cx="13" cy="13" r="3.5" fill="#0077A8"/><path d="M13 4v2M13 20v2M4 13h2M20 13h2" stroke="#0077A8" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <h3 class="e">KPIレポート</h3>
+      <p class="e">月次・週次のKPIをダッシュボードで一覧表示。マネジメント層の意思決定をデータが支えます。</p>
     </div>
   </div>
-  <div class="nt editable">架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける営業組織へ。</div>
+  <div class="nt e">架電業務を丸ごとデジタル化。マネージャーも担当者も、数字で動ける営業組織へ。</div>
 </div>
 
-<!-- ══════════ S14: 導入効果 ══════════ -->
+<!-- ══ S14: 導入効果 ══ -->
 <div class="slide s-res">
-  <div class="hd">
-    <h2 class="editable">導入効果 ── 数字が証明する、変革の実績</h2>
-    <p class="editable">実際の導入企業データに基づく成果指標</p>
-  </div>
+  <div class="hd"><h2 class="e">導入効果 ── 数字が証明する、変革の実績</h2><p class="e">実際の導入企業データに基づく成果指標</p></div>
   <div class="mcs">
-    <div class="mc"><div class="mn editable">87<span class="mu">%</span></div><div class="ml editable">業務時間削減<br>（90h→11.5h / 月）</div></div>
-    <div class="mc"><div class="mn" style="font-size:28px;line-height:1.2;"><span class="editable">1.8〜<br>2.4</span><span class="mu">倍</span></div><div class="ml editable">アポ獲得率<br>向上</div></div>
-    <div class="mc"><div class="mn editable">+28<span class="mu">%</span></div><div class="ml editable">メール返信率<br>改善</div></div>
-    <div class="mc"><div class="mn editable">+32<span class="mu">%</span></div><div class="ml editable">商談転換率<br>向上</div></div>
+    <div class="mc"><div class="mn e">87<span class="mu">%</span></div><div class="ml e">業務時間削減<br>（90h→11.5h / 月）</div></div>
+    <div class="mc"><div class="mn" style="font-size:28px;line-height:1.2;"><span class="e">1.8〜<br>2.4</span><span class="mu" style="font-size:22px;">倍</span></div><div class="ml e">アポ獲得率<br>向上</div></div>
+    <div class="mc"><div class="mn e">+28<span class="mu">%</span></div><div class="ml e">メール返信率<br>改善</div></div>
+    <div class="mc"><div class="mn e">+32<span class="mu">%</span></div><div class="ml e">商談転換率<br>向上</div></div>
   </div>
   <div class="sm">
-    <div class="si"><div class="sn editable">週5h</div><div class="sl editable">リスト作業削減</div></div>
+    <div class="si"><div class="sn e">週5h</div><div class="sl e">リスト作業削減</div></div>
     <div class="sd"></div>
-    <div class="si"><div class="sn editable">3日以内</div><div class="sl editable">導入・稼働開始</div></div>
+    <div class="si"><div class="sn e">3日以内</div><div class="sl e">導入・稼働開始</div></div>
     <div class="sd"></div>
-    <div class="si"><div class="sn editable">即日</div><div class="sl editable">リスト自動生成</div></div>
+    <div class="si"><div class="sn e">即日</div><div class="sl e">リスト自動生成</div></div>
     <div class="sd"></div>
-    <div class="si"><div class="sn editable">早期</div><div class="sl editable">ROI回収を実現</div></div>
+    <div class="si"><div class="sn e">早期</div><div class="sl e">ROI回収を実現</div></div>
   </div>
 </div>
 
-<!-- ══════════ S15: ご利用の流れ ══════════ -->
+<!-- ══ S15: ご利用の流れ ══ -->
 <div class="slide s-fl">
-  <div class="hd"><h2 class="editable">ご利用の流れ ── 最短3日で営業が変わる</h2></div>
+  <div class="hd"><h2 class="e">ご利用の流れ ── 最短3日で営業が変わる</h2></div>
   <div class="sr">
-    <div class="sb"><div class="nc">1</div><h3 class="editable">自社情報登録</h3><p class="editable">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p></div>
+    <div class="sb"><div class="nc">1</div><h3 class="e">自社情報登録</h3><p class="e">商材・ターゲット業種・自社の強みを入力するだけ。AIがすべての設定を最適化します</p></div>
     <div class="sa">&#9654;</div>
-    <div class="sb"><div class="nc">2</div><h3 class="editable">AIにリスト依頼</h3><p class="editable">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p></div>
+    <div class="sb"><div class="nc">2</div><h3 class="e">AIにリスト依頼</h3><p class="e">話し言葉で条件を伝えるだけ。スコアリング済みの優先リストが即座に完成</p></div>
     <div class="sa">&#9654;</div>
-    <div class="sb"><div class="nc">3</div><h3 class="editable">アプローチ実行</h3><p class="editable">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p></div>
+    <div class="sb"><div class="nc">3</div><h3 class="e">アプローチ実行</h3><p class="e">AIが生成したメール・スクリプトでアプローチ。送るだけで返信率が変わります</p></div>
     <div class="sa">&#9654;</div>
-    <div class="sb"><div class="nc">4</div><h3 class="editable">成果管理・改善</h3><p class="editable">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p></div>
+    <div class="sb"><div class="nc">4</div><h3 class="e">成果管理・改善</h3><p class="e">KPIをダッシュボードで確認し、AIの提案で打ち手を継続的に最適化</p></div>
   </div>
-  <div class="nt editable">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
+  <div class="nt e">※ 初期設定・オンボーディングサポート付き。技術的な知識は一切不要です。</div>
 </div>
 
-<!-- ══════════ S16: CTA ══════════ -->
+<!-- ══ S16: CTA ══ -->
 <div class="slide s-cta">
-  <div class="stripe"></div>
+  <div class="str"></div>
   <div class="r1"></div><div class="r2"></div><div class="r3"></div>
   <div class="ct">
-    <p class="ca editable">First Step</p>
-    <h2 class="cp editable">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
-    <p class="cs editable">AIリストマスターは、導入翌日から営業リストの質が変わります。<br>「うちの業種でも使えるか？」その疑問、30分の相談で解決します。</p>
-    <a href="#" class="btn editable">無料相談を申し込む</a>
-    <p class="cn editable">お電話・メール・Web会議 ご希望の方法でご対応します</p>
+    <p class="ca e">First Step</p>
+    <h2 class="cp e">まずは<em>無料相談</em>から。<br>貴社の営業を変えましょう。</h2>
+    <p class="cs e">AIリストマスターは、導入翌日から営業リストの質が変わります。<br>「うちの業種でも使えるか？」その疑問、30分の相談で解決します。</p>
+    <a href="#" class="btn e">無料相談を申し込む</a>
+    <p class="cn e">お電話・メール・Web会議 ご希望の方法でご対応します</p>
   </div>
-  <div class="lg editable">AIリストマスター</div>
+  <div class="lg e">AIリストマスター</div>
 </div>
 
 </div><!-- /scaler -->
@@ -781,40 +661,34 @@
   slides.forEach((_,i)=>{
     const d=document.createElement('div');
     d.className='dot'+(i===0?' active':'');
-    d.onclick=()=>go(i);
-    nav.appendChild(d);
+    d.onclick=()=>go(i); nav.appendChild(d);
   });
   function go(n){
-    slides[c].classList.remove('active');
-    nav.children[c].classList.remove('active');
+    slides[c].classList.remove('active'); nav.children[c].classList.remove('active');
     c=((n%N)+N)%N;
-    slides[c].classList.add('active');
-    nav.children[c].classList.add('active');
+    slides[c].classList.add('active'); nav.children[c].classList.add('active');
     ctr.textContent=(c+1)+' / '+N;
   }
   window.nextSlide=()=>go(c+1);
   window.prevSlide=()=>go(c-1);
   document.addEventListener('keydown',e=>{
-    if(document.body.classList.contains('edit-mode')&&document.activeElement?.isContentEditable)return;
+    if(document.body.classList.contains('em')&&document.activeElement?.isContentEditable)return;
     if(e.key==='ArrowRight'||e.key==='ArrowDown')go(c+1);
     if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(c-1);
   });
   function scale(){
     const s=Math.min(window.innerWidth/960,window.innerHeight/540);
-    const x=(window.innerWidth-960*s)/2;
-    const y=(window.innerHeight-540*s)/2;
+    const x=(window.innerWidth-960*s)/2; const y=(window.innerHeight-540*s)/2;
     sc.style.transform=`translate(${x}px,${y}px) scale(${s})`;
   }
   scale(); window.addEventListener('resize',scale);
   window.toggleEdit=function(){
-    const b=document.body,btn=document.getElementById('btn-edit'),els=document.querySelectorAll('.editable');
-    if(b.classList.contains('edit-mode')){
-      b.classList.remove('edit-mode');
-      els.forEach(e=>e.removeAttribute('contenteditable'));
+    const b=document.body,btn=document.getElementById('btn-edit'),els=document.querySelectorAll('.e');
+    if(b.classList.contains('em')){
+      b.classList.remove('em'); els.forEach(e=>e.removeAttribute('contenteditable'));
       btn.classList.remove('active'); btn.textContent='編集モード';
     }else{
-      b.classList.add('edit-mode');
-      els.forEach(e=>e.setAttribute('contenteditable','true'));
+      b.classList.add('em'); els.forEach(e=>e.setAttribute('contenteditable','true'));
       btn.classList.add('active'); btn.textContent='編集終了';
     }
   };
