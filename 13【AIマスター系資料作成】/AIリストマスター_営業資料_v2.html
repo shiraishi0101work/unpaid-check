@@ -789,52 +789,79 @@ body.em .et.light:focus{ background:rgba(13,27,74,.85)!important; }
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   };
 
-  // PDF出力
+  // 背景画像を DataURL に変換（キャッシュ付き）
+  const imgCache = new Map();
+  async function bgToDataURL(imgEl, w, h){
+    const src = imgEl.src;
+    if(imgCache.has(src)) return imgCache.get(src);
+    return new Promise(resolve=>{
+      const i = new Image();
+      i.onload = ()=>{
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(i,0,0,w,h);
+        const d = cv.toDataURL('image/jpeg',0.92);
+        imgCache.set(src,d);
+        resolve(d);
+      };
+      i.src = src;
+    });
+  }
+
+  // PDF出力（高速版）
   window.exportPDF = async function(){
     const btn = document.getElementById('btn-pdf');
     btn.textContent = '生成中...'; btn.disabled = true;
     const { jsPDF } = window.jspdf;
     const orig = c;
-    const saved = sc.style.transform;
-    document.body.style.overflow = 'visible';
-
-    // まず全サイズを取得
     const sizes = Array.from({length:N},(_,i)=>slideSize(i));
     let pdf = null;
 
     for(let i=0; i<N; i++){
       const {w,h} = sizes[i];
-      // スケーラーをリセットしてスライドを実寸で表示
-      sc.style.width   = w+'px';
-      sc.style.height  = h+'px';
-      sc.style.transform = 'translate(0px,0px) scale(1)';
-      sl.forEach(s2=>{ s2.style.opacity='0'; s2.style.pointerEvents='none'; s2.style.width=w+'px'; s2.style.height=h+'px'; });
-      sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
-      await new Promise(r=>setTimeout(r,250));
+      btn.textContent = `生成中 ${i+1}/${N}...`;
 
-      const canvas = await html2canvas(sl[i],{
-        scale:2, useCORS:true, allowTaint:true,
-        width:w, height:h,
-        windowWidth:w, windowHeight:h,
-        x:0, y:0, scrollX:0, scrollY:0,
-        backgroundColor:'#ffffff', logging:false,
-        ignoreElements: el=>
-          el.id==='toolbar'||el.id==='nav'||
-          el.id==='counter'||el.classList.contains('nb')
-      });
-      const img = canvas.toDataURL('image/jpeg', 0.96);
+      const hasModified = sl[i].querySelectorAll('.et.modified').length > 0;
+      let imgData;
+
+      if(!hasModified){
+        // 高速パス：背景画像を直接使用（html2canvas不要）
+        const bgEl = sl[i].querySelector('img.bg');
+        imgData = bgEl ? await bgToDataURL(bgEl,w,h) : null;
+      }
+
+      if(!imgData){
+        // 編集済みテキストがある場合のみ html2canvas を使用
+        const saved = sc.style.transform;
+        document.body.style.overflow = 'visible';
+        sc.style.width=w+'px'; sc.style.height=h+'px';
+        sc.style.transform='translate(0px,0px) scale(1)';
+        sl.forEach(s2=>{ s2.style.opacity='0'; s2.style.pointerEvents='none'; s2.style.width=w+'px'; s2.style.height=h+'px'; });
+        sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
+        await new Promise(r=>setTimeout(r,120));
+        const canvas = await html2canvas(sl[i],{
+          scale:1.5, useCORS:true, allowTaint:true,
+          width:w, height:h, windowWidth:w, windowHeight:h,
+          x:0, y:0, scrollX:0, scrollY:0,
+          backgroundColor:'#ffffff', logging:false,
+          ignoreElements: el=>
+            el.id==='toolbar'||el.id==='nav'||
+            el.id==='counter'||el.classList.contains('nb')
+        });
+        imgData = canvas.toDataURL('image/jpeg',0.92);
+        sc.style.transform=saved;
+        document.body.style.overflow='';
+        sl.forEach(s2=>{ s2.style.opacity=''; s2.style.pointerEvents=''; });
+      }
 
       if(!pdf){
         pdf = new jsPDF({orientation:'landscape', unit:'pt', format:[w,h]});
       } else {
         pdf.addPage([w,h],'landscape');
       }
-      pdf.addImage(img,'JPEG',0,0,w,h,undefined,'FAST');
+      pdf.addImage(imgData,'JPEG',0,0,w,h,undefined,'FAST');
     }
 
-    sc.style.transform = saved;
-    document.body.style.overflow = '';
-    sl.forEach(s2=>{ s2.style.opacity=''; s2.style.pointerEvents=''; });
     go(orig);
     pdf.save('AIリストマスター_営業資料_v2.pdf');
     btn.textContent = 'PDFで保存'; btn.disabled = false;
