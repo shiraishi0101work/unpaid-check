@@ -812,66 +812,9 @@ body.em .et.light:focus{ background:rgba(13,27,74,.85)!important; }
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   };
 
-  // PDF出力（高速版）
-  window.exportPDF = async function(){
-    const btn = document.getElementById('btn-pdf');
-    btn.textContent = '生成中...'; btn.disabled = true;
-    const { jsPDF } = window.jspdf;
-    const orig = c;
-    const sizes = Array.from({length:N},(_,i)=>slideSize(i));
-    let pdf = null;
-
-    for(let i=0; i<N; i++){
-      const {w,h} = sizes[i];
-      btn.textContent = `生成中 ${i+1}/${N}...`;
-      let imgData = null;
-
-      // 高速パス：修正なしスライドは既存imgタグから直接描画
-      if(sl[i].querySelectorAll('.et.modified').length === 0){
-        const bgEl = sl[i].querySelector('img.bg');
-        if(bgEl && bgEl.complete && bgEl.naturalWidth > 0){
-          try {
-            const cv = document.createElement('canvas');
-            cv.width = w; cv.height = h;
-            cv.getContext('2d').drawImage(bgEl, 0, 0, w, h);
-            imgData = cv.toDataURL('image/jpeg', 0.92);
-          } catch(e){ imgData = null; }
-        }
-      }
-
-      // 低速パス：html2canvas（編集済み or 画像描画失敗時）
-      if(!imgData){
-        document.body.style.overflow = 'visible';
-        sc.style.width=w+'px'; sc.style.height=h+'px';
-        sc.style.transform='translate(0px,0px) scale(1)';
-        sl.forEach(s2=>{ s2.style.opacity='0'; s2.style.pointerEvents='none'; s2.style.width=w+'px'; s2.style.height=h+'px'; });
-        sl[i].style.opacity='1'; sl[i].style.pointerEvents='all';
-        await new Promise(r=>setTimeout(r,60));
-        const cv = await html2canvas(sl[i],{
-          scale:1, useCORS:true, allowTaint:true,
-          width:w, height:h, windowWidth:w, windowHeight:h,
-          x:0, y:0, scrollX:0, scrollY:0,
-          backgroundColor:'#ffffff', logging:false,
-          ignoreElements: el=>
-            el.id==='toolbar'||el.id==='nav'||
-            el.id==='counter'||el.classList.contains('nb')
-        });
-        imgData = cv.toDataURL('image/jpeg', 0.92);
-      }
-
-      if(!pdf){
-        pdf = new jsPDF({orientation:'landscape', unit:'pt', format:[w,h]});
-      } else {
-        pdf.addPage([w,h],'landscape');
-      }
-      pdf.addImage(imgData,'JPEG',0,0,w,h,undefined,'FAST');
-    }
-
-    document.body.style.overflow = '';
-    sl.forEach(s2=>{ s2.style.opacity=''; s2.style.pointerEvents=''; });
-    go(orig);
-    pdf.save('AIリストマスター_営業資料_v2.pdf');
-    btn.textContent = 'PDFで保存'; btn.disabled = false;
+  // PDF出力（ブラウザ印刷→PDF保存）
+  window.exportPDF = function(){
+    window.print();
   };
 
   // 初期スライドをアクティブ化
