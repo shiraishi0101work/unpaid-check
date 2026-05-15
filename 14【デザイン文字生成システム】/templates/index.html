@@ -382,8 +382,42 @@
   <!-- フォント選択 -->
   <div class="form-group">
     <label>フォント</label>
-    <div class="font-list" id="fontList">
-      <!-- JS で動的生成 -->
+    <div class="font-list" id="fontList"></div>
+  </div>
+
+  <!-- 外縁設定 -->
+  <div class="form-group">
+    <label>外縁（ふち）</label>
+
+    <!-- ふちモード -->
+    <div class="border-mode-row">
+      <div class="border-mode-btn active" data-mode="double" onclick="setBorderMode('double')">ふち２種</div>
+      <div class="border-mode-btn"        data-mode="single" onclick="setBorderMode('single')">ふち１種</div>
+      <div class="border-mode-btn"        data-mode="none"   onclick="setBorderMode('none')">ふちなし</div>
+    </div>
+
+    <!-- ふち色 -->
+    <div class="border-colors-row" id="borderColorsRow">
+      <div class="border-color-item" id="borderColor1Item">
+        <label>内側の色</label>
+        <input type="color" id="borderColor1Picker" value="#1a1a1a" oninput="syncBorderHex(1)" />
+        <input type="text"  id="borderColor1Hex" class="hex-input" value="#1a1a1a" maxlength="7" oninput="syncBorderPicker(1)" />
+      </div>
+      <div class="border-color-item" id="borderColor2Item">
+        <label>外側の色</label>
+        <input type="color" id="borderColor2Picker" value="#ffffff" oninput="syncBorderHex(2)" />
+        <input type="text"  id="borderColor2Hex" class="hex-input" value="#ffffff" maxlength="7" oninput="syncBorderPicker(2)" />
+      </div>
+    </div>
+
+    <!-- ふちの太さ -->
+    <div class="border-size-row" id="borderSizeRow">
+      <div class="border-size-label">
+        <span>ふちの太さ</span>
+        <span class="border-size-val"><span id="borderSizeValue">5</span> / 10</span>
+      </div>
+      <input type="range" id="borderSizeSlider" min="1" max="10" value="5" step="1"
+             oninput="document.getElementById('borderSizeValue').textContent=this.value" />
     </div>
   </div>
 
