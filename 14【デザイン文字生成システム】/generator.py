@@ -102,7 +102,7 @@ def generate_sticker(
     padding   = combined * 3 + shadow_dx + shadow_dy
 
     # ---- フォントロード & テキスト計測 ----
-    font = ImageFont.truetype(font_path, font_size)
+    font = load_font(font_size, font_path)
 
     tmp_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
     bbox = tmp_draw.textbbox((0, 0), text, font=font)
