@@ -101,7 +101,7 @@ def _lerp_color(c1, c2, t):
 
 
 # ============================================================
-# テキスト計測 & レンダリング（字間対応）
+# テキスト計測
 # ============================================================
 _TMP_DRAW = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
 
@@ -125,23 +125,36 @@ def _measure(text, font, letter_spacing):
     return total_w, text_h, offset_x, offset_y
 
 
-def _render_text(canvas_size, text, font, tx, ty,
-                 fill_color, stroke_width=0, stroke_fill=None,
-                 letter_spacing=0):
-    img  = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    sf   = stroke_fill or fill_color
+# ============================================================
+# テキストマスク生成 & 膨張
+# ============================================================
+def _make_text_mask(canvas_size, text, font, tx, ty, letter_spacing):
+    """テキストをグレースケールマスク（L）として描画。"""
+    mask = Image.new("L", canvas_size, 0)
+    draw = ImageDraw.Draw(mask)
     if letter_spacing == 0:
-        draw.text((tx, ty), text, font=font, fill=fill_color,
-                  stroke_width=stroke_width, stroke_fill=sf)
-        return img
-    x = tx
-    for i, ch in enumerate(text):
-        draw.text((x, ty), ch, font=font, fill=fill_color,
-                  stroke_width=stroke_width, stroke_fill=sf)
-        cb = _TMP_DRAW.textbbox((0, 0), ch, font=font)
-        x += (cb[2] - cb[0]) + letter_spacing
-    return img
+        draw.text((tx, ty), text, font=font, fill=255)
+    else:
+        x = tx
+        for i, ch in enumerate(text):
+            draw.text((x, ty), ch, font=font, fill=255)
+            cb = _TMP_DRAW.textbbox((0, 0), ch, font=font)
+            x += (cb[2]-cb[0]) + letter_spacing
+    return mask
+
+
+def _dilate_mask(mask, pixels):
+    """MaxFilter でマスクを pixels 分膨張する。にじみのないきれいなふち用。"""
+    if pixels <= 0:
+        return mask
+    return mask.filter(ImageFilter.MaxFilter(pixels * 2 + 1))
+
+
+def _color_layer(canvas_size, color_rgba, mask):
+    """単色 RGBA レイヤーをマスクでクリップして返す。"""
+    layer = Image.new("RGBA", canvas_size, color_rgba)
+    layer.putalpha(mask)
+    return layer
 
 
 # ============================================================
@@ -160,7 +173,6 @@ def _create_gradient(w, h, c1, c2, mode):
             draw.line([(x, 0), (x, h-1)], fill=_lerp_color(c1, c2, x/max(1, w-1)))
 
     elif mode == "diagonal":
-        # 縦グラデ画像を -45° 回転して切り抜き
         diag = int(math.sqrt(w*w + h*h)) + 4
         tmp  = Image.new("RGBA", (diag, diag))
         td   = ImageDraw.Draw(tmp)
@@ -173,18 +185,6 @@ def _create_gradient(w, h, c1, c2, mode):
             img = img.resize((w, h), Image.LANCZOS)
 
     return img
-
-
-# ============================================================
-# 4角星（グロス用）
-# ============================================================
-def _draw_star(draw, cx, cy, r_outer, r_inner, color):
-    pts = []
-    for i in range(8):
-        ang = math.pi * i / 4 - math.pi / 2
-        r   = r_outer if i % 2 == 0 else r_inner
-        pts.append((cx + r*math.cos(ang), cy + r*math.sin(ang)))
-    draw.polygon(pts, fill=color)
 
 
 # ============================================================
@@ -227,16 +227,16 @@ def generate_sticker(
     border_color2    = "#ffffff",
     border_size      = 5,          # 1-10
     # 文字スタイル
-    letter_spacing   = 0,          # px（-20〜150）
-    x_scale          = 100,        # 横幅 %（50〜200）
-    slant            = 0,          # 斜体角度（-30〜30）
-    fake_bold        = 0,          # 疑似太字（0〜8）
-    font_weight      = None,       # ウェイト（可変フォントのみ有効、100〜900）
+    letter_spacing   = 0,
+    x_scale          = 100,
+    slant            = 0,
+    fake_bold        = 0,
+    font_weight      = None,
     # エフェクト
-    gloss            = True,       # 艶あり/なし
-    gloss_intensity  = 60,         # 艶の強さ（0〜100）
-    gradient_mode    = "none",     # "none"|"top_bottom"|"left_right"|"diagonal"
-    gradient_color2  = None,       # グラデ第2色（None=塗り色を明るくして自動生成）
+    gloss            = True,
+    gloss_intensity  = 60,
+    gradient_mode    = "none",
+    gradient_color2  = None,
 ):
     if not text or not text.strip():
         raise ValueError("テキストを入力してください")
@@ -277,86 +277,51 @@ def generate_sticker(
 
     result = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
+    # ---- ベーステキストマスク（全レイヤー共通） ----
+    base_mask = _make_text_mask((canvas_w, canvas_h), text, font, tx, ty, letter_spacing)
+
     # ---- 外側ふち（double） ----
     if border_mode == "double":
-        layer = _render_text(
-            (canvas_w, canvas_h), text, font, tx, ty,
-            color2_rgba, combined, color2_rgba, letter_spacing
-        )
-        result = Image.alpha_composite(result, layer)
+        outer_mask = _dilate_mask(base_mask, combined)
+        result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color2_rgba, outer_mask))
 
     # ---- 内側ふち（single / double） ----
     if border_mode in ("single", "double"):
-        layer = _render_text(
-            (canvas_w, canvas_h), text, font, tx, ty,
-            color1_rgba, inner_stroke, color1_rgba, letter_spacing
-        )
-        result = Image.alpha_composite(result, layer)
+        inner_mask = _dilate_mask(base_mask, inner_stroke)
+        result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color1_rgba, inner_mask))
 
-    # ---- 塗り（グラデ or フラット） ----
-    # テキストマスク
-    text_mask = Image.new("L", (canvas_w, canvas_h), 0)
-    _render_text((canvas_w, canvas_h), text, font, tx, ty,
-                 255, 0, None, letter_spacing
-                 )
-    # マスク専用レンダリング
-    mask_layer = Image.new("L", (canvas_w, canvas_h), 0)
-    mask_draw  = ImageDraw.Draw(mask_layer)
-    if letter_spacing == 0:
-        mask_draw.text((tx, ty), text, font=font, fill=255)
-    else:
-        x = tx
-        for i, ch in enumerate(text):
-            mask_draw.text((x, ty), ch, font=font, fill=255)
-            cb = _TMP_DRAW.textbbox((0, 0), ch, font=font)
-            x += (cb[2]-cb[0]) + letter_spacing
-    text_mask = mask_layer
+    # ---- 塗りマスク（疑似太字考慮） ----
+    fill_mask = _dilate_mask(base_mask, fake_bold) if fake_bold > 0 else base_mask
 
+    # ---- グラデ or フラット塗り ----
     if gradient_mode != "none":
         gc2 = hex_to_rgba(gradient_color2) if gradient_color2 else lighten_rgba(fill_rgba, 0.45)
-        grad_img = _create_gradient(canvas_w, canvas_h, fill_rgba, gc2, gradient_mode)
-        # fake_bold ストロークを考慮したマスク
-        if fake_bold > 0:
-            fb_mask = Image.new("L", (canvas_w, canvas_h), 0)
-            fb_draw = ImageDraw.Draw(fb_mask)
-            if letter_spacing == 0:
-                fb_draw.text((tx, ty), text, font=font, fill=255,
-                             stroke_width=fake_bold, stroke_fill=255)
-            else:
-                x = tx
-                for i, ch in enumerate(text):
-                    fb_draw.text((x, ty), ch, font=font, fill=255,
-                                 stroke_width=fake_bold, stroke_fill=255)
-                    cb = _TMP_DRAW.textbbox((0, 0), ch, font=font)
-                    x += (cb[2]-cb[0]) + letter_spacing
-            fill_mask = fb_mask
-        else:
-            fill_mask = text_mask
-        fill_layer = Image.composite(grad_img, Image.new("RGBA", (canvas_w, canvas_h), (0,0,0,0)), fill_mask)
+        grad_img   = _create_gradient(canvas_w, canvas_h, fill_rgba, gc2, gradient_mode)
+        empty      = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        fill_layer = Image.composite(grad_img, empty, fill_mask)
     else:
-        fill_layer = _render_text(
-            (canvas_w, canvas_h), text, font, tx, ty,
-            fill_rgba, fake_bold, fill_rgba, letter_spacing
-        )
+        fill_layer = _color_layer((canvas_w, canvas_h), fill_rgba, fill_mask)
 
     result = Image.alpha_composite(result, fill_layer)
 
-    # ---- グロス ----
+    # ---- グロス（ソフトなハイライト） ----
     if gloss and gloss_intensity > 0:
-        alpha   = int(gloss_intensity * 1.5)   # 0-150 範囲に拡張
+        alpha   = int(gloss_intensity * 1.5)
         gl_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         gl_draw = ImageDraw.Draw(gl_img)
 
-        # 上部ハイライト帯（文字の上40%に白いグロー）
+        # 上部ハイライト帯
         top_h = ty + int(text_h * 0.42)
         gl_draw.rectangle([tx, ty, tx + text_w, top_h],
                            fill=(255, 255, 255, min(255, int(alpha * 0.75))))
 
-        # ぼかしてなめらかなグロー（強めにぼかしてトゲ完全除去）
+        # ぼかしてなめらかなグロー
         blur_r = max(6, font_size // 20)
         gl_img = gl_img.filter(ImageFilter.GaussianBlur(radius=blur_r))
-        transp = Image.new("RGBA", (canvas_w, canvas_h), (0,0,0,0))
-        gl_img = Image.composite(gl_img, transp, text_mask)
+
+        # fill_mask でクリップ（文字内だけに限定）
+        transp = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        gl_img = Image.composite(gl_img, transp, fill_mask)
         result = Image.alpha_composite(result, gl_img)
 
     # ---- 余白トリミング ----
