@@ -16,6 +16,12 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 # 利用可能なフォント一覧 (id, 表示名, パス, variable_weight)
 FONT_CATALOG = [
     {
+        "id":    "lanovepop",
+        "label": "ラノベPOP V2（かわいい太ポップ）",
+        "path":  os.path.join(_HERE, "LightNovelPOPv2.otf"),
+        "weight": None,
+    },
+    {
         "id":    "tanuki",
         "label": "たぬき油性マジック（手書きポップ）",
         "path":  os.path.join(_HERE, "TanukiMagic.ttf"),
