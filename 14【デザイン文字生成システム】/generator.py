@@ -348,7 +348,7 @@ def generate_sticker(
 
     # ---- グロス ----
     if gloss and gloss_intensity > 0:
-        alpha   = int(gloss_intensity * 2.2)   # 強度を上げる
+        alpha   = int(gloss_intensity * 1.4)
         gl_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         gl_draw = ImageDraw.Draw(gl_img)
 
