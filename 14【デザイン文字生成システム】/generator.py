@@ -368,7 +368,8 @@ def generate_sticker(
                          star_cx+star_r*1.6+dot_r*0.7, star_cy+dot_r*0.7],
                         fill=(255, 255, 255, min(255, alpha + 20)))
 
-        # テキストマスクでクリップ
+        # ぼかしてからテキストマスクでクリップ（エッジのトゲ防止）
+        gl_img = gl_img.filter(ImageFilter.GaussianBlur(radius=max(2, font_size // 60)))
         transp = Image.new("RGBA", (canvas_w, canvas_h), (0,0,0,0))
         gl_img = Image.composite(gl_img, transp, text_mask)
         result = Image.alpha_composite(result, gl_img)
