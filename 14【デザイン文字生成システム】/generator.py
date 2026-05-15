@@ -11,10 +11,12 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ============================================================
 # フォント設定
 # ============================================================
-# 可変フォント（weight=900 で最太にする）を最優先
-VARIABLE_FONT = r"C:\Windows\Fonts\NotoSansJP-VF.ttf"
+# たぬき油性マジック（プロジェクト同梱）を最優先
+_HERE = os.path.dirname(os.path.abspath(__file__))
+TANUKI_FONT = os.path.join(_HERE, "TanukiMagic.ttf")
 
 FALLBACK_FONTS = [
+    r"C:\Windows\Fonts\NotoSansJP-VF.ttf",
     r"C:\Windows\Fonts\BIZ-UDGothicB.ttc",
     r"C:\Windows\Fonts\YuGothB.ttc",
     r"C:\Windows\Fonts\meiryob.ttc",
@@ -23,29 +25,19 @@ FALLBACK_FONTS = [
 
 
 def load_font(font_size: int, font_path: str = None) -> ImageFont.FreeTypeFont:
-    """フォントをロードする。可変フォントは weight=900 に設定。"""
+    """フォントをロードする。"""
     path = font_path
 
-    # パス未指定 → 自動選択
     if path is None:
-        if os.path.exists(VARIABLE_FONT):
-            path = VARIABLE_FONT
+        if os.path.exists(TANUKI_FONT):
+            path = TANUKI_FONT
         else:
             path = next((p for p in FALLBACK_FONTS if os.path.exists(p)), None)
 
     if path is None:
         raise FileNotFoundError("利用可能な日本語フォントが見つかりません")
 
-    font = ImageFont.truetype(path, font_size)
-
-    # 可変フォントなら weight=900（Black）に設定
-    if path == VARIABLE_FONT:
-        try:
-            font.set_variation_by_axes([900])
-        except Exception:
-            pass  # 非対応バージョンは無視
-
-    return font
+    return ImageFont.truetype(path, font_size)
 
 
 def hex_to_rgba(hex_color: str, alpha: int = 255) -> tuple:
