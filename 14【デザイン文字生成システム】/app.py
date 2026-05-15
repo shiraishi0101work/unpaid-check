@@ -73,6 +73,7 @@ def generate():
             gloss_intensity=gloss_intensity,
             gradient_mode=gradient_mode,
             gradient_color2=gradient_color2,
+            gradient_strength=gradient_strength,
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
