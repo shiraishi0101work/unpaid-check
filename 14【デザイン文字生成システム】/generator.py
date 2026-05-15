@@ -152,10 +152,13 @@ def _make_text_mask(canvas_size, text, font, tx, ty, letter_spacing):
 
 
 def _dilate_mask(mask, pixels):
-    """MaxFilter でマスクを膨張（疑似太字用）。"""
+    """MaxFilter(3) を繰り返して円形膨張（丸みのあるふち）。"""
     if pixels <= 0:
         return mask
-    return mask.filter(ImageFilter.MaxFilter(pixels * 2 + 1))
+    result = mask
+    for _ in range(pixels):
+        result = result.filter(ImageFilter.MaxFilter(3))
+    return result
 
 
 def _color_layer(canvas_size, color_rgba, mask):
