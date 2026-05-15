@@ -347,29 +347,14 @@ def generate_sticker(
         gl_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         gl_draw = ImageDraw.Draw(gl_img)
 
-        # 上部ハイライト帯
-        top_h = ty + int(text_h * 0.38)
-        gl_draw.rectangle([tx, ty, tx+text_w, top_h],
-                           fill=(255, 255, 255, min(255, int(alpha * 0.7))))
+        # 上部ハイライト帯（文字の上40%に白いグロー）
+        top_h = ty + int(text_h * 0.42)
+        gl_draw.rectangle([tx, ty, tx + text_w, top_h],
+                           fill=(255, 255, 255, min(255, int(alpha * 0.75))))
 
-        # 4角星
-        star_cx = tx + int(text_h * 0.13)
-        star_cy = ty + int(text_h * 0.13)
-        star_r  = max(8, int(text_h * 0.14))
-        _draw_star(gl_draw, star_cx, star_cy, star_r, star_r*0.33,
-                   (255, 255, 255, min(255, alpha + 80)))
-
-        # ドット
-        dot_r = max(3, int(star_r * 0.28))
-        gl_draw.ellipse([star_cx+star_r*1.05-dot_r, star_cy+star_r*0.5-dot_r,
-                         star_cx+star_r*1.05+dot_r, star_cy+star_r*0.5+dot_r],
-                        fill=(255, 255, 255, min(255, alpha + 50)))
-        gl_draw.ellipse([star_cx+star_r*1.6-dot_r*0.7, star_cy-dot_r*0.7,
-                         star_cx+star_r*1.6+dot_r*0.7, star_cy+dot_r*0.7],
-                        fill=(255, 255, 255, min(255, alpha + 20)))
-
-        # ぼかしてからテキストマスクでクリップ（エッジのトゲ防止）
-        gl_img = gl_img.filter(ImageFilter.GaussianBlur(radius=max(2, font_size // 60)))
+        # ぼかしてなめらかなグロー（強めにぼかしてトゲ完全除去）
+        blur_r = max(6, font_size // 20)
+        gl_img = gl_img.filter(ImageFilter.GaussianBlur(radius=blur_r))
         transp = Image.new("RGBA", (canvas_w, canvas_h), (0,0,0,0))
         gl_img = Image.composite(gl_img, transp, text_mask)
         result = Image.alpha_composite(result, gl_img)
