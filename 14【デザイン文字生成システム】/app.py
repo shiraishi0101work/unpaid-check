@@ -7,7 +7,7 @@ import uuid
 import io
 import base64
 from flask import Flask, render_template, request, jsonify, send_file
-from generator import generate_sticker
+from generator import generate_sticker, get_available_fonts
 
 app = Flask(__name__)
 
