@@ -20,12 +20,18 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/fonts")
+def fonts():
+    return jsonify(get_available_fonts())
+
+
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json()
     text      = (data.get("text") or "").strip()
     color_hex = data.get("color", "#FF88BB")
     font_size = int(data.get("font_size", 200))
+    font_id   = data.get("font_id") or None
 
     if not text:
         return jsonify({"error": "テキストを入力してください"}), 400
@@ -33,7 +39,7 @@ def generate():
     font_size = max(60, min(600, font_size))
 
     try:
-        img = generate_sticker(text, color_hex=color_hex, font_size=font_size)
+        img = generate_sticker(text, color_hex=color_hex, font_size=font_size, font_id=font_id)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
