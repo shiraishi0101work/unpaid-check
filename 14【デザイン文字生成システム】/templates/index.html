@@ -780,11 +780,28 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text, color: colorHex, font_size: fontSize, font_id: selectedFontId,
-          border_mode: selectedBorderMode,
-          border_color1: borderColor1,
-          border_color2: borderColor2,
-          border_size: borderSize,
+          text,
+          color:          colorHex,
+          font_size:      fontSize,
+          font_id:        selectedFontId,
+          border_mode:    selectedBorderMode,
+          border_color1:  borderColor1,
+          border_color2:  borderColor2,
+          border_size:    borderSize,
+          // 文字スタイル
+          letter_spacing: parseInt(document.getElementById("lsSlider").value),
+          x_scale:        parseInt(document.getElementById("xsSlider").value),
+          slant:          parseInt(document.getElementById("slantSlider").value),
+          fake_bold:      parseInt(document.getElementById("fbSlider").value),
+          font_weight:    parseInt(document.getElementById("wSlider").value),
+          // エフェクト
+          gloss:          document.getElementById("glossCheck").checked,
+          gloss_intensity:parseInt(document.getElementById("giSlider").value),
+          gradient_mode:  selectedGradMode,
+          gradient_color2: (() => {
+            const v = document.getElementById("gc2Hex").value;
+            return /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
+          })(),
         }),
       });
 
