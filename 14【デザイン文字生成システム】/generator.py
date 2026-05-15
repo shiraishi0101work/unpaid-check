@@ -285,18 +285,21 @@ def generate_sticker(
 
     result = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
-    # ---- ベーステキストマスク（全レイヤー共通） ----
-    base_mask = _make_text_mask((canvas_w, canvas_h), text, font, tx, ty, letter_spacing)
+    # ---- ふちマスク：PIL stroke_width でフォント形状を維持しながら生成 ----
+    # 色は別途 _color_layer で乗せることでにじみを防ぐ
 
     # ---- 外側ふち（double） ----
     if border_mode == "double":
-        outer_mask = _dilate_mask(base_mask, combined)
+        outer_mask = _render_stroke_mask((canvas_w, canvas_h), text, font, tx, ty, combined, letter_spacing)
         result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color2_rgba, outer_mask))
 
     # ---- 内側ふち（single / double） ----
     if border_mode in ("single", "double"):
-        inner_mask = _dilate_mask(base_mask, inner_stroke)
+        inner_mask = _render_stroke_mask((canvas_w, canvas_h), text, font, tx, ty, inner_stroke, letter_spacing)
         result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color1_rgba, inner_mask))
+
+    # ---- ベーステキストマスク（塗り・グロス用） ----
+    base_mask = _make_text_mask((canvas_w, canvas_h), text, font, tx, ty, letter_spacing)
 
     # ---- 塗りマスク（疑似太字考慮） ----
     fill_mask = _dilate_mask(base_mask, fake_bold) if fake_bold > 0 else base_mask
