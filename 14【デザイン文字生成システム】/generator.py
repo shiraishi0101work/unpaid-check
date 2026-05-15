@@ -104,99 +104,122 @@ def generate_sticker(
     color_hex: str = "#FF88BB",
     font_size: int = 200,
     font_id: str = None,
+    border_mode: str = "double",    # "none" | "single" | "double"
+    border_color1: str = "#1a1a1a", # 内側ふちの色（single/double 共通）
+    border_color2: str = "#ffffff", # 外側ふちの色（double のみ）
+    border_size: int = 5,           # ふちの太さ 1〜10（デフォルト 5）
 ) -> Image.Image:
     """
     ステッカースタイルの文字画像を生成する
 
-    Args:
-        text:       生成するテキスト
-        color_hex:  塗りの色（例: "#FF88BB"）
-        font_size:  フォントサイズ（デフォルト 200px）
-        font_id:    フォントID（None の場合は先頭フォントを使用）
-
-    Returns:
-        RGBA モードの PIL Image（背景透過）
+    border_mode:
+        "none"   - ふちなし
+        "single" - ふち1種（border_color1 のみ）
+        "double" - ふち2種（border_color1 内側 + border_color2 外側）
+    border_size: 1〜10、デフォルト 5
     """
     if not text or not text.strip():
         raise ValueError("テキストを入力してください")
 
-    fill_rgba   = hex_to_rgba(color_hex)
-    shadow_rgba = (140, 150, 200, 170)
+    border_size  = max(1, min(10, border_size))
+    size_factor  = border_size / 5.0   # 1.0 = デフォルト
 
-    # ストローク幅（フォントサイズに比例）
-    outer_stroke = max(10, font_size // 9)    # 白い外枠
-    inner_stroke = max(6,  font_size // 14)   # 黒いアウトライン
-    combined     = outer_stroke + inner_stroke
+    fill_rgba    = hex_to_rgba(color_hex)
+    color1_rgba  = hex_to_rgba(border_color1)
+    color2_rgba  = hex_to_rgba(border_color2)
+    shadow_rgba  = (140, 150, 200, 170)
 
-    shadow_dx = max(6, font_size // 22)
-    shadow_dy = max(7, font_size // 18)
-    padding   = combined * 3 + shadow_dx + shadow_dy
+    # ---- ストローク幅 ----
+    inner_stroke = max(2, int((font_size / 14) * size_factor))
+    outer_stroke = max(3, int((font_size / 9)  * size_factor))
+    combined     = inner_stroke + outer_stroke  # double のときの外枠幅
+
+    # padding はふちモードに応じて調整
+    if border_mode == "none":
+        effective_combined = 0
+    elif border_mode == "single":
+        effective_combined = inner_stroke
+    else:
+        effective_combined = combined
+
+    shadow_dx = max(6, font_size // 22) if border_mode != "none" else 0
+    shadow_dy = max(7, font_size // 18) if border_mode != "none" else 0
+    padding   = effective_combined * 3 + shadow_dx + shadow_dy + 10
 
     # ---- フォントロード & テキスト計測 ----
     font = load_font(font_size, font_id)
 
     tmp_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
     bbox = tmp_draw.textbbox((0, 0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
+    text_w   = bbox[2] - bbox[0]
+    text_h   = bbox[3] - bbox[1]
     offset_x = -bbox[0]
     offset_y = -bbox[1]
 
     canvas_w = text_w + padding * 2 + shadow_dx
     canvas_h = text_h + padding * 2 + shadow_dy
 
-    tx = padding + offset_x   # テキスト描画 X
-    ty = padding + offset_y   # テキスト描画 Y
+    tx = padding + offset_x
+    ty = padding + offset_y
+
+    result = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
     # ======================================================
-    # 1. ドロップシャドウ
+    # シャドウ（ふちあり時のみ）
     # ======================================================
-    shadow_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-    shadow_draw = ImageDraw.Draw(shadow_img)
-    shadow_draw.text(
-        (tx + shadow_dx, ty + shadow_dy), text, font=font,
-        fill=shadow_rgba,
-        stroke_width=combined,
-        stroke_fill=shadow_rgba,
-    )
-    blur_r = max(4, font_size // 30)
-    shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(blur_r))
+    if border_mode != "none":
+        shadow_sw   = combined if border_mode == "double" else inner_stroke
+        shadow_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow_img)
+        shadow_draw.text(
+            (tx + shadow_dx, ty + shadow_dy), text, font=font,
+            fill=shadow_rgba,
+            stroke_width=shadow_sw,
+            stroke_fill=shadow_rgba,
+        )
+        blur_r     = max(3, font_size // 35)
+        shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(blur_r))
+        result     = Image.alpha_composite(result, shadow_img)
 
     # ======================================================
-    # 2. 白い外枠レイヤー
+    # 外側ふち（double のみ）
     # ======================================================
-    white_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-    white_draw = ImageDraw.Draw(white_img)
-    white_draw.text(
-        (tx, ty), text, font=font,
-        fill=(255, 255, 255, 255),
-        stroke_width=combined,
-        stroke_fill=(255, 255, 255, 255),
-    )
+    if border_mode == "double":
+        outer_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        outer_draw = ImageDraw.Draw(outer_img)
+        outer_draw.text(
+            (tx, ty), text, font=font,
+            fill=color2_rgba,
+            stroke_width=combined,
+            stroke_fill=color2_rgba,
+        )
+        result = Image.alpha_composite(result, outer_img)
 
     # ======================================================
-    # 3. 黒いアウトラインレイヤー
+    # 内側ふち（single / double 共通）
     # ======================================================
-    black_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-    black_draw = ImageDraw.Draw(black_img)
-    black_draw.text(
-        (tx, ty), text, font=font,
-        fill=(25, 25, 25, 255),
-        stroke_width=inner_stroke,
-        stroke_fill=(25, 25, 25, 255),
-    )
+    if border_mode in ("single", "double"):
+        inner_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        inner_draw = ImageDraw.Draw(inner_img)
+        inner_draw.text(
+            (tx, ty), text, font=font,
+            fill=color1_rgba,
+            stroke_width=inner_stroke,
+            stroke_fill=color1_rgba,
+        )
+        result = Image.alpha_composite(result, inner_img)
 
     # ======================================================
-    # 4. カラー塗りレイヤー
+    # カラー塗り
     # ======================================================
     fill_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
     fill_draw = ImageDraw.Draw(fill_img)
     fill_draw.text((tx, ty), text, font=font, fill=fill_rgba)
+    result = Image.alpha_composite(result, fill_img)
 
     # ======================================================
-    # 5. グロスハイライト（文字の輪郭内のみ）
+    # グロスハイライト（文字内のみ）
     # ======================================================
-    # テキストマスク（ストロークなし、文字形状のみ）
     text_mask = Image.new("L", (canvas_w, canvas_h), 0)
     mask_draw = ImageDraw.Draw(text_mask)
     mask_draw.text((tx, ty), text, font=font, fill=255)
@@ -204,50 +227,32 @@ def generate_sticker(
     gloss_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
     gloss_draw = ImageDraw.Draw(gloss_img)
 
-    # 上部 38% を半透明ホワイトで塗る
-    gloss_top    = ty
     gloss_bottom = ty + int(text_h * 0.38)
-    gloss_draw.rectangle(
-        [tx, gloss_top, tx + text_w, gloss_bottom],
-        fill=(255, 255, 255, 105),
-    )
+    gloss_draw.rectangle([tx, ty, tx + text_w, gloss_bottom],
+                         fill=(255, 255, 255, 105))
 
-    # 4角星（キラキラ）
     star_cx = tx + int(text_h * 0.13)
     star_cy = ty + int(text_h * 0.13)
     star_r  = max(8, int(text_h * 0.14))
     draw_4point_star(gloss_draw, star_cx, star_cy, star_r, star_r * 0.33,
                      (255, 255, 255, 235))
 
-    # 小さいドット ×2
     dot_r = max(3, int(star_r * 0.28))
-    gloss_draw.ellipse([
-        star_cx + star_r * 1.05 - dot_r, star_cy + star_r * 0.5 - dot_r,
-        star_cx + star_r * 1.05 + dot_r, star_cy + star_r * 0.5 + dot_r,
-    ], fill=(255, 255, 255, 200))
-    gloss_draw.ellipse([
-        star_cx + star_r * 1.6 - dot_r * 0.7, star_cy - dot_r * 0.7,
-        star_cx + star_r * 1.6 + dot_r * 0.7, star_cy + dot_r * 0.7,
-    ], fill=(255, 255, 255, 170))
+    gloss_draw.ellipse([star_cx + star_r*1.05 - dot_r, star_cy + star_r*0.5 - dot_r,
+                        star_cx + star_r*1.05 + dot_r, star_cy + star_r*0.5 + dot_r],
+                       fill=(255, 255, 255, 200))
+    gloss_draw.ellipse([star_cx + star_r*1.6 - dot_r*0.7, star_cy - dot_r*0.7,
+                        star_cx + star_r*1.6 + dot_r*0.7, star_cy + dot_r*0.7],
+                       fill=(255, 255, 255, 170))
 
-    # テキストマスクでクリッピング
     transparent = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
     gloss_img   = Image.composite(gloss_img, transparent, text_mask)
+    result      = Image.alpha_composite(result, gloss_img)
 
-    # ======================================================
-    # 6. 合成（下から: シャドウ → 白枠 → 黒枠 → 塗り → グロス）
-    # ======================================================
-    result = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-    result = Image.alpha_composite(result, shadow_img)
-    result = Image.alpha_composite(result, white_img)
-    result = Image.alpha_composite(result, black_img)
-    result = Image.alpha_composite(result, fill_img)
-    result = Image.alpha_composite(result, gloss_img)
-
-    # 不要な余白をトリミング
+    # 余白トリミング
     bbox = result.getbbox()
     if bbox:
-        margin = max(4, combined // 2)
+        margin = max(4, effective_combined // 2 + 2)
         x0 = max(0, bbox[0] - margin)
         y0 = max(0, bbox[1] - margin)
         x1 = min(canvas_w, bbox[2] + margin)
