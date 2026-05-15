@@ -142,9 +142,9 @@ def generate_sticker(
     else:
         effective_combined = combined
 
-    shadow_dx = max(6, font_size // 22) if border_mode != "none" else 0
-    shadow_dy = max(7, font_size // 18) if border_mode != "none" else 0
-    padding   = effective_combined * 3 + shadow_dx + shadow_dy + 10
+    shadow_dx = 0
+    shadow_dy = 0
+    padding   = effective_combined * 3 + 10
 
     # ---- フォントロード & テキスト計測 ----
     font = load_font(font_size, font_id)
