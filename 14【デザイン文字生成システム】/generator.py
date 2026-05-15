@@ -314,7 +314,10 @@ def generate_sticker(
     text_mask = mask_layer
 
     if gradient_mode != "none":
-        gc2 = hex_to_rgba(gradient_color2) if gradient_color2 else lighten_rgba(fill_rgba, 0.45)
+        gc2_base = hex_to_rgba(gradient_color2) if gradient_color2 else lighten_rgba(fill_rgba, 0.45)
+        # 強度で第2色を fill_rgba との間で補間（0%=単色、100%=フル）
+        t = max(0, min(100, int(gradient_strength))) / 100.0
+        gc2 = tuple(int(fill_rgba[i] + (gc2_base[i] - fill_rgba[i]) * t) for i in range(4))
         grad_img = _create_gradient(canvas_w, canvas_h, fill_rgba, gc2, gradient_mode)
         # fake_bold ストロークを考慮したマスク
         if fake_bold > 0:
