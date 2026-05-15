@@ -165,23 +165,6 @@ def generate_sticker(
     result = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
     # ======================================================
-    # シャドウ（ふちあり時のみ）
-    # ======================================================
-    if border_mode != "none":
-        shadow_sw   = combined if border_mode == "double" else inner_stroke
-        shadow_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-        shadow_draw = ImageDraw.Draw(shadow_img)
-        shadow_draw.text(
-            (tx + shadow_dx, ty + shadow_dy), text, font=font,
-            fill=shadow_rgba,
-            stroke_width=shadow_sw,
-            stroke_fill=shadow_rgba,
-        )
-        blur_r     = max(3, font_size // 35)
-        shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(blur_r))
-        result     = Image.alpha_composite(result, shadow_img)
-
-    # ======================================================
     # 外側ふち（double のみ）
     # ======================================================
     if border_mode == "double":
