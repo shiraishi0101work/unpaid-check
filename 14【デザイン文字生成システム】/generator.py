@@ -126,25 +126,33 @@ def _measure(text, font, letter_spacing):
 
 
 # ============================================================
-# テキストマスク生成 & 膨張
+# テキストマスク生成
 # ============================================================
-def _make_text_mask(canvas_size, text, font, tx, ty, letter_spacing):
-    """テキストをグレースケールマスク（L）として描画。"""
+def _render_stroke_mask(canvas_size, text, font, tx, ty, stroke_width, letter_spacing):
+    """PIL の stroke_width でテキストを描き、グレースケールマスク（L）を返す。
+    フォント本来の形状を維持しつつ、色付けはマスク経由で行う。"""
     mask = Image.new("L", canvas_size, 0)
     draw = ImageDraw.Draw(mask)
     if letter_spacing == 0:
-        draw.text((tx, ty), text, font=font, fill=255)
+        draw.text((tx, ty), text, font=font, fill=255,
+                  stroke_width=stroke_width, stroke_fill=255)
     else:
         x = tx
         for i, ch in enumerate(text):
-            draw.text((x, ty), ch, font=font, fill=255)
+            draw.text((x, ty), ch, font=font, fill=255,
+                      stroke_width=stroke_width, stroke_fill=255)
             cb = _TMP_DRAW.textbbox((0, 0), ch, font=font)
             x += (cb[2]-cb[0]) + letter_spacing
     return mask
 
 
+def _make_text_mask(canvas_size, text, font, tx, ty, letter_spacing):
+    """ストロークなしのテキストマスク（塗り・グロス用）。"""
+    return _render_stroke_mask(canvas_size, text, font, tx, ty, 0, letter_spacing)
+
+
 def _dilate_mask(mask, pixels):
-    """MaxFilter でマスクを pixels 分膨張する。にじみのないきれいなふち用。"""
+    """MaxFilter でマスクを膨張（疑似太字用）。"""
     if pixels <= 0:
         return mask
     return mask.filter(ImageFilter.MaxFilter(pixels * 2 + 1))
