@@ -152,13 +152,23 @@ def _make_text_mask(canvas_size, text, font, tx, ty, letter_spacing):
 
 
 def _dilate_mask(mask, pixels):
-    """MaxFilter(3) を繰り返して円形膨張（丸みのあるふち）。"""
+    """均一な円形膨張。
+    ① 二値化でアンチエイリアスのムラを除去
+    ② MaxFilter(3) × n 回で八角形状に膨張
+    ③ GaussianBlur で八角形の角を丸め、ほぼ真円形に近づける
+    """
     if pixels <= 0:
         return mask
-    result = mask
+    # ① 二値化（アンチエイリアスの不均一さをなくす）
+    binary = mask.point(lambda x: 255 if x > 128 else 0)
+    result = binary
+    # ② MaxFilter(3) を繰り返す（斜め方向の余剰は約 0.41×pixels）
     for _ in range(pixels):
         result = result.filter(ImageFilter.MaxFilter(3))
-    return result
+    # ③ 八角形の角を GaussianBlur でならして円形に近づける
+    #    smooth_r ≈ 斜め方向の余剰を消せる程度（pixels の 25% 程度）
+    smooth_r = max(1.5, pixels * 0.25)
+    return result.filter(ImageFilter.GaussianBlur(radius=smooth_r))
 
 
 def _color_layer(canvas_size, color_rgba, mask):
