@@ -44,8 +44,9 @@ def generate():
     font_weight     = int(font_weight) if font_weight is not None else None
     gloss           = bool(data.get("gloss", True))
     gloss_intensity = int(data.get("gloss_intensity", 60))
-    gradient_mode   = data.get("gradient_mode", "none")
-    gradient_color2 = data.get("gradient_color2") or None
+    gradient_mode     = data.get("gradient_mode", "none")
+    gradient_color2   = data.get("gradient_color2") or None
+    gradient_strength = int(data.get("gradient_strength", 100))
 
     if not text:
         return jsonify({"error": "テキストを入力してください"}), 400
