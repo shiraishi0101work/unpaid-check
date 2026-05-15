@@ -97,7 +97,7 @@ def generate_sticker(
     text: str,
     color_hex: str = "#FF88BB",
     font_size: int = 200,
-    font_path: str = None,
+    font_id: str = None,
 ) -> Image.Image:
     """
     ステッカースタイルの文字画像を生成する
@@ -106,7 +106,7 @@ def generate_sticker(
         text:       生成するテキスト
         color_hex:  塗りの色（例: "#FF88BB"）
         font_size:  フォントサイズ（デフォルト 200px）
-        font_path:  フォントファイルのパス（None の場合は自動検出）
+        font_id:    フォントID（None の場合は先頭フォントを使用）
 
     Returns:
         RGBA モードの PIL Image（背景透過）
