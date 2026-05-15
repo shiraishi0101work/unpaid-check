@@ -500,6 +500,111 @@
 
   </div>
 
+  <!-- ========== 文字スタイル ========== -->
+  <div class="section-toggle" onclick="toggleSection('styleSection',this)">
+    <span class="sec-title">文字スタイル</span>
+    <span class="sec-arrow">▼</span>
+  </div>
+  <div class="section-body" id="styleSection">
+
+    <!-- 字間 -->
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>字間</span>
+        <span class="slider-val"><span id="lsVal">0</span> px</span>
+      </div>
+      <input type="range" id="lsSlider" min="-20" max="150" value="0" step="1"
+             oninput="document.getElementById('lsVal').textContent=this.value" />
+    </div>
+
+    <!-- 横幅スケール -->
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>横幅</span>
+        <span class="slider-val"><span id="xsVal">100</span> %</span>
+      </div>
+      <input type="range" id="xsSlider" min="50" max="200" value="100" step="1"
+             oninput="document.getElementById('xsVal').textContent=this.value" />
+    </div>
+
+    <!-- 斜体 -->
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>斜体（左← →右）</span>
+        <span class="slider-val"><span id="slantVal">0</span> °</span>
+      </div>
+      <input type="range" id="slantSlider" min="-30" max="30" value="0" step="1"
+             oninput="document.getElementById('slantVal').textContent=this.value" />
+    </div>
+
+    <!-- 疑似太字 -->
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>疑似太字</span>
+        <span class="slider-val"><span id="fbVal">0</span></span>
+      </div>
+      <input type="range" id="fbSlider" min="0" max="8" value="0" step="1"
+             oninput="document.getElementById('fbVal').textContent=this.value" />
+    </div>
+
+    <!-- ウェイト（可変フォント専用） -->
+    <div class="slider-row" id="weightRow">
+      <div class="slider-header">
+        <span>ウェイト <span style="color:#555;font-size:.7rem">※Noto Sans JPのみ有効</span></span>
+        <span class="slider-val"><span id="wVal">900</span></span>
+      </div>
+      <input type="range" id="wSlider" min="100" max="900" value="900" step="100"
+             oninput="document.getElementById('wVal').textContent=this.value" />
+    </div>
+
+  </div>
+
+  <!-- ========== エフェクト ========== -->
+  <div class="section-toggle" onclick="toggleSection('fxSection',this)">
+    <span class="sec-title">エフェクト</span>
+    <span class="sec-arrow">▼</span>
+  </div>
+  <div class="section-body" id="fxSection">
+
+    <!-- 艶だし -->
+    <div class="slider-row">
+      <div class="slider-header">
+        <span>艶だし</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.8rem;color:#aaa;margin:0">
+            <input type="checkbox" id="glossCheck" checked style="width:16px;height:16px;cursor:pointer" />
+            ON
+          </label>
+          <span class="slider-val"><span id="giVal">60</span> %</span>
+        </div>
+      </div>
+      <input type="range" id="giSlider" min="0" max="100" value="60" step="5"
+             oninput="document.getElementById('giVal').textContent=this.value" />
+    </div>
+
+    <!-- グラデーション -->
+    <div class="slider-row">
+      <div class="slider-header" style="margin-bottom:10px">
+        <span>グラデーション</span>
+      </div>
+      <div class="grad-mode-row">
+        <div class="grad-mode-btn active" data-gmode="none"       onclick="setGradMode('none')">なし</div>
+        <div class="grad-mode-btn"        data-gmode="top_bottom" onclick="setGradMode('top_bottom')">上→下</div>
+        <div class="grad-mode-btn"        data-gmode="left_right" onclick="setGradMode('left_right')">左→右</div>
+        <div class="grad-mode-btn"        data-gmode="diagonal"   onclick="setGradMode('diagonal')">斜め</div>
+      </div>
+      <div id="gradColor2Row" style="display:none;margin-top:8px">
+        <div class="border-color-item">
+          <label>第2カラー（空欄=自動）</label>
+          <input type="color" id="gc2Picker" value="#ffffff" oninput="syncGc2Hex()" />
+          <input type="text"  id="gc2Hex" class="hex-input" value="" maxlength="7"
+                 placeholder="自動" oninput="syncGc2Picker()" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <button class="btn-generate" id="generateBtn" onclick="generate()">
     生 成
   </button>
