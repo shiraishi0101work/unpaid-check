@@ -347,17 +347,17 @@ def generate_sticker(
 
     # ---- グロス ----
     if gloss and gloss_intensity > 0:
-        alpha   = int(gloss_intensity * 1.5)   # 0-150 範囲に拡張
+        alpha   = int(gloss_intensity * 2.2)   # 強度を上げる
         gl_img  = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         gl_draw = ImageDraw.Draw(gl_img)
 
-        # 上部ハイライト帯（文字の上40%に白いグロー）
+        # 上部ハイライト帯（文字の上42%に白いグロー）
         top_h = ty + int(text_h * 0.42)
         gl_draw.rectangle([tx, ty, tx + text_w, top_h],
-                           fill=(255, 255, 255, min(255, int(alpha * 0.75))))
+                           fill=(255, 255, 255, min(255, alpha)))
 
-        # ぼかしてなめらかなグロー（強めにぼかしてトゲ完全除去）
-        blur_r = max(6, font_size // 20)
+        # ぼかし：小さくしてハイライトをくっきり残す
+        blur_r = max(2, font_size // 60)
         gl_img = gl_img.filter(ImageFilter.GaussianBlur(radius=blur_r))
         transp = Image.new("RGBA", (canvas_w, canvas_h), (0,0,0,0))
         gl_img = Image.composite(gl_img, transp, text_mask)
