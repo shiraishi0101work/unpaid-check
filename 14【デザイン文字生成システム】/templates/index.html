@@ -247,6 +247,52 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ---- フォント選択 ---- */
+    .font-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .font-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #111118;
+      border: 1.5px solid #2e2e42;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .font-option:hover  { border-color: #5a5a80; }
+    .font-option.active { border-color: #7c6ef5; background: #1a1a30; }
+    .font-option input[type="radio"] { display: none; }
+    .font-radio-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid #444;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s;
+    }
+    .font-option.active .font-radio-dot {
+      border-color: #7c6ef5;
+    }
+    .font-radio-dot::after {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #7c6ef5;
+      display: none;
+    }
+    .font-option.active .font-radio-dot::after { display: block; }
+    .font-label-text {
+      font-size: .85rem;
+      color: #ccc;
+      line-height: 1.3;
+    }
+
     /* ---- エラー ---- */
     .error-msg {
       color: #ff6b6b;
