@@ -600,6 +600,15 @@
           <input type="text"  id="gc2Hex" class="hex-input" value="" maxlength="7"
                  placeholder="自動" oninput="syncGc2Picker()" />
         </div>
+        <!-- グラデーション強度 -->
+        <div class="slider-row" style="margin-top:12px">
+          <div class="slider-header">
+            <span>グラデーション強度</span>
+            <span class="slider-val"><span id="gradStrVal">100</span> %</span>
+          </div>
+          <input type="range" id="gradStrSlider" min="0" max="100" value="100" step="5"
+                 oninput="document.getElementById('gradStrVal').textContent=this.value" />
+        </div>
       </div>
     </div>
 
