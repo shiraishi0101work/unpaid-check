@@ -77,7 +77,8 @@ def generate():
         return jsonify({"error": str(e)}), 500
 
     # ファイル保存（ダウンロード用）
-    filename = f"sticker_{uuid.uuid4().hex[:8]}.png"
+    safe_text = "".join(c for c in text if c.isalnum() or "\u3000" <= c <= "\u9fff" or "\u3040" <= c <= "\u30ff")[:20]
+    filename = f"{safe_text}_{uuid.uuid4().hex[:6]}.png"
     filepath = os.path.join(OUTPUT_DIR, filename)
     img.save(filepath, "PNG")
 
