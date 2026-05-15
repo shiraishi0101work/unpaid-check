@@ -817,6 +817,7 @@
             const v = document.getElementById("gc2Hex").value;
             return /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
           })(),
+          gradient_strength: parseInt(document.getElementById("gradStrSlider").value),
         }),
       });
 
