@@ -235,8 +235,9 @@ def generate_sticker(
     # エフェクト
     gloss            = True,       # 艶あり/なし
     gloss_intensity  = 60,         # 艶の強さ（0〜100）
-    gradient_mode    = "none",     # "none"|"top_bottom"|"left_right"|"diagonal"
-    gradient_color2  = None,       # グラデ第2色（None=塗り色を明るくして自動生成）
+    gradient_mode     = "none",     # "none"|"top_bottom"|"left_right"|"diagonal"
+    gradient_color2   = None,       # グラデ第2色（None=塗り色を明るくして自動生成）
+    gradient_strength = 100,        # グラデーション強度 0-100
 ):
     if not text or not text.strip():
         raise ValueError("テキストを入力してください")
