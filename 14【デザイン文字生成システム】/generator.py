@@ -314,7 +314,7 @@ def generate_sticker(
     text_mask = mask_layer
 
     if gradient_mode != "none":
-        gc2_base = hex_to_rgba(gradient_color2) if gradient_color2 else lighten_rgba(fill_rgba, 0.45)
+        gc2_base = hex_to_rgba(gradient_color2) if gradient_color2 else lighten_rgba(fill_rgba, 0.82)
         # 強度で第2色を fill_rgba との間で補間（0%=単色、100%=フル）
         t = max(0, min(100, int(gradient_strength))) / 100.0
         gc2 = tuple(int(fill_rgba[i] + (gc2_base[i] - fill_rgba[i]) * t) for i in range(4))
