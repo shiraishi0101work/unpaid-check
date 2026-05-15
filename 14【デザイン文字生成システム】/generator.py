@@ -86,9 +86,6 @@ def generate_sticker(
     if not text or not text.strip():
         raise ValueError("テキストを入力してください")
 
-    if font_path is None:
-        font_path = find_font()
-
     fill_rgba   = hex_to_rgba(color_hex)
     shadow_rgba = (140, 150, 200, 170)
 
