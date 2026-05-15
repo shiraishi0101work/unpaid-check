@@ -11,33 +11,69 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ============================================================
 # フォント設定
 # ============================================================
-# たぬき油性マジック（プロジェクト同梱）を最優先
 _HERE = os.path.dirname(os.path.abspath(__file__))
-TANUKI_FONT = os.path.join(_HERE, "TanukiMagic.ttf")
 
-FALLBACK_FONTS = [
-    r"C:\Windows\Fonts\NotoSansJP-VF.ttf",
-    r"C:\Windows\Fonts\BIZ-UDGothicB.ttc",
-    r"C:\Windows\Fonts\YuGothB.ttc",
-    r"C:\Windows\Fonts\meiryob.ttc",
-    r"C:\Windows\Fonts\msgothic.ttc",
+# 利用可能なフォント一覧 (id, 表示名, パス, variable_weight)
+FONT_CATALOG = [
+    {
+        "id":    "tanuki",
+        "label": "たぬき油性マジック（手書きポップ）",
+        "path":  os.path.join(_HERE, "TanukiMagic.ttf"),
+        "weight": None,
+    },
+    {
+        "id":    "noto_black",
+        "label": "Noto Sans JP Black（極太ゴシック）",
+        "path":  r"C:\Windows\Fonts\NotoSansJP-VF.ttf",
+        "weight": 900,
+    },
+    {
+        "id":    "biz_ud",
+        "label": "BIZ UD Gothic Bold（太めゴシック）",
+        "path":  r"C:\Windows\Fonts\BIZ-UDGothicB.ttc",
+        "weight": None,
+    },
+    {
+        "id":    "yugoth",
+        "label": "Yu Gothic Bold（游ゴシック太字）",
+        "path":  r"C:\Windows\Fonts\YuGothB.ttc",
+        "weight": None,
+    },
+    {
+        "id":    "meiryo",
+        "label": "Meiryo Bold（メイリオ太字）",
+        "path":  r"C:\Windows\Fonts\meiryob.ttc",
+        "weight": None,
+    },
 ]
 
+# 実際に存在するフォントだけ残す
+FONT_CATALOG = [f for f in FONT_CATALOG if os.path.exists(f["path"])]
 
-def load_font(font_size: int, font_path: str = None) -> ImageFont.FreeTypeFont:
-    """フォントをロードする。"""
-    path = font_path
 
-    if path is None:
-        if os.path.exists(TANUKI_FONT):
-            path = TANUKI_FONT
-        else:
-            path = next((p for p in FALLBACK_FONTS if os.path.exists(p)), None)
+def get_available_fonts() -> list:
+    """UI 向けに {id, label} のリストを返す"""
+    return [{"id": f["id"], "label": f["label"]} for f in FONT_CATALOG]
 
-    if path is None:
-        raise FileNotFoundError("利用可能な日本語フォントが見つかりません")
 
-    return ImageFont.truetype(path, font_size)
+def _resolve_font_entry(font_id: str) -> dict:
+    """font_id から FONT_CATALOG のエントリを返す。見つからなければ先頭を返す。"""
+    for f in FONT_CATALOG:
+        if f["id"] == font_id:
+            return f
+    return FONT_CATALOG[0]
+
+
+def load_font(font_size: int, font_id: str = None) -> ImageFont.FreeTypeFont:
+    """フォントをロードする。font_id で書体を指定。"""
+    entry = _resolve_font_entry(font_id) if font_id else FONT_CATALOG[0]
+    font  = ImageFont.truetype(entry["path"], font_size)
+    if entry["weight"] is not None:
+        try:
+            font.set_variation_by_axes([entry["weight"]])
+        except Exception:
+            pass
+    return font
 
 
 def hex_to_rgba(hex_color: str, alpha: int = 255) -> tuple:
