@@ -534,13 +534,53 @@
     document.getElementById("fontSizeValue").textContent = slider.value;
   });
 
+  // ---- 外縁モード ----
+  let selectedBorderMode = "double";
+
+  function setBorderMode(mode) {
+    selectedBorderMode = mode;
+    document.querySelectorAll(".border-mode-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.mode === mode);
+    });
+    // 色ピッカー・太さの表示切替
+    const c1 = document.getElementById("borderColor1Item");
+    const c2 = document.getElementById("borderColor2Item");
+    const sr = document.getElementById("borderSizeRow");
+    if (mode === "none") {
+      c1.style.display = "none";
+      c2.style.display = "none";
+      sr.style.display = "none";
+    } else if (mode === "single") {
+      c1.style.display = "";
+      c2.style.display = "none";
+      sr.style.display = "";
+    } else {
+      c1.style.display = "";
+      c2.style.display = "";
+      sr.style.display = "";
+    }
+  }
+
+  function syncBorderHex(n) {
+    const v = document.getElementById(`borderColor${n}Picker`).value;
+    document.getElementById(`borderColor${n}Hex`).value = v;
+  }
+  function syncBorderPicker(n) {
+    const v = document.getElementById(`borderColor${n}Hex`).value;
+    if (/^#[0-9a-fA-F]{6}$/.test(v))
+      document.getElementById(`borderColor${n}Picker`).value = v;
+  }
+
   // ---- 生成 ----
   async function generate() {
-    const text      = document.getElementById("textInput").value.trim();
-    const colorHex  = document.getElementById("hexInput").value;
-    const fontSize  = parseInt(slider.value);
-    const btn       = document.getElementById("generateBtn");
-    const errEl     = document.getElementById("errorMsg");
+    const text         = document.getElementById("textInput").value.trim();
+    const colorHex     = document.getElementById("hexInput").value;
+    const fontSize     = parseInt(slider.value);
+    const borderColor1 = document.getElementById("borderColor1Hex").value;
+    const borderColor2 = document.getElementById("borderColor2Hex").value;
+    const borderSize   = parseInt(document.getElementById("borderSizeSlider").value);
+    const btn          = document.getElementById("generateBtn");
+    const errEl        = document.getElementById("errorMsg");
 
     if (!text) {
       showError("テキストを入力してください");
@@ -555,7 +595,13 @@
       const res = await fetch("/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, color: colorHex, font_size: fontSize, font_id: selectedFontId }),
+        body: JSON.stringify({
+          text, color: colorHex, font_size: fontSize, font_id: selectedFontId,
+          border_mode: selectedBorderMode,
+          border_color1: borderColor1,
+          border_color2: borderColor2,
+          border_size: borderSize,
+        }),
       });
 
       const data = await res.json();
