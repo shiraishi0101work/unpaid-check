@@ -319,11 +319,11 @@ def generate_sticker(
         # 強度で第2色を fill_rgba との間で補間（0%=単色、100%=フル）
         t = max(0, min(100, int(gradient_strength))) / 100.0
         gc2 = tuple(int(fill_rgba[i] + (gc2_base[i] - fill_rgba[i]) * t) for i in range(4))
-        # テキスト範囲だけでグラデを生成してキャンバスに貼る
-        # → 文字の端から端まで色が変化するようになる
+        # テキストピクセル範囲（padding, padding）に合わせてグラデを貼る
+        # tx/tyはフォントのオフセット分ずれているので使わない
         grad_small = _create_gradient(text_w, text_h, fill_rgba, gc2, gradient_mode)
         grad_img   = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-        grad_img.paste(grad_small, (tx, ty))
+        grad_img.paste(grad_small, (padding, padding))
         # fake_bold ストロークを考慮したマスク
         if fake_bold > 0:
             fb_mask = Image.new("L", (canvas_w, canvas_h), 0)
