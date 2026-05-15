@@ -31,15 +31,29 @@ def generate():
     text      = (data.get("text") or "").strip()
     color_hex = data.get("color", "#FF88BB")
     font_size = int(data.get("font_size", 200))
-    font_id   = data.get("font_id") or None
+    font_id      = data.get("font_id") or None
+    border_mode  = data.get("border_mode", "double")
+    border_color1= data.get("border_color1", "#1a1a1a")
+    border_color2= data.get("border_color2", "#ffffff")
+    border_size  = int(data.get("border_size", 5))
 
     if not text:
         return jsonify({"error": "テキストを入力してください"}), 400
 
-    font_size = max(60, min(600, font_size))
+    font_size   = max(60, min(600, font_size))
+    border_size = max(1, min(10, border_size))
 
     try:
-        img = generate_sticker(text, color_hex=color_hex, font_size=font_size, font_id=font_id)
+        img = generate_sticker(
+            text,
+            color_hex=color_hex,
+            font_size=font_size,
+            font_id=font_id,
+            border_mode=border_mode,
+            border_color1=border_color1,
+            border_color2=border_color2,
+            border_size=border_size,
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
