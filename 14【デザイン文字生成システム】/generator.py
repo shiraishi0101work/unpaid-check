@@ -11,20 +11,41 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ============================================================
 # フォント設定
 # ============================================================
-DEFAULT_FONTS = [
-    r"C:\Windows\Fonts\BIZ-UDGothicB.ttc",   # BIZ UD Gothic Bold（おすすめ）
-    r"C:\Windows\Fonts\NotoSansJP-VF.ttf",    # Noto Sans JP
-    r"C:\Windows\Fonts\YuGothB.ttc",          # Yu Gothic Bold
-    r"C:\Windows\Fonts\meiryob.ttc",          # Meiryo Bold
-    r"C:\Windows\Fonts\msgothic.ttc",         # MS Gothic（フォールバック）
+# 可変フォント（weight=900 で最太にする）を最優先
+VARIABLE_FONT = r"C:\Windows\Fonts\NotoSansJP-VF.ttf"
+
+FALLBACK_FONTS = [
+    r"C:\Windows\Fonts\BIZ-UDGothicB.ttc",
+    r"C:\Windows\Fonts\YuGothB.ttc",
+    r"C:\Windows\Fonts\meiryob.ttc",
+    r"C:\Windows\Fonts\msgothic.ttc",
 ]
 
 
-def find_font():
-    for path in DEFAULT_FONTS:
-        if os.path.exists(path):
-            return path
-    raise FileNotFoundError("利用可能な日本語フォントが見つかりません")
+def load_font(font_size: int, font_path: str = None) -> ImageFont.FreeTypeFont:
+    """フォントをロードする。可変フォントは weight=900 に設定。"""
+    path = font_path
+
+    # パス未指定 → 自動選択
+    if path is None:
+        if os.path.exists(VARIABLE_FONT):
+            path = VARIABLE_FONT
+        else:
+            path = next((p for p in FALLBACK_FONTS if os.path.exists(p)), None)
+
+    if path is None:
+        raise FileNotFoundError("利用可能な日本語フォントが見つかりません")
+
+    font = ImageFont.truetype(path, font_size)
+
+    # 可変フォントなら weight=900（Black）に設定
+    if path == VARIABLE_FONT:
+        try:
+            font.set_variation_by_axes([900])
+        except Exception:
+            pass  # 非対応バージョンは無視
+
+    return font
 
 
 def hex_to_rgba(hex_color: str, alpha: int = 255) -> tuple:
