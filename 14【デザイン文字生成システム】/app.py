@@ -31,11 +31,21 @@ def generate():
     text      = (data.get("text") or "").strip()
     color_hex = data.get("color", "#FF88BB")
     font_size = int(data.get("font_size", 200))
-    font_id      = data.get("font_id") or None
-    border_mode  = data.get("border_mode", "double")
-    border_color1= data.get("border_color1", "#1a1a1a")
-    border_color2= data.get("border_color2", "#ffffff")
-    border_size  = int(data.get("border_size", 5))
+    font_id         = data.get("font_id") or None
+    border_mode     = data.get("border_mode", "double")
+    border_color1   = data.get("border_color1", "#1a1a1a")
+    border_color2   = data.get("border_color2", "#ffffff")
+    border_size     = int(data.get("border_size", 5))
+    letter_spacing  = int(data.get("letter_spacing", 0))
+    x_scale         = int(data.get("x_scale", 100))
+    slant           = int(data.get("slant", 0))
+    fake_bold       = int(data.get("fake_bold", 0))
+    font_weight     = data.get("font_weight")
+    font_weight     = int(font_weight) if font_weight is not None else None
+    gloss           = bool(data.get("gloss", True))
+    gloss_intensity = int(data.get("gloss_intensity", 60))
+    gradient_mode   = data.get("gradient_mode", "none")
+    gradient_color2 = data.get("gradient_color2") or None
 
     if not text:
         return jsonify({"error": "テキストを入力してください"}), 400
@@ -53,6 +63,15 @@ def generate():
             border_color1=border_color1,
             border_color2=border_color2,
             border_size=border_size,
+            letter_spacing=letter_spacing,
+            x_scale=x_scale,
+            slant=slant,
+            fake_bold=fake_bold,
+            font_weight=font_weight,
+            gloss=gloss,
+            gloss_intensity=gloss_intensity,
+            gradient_mode=gradient_mode,
+            gradient_color2=gradient_color2,
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
