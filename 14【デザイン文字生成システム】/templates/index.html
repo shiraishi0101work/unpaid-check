@@ -697,6 +697,27 @@
     document.getElementById("fontSizeValue").textContent = slider.value;
   });
 
+  // ---- セクション折りたたみ ----
+  function toggleSection(id, btn) {
+    const body = document.getElementById(id);
+    const open = body.classList.toggle("open");
+    btn.classList.toggle("open", open);
+  }
+
+  // ---- グラデーション ----
+  let selectedGradMode = "none";
+  function setGradMode(mode) {
+    selectedGradMode = mode;
+    document.querySelectorAll(".grad-mode-btn").forEach(b =>
+      b.classList.toggle("active", b.dataset.gmode === mode));
+    document.getElementById("gradColor2Row").style.display = mode === "none" ? "none" : "";
+  }
+  function syncGc2Hex()     { document.getElementById("gc2Hex").value    = document.getElementById("gc2Picker").value; }
+  function syncGc2Picker()  {
+    const v = document.getElementById("gc2Hex").value;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById("gc2Picker").value = v;
+  }
+
   // ---- 外縁モード ----
   let selectedBorderMode = "double";
 
