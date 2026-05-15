@@ -288,15 +288,19 @@ def generate_sticker(
     # ---- ベーステキストマスク ----
     base_mask = _make_text_mask((canvas_w, canvas_h), text, font, tx, ty, letter_spacing)
 
-    # ---- 外側ふち（double）: MaxFilter 膨張で丸みのあるふち ----
-    if border_mode == "double":
-        outer_mask = _dilate_mask(base_mask, combined)
-        result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color2_rgba, outer_mask))
+    # たぬき油性マジックはふちなし（手書きフォントにふちは合わないため）
+    is_tanuki = (font_id == "tanuki")
 
-    # ---- 内側ふち（single / double） ----
-    if border_mode in ("single", "double"):
-        inner_mask = _dilate_mask(base_mask, inner_stroke)
-        result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color1_rgba, inner_mask))
+    if not is_tanuki:
+        # ---- 外側ふち（double）: MaxFilter 膨張で丸みのあるふち ----
+        if border_mode == "double":
+            outer_mask = _dilate_mask(base_mask, combined)
+            result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color2_rgba, outer_mask))
+
+        # ---- 内側ふち（single / double） ----
+        if border_mode in ("single", "double"):
+            inner_mask = _dilate_mask(base_mask, inner_stroke)
+            result = Image.alpha_composite(result, _color_layer((canvas_w, canvas_h), color1_rgba, inner_mask))
 
     # ---- 塗りマスク（疑似太字考慮） ----
     fill_mask = _dilate_mask(base_mask, fake_bold) if fake_bold > 0 else base_mask
