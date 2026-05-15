@@ -365,6 +365,34 @@
 </div>
 
 <script>
+  // ---- フォント一覧をサーバーから取得してレンダリング ----
+  let selectedFontId = null;
+
+  async function loadFonts() {
+    const res   = await fetch("/fonts");
+    const fonts = await res.json();
+    const list  = document.getElementById("fontList");
+    list.innerHTML = "";
+
+    fonts.forEach((f, i) => {
+      const row = document.createElement("div");
+      row.className = "font-option" + (i === 0 ? " active" : "");
+      row.dataset.id = f.id;
+      row.innerHTML = `
+        <div class="font-radio-dot"></div>
+        <span class="font-label-text">${f.label}</span>
+      `;
+      row.addEventListener("click", () => {
+        list.querySelectorAll(".font-option").forEach(el => el.classList.remove("active"));
+        row.classList.add("active");
+        selectedFontId = f.id;
+      });
+      list.appendChild(row);
+      if (i === 0) selectedFontId = f.id;
+    });
+  }
+  loadFonts();
+
   // ---- プリセットカラー ----
   const PRESETS = [
     "#FF88BB", "#FFEE55", "#88EEFF", "#BBFF66",
