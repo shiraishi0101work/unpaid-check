@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const pkgDir = path.dirname(require.resolve('pdfjs-dist/package.json'));
-const cmapUrl = path.join(pkgDir, 'cmaps') + path.sep;
+const cMapUrl = path.join(pkgDir, 'cmaps') + path.sep;
 
 const filePath = 'C:/Users/shira_k13727w/OneDrive/DF/アライアンス関連/請求書・売上/アライアンス事業部請求書/2026年度/1月/AIブログ（請求書）/☆●OneChat株式会社御中【1月度AIブログマスターご請求】.pdf';
 const buffer = fs.readFileSync(filePath);
