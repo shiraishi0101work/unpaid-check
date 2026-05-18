@@ -247,12 +247,21 @@ function initYears() {
 }
 
 function switchTab(name) {
-  ['table','charts','activity'].forEach(t => {
+  ['table','charts','activity','ranking'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = (t === name) ? '' : 'none';
     document.getElementById(`btn-${t}`).classList.toggle('active', t === name);
   });
-  if (name === 'charts' && !analyticsData) loadAnalytics();
+  if (name === 'charts'  && !analyticsData) loadAnalytics();
   if (name === 'activity' && activityData.length === 0) loadActivity();
+  if (name === 'ranking') {
+    // 今月をデフォルト設定
+    if (!document.getElementById('rankingMonth').value) {
+      const now = new Date();
+      document.getElementById('rankingMonth').value =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      loadRanking();
+    }
+  }
 }
 
 // ── 集計テーブル ──────────────────────────────────────────────────────────────
