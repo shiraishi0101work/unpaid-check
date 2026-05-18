@@ -469,6 +469,31 @@ app.get('/api/partners/:id/contracts/:contractId/view', (req, res) => {
 
 // ── 商材 ──────────────────────────────────────────────────────────────────────
 
+// CSV一括取込（/api/products/:id より先に定義）
+app.post('/api/products/import-csv', express.json(), (req, res) => {
+  const db = getDB();
+  const { category, products } = req.body;
+  if (!products || products.length === 0) return res.status(400).json({ error: 'データがありません' });
+
+  const stmt = db.prepare(`
+    INSERT INTO products (name, code, unit_price, description, category) VALUES (?, ?, ?, ?, ?)
+  `);
+
+  let imported = 0, skipped = 0;
+  const errors = [];
+  for (const p of products) {
+    if (!p.name) { skipped++; continue; }
+    try {
+      stmt.run(p.name, p.code || null, p.unit_price || 0, p.description || null, category || null);
+      imported++;
+    } catch (e) {
+      errors.push(e.message);
+      skipped++;
+    }
+  }
+  res.json({ message: `${imported}件取込完了（スキップ: ${skipped}件）`, imported, skipped, errors });
+});
+
 app.get('/api/products', (req, res) => {
   const db = getDB();
   const { search, category } = req.query;
