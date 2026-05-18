@@ -734,11 +734,12 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
     const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, invoiceNo } =
       await parseInvoiceFile(file, partners);
 
+    const autoStatus = guessedPartnerId ? 'confirmed' : 'pending';
     const result = db.prepare(`
       INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status, notes)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(file.originalname, file.path, guessedMonth, guessedAmount,
-           extractedText.slice(0, 5000), guessedPartnerId,
+           extractedText.slice(0, 5000), guessedPartnerId, autoStatus,
            invoiceNo ? `請求書番号: ${invoiceNo}` : null);
 
     const invoiceId = result.lastInsertRowid;
@@ -752,6 +753,7 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
       guessed_partner_id: guessedPartnerId,
       guessed_partner_name: partners.find(p => p.id === guessedPartnerId)?.company_name || null,
       items_count: extractedItems.length,
+      auto_confirmed: !!guessedPartnerId,
     });
   }
 
