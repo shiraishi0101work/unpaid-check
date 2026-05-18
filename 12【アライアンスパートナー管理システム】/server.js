@@ -830,6 +830,7 @@ app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
     guessed_amount: guessedAmount,
     guessed_partner_id: guessedPartnerId,
     extracted_text: extractedText.slice(0, 2000),
+    name_from_pdf: nameFromPdf,
     items_count: extractedItems.length,
     invoice_no: invoiceNo,
     due_date: dueDate,
