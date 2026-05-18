@@ -346,6 +346,7 @@ async function init() {
 
 async function loadClients() {
   const search = document.getElementById('searchInput').value;
+  const statusF = document.getElementById('statusFilter').value;
   const params = new URLSearchParams();
   if (search) params.set('search', search);
 
