@@ -50,7 +50,7 @@
       <div class="toolbar" style="margin:0;flex:1;gap:8px">
         <div class="search-wrap">
           <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          <input type="text" id="searchInput" placeholder="商材名・コード・分類で検索..." oninput="loadProducts()">
+          <input type="text" id="searchInput" placeholder="商材名・分類で検索..." oninput="loadProducts()">
         </div>
         <select id="categoryFilter" onchange="loadProducts()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;color:var(--text);min-width:140px">
           <option value="">すべての分類</option>
@@ -69,7 +69,6 @@
           <tr>
             <th>分類</th>
             <th>商材名</th>
-            <th>コード</th>
             <th>単価</th>
             <th>説明</th>
             <th>登録日</th>
@@ -77,7 +76,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+          <tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -85,7 +84,7 @@
   </div>
 </main>
 
-<!-- Modal -->
+<!-- 商材追加・編集モーダル -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -102,11 +101,7 @@
         <label>商材名 <span style="color:var(--danger)">*</span></label>
         <input type="text" id="f_name" placeholder="例：Googleサジェスト消し放題【成果型】">
       </div>
-      <div class="form-group">
-        <label>商材コード</label>
-        <input type="text" id="f_code" placeholder="例：SGT-001">
-      </div>
-      <div class="form-group">
+      <div class="form-group full">
         <label>単価（円）</label>
         <input type="number" id="f_unit_price" placeholder="0" min="0">
       </div>
@@ -133,7 +128,7 @@
     <div style="margin-bottom:16px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div>
         <strong style="color:var(--text)">CSVフォーマット（1行目はヘッダー）</strong><br>
-        <code style="font-size:12px">商材名,コード,単価,説明</code><br>
+        <code style="font-size:12px">商材名,単価,説明</code><br>
         ※ 分類は下で選択。CSVに「分類」列があればそちらを優先します。
       </div>
       <button class="btn btn-ghost btn-sm" onclick="downloadCsvTemplate()" style="white-space:nowrap;display:flex;align-items:center;gap:5px">
@@ -145,10 +140,8 @@
     <div class="form-grid" style="margin-bottom:16px">
       <div class="form-group full">
         <label>分類 <span style="color:var(--danger)">*</span></label>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="csv_category" placeholder="例：サジェスト対策" list="csv-category-suggestions" style="flex:1">
-          <datalist id="csv-category-suggestions"></datalist>
-        </div>
+        <input type="text" id="csv_category" placeholder="例：サジェスト対策" list="csv-category-suggestions" style="flex:1">
+        <datalist id="csv-category-suggestions"></datalist>
         <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px" id="csvCategoryChips"></div>
       </div>
       <div class="form-group full">
@@ -167,7 +160,6 @@
           <thead style="background:var(--bg);position:sticky;top:0">
             <tr>
               <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">商材名</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">コード</th>
               <th style="padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)">単価</th>
               <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">説明</th>
               <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">分類</th>
@@ -200,13 +192,11 @@ async function loadProducts() {
   const data = await fetch('/api/products?' + params).then(r => r.json());
   const tbody = document.getElementById('tableBody');
 
-  // 分類フィルターを更新
   updateCategoryFilter(data);
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
   } else {
-    // 分類でグループ化して表示
     let lastCategory = null;
     const rows = data.map(p => {
       const catCell = p.category !== lastCategory
@@ -219,7 +209,6 @@ async function loadProducts() {
         <tr>
           ${catCell}
           <td><strong>${p.name}</strong></td>
-          <td>${p.code ? `<span class="badge badge-blue">${p.code}</span>` : '-'}</td>
           <td style="text-align:right;font-weight:600;color:var(--primary)">${fmt(p.unit_price)}</td>
           <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
           <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
@@ -241,8 +230,6 @@ function updateCategoryFilter(data) {
   const sel = document.getElementById('categoryFilter');
   sel.innerHTML = '<option value="">すべての分類</option>' +
     cats.map(c => `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`).join('');
-
-  // datalistも更新
   document.getElementById('category-suggestions').innerHTML =
     cats.map(c => `<option value="${c}">`).join('');
   allCategories = cats;
@@ -261,7 +248,7 @@ function closeModal() {
 }
 
 function clearForm() {
-  ['f_category','f_name','f_code','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
+  ['f_category','f_name','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
 }
 
 async function editProduct(id) {
@@ -271,7 +258,6 @@ async function editProduct(id) {
   openModal(id);
   document.getElementById('f_category').value    = p.category || '';
   document.getElementById('f_name').value        = p.name || '';
-  document.getElementById('f_code').value        = p.code || '';
   document.getElementById('f_unit_price').value  = p.unit_price || '';
   document.getElementById('f_description').value = p.description || '';
 }
@@ -280,7 +266,6 @@ async function saveProduct() {
   const body = {
     category:    document.getElementById('f_category').value.trim(),
     name:        document.getElementById('f_name').value.trim(),
-    code:        document.getElementById('f_code').value.trim(),
     unit_price:  parseInt(document.getElementById('f_unit_price').value) || 0,
     description: document.getElementById('f_description').value.trim(),
   };
@@ -324,12 +309,9 @@ function openCsvModal() {
   document.getElementById('csv_category').value = '';
   document.getElementById('csvPreviewWrap').style.display = 'none';
   document.getElementById('csvImportBtn').disabled = true;
-
-  // 既存分類をdatalist＋チップに反映
   document.getElementById('csv-category-suggestions').innerHTML =
     allCategories.map(c => `<option value="${c}">`).join('');
   renderCategoryChips();
-
   document.getElementById('csvModalOverlay').classList.add('open');
 }
 
@@ -349,7 +331,7 @@ function renderCategoryChips() {
 function parseCSVClient(text) {
   text = text.replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return { headers: [], rows: [] };
+  if (lines.length < 2) return { rows: [] };
 
   const parseRow = line => {
     const result = []; let cur = '', inQ = false;
@@ -365,7 +347,6 @@ function parseCSVClient(text) {
 
   const HEADER_MAP = {
     '商材名':'name','名称':'name',
-    'コード':'code','商材コード':'code',
     '単価':'unit_price','価格':'unit_price','単価（円）':'unit_price',
     '説明':'description','備考':'description',
     '分類':'category',
@@ -380,7 +361,7 @@ function parseCSVClient(text) {
     headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
     if (row.name) rows.push(row);
   }
-  return { headers, rows };
+  return { rows };
 }
 
 function previewCSV() {
@@ -392,7 +373,6 @@ function previewCSV() {
     const { rows } = parseCSVClient(e.target.result);
     csvParsedRows = rows;
     const defaultCat = document.getElementById('csv_category').value.trim();
-    const fmt = n => n ? '¥' + Number(n).toLocaleString() : '-';
 
     const tbody = document.getElementById('csvPreviewBody');
     tbody.innerHTML = rows.map(r => {
@@ -400,7 +380,6 @@ function previewCSV() {
       const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
       return `<tr>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${r.name}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted)">${r.code || '-'}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right">${fmt(unitPrice)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || '-'}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${cat}</td>
@@ -414,7 +393,6 @@ function previewCSV() {
   reader.readAsText(file, 'utf-8');
 }
 
-// 分類入力・ファイル選択どちらが変わってもプレビュー更新
 document.getElementById('csv_category').addEventListener('input', () => {
   if (csvParsedRows.length) previewCSV();
 });
@@ -425,9 +403,8 @@ async function importCSV() {
   if (!csvParsedRows.length) { alert('CSVファイルを選択してください'); return; }
 
   const products = csvParsedRows.map(r => ({
-    name:       r.name,
-    code:       r.code || null,
-    unit_price: parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0,
+    name:        r.name,
+    unit_price:  parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0,
     description: r.description || null,
   }));
 
@@ -451,8 +428,8 @@ async function importCSV() {
 
 function downloadCsvTemplate() {
   const bom = '\uFEFF';
-  const header = '商材名,コード,単価,説明';
-  const sample = 'Googleサジェスト消し放題【成果型】,SGT-001,50000,成果報酬型のサジェスト対策';
+  const header = '商材名,単価,説明';
+  const sample = 'Googleサジェスト消し放題【成果型】,50000,成果報酬型のサジェスト対策';
   const csv = bom + header + '\n' + sample + '\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
