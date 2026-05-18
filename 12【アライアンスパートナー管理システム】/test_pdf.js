@@ -17,7 +17,7 @@ pdfjsLib.getDocument({ data: new Uint8Array(buffer), cMapUrl, cMapPacked: true, 
     }
     console.log('=== 先頭600文字 ===');
     console.log(JSON.stringify(text.slice(0, 600)));
-    const m = text.match(/([^\n\r]{2,40})\s*(?:御中|様)/);
+    const m = text.match(/(\S+)\s*御中/);
     console.log('=== 御中/様マッチ ===', m ? JSON.stringify(m[1]) : '未検出');
     console.log('=== OneChat含む行 ===');
     text.split('\n').filter(l => l.includes('OneChat') || l.includes('御中') || l.includes('様')).forEach(l => console.log(JSON.stringify(l)));
