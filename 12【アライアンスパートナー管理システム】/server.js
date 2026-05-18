@@ -876,13 +876,14 @@ app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
 // 請求書を手動で新規作成（PDFなし）
 app.post('/api/invoices', (req, res) => {
   const db = getDB();
-  const { partner_id, billing_month, total_amount, notes, items } = req.body;
-  if (!partner_id || !billing_month) return res.status(400).json({ error: 'パートナーと請求月は必須です' });
+  const { partner_id, client_id, billing_month, total_amount, notes, items } = req.body;
+  if (!billing_month) return res.status(400).json({ error: '請求月は必須です' });
+  if (!partner_id && !client_id) return res.status(400).json({ error: 'パートナーまたはエンドを選択してください' });
 
   const result = db.prepare(`
-    INSERT INTO invoices (partner_id, billing_month, total_amount, notes, status)
-    VALUES (?, ?, ?, ?, 'confirmed')
-  `).run(partner_id, billing_month, total_amount || 0, notes);
+    INSERT INTO invoices (partner_id, client_id, billing_month, total_amount, notes, status)
+    VALUES (?, ?, ?, ?, ?, 'confirmed')
+  `).run(partner_id || null, client_id || null, billing_month, total_amount || 0, notes);
 
   const invoiceId = result.lastInsertRowid;
 
