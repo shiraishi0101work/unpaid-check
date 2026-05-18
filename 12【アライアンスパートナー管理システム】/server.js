@@ -903,12 +903,23 @@ app.post('/api/invoices', (req, res) => {
 // 請求書を確定・更新
 app.put('/api/invoices/:id', (req, res) => {
   const db = getDB();
-  const { partner_id, billing_month, total_amount, notes, status, items } = req.body;
+  const { partner_id, client_id, billing_month, total_amount, notes, status, items, extracted_name } = req.body;
 
   db.prepare(`
-    UPDATE invoices SET partner_id=?, billing_month=?, total_amount=?, notes=?, status=?,
+    UPDATE invoices SET partner_id=?, client_id=?, billing_month=?, total_amount=?, notes=?, status=?,
     updated_at=datetime('now','localtime') WHERE id=?
-  `).run(partner_id, billing_month, total_amount || 0, notes, status || 'confirmed', req.params.id);
+  `).run(partner_id || null, client_id || null, billing_month, total_amount || 0, notes, status || 'confirmed', req.params.id);
+
+  // 学習マップに保存（PDFから抽出名がある場合）
+  if (extracted_name && (partner_id || client_id)) {
+    const normName = normalizeName(extracted_name);
+    if (normName) {
+      db.prepare(`
+        INSERT OR REPLACE INTO invoice_name_map (extracted_name, partner_id, client_id)
+        VALUES (?, ?, ?)
+      `).run(normName, partner_id || null, client_id || null);
+    }
+  }
 
   if (items !== undefined) {
     db.prepare('DELETE FROM invoice_items WHERE invoice_id = ?').run(req.params.id);
@@ -924,6 +935,29 @@ app.put('/api/invoices/:id', (req, res) => {
   }
 
   res.json({ message: '更新しました' });
+});
+
+// 請求書の手動紐づけ（学習マップ保存付き）
+app.post('/api/invoices/:id/link', (req, res) => {
+  const db = getDB();
+  const { partner_id, client_id, extracted_name } = req.body;
+
+  db.prepare(`
+    UPDATE invoices SET partner_id=?, client_id=?, updated_at=datetime('now','localtime') WHERE id=?
+  `).run(partner_id || null, client_id || null, req.params.id);
+
+  if (extracted_name) {
+    const normName = normalizeName(extracted_name);
+    if (normName) {
+      db.prepare(`
+        INSERT OR REPLACE INTO invoice_name_map (extracted_name, partner_id, client_id)
+        VALUES (?, ?, ?)
+      `).run(normName, partner_id || null, client_id || null);
+      console.log('[学習] 名前マップ保存:', normName, '→ partner:', partner_id, '/ client:', client_id);
+    }
+  }
+
+  res.json({ message: '紐づけを保存しました' });
 });
 
 app.delete('/api/invoices/:id', (req, res) => {
