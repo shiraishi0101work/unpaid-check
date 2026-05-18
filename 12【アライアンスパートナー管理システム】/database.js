@@ -98,6 +98,20 @@ function initDB() {
       updated_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    -- エンド契約書
+    CREATE TABLE IF NOT EXISTS client_contracts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      file_name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      contract_date TEXT,
+      extracted_text TEXT,
+      notes TEXT,
+      doc_type TEXT DEFAULT '契約書',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    );
+
     -- PDF名→パートナー/エンド 学習マッピング
     CREATE TABLE IF NOT EXISTS invoice_name_map (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
