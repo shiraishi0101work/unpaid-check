@@ -449,6 +449,18 @@ async function importCSV() {
   if (res.ok) { closeCsvModal(); loadProducts(); }
 }
 
+function downloadCsvTemplate() {
+  const bom = '\uFEFF';
+  const header = '商材名,コード,単価,説明';
+  const sample = 'Googleサジェスト消し放題【成果型】,SGT-001,50000,成果報酬型のサジェスト対策';
+  const csv = bom + header + '\n' + sample + '\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '商材取込ひな型.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 document.getElementById('csvModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('csvModalOverlay')) closeCsvModal();
 });
