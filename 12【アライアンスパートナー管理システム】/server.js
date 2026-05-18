@@ -546,19 +546,21 @@ app.delete('/api/products/:id', (req, res) => {
 
 app.get('/api/invoices', (req, res) => {
   const db = getDB();
-  const { partner_id, year, month, status } = req.query;
+  const { partner_id, client_id, year, month, status } = req.query;
   let q = `
-    SELECT i.*, p.company_name as partner_name
+    SELECT i.*, p.company_name as partner_name, c.company_name as client_name
     FROM invoices i
     LEFT JOIN partners p ON p.id = i.partner_id
+    LEFT JOIN clients c ON c.id = i.client_id
     WHERE 1=1
   `;
   const params = [];
   if (partner_id) { q += ' AND i.partner_id = ?'; params.push(partner_id); }
+  if (client_id)  { q += ' AND i.client_id = ?';  params.push(client_id); }
   if (year)  { q += " AND i.billing_month LIKE ?"; params.push(`${year}-%`); }
   if (month) { q += ' AND i.billing_month = ?'; params.push(month); }
   if (status) { q += ' AND i.status = ?'; params.push(status); }
-  q += ' ORDER BY i.billing_month DESC, p.company_name ASC';
+  q += ' ORDER BY i.billing_month DESC, COALESCE(p.company_name, c.company_name) ASC';
   res.json(db.prepare(q).all(...params));
 });
 
