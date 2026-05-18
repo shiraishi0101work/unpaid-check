@@ -135,6 +135,17 @@ function initDB() {
   // マイグレーション: invoices.client_id カラム追加
   try { db.exec(`ALTER TABLE invoices ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL`); } catch {}
 
+  // 明細テキスト→商材 学習マッピング
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS invoice_item_name_map (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      extracted_text TEXT NOT NULL UNIQUE,
+      product_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    );
+  `);
+
   return db;
 }
 
