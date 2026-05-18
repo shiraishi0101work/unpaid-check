@@ -439,6 +439,7 @@ async function openEditModal(id, defaultTab = 'info') {
   document.getElementById('e_contact_name').value  = c.contact_name || '';
   document.getElementById('e_contact_email').value = c.contact_email || '';
   document.getElementById('e_contact_phone').value = c.contact_phone || '';
+  document.getElementById('e_status').value        = c.status || 'active';
   document.getElementById('e_notes').value         = c.notes || '';
   document.getElementById('editModalOverlay').classList.add('open');
   switchTab(defaultTab);
