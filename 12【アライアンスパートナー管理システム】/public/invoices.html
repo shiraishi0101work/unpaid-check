@@ -74,8 +74,17 @@
   <div class="card">
     <div class="card-header">
       <div class="toolbar" style="margin:0;flex:1;flex-wrap:wrap">
+        <select id="filterType" onchange="loadInvoices()" style="min-width:130px">
+          <option value="">すべての種別</option>
+          <option value="partner">パートナー</option>
+          <option value="client">エンド</option>
+          <option value="unlinked">未紐づけ</option>
+        </select>
         <select id="filterPartner" onchange="loadInvoices()" style="min-width:160px">
           <option value="">すべてのパートナー</option>
+        </select>
+        <select id="filterClient" onchange="loadInvoices()" style="min-width:160px">
+          <option value="">すべてのエンド</option>
         </select>
         <input type="month" id="filterMonth" onchange="loadInvoices()" style="min-width:150px">
         <select id="filterStatus" onchange="loadInvoices()" style="min-width:120px">
@@ -91,7 +100,8 @@
       <table>
         <thead>
           <tr>
-            <th>パートナー</th>
+            <th>種別</th>
+            <th>取引先</th>
             <th>請求月</th>
             <th>金額</th>
             <th>状態</th>
@@ -101,7 +111,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
+          <tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
