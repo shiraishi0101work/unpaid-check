@@ -567,8 +567,10 @@ app.get('/api/invoices', (req, res) => {
 app.get('/api/invoices/:id', (req, res) => {
   const db = getDB();
   const invoice = db.prepare(`
-    SELECT i.*, p.company_name as partner_name
-    FROM invoices i LEFT JOIN partners p ON p.id = i.partner_id
+    SELECT i.*, p.company_name as partner_name, c.company_name as client_name
+    FROM invoices i
+    LEFT JOIN partners p ON p.id = i.partner_id
+    LEFT JOIN clients c ON c.id = i.client_id
     WHERE i.id = ?
   `).get(req.params.id);
   if (!invoice) return res.status(404).json({ error: '見つかりません' });
