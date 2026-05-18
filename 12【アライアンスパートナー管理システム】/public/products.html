@@ -247,6 +247,7 @@ async function loadProducts() {
           <td><strong>${p.name}</strong></td>
           <td style="text-align:right">${daily}</td>
           <td style="text-align:right">${monthly}</td>
+          <td style="text-align:right;color:var(--text-muted)">${p.cost_price ? fmt(p.cost_price) : '-'}</td>
           <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
           <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
           <td style="white-space:nowrap">
