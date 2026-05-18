@@ -768,7 +768,7 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
   const db = getDB();
   if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'ファイルがありません' });
 
-  const partners = db.prepare('SELECT id, company_name FROM partners WHERE status = ?').all('active');
+  const partners = db.prepare('SELECT id, company_name FROM partners').all();
   const results = [];
 
   for (const file of req.files) {
