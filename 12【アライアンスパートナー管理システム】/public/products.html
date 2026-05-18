@@ -485,6 +485,36 @@ function downloadCsvTemplate() {
   URL.revokeObjectURL(url);
 }
 
+// ── ドロップゾーン ─────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.style.background = 'var(--bg)';
+  dropZone.style.borderColor = 'var(--primary)';
+});
+dropZone.addEventListener('dragleave', () => {
+  dropZone.style.background = '';
+  dropZone.style.borderColor = '';
+});
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.background = '';
+  dropZone.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.name.endsWith('.csv')) { alert('CSVファイルをドロップしてください'); return; }
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('csvFile').files = dt.files;
+  document.getElementById('dropZoneLabel').textContent = file.name;
+  previewCSV();
+});
+
+document.getElementById('csvFile').addEventListener('change', () => {
+  const file = document.getElementById('csvFile').files[0];
+  if (file) document.getElementById('dropZoneLabel').textContent = file.name;
+});
+
 document.getElementById('csvModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('csvModalOverlay')) closeCsvModal();
 });
