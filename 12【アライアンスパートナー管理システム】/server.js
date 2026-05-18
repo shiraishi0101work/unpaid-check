@@ -476,7 +476,7 @@ app.post('/api/products/import-csv', express.json(), (req, res) => {
   if (!products || products.length === 0) return res.status(400).json({ error: 'データがありません' });
 
   const stmt = db.prepare(`
-    INSERT INTO products (name, code, unit_price, description, category) VALUES (?, ?, ?, ?, ?)
+    INSERT INTO products (name, unit_price, description, category) VALUES (?, ?, ?, ?)
   `);
 
   let imported = 0, skipped = 0;
@@ -484,7 +484,7 @@ app.post('/api/products/import-csv', express.json(), (req, res) => {
   for (const p of products) {
     if (!p.name) { skipped++; continue; }
     try {
-      stmt.run(p.name, p.code || null, p.unit_price || 0, p.description || null, category || null);
+      stmt.run(p.name, p.unit_price || 0, p.description || null, category || null);
       imported++;
     } catch (e) {
       errors.push(e.message);
