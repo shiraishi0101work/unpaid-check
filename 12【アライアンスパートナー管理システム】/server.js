@@ -507,21 +507,21 @@ app.get('/api/products', (req, res) => {
 
 app.post('/api/products', (req, res) => {
   const db = getDB();
-  const { name, unit_price, price_type, description, category } = req.body;
+  const { name, unit_price, price_type, cost_price, description, category } = req.body;
   if (!name) return res.status(400).json({ error: '商材名は必須です' });
   const result = db.prepare(`
-    INSERT INTO products (name, unit_price, price_type, description, category) VALUES (?, ?, ?, ?, ?)
-  `).run(name, unit_price || 0, price_type || 'monthly', description ?? null, category ?? null);
+    INSERT INTO products (name, unit_price, price_type, cost_price, description, category) VALUES (?, ?, ?, ?, ?, ?)
+  `).run(name, unit_price || 0, price_type || 'monthly', cost_price ?? 0, description ?? null, category ?? null);
   res.json({ id: result.lastInsertRowid, message: '登録しました' });
 });
 
 app.put('/api/products/:id', (req, res) => {
   const db = getDB();
-  const { name, unit_price, price_type, description, category } = req.body;
+  const { name, unit_price, price_type, cost_price, description, category } = req.body;
   db.prepare(`
-    UPDATE products SET name=?, unit_price=?, price_type=?, description=?, category=?, updated_at=datetime('now','localtime')
+    UPDATE products SET name=?, unit_price=?, price_type=?, cost_price=?, description=?, category=?, updated_at=datetime('now','localtime')
     WHERE id=?
-  `).run(name ?? null, unit_price || 0, price_type || 'monthly', description ?? null, category ?? null, req.params.id);
+  `).run(name ?? null, unit_price || 0, price_type || 'monthly', cost_price ?? 0, description ?? null, category ?? null, req.params.id);
   res.json({ message: '更新しました' });
 });
 
