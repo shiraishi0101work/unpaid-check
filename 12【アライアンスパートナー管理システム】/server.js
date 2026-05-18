@@ -794,17 +794,19 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
   if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'ファイルがありません' });
 
   const partners = db.prepare('SELECT id, company_name FROM partners').all();
+  const clients  = db.prepare('SELECT id, company_name FROM clients').all();
+  const nameMap  = db.prepare('SELECT * FROM invoice_name_map').all();
   const results = [];
 
   for (const file of req.files) {
-    const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, invoiceNo } =
-      await parseInvoiceFile(file, partners);
+    const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, guessedClientId, extractedItems, invoiceNo } =
+      await parseInvoiceFile(file, partners, clients, nameMap);
 
     const result = db.prepare(`
-      INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status, notes)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+      INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, client_id, status, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
     `).run(file.originalname, file.path, guessedMonth, guessedAmount,
-           extractedText.slice(0, 5000), guessedPartnerId,
+           extractedText.slice(0, 5000), guessedPartnerId, guessedClientId,
            invoiceNo ? `請求書番号: ${invoiceNo}` : null);
 
     const invoiceId = result.lastInsertRowid;
@@ -817,6 +819,8 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
       guessed_amount: guessedAmount,
       guessed_partner_id: guessedPartnerId,
       guessed_partner_name: partners.find(p => p.id === guessedPartnerId)?.company_name || null,
+      guessed_client_id: guessedClientId,
+      guessed_client_name: clients.find(c => c.id === guessedClientId)?.company_name || null,
       items_count: extractedItems.length,
     });
   }
