@@ -194,7 +194,22 @@
 <script>
 let editId = null;
 let allCategories = [];
-const fmt = n => n ? '¥' + Number(n).toLocaleString() : '-';
+const fmt = n => n != null && n !== '' ? '¥' + Number(n).toLocaleString() : '-';
+
+function priceDisplay(p) {
+  if (p.price_type === 'daily') {
+    const monthly = (p.unit_price || 0) * 30;
+    return {
+      daily:   `<span style="font-weight:600;color:var(--primary)">${fmt(p.unit_price)}<small style="font-weight:normal;color:var(--text-muted)">/日</small></span>`,
+      monthly: `<span style="font-weight:600;color:var(--primary)">${fmt(monthly)}</span><br><small style="color:var(--text-muted);font-size:11px">（30日成果）</small>`,
+    };
+  } else {
+    return {
+      daily:   `<span style="color:var(--text-muted)">-</span>`,
+      monthly: `<span style="font-weight:600;color:var(--primary)">${fmt(p.unit_price)}<small style="font-weight:normal;color:var(--text-muted)">/月</small></span>`,
+    };
+  }
+}
 
 async function loadProducts() {
   const search   = document.getElementById('searchInput').value;
@@ -209,7 +224,7 @@ async function loadProducts() {
   updateCategoryFilter(data);
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
   } else {
     let lastCategory = null;
     const rows = data.map(p => {
@@ -219,11 +234,13 @@ async function loadProducts() {
            </td>`
         : `<td style="color:var(--text-muted);font-size:11px">　└</td>`;
       lastCategory = p.category;
+      const { daily, monthly } = priceDisplay(p);
       return `
         <tr>
           ${catCell}
           <td><strong>${p.name}</strong></td>
-          <td style="text-align:right;font-weight:600;color:var(--primary)">${fmt(p.unit_price)}</td>
+          <td style="text-align:right">${daily}</td>
+          <td style="text-align:right">${monthly}</td>
           <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${p.description || '-'}</td>
           <td style="color:var(--text-muted)">${p.created_at?.slice(0,10) || '-'}</td>
           <td style="white-space:nowrap">
