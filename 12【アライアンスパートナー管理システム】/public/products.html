@@ -412,11 +412,17 @@ function previewCSV() {
     const tbody = document.getElementById('csvPreviewBody');
     tbody.innerHTML = rows.map(r => {
       const unitPrice = parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0;
+      const pt = r.price_type === '日額' ? 'daily' : 'monthly';
+      const monthly = pt === 'daily' ? unitPrice * 30 : unitPrice;
       const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
+      const ptLabel = pt === 'daily' ? '日額' : '月額';
+      const monthlyStr = pt === 'daily' ? `${fmt(monthly)}<br><small style="color:var(--text-muted)">（30日成果）</small>` : fmt(monthly);
       return `<tr>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${r.name}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${ptLabel}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right">${fmt(unitPrice)}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || '-'}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right">${monthlyStr}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || '-'}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${cat}</td>
       </tr>`;
     }).join('');
