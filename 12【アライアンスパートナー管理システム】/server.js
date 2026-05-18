@@ -832,12 +832,14 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
 app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
   const db = getDB();
   const partners = db.prepare('SELECT id, company_name FROM partners').all();
-  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, nameFromPdf, invoiceNo, dueDate } =
-    await parseInvoiceFile(req.file, partners);
+  const clients  = db.prepare('SELECT id, company_name FROM clients').all();
+  const nameMap  = db.prepare('SELECT * FROM invoice_name_map').all();
+  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, guessedClientId, extractedItems, nameFromPdf, invoiceNo, dueDate } =
+    await parseInvoiceFile(req.file, partners, clients, nameMap);
 
   const result = db.prepare(`
-    INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, status, notes)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+    INSERT INTO invoices (file_name, file_path, billing_month, total_amount, extracted_text, partner_id, client_id, status, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
   `).run(
     req.file ? req.file.originalname : '手動入力',
     req.file ? req.file.path : '',
@@ -845,6 +847,7 @@ app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
     guessedAmount,
     extractedText.slice(0, 5000),
     guessedPartnerId,
+    guessedClientId,
     invoiceNo ? `請求書番号: ${invoiceNo}` : null
   );
 
@@ -856,6 +859,7 @@ app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
     guessed_month: guessedMonth,
     guessed_amount: guessedAmount,
     guessed_partner_id: guessedPartnerId,
+    guessed_client_id: guessedClientId,
     extracted_text: extractedText.slice(0, 2000),
     name_from_pdf: nameFromPdf,
     items_count: extractedItems.length,
