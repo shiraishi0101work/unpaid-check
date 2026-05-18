@@ -140,8 +140,8 @@
     <div style="margin-bottom:16px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div>
         <strong style="color:var(--text)">CSVフォーマット（1行目はヘッダー）</strong><br>
-        <code style="font-size:12px">商材名,単価,説明</code><br>
-        ※ 分類は下で選択。CSVに「分類」列があればそちらを優先します。
+        <code style="font-size:12px">商材名,単価,単価種別,説明</code><br>
+        ※ 単価種別は「月額」または「日額」。省略時は月額。分類は下で選択。
       </div>
       <button class="btn btn-ghost btn-sm" onclick="downloadCsvTemplate()" style="white-space:nowrap;display:flex;align-items:center;gap:5px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
