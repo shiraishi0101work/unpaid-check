@@ -443,7 +443,7 @@ function previewCSV() {
     const tbody = document.getElementById('csvPreviewBody');
     tbody.innerHTML = rows.map(r => {
       const unitPrice = parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0;
-      const pt = r.price_type === '日額' ? 'daily' : 'monthly';
+      const pt = r.price_type === '日額' ? 'daily' : r.price_type === 'ショット' ? 'shot' : 'monthly';
       const monthly = pt === 'daily' ? unitPrice * 30 : unitPrice;
       const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
       const ptLabel = pt === 'daily' ? '日額' : '月額';
