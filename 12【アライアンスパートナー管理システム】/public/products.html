@@ -302,6 +302,7 @@ async function editProduct(id) {
   document.getElementById('f_category').value    = p.category || '';
   document.getElementById('f_name').value        = p.name || '';
   document.getElementById('f_unit_price').value  = p.unit_price || '';
+  document.getElementById('f_cost_price').value  = p.cost_price || '';
   document.getElementById('f_description').value = p.description || '';
   document.querySelector(`input[name="price_type"][value="${p.price_type || 'monthly'}"]`).checked = true;
 }
