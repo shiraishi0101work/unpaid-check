@@ -180,7 +180,7 @@ async function init() {
   products = await fetch('/api/products').then(r => r.json());
 
   const sel = document.getElementById('f_partner_id');
-  partners.filter(p => p.status === 'active').forEach(p => {
+  partners.forEach(p => {
     sel.innerHTML += `<option value="${p.id}">${p.company_name}</option>`;
   });
 
