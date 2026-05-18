@@ -854,6 +854,45 @@ app.delete('/api/invoices/:id', (req, res) => {
   res.json({ message: '削除しました' });
 });
 
+// サービス別月次パートナーランキング
+app.get('/api/monthly-product-ranking', (req, res) => {
+  const db = getDB();
+  const { month } = req.query;
+  if (!month) return res.status(400).json({ error: 'monthが必要です' });
+
+  const rows = db.prepare(`
+    SELECT
+      COALESCE(pr.name, '（未紐付け）') as product_name,
+      p.company_name,
+      SUM(ii.amount) as amount
+    FROM invoice_items ii
+    LEFT JOIN products pr ON pr.id = ii.product_id
+    INNER JOIN invoices i ON i.id = ii.invoice_id
+    INNER JOIN partners p ON p.id = i.partner_id
+    WHERE i.status = 'confirmed'
+      AND i.billing_month = ?
+      AND i.partner_id IS NOT NULL
+    GROUP BY COALESCE(pr.name, '（未紐付け）'), p.id
+    ORDER BY product_name ASC, amount DESC
+  `).all(month);
+
+  const productMap = {};
+  for (const row of rows) {
+    if (!productMap[row.product_name]) productMap[row.product_name] = [];
+    if (productMap[row.product_name].length < 3) {
+      productMap[row.product_name].push({ company_name: row.company_name, amount: row.amount });
+    }
+  }
+
+  res.json({
+    month,
+    products: Object.entries(productMap).map(([name, partners]) => ({
+      product_name: name,
+      top_partners: partners.map((p, i) => ({ rank: i + 1, ...p }))
+    }))
+  });
+});
+
 // ── 月別集計 ──────────────────────────────────────────────────────────────────
 
 app.get('/api/monthly-summary', (req, res) => {
