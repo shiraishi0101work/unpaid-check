@@ -511,7 +511,7 @@ async function importCSV() {
 function downloadCsvTemplate() {
   const bom = '\uFEFF';
   const header = '商材名,単価,単価種別,原価,説明';
-  const sample = 'Googleサジェスト消し放題【成果型】,50000,月額,30000,成果報酬型のサジェスト対策\nGoogle広告運用,3000,日額,1500,クリック単価制';
+  const sample = 'Googleサジェスト消し放題【成果型】,50000,月額,30000,成果報酬型のサジェスト対策\nGoogle広告運用,3000,日額,1500,クリック単価制\nサイト制作,200000,ショット,100000,初期構築のみ';
   const csv = bom + header + '\n' + sample + '\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
