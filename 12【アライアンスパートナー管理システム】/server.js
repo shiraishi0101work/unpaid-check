@@ -1330,6 +1330,133 @@ app.delete('/api/clients/:id', (req, res) => {
   res.json({ message: '削除しました' });
 });
 
+// ── エンド契約書 ──────────────────────────────────────────────────────────────
+
+app.get('/api/clients/:id/contracts', (req, res) => {
+  const db = getDB();
+  const contracts = db.prepare(
+    'SELECT * FROM client_contracts WHERE client_id = ? ORDER BY created_at DESC'
+  ).all(req.params.id);
+  res.json(contracts);
+});
+
+app.post('/api/clients/:id/contracts', uploadContract.single('file'), async (req, res) => {
+  const db = getDB();
+  if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+
+  const docType = req.body.doc_type || '契約書';
+  let extractedText = '';
+  let extractedDate = null;
+  try {
+    const buffer = fs.readFileSync(req.file.path);
+    extractedText = await parsePDFText(buffer);
+    extractedDate = extractContractDate(extractedText);
+  } catch (e) {
+    console.error('エンド契約書PDF解析エラー:', e.message);
+  }
+
+  const result = db.prepare(`
+    INSERT INTO client_contracts (client_id, file_name, file_path, contract_date, extracted_text, doc_type)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(req.params.id, req.file.originalname, req.file.path,
+         extractedDate, extractedText.slice(0, 5000), docType);
+
+  res.json({
+    id: result.lastInsertRowid,
+    extracted_date: extractedDate,
+    message: extractedDate
+      ? `締結日を自動検出しました: ${extractedDate}`
+      : '締結日を自動検出できませんでした。手動で入力してください。'
+  });
+});
+
+app.put('/api/clients/:id/contracts/:contractId', (req, res) => {
+  const db = getDB();
+  const { contract_date, notes } = req.body;
+  db.prepare('UPDATE client_contracts SET contract_date=?, notes=? WHERE id=? AND client_id=?')
+    .run(contract_date, notes, req.params.contractId, req.params.id);
+  res.json({ message: '更新しました' });
+});
+
+app.delete('/api/clients/:id/contracts/:contractId', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT file_path FROM client_contracts WHERE id=? AND client_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (row?.file_path && fs.existsSync(row.file_path)) {
+    try { fs.unlinkSync(row.file_path); } catch {}
+  }
+  db.prepare('DELETE FROM client_contracts WHERE id=? AND client_id=?')
+    .run(req.params.contractId, req.params.id);
+  res.json({ message: '削除しました' });
+});
+
+app.get('/api/clients/:id/contracts/:contractId/download', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT * FROM client_contracts WHERE id=? AND client_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (!row) return res.status(404).json({ error: '見つかりません' });
+  if (!fs.existsSync(row.file_path)) return res.status(404).json({ error: 'ファイルが存在しません' });
+  res.download(row.file_path, row.file_name);
+});
+
+app.get('/api/clients/:id/contracts/:contractId/view', (req, res) => {
+  const db = getDB();
+  const row = db.prepare('SELECT * FROM client_contracts WHERE id=? AND client_id=?')
+    .get(req.params.contractId, req.params.id);
+  if (!row) return res.status(404).send('見つかりません');
+  if (!fs.existsSync(row.file_path)) return res.status(404).send('ファイルが存在しません');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(row.file_name)}`);
+  res.sendFile(path.resolve(row.file_path));
+});
+
+// ── エンドCSV取込 ─────────────────────────────────────────────────────────────
+
+const CLIENT_CSV_HEADER_MAP = {
+  '会社名': 'company_name', '担当者名': 'contact_name', '担当者': 'contact_name',
+  'メール': 'contact_email', 'メールアドレス': 'contact_email',
+  '電話': 'contact_phone', '電話番号': 'contact_phone',
+  '備考': 'notes',
+};
+
+app.post('/api/clients/import-csv', uploadCSV.single('file'), (req, res) => {
+  const db = getDB();
+  if (!req.file) return res.status(400).json({ error: 'ファイルがありません' });
+
+  let text = fs.readFileSync(req.file.path, 'utf-8').replace(/^\uFEFF/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return res.status(400).json({ error: 'データが1件もありません' });
+
+  const rawHeaders = parseCSVRow(lines[0]);
+  const headers = rawHeaders.map(h => CLIENT_CSV_HEADER_MAP[h] || h);
+
+  const stmt = db.prepare(`
+    INSERT INTO clients (company_name, contact_name, contact_email, contact_phone, notes)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  let imported = 0, skipped = 0;
+  const errors = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVRow(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+    if (!row.company_name) { skipped++; continue; }
+    try {
+      stmt.run(row.company_name, row.contact_name || null, row.contact_email || null,
+               row.contact_phone || null, row.notes || null);
+      imported++;
+    } catch (e) {
+      errors.push(`行${i + 1}: ${e.message}`);
+      skipped++;
+    }
+  }
+
+  fs.unlinkSync(req.file.path);
+  res.json({ message: `${imported}件取込完了 (スキップ: ${skipped}件)`, imported, skipped, errors });
+});
+
 // 学習マップ一覧
 app.get('/api/invoice-name-map', (req, res) => {
   const db = getDB();
