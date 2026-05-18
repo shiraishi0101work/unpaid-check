@@ -346,6 +346,7 @@ function openCsvModal() {
   csvParsedRows = [];
   document.getElementById('csvFile').value = '';
   document.getElementById('csv_category').value = '';
+  document.getElementById('dropZoneLabel').textContent = 'ここにCSVをドロップ、またはクリックして選択';
   document.getElementById('csvPreviewWrap').style.display = 'none';
   document.getElementById('csvImportBtn').disabled = true;
   document.getElementById('csv-category-suggestions').innerHTML =
