@@ -475,23 +475,34 @@ app.post('/api/products/import-csv', express.json(), (req, res) => {
   const { category, products } = req.body;
   if (!products || products.length === 0) return res.status(400).json({ error: 'データがありません' });
 
-  const stmt = db.prepare(`
+  const findStmt   = db.prepare(`SELECT id FROM products WHERE name = ?`);
+  const insertStmt = db.prepare(`
     INSERT INTO products (name, unit_price, price_type, cost_price, description, category) VALUES (?, ?, ?, ?, ?, ?)
   `);
+  const updateStmt = db.prepare(`
+    UPDATE products SET unit_price=?, price_type=?, cost_price=?, description=?, category=?, updated_at=datetime('now','localtime')
+    WHERE id=?
+  `);
 
-  let imported = 0, skipped = 0;
+  let inserted = 0, updated = 0, skipped = 0;
   const errors = [];
   for (const p of products) {
     if (!p.name) { skipped++; continue; }
     try {
-      stmt.run(p.name, p.unit_price || 0, p.price_type || 'monthly', p.cost_price || 0, p.description || null, category || null);
-      imported++;
+      const existing = findStmt.get(p.name);
+      if (existing) {
+        updateStmt.run(p.unit_price || 0, p.price_type || 'monthly', p.cost_price || 0, p.description || null, category || null, existing.id);
+        updated++;
+      } else {
+        insertStmt.run(p.name, p.unit_price || 0, p.price_type || 'monthly', p.cost_price || 0, p.description || null, category || null);
+        inserted++;
+      }
     } catch (e) {
       errors.push(e.message);
       skipped++;
     }
   }
-  res.json({ message: `${imported}件取込完了（スキップ: ${skipped}件）`, imported, skipped, errors });
+  res.json({ message: `新規${inserted}件・更新${updated}件（スキップ: ${skipped}件）`, inserted, updated, skipped, errors });
 });
 
 app.get('/api/products', (req, res) => {
