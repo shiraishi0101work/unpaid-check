@@ -122,6 +122,63 @@
   </div>
 </div>
 
+<!-- CSV取込モーダル -->
+<div class="modal-overlay" id="csvModalOverlay">
+  <div class="modal" style="max-width:720px;width:95%">
+    <div class="modal-header">
+      <h3>商材CSV一括登録</h3>
+      <button class="modal-close" onclick="closeCsvModal()">✕</button>
+    </div>
+
+    <div style="margin-bottom:16px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text-muted)">
+      <strong style="color:var(--text)">CSVフォーマット（1行目はヘッダー）</strong><br>
+      <code style="font-size:12px">商材名,コード,単価,説明</code><br>
+      ※ 分類は下で選択。CSVに「分類」列があればそちらを優先します。
+    </div>
+
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="form-group full">
+        <label>分類 <span style="color:var(--danger)">*</span></label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="csv_category" placeholder="例：サジェスト対策" list="csv-category-suggestions" style="flex:1">
+          <datalist id="csv-category-suggestions"></datalist>
+        </div>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px" id="csvCategoryChips"></div>
+      </div>
+      <div class="form-group full">
+        <label>CSVファイル</label>
+        <input type="file" id="csvFile" accept=".csv" onchange="previewCSV()" style="padding:6px">
+      </div>
+    </div>
+
+    <!-- プレビュー -->
+    <div id="csvPreviewWrap" style="display:none">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text)">
+        プレビュー（<span id="csvPreviewCount">0</span>件）
+      </div>
+      <div style="overflow-x:auto;max-height:280px;border:1px solid var(--border);border-radius:6px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead style="background:var(--bg);position:sticky;top:0">
+            <tr>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">商材名</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">コード</th>
+              <th style="padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)">単価</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">説明</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">分類</th>
+            </tr>
+          </thead>
+          <tbody id="csvPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCsvModal()">キャンセル</button>
+      <button class="btn btn-primary" id="csvImportBtn" onclick="importCSV()" disabled>取り込む</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let editId = null;
 let allCategories = [];
