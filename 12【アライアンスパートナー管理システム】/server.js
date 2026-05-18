@@ -1410,6 +1410,76 @@ app.get('/api/clients/:id/contracts/:contractId/view', (req, res) => {
   res.sendFile(path.resolve(row.file_path));
 });
 
+// ── エンド契約書PDF一括取込 ───────────────────────────────────────────────────
+
+const uploadPDFBulkClient = multer({
+  storage: makeStorage('tmp_client_contracts'),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('PDFファイルのみ'));
+  },
+  limits: { fileSize: 30 * 1024 * 1024 }
+});
+
+app.post('/api/clients/import-pdf-preview', uploadPDFBulkClient.array('files', 30), async (req, res) => {
+  if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'ファイルがありません' });
+
+  const results = [];
+  for (const file of req.files) {
+    let text = '';
+    try {
+      const buffer = fs.readFileSync(file.path);
+      text = await parsePDFText(buffer);
+    } catch (e) {
+      console.error('PDF解析エラー:', e.message);
+    }
+
+    const { contractDate } = extractPartnerInfoFromText(text);
+    results.push({
+      file_name:      file.originalname,
+      file_path:      file.path,
+      company_name:   '',
+      contact_name:   '',
+      contact_phone:  '',
+      contact_email:  '',
+      contract_start: contractDate || '',
+      extracted_text: text.slice(0, 5000),
+    });
+  }
+  res.json(results);
+});
+
+app.post('/api/clients/import-pdf-save', express.json(), async (req, res) => {
+  const db = getDB();
+  const { entries } = req.body;
+  if (!entries || entries.length === 0) return res.status(400).json({ error: 'データがありません' });
+
+  const results = [];
+  for (const e of entries) {
+    if (!e.company_name) { results.push({ skipped: true, file_name: e.file_name }); continue; }
+    const r = db.prepare(`
+      INSERT INTO clients (company_name, contact_name, contact_email, contact_phone, notes)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(e.company_name, e.contact_name || null, e.contact_email || null,
+           e.contact_phone || null, null);
+    const clientId = r.lastInsertRowid;
+
+    if (e.file_path && fs.existsSync(e.file_path)) {
+      const destDir = path.join(__dirname, 'uploads', 'contracts');
+      if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+      const destPath = path.join(destDir, path.basename(e.file_path));
+      fs.renameSync(e.file_path, destPath);
+
+      db.prepare(`
+        INSERT INTO client_contracts (client_id, file_name, file_path, contract_date, extracted_text, doc_type)
+        VALUES (?, ?, ?, ?, ?, '契約書')
+      `).run(clientId, e.file_name, destPath, e.contract_start || null, e.extracted_text?.slice(0, 5000) || '');
+    }
+    results.push({ id: clientId, company_name: e.company_name });
+  }
+  res.json({ count: results.filter(r => !r.skipped).length, results });
+});
+
 // ── エンドCSV取込 ─────────────────────────────────────────────────────────────
 
 const CLIENT_CSV_HEADER_MAP = {
