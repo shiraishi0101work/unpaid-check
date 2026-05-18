@@ -84,6 +84,30 @@ function initDB() {
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
       UNIQUE(partner_id, product_id)
     );
+
+    -- エンド（直接売上先）
+    CREATE TABLE IF NOT EXISTS clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      company_name TEXT NOT NULL,
+      contact_name TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    -- PDF名→パートナー/エンド 学習マッピング
+    CREATE TABLE IF NOT EXISTS invoice_name_map (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      extracted_name TEXT NOT NULL UNIQUE,
+      partner_id INTEGER,
+      client_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
+    );
   `);
 
   // マイグレーション: doc_type カラム追加
