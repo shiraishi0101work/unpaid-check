@@ -350,7 +350,8 @@ async function loadClients() {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
 
-  const data = await fetch('/api/clients?' + params).then(r => r.json());
+  let data = await fetch('/api/clients?' + params).then(r => r.json());
+  if (statusF) data = data.filter(c => c.status === statusF);
 
   // 契約書数を並列取得
   const contractCounts = await Promise.all(
