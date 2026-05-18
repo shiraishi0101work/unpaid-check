@@ -4,6 +4,53 @@
   <meta charset="UTF-8">
   <title>エンド一覧 — アライアンスパートナー管理</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .modal-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:20px; }
+    .modal-tab {
+      padding:10px 20px; cursor:pointer; font-size:13px; font-weight:600;
+      color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px;
+      transition:all .12s; background:none; border-top:none; border-left:none; border-right:none;
+    }
+    .modal-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .modal-tab:hover:not(.active) { color:var(--text); }
+    .tab-panel { display:none; } .tab-panel.active { display:block; }
+
+    .contract-row {
+      display:flex; align-items:center; gap:12px; padding:10px 12px;
+      border:1px solid var(--border); border-radius:6px; margin-bottom:8px; background:#fafcff;
+    }
+    .contract-row .c-icon { color:var(--text-muted); flex-shrink:0; display:flex; align-items:center; }
+    .contract-row .c-info { flex:1; min-width:0; }
+    .contract-row .c-name { font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .contract-row .c-date { font-size:12px; color:var(--text-muted); }
+    .contract-row .c-date input { padding:3px 8px; font-size:12px; border:1px solid var(--border); border-radius:4px; }
+    .contract-row .c-actions { display:flex; gap:6px; flex-shrink:0; }
+
+    .contract-upload {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:20px; text-align:center; cursor:pointer; transition:all .12s;
+      background:#fafcff; margin-bottom:16px;
+    }
+    .contract-upload:hover { border-color:var(--primary); background:var(--primary-light); }
+    .contract-upload p { font-size:13px; color:var(--text-muted); margin-top:6px; }
+    .contract-upload .zone-icon {
+      width:40px; height:40px; background:var(--primary-light); border-radius:8px;
+      margin:0 auto 2px; display:flex; align-items:center; justify-content:center;
+      color:var(--primary);
+    }
+
+    .csv-zone {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:28px; text-align:center; cursor:pointer; transition:all .12s; background:#fafcff;
+    }
+    .csv-zone:hover { border-color:var(--primary); background:var(--primary-light); }
+    .csv-zone p { font-size:13px; color:var(--text-muted); margin-top:8px; }
+    .csv-zone .zone-icon {
+      width:44px; height:44px; background:var(--primary-light); border-radius:10px;
+      margin:0 auto 4px; display:flex; align-items:center; justify-content:center;
+      color:var(--primary);
+    }
+  </style>
 </head>
 <body>
 
@@ -58,6 +105,8 @@
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()">CSVテンプレート</button>
+        <button class="btn btn-outline btn-sm" onclick="openCSVModal()">CSV取込</button>
         <button class="btn btn-primary" onclick="openAddModal()">+ エンド追加</button>
       </div>
     </div>
@@ -69,7 +118,7 @@
             <th>会社名</th>
             <th>担当者</th>
             <th>電話</th>
-            <th>メール</th>
+            <th>契約書</th>
             <th>請求件数</th>
             <th>備考</th>
             <th>操作</th>
@@ -84,7 +133,7 @@
   </div>
 </main>
 
-<!-- 追加モーダル -->
+<!-- ── エンド追加モーダル ── -->
 <div class="modal-overlay" id="addModalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -115,60 +164,116 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeAddModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveNewClient()">登録</button>
+      <button class="btn btn-primary" onclick="saveNewClient()">保存して詳細設定へ →</button>
     </div>
   </div>
 </div>
 
-<!-- 編集モーダル -->
+<!-- ── エンド詳細・編集モーダル（2タブ） ── -->
 <div class="modal-overlay" id="editModalOverlay">
-  <div class="modal">
+  <div class="modal wide">
     <div class="modal-header">
       <h3 id="editModalTitle">エンド編集</h3>
       <button class="modal-close" onclick="closeEditModal()">✕</button>
     </div>
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>会社名 <span style="color:var(--danger)">*</span></label>
-        <input type="text" id="e_company_name">
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('info')">基本情報</button>
+      <button class="modal-tab" onclick="switchTab('contracts')">契約書</button>
+    </div>
+
+    <!-- Tab: 基本情報 -->
+    <div class="tab-panel active" id="tab-info">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>会社名 <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="e_company_name">
+        </div>
+        <div class="form-group">
+          <label>担当者名</label>
+          <input type="text" id="e_contact_name">
+        </div>
+        <div class="form-group">
+          <label>メールアドレス</label>
+          <input type="email" id="e_contact_email">
+        </div>
+        <div class="form-group">
+          <label>電話番号</label>
+          <input type="tel" id="e_contact_phone">
+        </div>
+        <div class="form-group full">
+          <label>備考</label>
+          <textarea id="e_notes"></textarea>
+        </div>
       </div>
-      <div class="form-group">
-        <label>担当者名</label>
-        <input type="text" id="e_contact_name">
-      </div>
-      <div class="form-group">
-        <label>メールアドレス</label>
-        <input type="email" id="e_contact_email">
-      </div>
-      <div class="form-group">
-        <label>電話番号</label>
-        <input type="tel" id="e_contact_phone">
-      </div>
-      <div class="form-group full">
-        <label>備考</label>
-        <textarea id="e_notes"></textarea>
+      <div class="modal-footer" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
+        <button class="btn btn-primary" onclick="saveEditClient()">保存</button>
       </div>
     </div>
+
+    <!-- Tab: 契約書 -->
+    <div class="tab-panel" id="tab-contracts">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap">書類種別</label>
+        <select id="contractDocType" style="min-width:130px">
+          <option value="契約書">契約書</option>
+          <option value="申込書">申込書</option>
+          <option value="覚書">覚書</option>
+          <option value="その他">その他</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('contractFileInput').click()">+ PDFをアップロード</button>
+      </div>
+      <div class="contract-upload" onclick="document.getElementById('contractFileInput').click()" id="contractUploadZone">
+        <div class="zone-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        </div>
+        <p><strong>クリックまたはドラッグ&ドロップでアップロード</strong></p>
+        <p>締結日を自動抽出します。抽出できない場合は手入力してください</p>
+      </div>
+      <input type="file" id="contractFileInput" accept=".pdf" style="display:none" onchange="uploadContract(this)">
+      <div id="contractUploadProgress" style="display:none;font-size:13px;color:var(--primary);margin-bottom:12px">アップロード・解析中...</div>
+
+      <div id="contractsList"></div>
+      <div class="modal-footer" style="margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CSV取込モーダル ── -->
+<div class="modal-overlay" id="csvModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>CSVでエンドを一括取込</h3>
+      <button class="modal-close" onclick="closeCSVModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+      CSVの1行目にヘッダーが必要です。列の順序は問いません。<br>
+      対応ヘッダー: <code>会社名, 担当者名, メール, 電話, 備考</code>
+    </p>
+    <div class="csv-zone" onclick="document.getElementById('csvFileInput').click()" id="csvZone">
+      <div class="zone-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      </div>
+      <p><strong>CSVファイルをクリックまたはドロップ</strong></p>
+      <p>Excel (.xlsx) はCSVに変換してからアップロードしてください</p>
+    </div>
+    <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(this)">
+    <div id="csvResult" style="margin-top:14px"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeEditModal()">閉じる</button>
-      <button class="btn btn-primary" onclick="saveEditClient()">保存</button>
+      <button class="btn btn-ghost" onclick="closeCSVModal()">閉じる</button>
     </div>
   </div>
 </div>
 
 <script>
 let currentEditId = null;
-let invoiceCounts = {};
 
 async function init() {
-  // 請求件数を事前取得
-  const invoices = await fetch('/api/invoices').then(r => r.json());
-  for (const inv of invoices) {
-    if (inv.client_id) {
-      invoiceCounts[inv.client_id] = (invoiceCounts[inv.client_id] || 0) + 1;
-    }
-  }
   loadClients();
+  setupDragDrop();
 }
 
 async function loadClients() {
@@ -177,8 +282,21 @@ async function loadClients() {
   if (search) params.set('search', search);
 
   const data = await fetch('/api/clients?' + params).then(r => r.json());
-  const tbody = document.getElementById('tableBody');
 
+  // 契約書数を並列取得
+  const contractCounts = await Promise.all(
+    data.map(c => fetch(`/api/clients/${c.id}/contracts`).then(r => r.json()).then(list => ({ id: c.id, count: list.length })))
+  );
+  const contractMap = Object.fromEntries(contractCounts.map(x => [x.id, x.count]));
+
+  // 請求件数
+  const invoices = await fetch('/api/invoices').then(r => r.json());
+  const invoiceMap = {};
+  for (const inv of invoices) {
+    if (inv.client_id) invoiceMap[inv.client_id] = (invoiceMap[inv.client_id] || 0) + 1;
+  }
+
+  const tbody = document.getElementById('tableBody');
   if (data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">エンドが登録されていません</td></tr>';
   } else {
@@ -187,10 +305,14 @@ async function loadClients() {
         <td><strong>${esc(c.company_name)}</strong></td>
         <td>${esc(c.contact_name || '-')}</td>
         <td>${esc(c.contact_phone || '-')}</td>
-        <td style="font-size:12px;color:var(--text-muted)">${esc(c.contact_email || '-')}</td>
         <td>
-          ${(invoiceCounts[c.id] || 0) > 0
-            ? `<span class="badge badge-blue">${invoiceCounts[c.id]}件</span>`
+          ${(contractMap[c.id] || 0) > 0
+            ? `<span class="badge badge-green">${contractMap[c.id]}件</span>`
+            : '<span class="text-muted" style="font-size:12px">なし</span>'}
+        </td>
+        <td>
+          ${(invoiceMap[c.id] || 0) > 0
+            ? `<span class="badge badge-blue">${invoiceMap[c.id]}件</span>`
             : '<span class="text-muted" style="font-size:12px">なし</span>'}
         </td>
         <td style="font-size:12px;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.notes || '')}</td>
@@ -204,6 +326,7 @@ async function loadClients() {
   document.getElementById('countLabel').textContent = `${data.length}件`;
 }
 
+// ── 追加モーダル ──────────────────────────────────────────────────────────────
 function openAddModal() {
   ['a_company_name','a_contact_name','a_contact_email','a_contact_phone','a_notes']
     .forEach(id => document.getElementById(id).value = '');
@@ -226,11 +349,13 @@ async function saveNewClient() {
   const data = await res.json();
   if (!res.ok) { showAlert(data.error, 'error'); return; }
   closeAddModal();
-  showAlert('登録しました');
-  loadClients();
+  showAlert('登録しました。続けて契約書を設定できます。');
+  await loadClients();
+  openEditModal(data.id, 'contracts');
 }
 
-async function openEditModal(id) {
+// ── 編集モーダル（2タブ） ─────────────────────────────────────────────────────
+async function openEditModal(id, defaultTab = 'info') {
   currentEditId = id;
   const c = await fetch(`/api/clients/${id}`).then(r => r.json());
   document.getElementById('editModalTitle').textContent = `${c.company_name} — 編集`;
@@ -240,8 +365,23 @@ async function openEditModal(id) {
   document.getElementById('e_contact_phone').value = c.contact_phone || '';
   document.getElementById('e_notes').value         = c.notes || '';
   document.getElementById('editModalOverlay').classList.add('open');
+  switchTab(defaultTab);
 }
-function closeEditModal() { document.getElementById('editModalOverlay').classList.remove('open'); currentEditId = null; }
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').classList.remove('open');
+  currentEditId = null;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.modal-tab').forEach((t, i) => {
+    const tabs = ['info','contracts'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'contracts') loadContractsList();
+}
 
 async function saveEditClient() {
   const body = {
@@ -259,13 +399,155 @@ async function saveEditClient() {
 }
 
 async function deleteClient(id, name) {
-  if (!confirm(`「${name}」を削除しますか？\n関連する請求書の紐づけも解除されます。`)) return;
+  if (!confirm(`「${name}」を削除しますか？\n関連する契約書・請求書の紐づけも解除されます。`)) return;
   const res = await fetch(`/api/clients/${id}`, { method:'DELETE' });
   const data = await res.json();
   showAlert(data.message, res.ok ? 'success' : 'error');
   if (res.ok) loadClients();
 }
 
+// ── 契約書タブ ────────────────────────────────────────────────────────────────
+async function loadContractsList() {
+  const contracts = await fetch(`/api/clients/${currentEditId}/contracts`).then(r => r.json());
+  const container = document.getElementById('contractsList');
+
+  if (contracts.length === 0) {
+    container.innerHTML = '<p class="text-muted" style="font-size:13px;text-align:center;padding:16px">契約書がまだアップロードされていません</p>';
+    return;
+  }
+
+  const typeColor = { '契約書':'badge-blue', '申込書':'badge-green', '覚書':'badge-yellow', 'その他':'badge-gray' };
+  container.innerHTML = contracts.map(c => `
+    <div class="contract-row" id="contract-${c.id}">
+      <div class="c-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="c-info">
+        <div class="c-name" title="${esc(c.file_name)}">
+          <span class="badge ${typeColor[c.doc_type] || 'badge-gray'}" style="margin-right:6px;font-size:11px">${esc(c.doc_type || '契約書')}</span>
+          <a href="/api/clients/${currentEditId}/contracts/${c.id}/view" target="_blank"
+             style="color:var(--primary);text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+            ${esc(c.file_name)}
+          </a>
+        </div>
+        <div class="c-date">
+          <span style="margin-right:6px">締結日:</span>
+          <input type="date" value="${c.contract_date || ''}" id="cdate-${c.id}"
+            onchange="updateContractDate(${c.id})" style="background:#fff">
+          ${!c.contract_date ? '<span style="color:var(--warning);font-size:11px;margin-left:6px">要入力</span>' : ''}
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.created_at?.slice(0,10) || ''} 登録</div>
+      </div>
+      <div class="c-actions">
+        <a href="/api/clients/${currentEditId}/contracts/${c.id}/view" target="_blank" class="btn btn-outline btn-sm">表示</a>
+        <a href="/api/clients/${currentEditId}/contracts/${c.id}/download" class="btn btn-ghost btn-sm">DL</a>
+        <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" style="color:var(--danger)">削除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadContract(input) {
+  if (!input.files[0]) return;
+  document.getElementById('contractUploadProgress').style.display = 'block';
+
+  const docType = document.getElementById('contractDocType')?.value || '契約書';
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  fd.append('doc_type', docType);
+  const res = await fetch(`/api/clients/${currentEditId}/contracts`, { method:'POST', body: fd });
+  const data = await res.json();
+  document.getElementById('contractUploadProgress').style.display = 'none';
+  input.value = '';
+
+  if (res.ok) {
+    showAlert(data.message, 'success');
+    loadContractsList();
+    loadClients();
+  } else {
+    showAlert(data.error || 'エラーが発生しました', 'error');
+  }
+}
+
+async function updateContractDate(contractId) {
+  const date = document.getElementById(`cdate-${contractId}`).value;
+  await fetch(`/api/clients/${currentEditId}/contracts/${contractId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contract_date: date })
+  });
+  showAlert('締結日を更新しました');
+  loadClients();
+}
+
+async function deleteContract(contractId) {
+  if (!confirm('この契約書を削除しますか？')) return;
+  const res = await fetch(`/api/clients/${currentEditId}/contracts/${contractId}`, { method:'DELETE' });
+  const data = await res.json();
+  showAlert(data.message, res.ok ? 'success' : 'error');
+  if (res.ok) { loadContractsList(); loadClients(); }
+}
+
+// ── CSV取込モーダル ──────────────────────────────────────────────────────────
+function openCSVModal() {
+  document.getElementById('csvModalOverlay').classList.add('open');
+  document.getElementById('csvResult').innerHTML = '';
+}
+function closeCSVModal() { document.getElementById('csvModalOverlay').classList.remove('open'); }
+
+async function importCSV(input) {
+  if (!input.files[0]) return;
+  const resultEl = document.getElementById('csvResult');
+  resultEl.innerHTML = '<p style="font-size:13px;color:var(--primary)">取込中...</p>';
+
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  const res = await fetch('/api/clients/import-csv', { method:'POST', body: fd });
+  const data = await res.json();
+  input.value = '';
+
+  if (res.ok) {
+    resultEl.innerHTML = `<div class="alert alert-success">
+      ${data.message}
+      ${data.errors?.length > 0 ? '<br><small>' + data.errors.join('<br>') + '</small>' : ''}
+    </div>`;
+    loadClients();
+  } else {
+    resultEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+  }
+}
+
+function downloadTemplate() {
+  const bom = '\uFEFF';
+  const csv = bom + '会社名,担当者名,メール,電話番号,備考\n' +
+    '株式会社サンプルエンド,田中花子,tanaka@example.com,06-0000-0001,サンプルエンド\n';
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'エンド取込テンプレート.csv';
+  a.click();
+}
+
+// ── ドラッグ&ドロップ ─────────────────────────────────────────────────────────
+function setupDragDrop() {
+  setupDropZone('csvZone', 'csvFileInput', importCSV);
+  setupDropZone('contractUploadZone', 'contractFileInput', uploadContract);
+}
+
+function setupDropZone(zoneId, inputId, handler) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--primary)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const input = document.getElementById(inputId);
+    const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+    handler(input);
+  });
+}
+
+// ── ユーティリティ ────────────────────────────────────────────────────────────
 function showAlert(msg, type = 'success') {
   const el = document.getElementById('alert');
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
@@ -275,6 +557,7 @@ function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt
 
 document.getElementById('addModalOverlay').addEventListener('click', e => { if (e.target.id === 'addModalOverlay') closeAddModal(); });
 document.getElementById('editModalOverlay').addEventListener('click', e => { if (e.target.id === 'editModalOverlay') closeEditModal(); });
+document.getElementById('csvModalOverlay').addEventListener('click', e => { if (e.target.id === 'csvModalOverlay') closeCSVModal(); });
 
 init();
 </script>
