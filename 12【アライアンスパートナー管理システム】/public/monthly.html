@@ -547,6 +547,54 @@ function renderActivity(grade) {
   }).join('');
 }
 
+// ── サービス別ランキング ──────────────────────────────────────────────────────
+async function loadRanking() {
+  const month = document.getElementById('rankingMonth').value;
+  if (!month) return;
+  const data = await fetch(`/api/monthly-product-ranking?month=${month}`).then(r => r.json());
+  renderRanking(data);
+}
+
+function renderRanking(data) {
+  const content = document.getElementById('rankingContent');
+  if (!data.products || data.products.length === 0) {
+    content.innerHTML = '<p class="text-muted" style="text-align:center;padding:40px">該当月の明細データがありません。<br>請求書に明細を登録するとランキングが表示されます。</p>';
+    return;
+  }
+
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  const MEDAL_STYLES = [
+    'background:#fef9c3;border-left:4px solid #f59e0b',
+    'background:#f1f5f9;border-left:4px solid #94a3b8',
+    'background:#fdf4ff;border-left:4px solid #c084fc',
+  ];
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      ${data.products.map(prod => `
+        <div class="chart-card" style="padding:18px">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            ${prod.product_name}
+          </div>
+          ${prod.top_partners.map((p, i) => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:6px;margin-bottom:6px;${MEDAL_STYLES[i]}">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:20px">${MEDALS[i]}</span>
+                <div>
+                  <div style="font-weight:600;font-size:13px">${p.company_name}</div>
+                  <div style="font-size:11px;color:var(--text-muted)">第${p.rank}位</div>
+                </div>
+              </div>
+              <div style="font-weight:700;font-size:14px;color:var(--primary)">${fmtF(p.amount)}</div>
+            </div>
+          `).join('')}
+          ${prod.top_partners.length === 0 ? '<p class="text-muted" style="font-size:12px">データなし</p>' : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 // ── 初期化 ────────────────────────────────────────────────────────────────────
 initYears();
 loadSummary();
