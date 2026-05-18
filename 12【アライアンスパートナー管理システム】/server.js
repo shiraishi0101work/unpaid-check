@@ -341,7 +341,16 @@ app.put('/api/partners/:id', (req, res) => {
     UPDATE partners SET company_name=?, contact_name=?, contact_email=?, contact_phone=?,
     contract_start=?, status=?, notes=?, updated_at=datetime('now','localtime')
     WHERE id=?
-  `).run(company_name, contact_name, contact_email, contact_phone, contract_start, status, notes, req.params.id);
+  `).run(
+    company_name ?? null,
+    contact_name ?? null,
+    contact_email ?? null,
+    contact_phone ?? null,
+    contract_start ?? null,
+    status ?? 'active',
+    notes ?? null,
+    req.params.id
+  );
   res.json({ message: '更新しました' });
 });
 
