@@ -344,7 +344,10 @@ function openModal(id = null, guessed = null) {
     if (guessed.guessed_amount) document.getElementById('f_total_amount').value  = guessed.guessed_amount;
     if (guessed.extracted_text) {
       document.getElementById('extractedSection').style.display = 'block';
-      document.getElementById('extractedText').value = guessed.extracted_text;
+      const debugLine = guessed.name_from_pdf
+        ? `【PDF抽出名: "${guessed.name_from_pdf}"】\n`
+        : '【PDF抽出名: 未検出（御中・様が見つかりませんでした）】\n';
+      document.getElementById('extractedText').value = debugLine + guessed.extracted_text;
     }
   }
 
