@@ -955,8 +955,17 @@ app.put('/api/invoices/:id', (req, res) => {
         INSERT INTO invoice_items (invoice_id, product_id, description, quantity, unit_price, amount)
         VALUES (?, ?, ?, ?, ?, ?)
       `);
+      const learnStmt = db.prepare(`
+        INSERT OR REPLACE INTO invoice_item_name_map (extracted_text, product_id)
+        VALUES (?, ?)
+      `);
       for (const item of items) {
         stmt.run(req.params.id, item.product_id || null, item.description, item.quantity || 1, item.unit_price || 0, item.amount || 0);
+        // 商材が手動選択された場合は学習マップに保存
+        if (item.product_id && item.description) {
+          const normDesc = normalizeName(item.description);
+          if (normDesc) learnStmt.run(normDesc, item.product_id);
+        }
       }
     }
   }
