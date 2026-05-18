@@ -445,6 +445,7 @@ async function importCSV() {
 
   const products = csvParsedRows.map(r => ({
     name:        r.name,
+    price_type:  r.price_type === '日額' ? 'daily' : 'monthly',
     unit_price:  parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0,
     description: r.description || null,
   }));
