@@ -691,7 +691,7 @@ async function parsePDFText(buffer) {
   return text;
 }
 
-async function parseInvoiceFile(file, partners) {
+async function parseInvoiceFile(file, partners, clients = [], nameMap = []) {
   let extractedText = '';
 
   if (file && file.mimetype === 'application/pdf') {
@@ -712,19 +712,43 @@ async function parseInvoiceFile(file, partners) {
   // 請求月（件名 + 請求日の年 優先）
   const guessedMonth = extractBillingMonth(extractedText);
 
-  // 代理店名（御中の前から取得 → DBと照合）
-  let guessedPartnerId = null;
+  // 代理店名（御中の前から取得）
   const nameFromPdf = extractPartnerNameFromText(extractedText);
-  const hit1 = findPartner(partners, nameFromPdf);
-  if (hit1) guessedPartnerId = hit1.id;
+  const normExtracted = normalizeName(nameFromPdf);
 
-  // フォールバック: テキスト全体に各社名が含まれるか正規化比較
-  if (!guessedPartnerId) {
+  let guessedPartnerId = null;
+  let guessedClientId  = null;
+
+  // 1. 学習済み名前マップを優先チェック
+  if (normExtracted) {
+    const mapEntry = nameMap.find(m => m.extracted_name === normExtracted);
+    if (mapEntry) {
+      guessedPartnerId = mapEntry.partner_id || null;
+      guessedClientId  = mapEntry.client_id  || null;
+    }
+  }
+
+  // 2. パートナーから照合
+  if (!guessedPartnerId && !guessedClientId) {
+    const hit = findPartner(partners, nameFromPdf);
+    if (hit) guessedPartnerId = hit.id;
+  }
+
+  // 3. エンドから照合
+  if (!guessedPartnerId && !guessedClientId) {
+    const hit = findPartner(clients, nameFromPdf);
+    if (hit) guessedClientId = hit.id;
+  }
+
+  // 4. フォールバック: テキスト全体を正規化比較（パートナー→エンドの順）
+  if (!guessedPartnerId && !guessedClientId) {
     const normText = normalizeName(extractedText);
     for (const p of partners) {
-      if (normText.includes(normalizeName(p.company_name))) {
-        guessedPartnerId = p.id;
-        break;
+      if (normText.includes(normalizeName(p.company_name))) { guessedPartnerId = p.id; break; }
+    }
+    if (!guessedPartnerId) {
+      for (const c of clients) {
+        if (normText.includes(normalizeName(c.company_name))) { guessedClientId = c.id; break; }
       }
     }
   }
@@ -733,17 +757,18 @@ async function parseInvoiceFile(file, partners) {
   const extractedItems = extractInvoiceItems(extractedText);
 
   // 請求書番号・支払期限
-  const invoiceNoMatch  = extractedText.match(/請求書番号[：:]\s*(\d+)/);
-  const dueDateMatch    = extractedText.match(/お支払期限[：:]\s*(\d{4}\/\d{2}\/\d{2})/);
+  const invoiceNoMatch = extractedText.match(/請求書番号[：:]\s*(\d+)/);
+  const dueDateMatch   = extractedText.match(/お支払期限[：:]\s*(\d{4}\/\d{2}\/\d{2})/);
 
   // デバッグ用ログ
-  console.log('[照合] 抽出名:', nameFromPdf, '→ partner_id:', guessedPartnerId);
+  console.log('[照合] 抽出名:', nameFromPdf, '→ partner_id:', guessedPartnerId, '/ client_id:', guessedClientId);
 
   return {
     extractedText,
     guessedAmount,
     guessedMonth,
     guessedPartnerId,
+    guessedClientId,
     extractedItems,
     nameFromPdf,
     invoiceNo: invoiceNoMatch?.[1] || null,
