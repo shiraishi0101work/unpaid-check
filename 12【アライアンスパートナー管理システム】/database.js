@@ -118,6 +118,8 @@ function initDB() {
   try { db.exec(`ALTER TABLE products ADD COLUMN price_type TEXT DEFAULT 'monthly'`); } catch {}
   // マイグレーション: products.cost_price カラム追加
   try { db.exec(`ALTER TABLE products ADD COLUMN cost_price INTEGER DEFAULT 0`); } catch {}
+  // マイグレーション: invoices.client_id カラム追加
+  try { db.exec(`ALTER TABLE invoices ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL`); } catch {}
 
   return db;
 }
