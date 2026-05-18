@@ -197,67 +197,151 @@
   </div>
 </div>
 
+<!-- 紐づけモーダル -->
+<div class="modal-overlay" id="linkModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>取引先を紐づける</h3>
+      <button class="modal-close" onclick="closeLinkModal()">✕</button>
+    </div>
+    <div id="linkExtractedInfo" style="background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:13px">
+      <span style="color:var(--text-muted)">PDF抽出名:</span>
+      <span id="linkExtractedName" style="font-weight:600;margin-left:6px"></span>
+    </div>
+    <div style="background:#e0f2fe;border:1px solid #bae6fd;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#0369a1">
+      ✓ 一度紐づけると、同じ名前のPDFは今後自動的に紐づけられます
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>種別 <span style="color:var(--danger)">*</span></label>
+        <select id="link_type" onchange="onLinkModalTypeChange()">
+          <option value="">選択してください</option>
+          <option value="partner">パートナー</option>
+          <option value="client">エンド（直接売上）</option>
+        </select>
+      </div>
+      <div class="form-group full" id="link_partner_wrap" style="display:none">
+        <label>パートナー</label>
+        <select id="link_partner_id">
+          <option value="">選択してください</option>
+        </select>
+      </div>
+      <div class="form-group full" id="link_client_wrap" style="display:none">
+        <label>エンド</label>
+        <select id="link_client_id">
+          <option value="">選択してください</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeLinkModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveLinkModal()">紐づけ保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let editInvoiceId = null;
+let linkInvoiceId = null;
+let linkExtractedNameVal = '';
 let partners = [];
+let clients  = [];
 let products = [];
 const fmt = n => '¥' + Number(n || 0).toLocaleString();
 
 async function init() {
-  partners = await fetch('/api/partners').then(r => r.json());
-  products = await fetch('/api/products').then(r => r.json());
+  [partners, clients, products] = await Promise.all([
+    fetch('/api/partners').then(r => r.json()),
+    fetch('/api/clients').then(r => r.json()),
+    fetch('/api/products').then(r => r.json()),
+  ]);
 
-  const sel = document.getElementById('f_partner_id');
-  partners.forEach(p => {
-    sel.innerHTML += `<option value="${p.id}">${p.company_name}</option>`;
-  });
+  // 入力フォーム用セレクト
+  const pSel = document.getElementById('f_partner_id');
+  partners.forEach(p => { pSel.innerHTML += `<option value="${p.id}">${p.company_name}</option>`; });
 
-  const filterSel = document.getElementById('filterPartner');
-  partners.forEach(p => {
-    filterSel.innerHTML += `<option value="${p.id}">${p.company_name}</option>`;
-  });
+  const cSel = document.getElementById('f_client_id');
+  clients.forEach(c => { cSel.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
+
+  // 絞り込み用セレクト
+  const filterP = document.getElementById('filterPartner');
+  partners.forEach(p => { filterP.innerHTML += `<option value="${p.id}">${p.company_name}</option>`; });
+
+  const filterC = document.getElementById('filterClient');
+  clients.forEach(c => { filterC.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
+
+  // 紐づけモーダル用セレクト
+  const lp = document.getElementById('link_partner_id');
+  partners.forEach(p => { lp.innerHTML += `<option value="${p.id}">${p.company_name}</option>`; });
+
+  const lc = document.getElementById('link_client_id');
+  clients.forEach(c => { lc.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
 
   setupDragDrop();
   loadInvoices();
 }
 
 async function loadInvoices() {
-  const partnerId = document.getElementById('filterPartner').value;
-  const month     = document.getElementById('filterMonth').value;
-  const status    = document.getElementById('filterStatus').value;
-  const params    = new URLSearchParams();
+  const filterType   = document.getElementById('filterType').value;
+  const partnerId    = document.getElementById('filterPartner').value;
+  const clientId     = document.getElementById('filterClient').value;
+  const month        = document.getElementById('filterMonth').value;
+  const status       = document.getElementById('filterStatus').value;
+  const params       = new URLSearchParams();
   if (partnerId) params.set('partner_id', partnerId);
+  if (clientId)  params.set('client_id', clientId);
   if (month)     params.set('month', month);
   if (status)    params.set('status', status);
 
-  const data = await fetch('/api/invoices?' + params).then(r => r.json());
-  const tbody = document.getElementById('tableBody');
+  let data = await fetch('/api/invoices?' + params).then(r => r.json());
 
+  // 種別フィルター（クライアント側で処理）
+  if (filterType === 'partner')  data = data.filter(i => i.partner_id);
+  if (filterType === 'client')   data = data.filter(i => i.client_id);
+  if (filterType === 'unlinked') data = data.filter(i => !i.partner_id && !i.client_id);
+
+  const tbody = document.getElementById('tableBody');
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">請求書がありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px">請求書がありません</td></tr>';
   } else {
-    tbody.innerHTML = data.map(i => `
-      <tr>
-        <td><strong>${i.partner_name || '<span class="text-muted">未設定</span>'}</strong></td>
-        <td>${i.billing_month || '-'}</td>
-        <td style="text-align:right;font-weight:700;color:var(--primary)">${fmt(i.total_amount)}</td>
-        <td>${i.status === 'confirmed'
-              ? '<span class="badge badge-green">確定</span>'
-              : '<span class="badge badge-yellow">未確定</span>'}</td>
-        <td style="font-size:12px;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.file_name || '-'}</td>
-        <td style="color:var(--text-muted);font-size:12px">${i.created_at?.slice(0,10) || '-'}</td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="editInvoice(${i.id})">編集</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteInvoice(${i.id})" style="color:var(--danger)">削除</button>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = data.map(i => {
+      const isPartner  = !!i.partner_id;
+      const isClient   = !!i.client_id;
+      const entityName = i.partner_name || i.client_name || '';
+      const typeBadge  = isPartner
+        ? '<span class="badge badge-blue" style="font-size:10px">P</span>'
+        : isClient
+        ? '<span class="badge badge-green" style="font-size:10px">E</span>'
+        : '<span class="badge badge-gray" style="font-size:10px">—</span>';
+      const linkBtn = (!isPartner && !isClient)
+        ? `<button class="btn btn-ghost btn-sm" onclick="openLinkModal(${i.id}, '${esc(i.file_name || '')}')" style="color:var(--primary)">紐づけ</button>`
+        : '';
+      return `
+        <tr ${!isPartner && !isClient ? 'style="background:#fffbeb"' : ''}>
+          <td>${typeBadge}</td>
+          <td><strong>${entityName ? esc(entityName) : '<span class="text-muted" style="font-size:12px">未紐づけ</span>'}</strong></td>
+          <td>${i.billing_month || '-'}</td>
+          <td style="text-align:right;font-weight:700;color:var(--primary)">${fmt(i.total_amount)}</td>
+          <td>${i.status === 'confirmed'
+                ? '<span class="badge badge-green">確定</span>'
+                : '<span class="badge badge-yellow">未確定</span>'}</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.file_name || '-')}</td>
+          <td style="color:var(--text-muted);font-size:12px">${i.created_at?.slice(0,10) || '-'}</td>
+          <td style="white-space:nowrap">
+            ${linkBtn}
+            <button class="btn btn-ghost btn-sm" onclick="editInvoice(${i.id})">編集</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteInvoice(${i.id})" style="color:var(--danger)">削除</button>
+          </td>
+        </tr>`;
+    }).join('');
   }
   document.getElementById('countLabel').textContent = `${data.length}件`;
 }
 
 function clearFilters() {
+  document.getElementById('filterType').value = '';
   document.getElementById('filterPartner').value = '';
+  document.getElementById('filterClient').value = '';
   document.getElementById('filterMonth').value = '';
   document.getElementById('filterStatus').value = '';
   loadInvoices();
@@ -269,7 +353,6 @@ async function uploadFiles(input) {
   if (!files.length) return;
 
   if (files.length === 1) {
-    // 単体はモーダルで確認
     document.getElementById('uploadProgress').style.display = 'block';
     document.getElementById('uploadProgressText').textContent = 'アップロード・解析中...';
     const formData = new FormData();
@@ -282,7 +365,6 @@ async function uploadFiles(input) {
     return;
   }
 
-  // 複数ファイル一括処理
   if (files.length > 20) { showAlert('一度にアップロードできるのは20枚までです', 'error'); return; }
 
   document.getElementById('uploadProgress').style.display = 'block';
@@ -304,16 +386,23 @@ async function uploadFiles(input) {
 }
 
 function showBulkResult(results) {
-  const rows = results.map(r => `
-    <tr>
-      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.file_name}</td>
-      <td>${r.guessed_partner_name ? `<strong>${r.guessed_partner_name}</strong>` : '<span class="text-muted">未検出</span>'}</td>
-      <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
-      <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
-      <td><span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">未確定</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">確認・登録</button></td>
-    </tr>
-  `).join('');
+  const rows = results.map(r => {
+    const entityName = r.guessed_partner_name || r.guessed_client_name || null;
+    const typeBadge  = r.guessed_partner_name
+      ? '<span class="badge badge-blue" style="font-size:10px">P</span>'
+      : r.guessed_client_name
+      ? '<span class="badge badge-green" style="font-size:10px">E</span>'
+      : '';
+    return `
+      <tr>
+        <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.file_name)}</td>
+        <td>${typeBadge} ${entityName ? `<strong>${esc(entityName)}</strong>` : '<span class="text-muted">未検出</span>'}</td>
+        <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
+        <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
+        <td><span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">未確定</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">確認・登録</button></td>
+      </tr>`;
+  }).join('');
 
   document.getElementById('bulkResult').style.display = 'block';
   document.getElementById('bulkResult').innerHTML = `
@@ -324,11 +413,11 @@ function showBulkResult(results) {
       </div>
       <div style="overflow-x:auto">
         <table style="font-size:13px;width:100%">
-          <thead><tr><th>ファイル名</th><th>パートナー（推定）</th><th>請求月</th><th>金額</th><th>状態</th><th></th></tr></thead>
+          <thead><tr><th>ファイル名</th><th>取引先（推定）</th><th>請求月</th><th>金額</th><th>状態</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">「確認・登録」ボタンで内容を確認してから保存してください</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">P=パートナー E=エンド　「確認・登録」ボタンで内容を確認してから保存してください</p>
     </div>
   `;
 }
@@ -351,14 +440,36 @@ function setupDragDrop() {
   });
 }
 
+// ── 種別切り替え ──
+function onLinkTypeChange() {
+  const t = document.getElementById('f_link_type').value;
+  document.getElementById('f_partner_wrap').style.display = t === 'partner' ? '' : 'none';
+  document.getElementById('f_client_wrap').style.display  = t === 'client'  ? '' : 'none';
+  if (t !== 'partner') document.getElementById('f_partner_id').value = '';
+  if (t !== 'client')  document.getElementById('f_client_id').value  = '';
+}
+
 // ── Modal ──
+let currentNameFromPdf = '';
+
 function openModal(id = null, guessed = null) {
   editInvoiceId = id;
+  currentNameFromPdf = '';
   clearForm();
   document.getElementById('modalTitle').textContent = id ? '請求書確認・編集' : '請求書入力';
 
   if (guessed) {
-    if (guessed.guessed_partner_id) document.getElementById('f_partner_id').value = guessed.guessed_partner_id;
+    currentNameFromPdf = guessed.name_from_pdf || '';
+
+    if (guessed.guessed_partner_id) {
+      document.getElementById('f_link_type').value = 'partner';
+      onLinkTypeChange();
+      document.getElementById('f_partner_id').value = guessed.guessed_partner_id;
+    } else if (guessed.guessed_client_id) {
+      document.getElementById('f_link_type').value = 'client';
+      onLinkTypeChange();
+      document.getElementById('f_client_id').value = guessed.guessed_client_id;
+    }
     if (guessed.guessed_month)  document.getElementById('f_billing_month').value = guessed.guessed_month;
     if (guessed.guessed_amount) document.getElementById('f_total_amount').value  = guessed.guessed_amount;
     if (guessed.extracted_text) {
@@ -384,7 +495,11 @@ function closeModal() {
 }
 
 function clearForm() {
+  document.getElementById('f_link_type').value = '';
   document.getElementById('f_partner_id').value = '';
+  document.getElementById('f_client_id').value = '';
+  document.getElementById('f_partner_wrap').style.display = 'none';
+  document.getElementById('f_client_wrap').style.display = 'none';
   document.getElementById('f_billing_month').value = '';
   document.getElementById('f_total_amount').value = '';
   document.getElementById('f_notes').value = '';
@@ -397,9 +512,20 @@ function clearForm() {
 async function editInvoice(id) {
   const data = await fetch(`/api/invoices/${id}`).then(r => r.json());
   editInvoiceId = id;
+  currentNameFromPdf = '';
   clearForm();
   document.getElementById('modalTitle').textContent = '請求書編集';
-  document.getElementById('f_partner_id').value    = data.partner_id || '';
+
+  if (data.partner_id) {
+    document.getElementById('f_link_type').value = 'partner';
+    onLinkTypeChange();
+    document.getElementById('f_partner_id').value = data.partner_id;
+  } else if (data.client_id) {
+    document.getElementById('f_link_type').value = 'client';
+    onLinkTypeChange();
+    document.getElementById('f_client_id').value = data.client_id;
+  }
+
   document.getElementById('f_billing_month').value = data.billing_month || '';
   document.getElementById('f_total_amount').value  = data.total_amount || '';
   document.getElementById('f_notes').value         = data.notes || '';
@@ -407,6 +533,9 @@ async function editInvoice(id) {
   if (data.extracted_text) {
     document.getElementById('extractedSection').style.display = 'block';
     document.getElementById('extractedText').value = data.extracted_text;
+    // 抽出テキストからPDF名を復元（先頭行の【PDF抽出名: "..."】から）
+    const m = data.extracted_text.match(/【PDF抽出名: "([^"]+)"】/);
+    if (m) currentNameFromPdf = m[1];
   }
 
   for (const item of (data.items || [])) addItem(item);
@@ -415,16 +544,26 @@ async function editInvoice(id) {
 }
 
 async function saveInvoice() {
-  const partner_id    = document.getElementById('f_partner_id').value;
+  const linkType      = document.getElementById('f_link_type').value;
+  const partner_id    = linkType === 'partner' ? document.getElementById('f_partner_id').value : null;
+  const client_id     = linkType === 'client'  ? document.getElementById('f_client_id').value  : null;
   const billing_month = document.getElementById('f_billing_month').value;
   const total_amount  = parseInt(document.getElementById('f_total_amount').value) || 0;
   const notes         = document.getElementById('f_notes').value.trim();
 
-  if (!partner_id)    { alert('パートナーを選択してください'); return; }
+  if (!linkType) { alert('種別（パートナー/エンド）を選択してください'); return; }
+  if (linkType === 'partner' && !partner_id) { alert('パートナーを選択してください'); return; }
+  if (linkType === 'client'  && !client_id)  { alert('エンドを選択してください'); return; }
   if (!billing_month) { alert('請求月を選択してください'); return; }
 
   const items = collectItems();
-  const body = { partner_id: parseInt(partner_id), billing_month, total_amount, notes, status: 'confirmed', items };
+  const body = {
+    partner_id: partner_id ? parseInt(partner_id) : null,
+    client_id:  client_id  ? parseInt(client_id)  : null,
+    billing_month, total_amount, notes,
+    status: 'confirmed', items,
+    extracted_name: currentNameFromPdf || null,  // 学習マップ保存用
+  };
 
   const url    = editInvoiceId ? `/api/invoices/${editInvoiceId}` : '/api/invoices';
   const method = editInvoiceId ? 'PUT' : 'POST';
@@ -433,6 +572,71 @@ async function saveInvoice() {
 
   showAlert(data.message || '保存しました', res.ok ? 'success' : 'error');
   if (res.ok) { closeModal(); loadInvoices(); }
+}
+
+async function deleteInvoice(id) {
+  if (!confirm('この請求書を削除しますか？')) return;
+  const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  showAlert(data.message, res.ok ? 'success' : 'error');
+  if (res.ok) loadInvoices();
+}
+
+// ── 手動紐づけモーダル ────────────────────────────────────────────────────────
+async function openLinkModal(id, fileName) {
+  linkInvoiceId = id;
+  linkExtractedNameVal = '';
+
+  // 請求書のextracted_textからPDF名を取得
+  const inv = await fetch(`/api/invoices/${id}`).then(r => r.json());
+  const m = inv.extracted_text?.match(/【PDF抽出名: "([^"]+)"】/);
+  if (m) linkExtractedNameVal = m[1];
+
+  const nameDisplay = linkExtractedNameVal || fileName || '（取得できませんでした）';
+  document.getElementById('linkExtractedName').textContent = nameDisplay;
+  document.getElementById('linkExtractedInfo').style.display = linkExtractedNameVal ? '' : 'none';
+
+  document.getElementById('link_type').value = '';
+  document.getElementById('link_partner_wrap').style.display = 'none';
+  document.getElementById('link_client_wrap').style.display  = 'none';
+  document.getElementById('link_partner_id').value = '';
+  document.getElementById('link_client_id').value  = '';
+
+  document.getElementById('linkModalOverlay').classList.add('open');
+}
+
+function closeLinkModal() {
+  document.getElementById('linkModalOverlay').classList.remove('open');
+  linkInvoiceId = null;
+}
+
+function onLinkModalTypeChange() {
+  const t = document.getElementById('link_type').value;
+  document.getElementById('link_partner_wrap').style.display = t === 'partner' ? '' : 'none';
+  document.getElementById('link_client_wrap').style.display  = t === 'client'  ? '' : 'none';
+}
+
+async function saveLinkModal() {
+  const linkType  = document.getElementById('link_type').value;
+  const partnerId = linkType === 'partner' ? document.getElementById('link_partner_id').value : null;
+  const clientId  = linkType === 'client'  ? document.getElementById('link_client_id').value  : null;
+
+  if (!linkType) { alert('種別を選択してください'); return; }
+  if (linkType === 'partner' && !partnerId) { alert('パートナーを選択してください'); return; }
+  if (linkType === 'client'  && !clientId)  { alert('エンドを選択してください'); return; }
+
+  const res = await fetch(`/api/invoices/${linkInvoiceId}/link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      partner_id: partnerId ? parseInt(partnerId) : null,
+      client_id:  clientId  ? parseInt(clientId)  : null,
+      extracted_name: linkExtractedNameVal || null,
+    })
+  });
+  const data = await res.json();
+  showAlert(data.message || '紐づけを保存しました', res.ok ? 'success' : 'error');
+  if (res.ok) { closeLinkModal(); loadInvoices(); }
 }
 
 async function deleteInvoice(id) {
