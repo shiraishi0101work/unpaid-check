@@ -158,7 +158,12 @@
       </div>
       <div class="form-group full">
         <label>CSVファイル</label>
-        <input type="file" id="csvFile" accept=".csv" onchange="previewCSV()" style="padding:6px">
+        <div id="dropZone" onclick="document.getElementById('csvFile').click()"
+          style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s;color:var(--text-muted);font-size:13px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;display:block;margin-inline:auto"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="dropZoneLabel">ここにCSVをドロップ、またはクリックして選択</span>
+        </div>
+        <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="previewCSV()">
       </div>
     </div>
 
