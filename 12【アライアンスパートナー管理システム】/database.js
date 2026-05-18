@@ -90,6 +90,8 @@ function initDB() {
   try { db.exec(`ALTER TABLE partner_contracts ADD COLUMN doc_type TEXT DEFAULT '契約書'`); } catch {}
   // マイグレーション: products.category カラム追加
   try { db.exec(`ALTER TABLE products ADD COLUMN category TEXT`); } catch {}
+  // マイグレーション: products.price_type カラム追加
+  try { db.exec(`ALTER TABLE products ADD COLUMN price_type TEXT DEFAULT 'monthly'`); } catch {}
 
   return db;
 }
