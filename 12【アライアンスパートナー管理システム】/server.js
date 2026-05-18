@@ -736,12 +736,16 @@ async function parseInvoiceFile(file, partners) {
   const invoiceNoMatch  = extractedText.match(/請求書番号[：:]\s*(\d+)/);
   const dueDateMatch    = extractedText.match(/お支払期限[：:]\s*(\d{4}\/\d{2}\/\d{2})/);
 
+  // デバッグ用ログ
+  console.log('[照合] 抽出名:', nameFromPdf, '→ partner_id:', guessedPartnerId);
+
   return {
     extractedText,
     guessedAmount,
     guessedMonth,
     guessedPartnerId,
     extractedItems,
+    nameFromPdf,
     invoiceNo: invoiceNoMatch?.[1] || null,
     dueDate:   dueDateMatch?.[1]   || null,
   };
