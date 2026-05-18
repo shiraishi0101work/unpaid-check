@@ -714,16 +714,17 @@ async function parseInvoiceFile(file, partners) {
   // 代理店名（御中の前から取得 → DBと照合）
   let guessedPartnerId = null;
   const nameFromPdf = extractPartnerNameFromText(extractedText);
-  if (nameFromPdf) {
-    // 完全一致 or 部分一致
-    const hit = partners.find(p => p.company_name === nameFromPdf) ||
-                partners.find(p => nameFromPdf.includes(p.company_name) || p.company_name.includes(nameFromPdf));
-    if (hit) guessedPartnerId = hit.id;
-  }
-  // フォールバック: テキスト全体で会社名検索
+  const hit1 = findPartner(partners, nameFromPdf);
+  if (hit1) guessedPartnerId = hit1.id;
+
+  // フォールバック: テキスト全体に各社名が含まれるか正規化比較
   if (!guessedPartnerId) {
+    const normText = normalizeName(extractedText);
     for (const p of partners) {
-      if (extractedText.includes(p.company_name)) { guessedPartnerId = p.id; break; }
+      if (normText.includes(normalizeName(p.company_name))) {
+        guessedPartnerId = p.id;
+        break;
+      }
     }
   }
 
