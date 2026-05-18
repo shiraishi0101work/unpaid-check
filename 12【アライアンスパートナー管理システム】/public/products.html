@@ -446,8 +446,11 @@ function previewCSV() {
       const pt = r.price_type === '日額' ? 'daily' : r.price_type === 'ショット' ? 'shot' : 'monthly';
       const monthly = pt === 'daily' ? unitPrice * 30 : unitPrice;
       const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
-      const ptLabel = pt === 'daily' ? '日額' : '月額';
-      const monthlyStr = pt === 'daily' ? `${fmt(monthly)}<br><small style="color:var(--text-muted)">（30日成果）</small>` : fmt(monthly);
+      const ptLabel = pt === 'daily' ? '日額' : pt === 'shot' ? 'ショット' : '月額';
+      const monthlyStr = pt === 'daily'
+        ? `${fmt(monthly)}<br><small style="color:var(--text-muted)">（30日成果）</small>`
+        : pt === 'shot' ? `${fmt(unitPrice)}<br><small style="color:var(--text-muted)">（単発）</small>`
+        : fmt(monthly);
       const isUpdate = existingProductNames.has(r.name);
       const badge = isUpdate
         ? `<span style="padding:2px 7px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">更新</span>`
