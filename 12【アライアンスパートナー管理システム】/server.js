@@ -780,15 +780,38 @@ async function parseInvoiceFile(file, partners, clients = [], nameMap = []) {
   };
 }
 
+// 明細テキストから商材を照合（学習マップ→完全一致→部分一致の順）
+function findProductForItem(description, products, itemNameMap = []) {
+  if (!description) return null;
+  const normDesc = normalizeName(description);
+
+  // 1. 学習済みマップを優先
+  const mapEntry = itemNameMap.find(m => m.extracted_text === normDesc);
+  if (mapEntry) return mapEntry.product_id || null;
+
+  // 2. 完全一致
+  let hit = products.find(p => normalizeName(p.name) === normDesc);
+  if (hit) return hit.id;
+
+  // 3. 部分一致（説明文が商材名を含む、または商材名が説明文を含む）
+  hit = products.find(p => {
+    const normProd = normalizeName(p.name);
+    return normDesc.includes(normProd) || normProd.includes(normDesc);
+  });
+  return hit ? hit.id : null;
+}
+
 // 明細をDBに一括保存するヘルパー
-function saveInvoiceItems(db, invoiceId, items) {
+function saveInvoiceItems(db, invoiceId, items, products = [], itemNameMap = []) {
   if (!items || items.length === 0) return;
   const stmt = db.prepare(`
     INSERT INTO invoice_items (invoice_id, product_id, description, quantity, unit_price, amount)
-    VALUES (?, NULL, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
   for (const item of items) {
-    stmt.run(invoiceId, item.description, item.quantity || 1, item.unit_price || 0, item.amount || 0);
+    const productId = item.product_id != null ? item.product_id
+      : findProductForItem(item.description, products, itemNameMap);
+    stmt.run(invoiceId, productId || null, item.description, item.quantity || 1, item.unit_price || 0, item.amount || 0);
   }
 }
 
