@@ -622,6 +622,41 @@ function extractPartnerNameFromText(text) {
   return m ? m[1].trim() : null;
 }
 
+// 会社名を正規化（照合用）
+function normalizeName(name) {
+  if (!name) return '';
+  return name
+    // 全角英数→半角
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    // 半角カタカナ→全角
+    .replace(/[\uFF65-\uFF9F]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60))
+    // 大文字→小文字
+    .toLowerCase()
+    // スペース（全角・半角・タブ）除去
+    .replace(/[\s\u3000]+/g, '')
+    // 法人格の表記揺れを統一
+    .replace(/（株）|\(株\)/g, '株式会社')
+    .replace(/（有）|\(有\)/g, '有限会社')
+    .replace(/（合）|\(合\)/g, '合同会社');
+}
+
+// 正規化したうえでパートナーを検索
+function findPartner(partners, nameFromPdf) {
+  if (!nameFromPdf) return null;
+  const normPdf = normalizeName(nameFromPdf);
+
+  // 完全一致
+  let hit = partners.find(p => normalizeName(p.company_name) === normPdf);
+  if (hit) return hit;
+
+  // 部分一致（PDF名がDB名を含む or DB名がPDF名を含む）
+  hit = partners.find(p => {
+    const normDb = normalizeName(p.company_name);
+    return normPdf.includes(normDb) || normDb.includes(normPdf);
+  });
+  return hit || null;
+}
+
 // 請求月抽出: 件名"4月分〜" + 請求日の年 → "2026-04"
 function extractBillingMonth(text) {
   const subjectMatch = text.match(/件名[：:]\s*(\d+)月分/);
