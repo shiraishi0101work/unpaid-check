@@ -230,7 +230,7 @@ async function loadProducts() {
   updateCategoryFilter(data);
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px">商材が登録されていません</td></tr>';
   } else {
     let lastCategory = null;
     const rows = data.map(p => {
