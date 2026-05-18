@@ -1281,6 +1281,68 @@ app.get('/api/analytics/partner-activity', (req, res) => {
   res.json(result);
 });
 
+// ── エンド（直接売上先）────────────────────────────────────────────────────────
+
+app.get('/api/clients', (req, res) => {
+  const db = getDB();
+  const { search } = req.query;
+  let q = 'SELECT * FROM clients WHERE 1=1';
+  const params = [];
+  if (search) { q += ' AND (company_name LIKE ? OR contact_name LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
+  q += ' ORDER BY company_name ASC';
+  res.json(db.prepare(q).all(...params));
+});
+
+app.get('/api/clients/:id', (req, res) => {
+  const db = getDB();
+  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
+  if (!client) return res.status(404).json({ error: '見つかりません' });
+  res.json(client);
+});
+
+app.post('/api/clients', (req, res) => {
+  const db = getDB();
+  const { company_name, contact_name, contact_email, contact_phone, notes } = req.body;
+  if (!company_name) return res.status(400).json({ error: '会社名は必須です' });
+  const result = db.prepare(`
+    INSERT INTO clients (company_name, contact_name, contact_email, contact_phone, notes)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(company_name, contact_name || null, contact_email || null, contact_phone || null, notes || null);
+  res.json({ id: result.lastInsertRowid, message: '登録しました' });
+});
+
+app.put('/api/clients/:id', (req, res) => {
+  const db = getDB();
+  const { company_name, contact_name, contact_email, contact_phone, notes, status } = req.body;
+  db.prepare(`
+    UPDATE clients SET company_name=?, contact_name=?, contact_email=?, contact_phone=?,
+    notes=?, status=?, updated_at=datetime('now','localtime') WHERE id=?
+  `).run(
+    company_name ?? null, contact_name ?? null, contact_email ?? null,
+    contact_phone ?? null, notes ?? null, status ?? 'active', req.params.id
+  );
+  res.json({ message: '更新しました' });
+});
+
+app.delete('/api/clients/:id', (req, res) => {
+  const db = getDB();
+  db.prepare('DELETE FROM clients WHERE id = ?').run(req.params.id);
+  res.json({ message: '削除しました' });
+});
+
+// 学習マップ一覧
+app.get('/api/invoice-name-map', (req, res) => {
+  const db = getDB();
+  const rows = db.prepare(`
+    SELECT m.*, p.company_name as partner_name, c.company_name as client_name
+    FROM invoice_name_map m
+    LEFT JOIN partners p ON p.id = m.partner_id
+    LEFT JOIN clients c ON c.id = m.client_id
+    ORDER BY m.created_at DESC
+  `).all();
+  res.json(rows);
+});
+
 // ── 起動 ──────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
