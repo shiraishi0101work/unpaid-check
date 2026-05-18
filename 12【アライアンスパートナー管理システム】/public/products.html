@@ -308,6 +308,145 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 });
 
+// ── CSV取込 ────────────────────────────────────────────────────────────────────
+
+let csvParsedRows = [];
+
+function openCsvModal() {
+  csvParsedRows = [];
+  document.getElementById('csvFile').value = '';
+  document.getElementById('csv_category').value = '';
+  document.getElementById('csvPreviewWrap').style.display = 'none';
+  document.getElementById('csvImportBtn').disabled = true;
+
+  // 既存分類をdatalist＋チップに反映
+  document.getElementById('csv-category-suggestions').innerHTML =
+    allCategories.map(c => `<option value="${c}">`).join('');
+  renderCategoryChips();
+
+  document.getElementById('csvModalOverlay').classList.add('open');
+}
+
+function closeCsvModal() {
+  document.getElementById('csvModalOverlay').classList.remove('open');
+}
+
+function renderCategoryChips() {
+  const wrap = document.getElementById('csvCategoryChips');
+  if (!allCategories.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = allCategories.map(c =>
+    `<span style="cursor:pointer;padding:3px 10px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:12px;color:var(--text)"
+      onclick="document.getElementById('csv_category').value='${c.replace(/'/g,"\\'")}';previewCSV()">${c}</span>`
+  ).join('');
+}
+
+function parseCSVClient(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+
+  const parseRow = line => {
+    const result = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    result.push(cur.trim());
+    return result;
+  };
+
+  const HEADER_MAP = {
+    '商材名':'name','名称':'name',
+    'コード':'code','商材コード':'code',
+    '単価':'unit_price','価格':'unit_price','単価（円）':'unit_price',
+    '説明':'description','備考':'description',
+    '分類':'category',
+  };
+
+  const rawHeaders = parseRow(lines[0]);
+  const headers = rawHeaders.map(h => HEADER_MAP[h] || h);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseRow(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
+    if (row.name) rows.push(row);
+  }
+  return { headers, rows };
+}
+
+function previewCSV() {
+  const file = document.getElementById('csvFile').files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { rows } = parseCSVClient(e.target.result);
+    csvParsedRows = rows;
+    const defaultCat = document.getElementById('csv_category').value.trim();
+    const fmt = n => n ? '¥' + Number(n).toLocaleString() : '-';
+
+    const tbody = document.getElementById('csvPreviewBody');
+    tbody.innerHTML = rows.map(r => {
+      const unitPrice = parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0;
+      const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
+      return `<tr>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${r.name}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted)">${r.code || '-'}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right">${fmt(unitPrice)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || '-'}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${cat}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('csvPreviewCount').textContent = rows.length;
+    document.getElementById('csvPreviewWrap').style.display = rows.length ? 'block' : 'none';
+    document.getElementById('csvImportBtn').disabled = rows.length === 0;
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// 分類入力・ファイル選択どちらが変わってもプレビュー更新
+document.getElementById('csv_category').addEventListener('input', () => {
+  if (csvParsedRows.length) previewCSV();
+});
+
+async function importCSV() {
+  const category = document.getElementById('csv_category').value.trim();
+  if (!category) { alert('分類を選択または入力してください'); return; }
+  if (!csvParsedRows.length) { alert('CSVファイルを選択してください'); return; }
+
+  const products = csvParsedRows.map(r => ({
+    name:       r.name,
+    code:       r.code || null,
+    unit_price: parseInt(String(r.unit_price || '0').replace(/[,，¥￥]/g, '')) || 0,
+    description: r.description || null,
+  }));
+
+  const btn = document.getElementById('csvImportBtn');
+  btn.disabled = true;
+  btn.textContent = '取り込み中...';
+
+  const res = await fetch('/api/products/import-csv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category, products }),
+  });
+  const data = await res.json();
+
+  btn.disabled = false;
+  btn.textContent = '取り込む';
+
+  showAlert(data.message || '取込完了', res.ok ? 'success' : 'error');
+  if (res.ok) { closeCsvModal(); loadProducts(); }
+}
+
+document.getElementById('csvModalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('csvModalOverlay')) closeCsvModal();
+});
+
 loadProducts();
 </script>
 </body>
