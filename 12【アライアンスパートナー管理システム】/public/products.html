@@ -350,8 +350,15 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
 // ── CSV取込 ────────────────────────────────────────────────────────────────────
 
 let csvParsedRows = [];
+let existingProductNames = new Set();
+
+async function loadExistingNames() {
+  const data = await fetch('/api/products').then(r => r.json());
+  existingProductNames = new Set(data.map(p => p.name));
+}
 
 function openCsvModal() {
+  loadExistingNames();
   csvParsedRows = [];
   document.getElementById('csvFile').value = '';
   document.getElementById('csv_category').value = '';
