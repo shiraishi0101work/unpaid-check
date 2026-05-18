@@ -280,6 +280,7 @@ function closeModal() {
 
 function clearForm() {
   ['f_category','f_name','f_unit_price','f_description'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pt_monthly').checked = true;
 }
 
 async function editProduct(id) {
@@ -291,12 +292,14 @@ async function editProduct(id) {
   document.getElementById('f_name').value        = p.name || '';
   document.getElementById('f_unit_price').value  = p.unit_price || '';
   document.getElementById('f_description').value = p.description || '';
+  document.querySelector(`input[name="price_type"][value="${p.price_type || 'monthly'}"]`).checked = true;
 }
 
 async function saveProduct() {
   const body = {
     category:    document.getElementById('f_category').value.trim(),
     name:        document.getElementById('f_name').value.trim(),
+    price_type:  document.querySelector('input[name="price_type"]:checked').value,
     unit_price:  parseInt(document.getElementById('f_unit_price').value) || 0,
     description: document.getElementById('f_description').value.trim(),
   };
