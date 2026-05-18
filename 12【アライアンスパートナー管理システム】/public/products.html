@@ -440,7 +440,12 @@ function previewCSV() {
       const cat = r.category || defaultCat || '<span style="color:var(--danger)">未選択</span>';
       const ptLabel = pt === 'daily' ? '日額' : '月額';
       const monthlyStr = pt === 'daily' ? `${fmt(monthly)}<br><small style="color:var(--text-muted)">（30日成果）</small>` : fmt(monthly);
-      return `<tr>
+      const isUpdate = existingProductNames.has(r.name);
+      const badge = isUpdate
+        ? `<span style="padding:2px 7px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">更新</span>`
+        : `<span style="padding:2px 7px;border-radius:4px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600">新規</span>`;
+      return `<tr style="${isUpdate ? 'background:#fffbeb' : ''}">
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${badge}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${r.name}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border)">${ptLabel}</td>
         <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right">${fmt(unitPrice)}</td>
