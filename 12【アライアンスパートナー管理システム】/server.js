@@ -1563,6 +1563,18 @@ app.post('/api/clients/import-csv', uploadCSV.single('file'), (req, res) => {
   res.json({ message: `${imported}件取込完了 (スキップ: ${skipped}件)`, imported, skipped, errors });
 });
 
+// 商材学習マップ一覧
+app.get('/api/invoice-item-name-map', (req, res) => {
+  const db = getDB();
+  const rows = db.prepare(`
+    SELECT m.*, pr.name as product_name
+    FROM invoice_item_name_map m
+    LEFT JOIN products pr ON pr.id = m.product_id
+    ORDER BY m.created_at DESC
+  `).all();
+  res.json(rows);
+});
+
 // 学習マップ一覧
 app.get('/api/invoice-name-map', (req, res) => {
   const db = getDB();
