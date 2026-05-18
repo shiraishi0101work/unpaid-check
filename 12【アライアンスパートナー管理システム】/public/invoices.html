@@ -639,14 +639,6 @@ async function saveLinkModal() {
   if (res.ok) { closeLinkModal(); loadInvoices(); }
 }
 
-async function deleteInvoice(id) {
-  if (!confirm('この請求書を削除しますか？')) return;
-  const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' });
-  const data = await res.json();
-  showAlert(data.message, res.ok ? 'success' : 'error');
-  if (res.ok) loadInvoices();
-}
-
 // ── Items ──
 function addItem(item = null) {
   const tbody = document.getElementById('itemsBody');
