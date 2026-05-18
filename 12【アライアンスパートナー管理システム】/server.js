@@ -616,10 +616,10 @@ function extractInvoiceItems(text) {
   return items;
 }
 
-// 宛先（代理店名）抽出: "株式会社アーク御中" or "株式会社アーク様" → "株式会社アーク"
+// 宛先（代理店名）抽出: "OneChat株式会社 御中" → "OneChat株式会社"
 function extractPartnerNameFromText(text) {
-  // 御中・様の直前の文字列を抽出（行区切りを含まない2〜40文字）
-  const m = text.match(/([^\n\r]{2,40})\s*(?:御中|様)/);
+  // 「御中」直前の非空白文字列を取得（「様」はお客様等にも使われるため対象外）
+  const m = text.match(/(\S+)\s*御中/);
   return m ? m[1].trim() : null;
 }
 
