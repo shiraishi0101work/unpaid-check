@@ -92,6 +92,8 @@ function initDB() {
   try { db.exec(`ALTER TABLE products ADD COLUMN category TEXT`); } catch {}
   // マイグレーション: products.price_type カラム追加
   try { db.exec(`ALTER TABLE products ADD COLUMN price_type TEXT DEFAULT 'monthly'`); } catch {}
+  // マイグレーション: products.cost_price カラム追加
+  try { db.exec(`ALTER TABLE products ADD COLUMN cost_price INTEGER DEFAULT 0`); } catch {}
 
   return db;
 }
