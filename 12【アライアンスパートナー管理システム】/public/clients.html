@@ -103,6 +103,11 @@
           <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <input type="text" id="searchInput" placeholder="会社名・担当者名で検索..." oninput="loadClients()">
         </div>
+        <select id="statusFilter" onchange="loadClients()" style="min-width:120px">
+          <option value="">すべて</option>
+          <option value="active">アクティブ</option>
+          <option value="cancelled">解約</option>
+        </select>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()">CSVテンプレート</button>
