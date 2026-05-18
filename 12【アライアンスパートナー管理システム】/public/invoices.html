@@ -276,40 +276,31 @@ async function uploadFiles(input) {
 }
 
 function showBulkResult(results) {
-  const autoConfirmed = results.filter(r => r.auto_confirmed);
-  const needReview    = results.filter(r => !r.auto_confirmed);
-
-  const rows = results.map(r => {
-    const statusCell = r.auto_confirmed
-      ? `<span style="padding:2px 8px;border-radius:4px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600">自動確定</span>`
-      : `<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">要確認</span>`;
-    return `
-      <tr style="${r.auto_confirmed ? '' : 'background:#fffbeb'}">
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.file_name}</td>
-        <td>${r.guessed_partner_name ? `<strong>${r.guessed_partner_name}</strong>` : '<span class="text-muted">未検出</span>'}</td>
-        <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
-        <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
-        <td>${statusCell}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">編集</button></td>
-      </tr>
-    `;
-  }).join('');
+  const rows = results.map(r => `
+    <tr>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.file_name}</td>
+      <td>${r.guessed_partner_name ? `<strong>${r.guessed_partner_name}</strong>` : '<span class="text-muted">未検出</span>'}</td>
+      <td>${r.guessed_month || '<span class="text-muted">未検出</span>'}</td>
+      <td style="text-align:right">${r.guessed_amount ? fmt(r.guessed_amount) : '-'}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600">未確定</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editInvoice(${r.id})">確認・登録</button></td>
+    </tr>
+  `).join('');
 
   document.getElementById('bulkResult').style.display = 'block';
   document.getElementById('bulkResult').innerHTML = `
     <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px">
       <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
         <span style="font-size:13px;font-weight:700">${results.length}枚 アップロード完了</span>
-        ${autoConfirmed.length ? `<span style="padding:3px 10px;border-radius:20px;background:#d1fae5;color:#065f46;font-size:12px;font-weight:600">自動確定: ${autoConfirmed.length}件</span>` : ''}
-        ${needReview.length    ? `<span style="padding:3px 10px;border-radius:20px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:600">要確認: ${needReview.length}件</span>` : ''}
+        <span style="padding:3px 10px;border-radius:20px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:600">要確認: ${results.length}件</span>
       </div>
       <div style="overflow-x:auto">
         <table style="font-size:13px;width:100%">
-          <thead><tr><th>ファイル名</th><th>パートナー</th><th>請求月</th><th>金額</th><th>状態</th><th></th></tr></thead>
+          <thead><tr><th>ファイル名</th><th>パートナー（推定）</th><th>請求月</th><th>金額</th><th>状態</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      ${needReview.length ? '<p style="font-size:12px;color:var(--text-muted);margin-top:8px">⚠ 黄色の行はパートナーを手動で確認・設定してください</p>' : ''}
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">「確認・登録」ボタンで内容を確認してから保存してください</p>
     </div>
   `;
 }
