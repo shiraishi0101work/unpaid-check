@@ -313,6 +313,7 @@ async function saveProduct() {
     name:        document.getElementById('f_name').value.trim(),
     price_type:  document.querySelector('input[name="price_type"]:checked').value,
     unit_price:  parseInt(document.getElementById('f_unit_price').value) || 0,
+    cost_price:  parseInt(document.getElementById('f_cost_price').value) || 0,
     description: document.getElementById('f_description').value.trim(),
   };
 
