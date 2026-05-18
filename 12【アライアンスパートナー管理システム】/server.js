@@ -805,7 +805,7 @@ app.post('/api/invoices/upload-bulk', upload.array('files', 20), async (req, res
 app.post('/api/invoices/upload', upload.single('file'), async (req, res) => {
   const db = getDB();
   const partners = db.prepare('SELECT id, company_name FROM partners WHERE status = ?').all('active');
-  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, invoiceNo, dueDate } =
+  const { extractedText, guessedAmount, guessedMonth, guessedPartnerId, extractedItems, nameFromPdf, invoiceNo, dueDate } =
     await parseInvoiceFile(req.file, partners);
 
   const result = db.prepare(`
