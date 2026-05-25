@@ -1410,7 +1410,7 @@ app.put('/api/clients/:id/contracts/:contractId', (req, res) => {
   const db = getDB();
   const { contract_date, notes } = req.body;
   db.prepare('UPDATE client_contracts SET contract_date=?, notes=? WHERE id=? AND client_id=?')
-    .run(contract_date, notes, req.params.contractId, req.params.id);
+    .run(contract_date ?? null, notes ?? null, req.params.contractId, req.params.id);
   res.json({ message: '更新しました' });
 });
 
