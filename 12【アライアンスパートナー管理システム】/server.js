@@ -381,6 +381,16 @@ app.put('/api/partners/:id/products', (req, res) => {
 
 // ── パートナー契約書 ──────────────────────────────────────────────────────────
 
+// 契約書の最古締結日をpartners.contract_startに反映
+function syncPartnerContractStart(db, partnerId) {
+  const row = db.prepare(`
+    SELECT MIN(contract_date) as oldest FROM partner_contracts
+    WHERE partner_id = ? AND contract_date IS NOT NULL AND contract_date != ''
+  `).get(partnerId);
+  db.prepare(`UPDATE partners SET contract_start=? WHERE id=?`)
+    .run(row?.oldest ?? null, partnerId);
+}
+
 app.get('/api/partners/:id/contracts', (req, res) => {
   const db = getDB();
   const contracts = db.prepare(
