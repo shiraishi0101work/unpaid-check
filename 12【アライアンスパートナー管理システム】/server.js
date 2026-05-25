@@ -427,6 +427,8 @@ app.post('/api/partners/:id/contracts', uploadContract.single('file'), async (re
     docType
   );
 
+  syncPartnerContractStart(db, req.params.id);
+
   res.json({
     id: result.lastInsertRowid,
     extracted_date: extractedDate,
@@ -441,6 +443,7 @@ app.put('/api/partners/:id/contracts/:contractId', (req, res) => {
   const { contract_date, notes } = req.body;
   db.prepare('UPDATE partner_contracts SET contract_date=?, notes=? WHERE id=? AND partner_id=?')
     .run(contract_date ?? null, notes ?? null, req.params.contractId, req.params.id);
+  syncPartnerContractStart(db, req.params.id);
   res.json({ message: '更新しました' });
 });
 
@@ -453,6 +456,7 @@ app.delete('/api/partners/:id/contracts/:contractId', (req, res) => {
   }
   db.prepare('DELETE FROM partner_contracts WHERE id=? AND partner_id=?')
     .run(req.params.contractId, req.params.id);
+  syncPartnerContractStart(db, req.params.id);
   res.json({ message: '削除しました' });
 });
 
