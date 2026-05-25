@@ -125,6 +125,20 @@ function extractPartnerInfoFromText(text) {
 
 initDB();
 
+// 起動時に全パートナーの contract_start を契約書の最古日で同期
+(function syncAllOnBoot() {
+  const db = getDB();
+  const partners = db.prepare('SELECT id FROM partners').all();
+  for (const p of partners) {
+    const row = db.prepare(
+      "SELECT MIN(contract_date) as oldest FROM partner_contracts WHERE partner_id=? AND contract_date IS NOT NULL AND contract_date != ''"
+    ).get(p.id);
+    if (row?.oldest) {
+      db.prepare("UPDATE partners SET contract_start=? WHERE id=?").run(row.oldest, p.id);
+    }
+  }
+})();
+
 // ── パートナー ────────────────────────────────────────────────────────────────
 
 // ── 契約書PDF一括読み込み → パートナー情報抽出（/api/partners/:id より先に定義）
