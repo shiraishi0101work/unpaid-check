@@ -207,6 +207,7 @@ app.post('/api/partners/import-pdf-save', express.json(), async (req, res) => {
         VALUES (?, ?, ?, ?, ?, '契約書')
       `).run(partnerId, e.file_name, destPath, e.contract_start || null, e.extracted_text?.slice(0, 5000) || '');
     }
+    syncPartnerContractStart(db, partnerId);
     results.push({ id: partnerId, company_name: e.company_name });
   }
   res.json({ count: results.filter(r => !r.skipped).length, results });
