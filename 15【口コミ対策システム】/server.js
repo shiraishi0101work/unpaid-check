@@ -167,6 +167,19 @@ app.post('/api/reset-location', async (req, res) => {
   }
 });
 
+// ---- 住所検索プロキシ ----
+app.get('/api/search', async (req, res) => {
+  const q = req.query.q;
+  if (!q) return res.json([]);
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ja&countrycodes=jp`;
+    const { stdout } = await execAsync(`curl -s "${url}" -H "User-Agent: MEO-LocationChecker/1.0"`);
+    res.json(JSON.parse(stdout));
+  } catch (e) {
+    res.json([]);
+  }
+});
+
 // ---- 切断 ----
 app.post('/api/disconnect', async (req, res) => {
   if (state.deviceId) {
