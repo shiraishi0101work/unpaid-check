@@ -52,6 +52,21 @@ app.get('/api/devices', async (req, res) => {
   }
 });
 
+// HTTP で /json/version を取得（CDPを開かずに確認）
+function checkChromeHttp(port) {
+  return new Promise((resolve, reject) => {
+    const req = http.get(`http://127.0.0.1:${port}/json/version`, { timeout: 3000 }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); } catch { reject(new Error('parse error')); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+  });
+}
+
 // ---- デバイス接続 ----
 app.post('/api/connect', async (req, res) => {
   const { deviceId } = req.body;
@@ -64,18 +79,14 @@ app.post('/api/connect', async (req, res) => {
     try {
       await execAsync(`${ADB} -s ${deviceId} forward tcp:9222 localabstract:${socket}`);
 
-      // 接続テスト（3秒タイムアウト）
-      const client = await Promise.race([
-        CDP({ port: 9222 }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-      ]);
-      await client.close();
+      // CDPを開かずHTTPだけで確認（Chromeがクラッシュしない）
+      const info = await checkChromeHttp(9222);
 
       state.connected = true;
       state.deviceId = deviceId;
       state.socket = socket;
 
-      return res.json({ success: true, socket });
+      return res.json({ success: true, socket, browser: info.Browser || '' });
     } catch {
       try { await execAsync(`${ADB} -s ${deviceId} forward --remove tcp:9222`); } catch {}
     }
