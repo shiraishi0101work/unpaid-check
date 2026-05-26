@@ -130,38 +130,26 @@ app.post('/api/set-location', async (req, res) => {
   }
 
   try {
-    // 単一接続でTarget APIを使い全タブに適用（Chromeへの負荷を最小化）
-    const client = await CDP({ port: 9222 });
-    let successCount = 0;
-    try {
-      const { targetInfos } = await client.Target.getTargets();
-      const pages = targetInfos.filter(t => t.type === 'page');
+    // HTTP でタブ一覧取得（WebSocket不使用）
+    const targets = await CDP.List({ port: 9222 });
+    const pages = targets.filter(t => t.type === 'page' && t.webSocketDebuggerUrl);
 
-      if (pages.length === 0) {
-        await client.close();
-        return res.json({ error: 'Chrome のタブが見つかりません。Chrome で何かページを開いてください。' });
-      }
-
-      for (const target of pages) {
-        try {
-          const { sessionId } = await client.Target.attachToTarget({ targetId: target.targetId, flatten: true });
-          await client.send('Emulation.setGeolocationOverride',
-            { latitude, longitude, accuracy: 10 }, sessionId);
-          await client.Target.detachFromTarget({ sessionId });
-          successCount++;
-        } catch (e) {
-          console.error(`Tab ${target.targetId}: ${e.message}`);
-        }
-      }
-    } finally {
-      await client.close();
+    if (pages.length === 0) {
+      return res.json({ error: 'Chrome のタブが見つかりません。Chrome で何かページを開いてください。' });
     }
+
+    // 最初の1タブにだけ送る（最小負荷）
+    const wsUrl = pages[0].webSocketDebuggerUrl.replace('ws://localhost', 'ws://127.0.0.1');
+    console.log('Connecting to:', wsUrl);
+
+    await sendCDPCommand(wsUrl, 'Emulation.setGeolocationOverride',
+      { latitude, longitude, accuracy: 10 });
 
     state.lat = latitude;
     state.lon = longitude;
     state.locationName = name || null;
 
-    res.json({ success: true, lat: latitude, lon: longitude, tabCount: successCount });
+    res.json({ success: true, lat: latitude, lon: longitude, tabCount: 1 });
   } catch (err) {
     res.json({ error: `位置情報の設定に失敗しました: ${err.message}` });
   }
