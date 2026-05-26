@@ -2,9 +2,28 @@ const express = require('express');
 const { exec } = require('child_process');
 const CDP = require('chrome-remote-interface');
 const http = require('http');
+const WebSocket = require('ws');
 const path = require('path');
 const util = require('util');
 const execAsync = util.promisify(exec);
+
+// 生WebSocketで1コマンドだけ送る（Chromeへの負荷最小）
+function sendCDPCommand(wsUrl, method, params = {}) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(wsUrl);
+    const timer = setTimeout(() => { ws.terminate(); reject(new Error('timeout')); }, 5000);
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify({ id: 1, method, params }));
+    });
+    ws.on('message', (data) => {
+      clearTimeout(timer);
+      ws.close();
+      resolve(JSON.parse(data));
+    });
+    ws.on('error', (e) => { clearTimeout(timer); reject(e); });
+  });
+}
 
 // ADBのパス（wingetインストール先 or PATH上のadb）
 const ADB = process.env.ADB_PATH ||
