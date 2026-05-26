@@ -244,11 +244,6 @@ app.get('/api/search', async (req, res) => {
   }
 
   res.json([]);
-
-  // （旧コードの残骸を防ぐためのダミー）
-  if (false) {
-    res.json([]);
-  }
 });
 
 // ---- 切断 ----
