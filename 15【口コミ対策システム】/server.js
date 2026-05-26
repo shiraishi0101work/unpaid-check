@@ -1,6 +1,7 @@
 const express = require('express');
 const { exec } = require('child_process');
 const CDP = require('chrome-remote-interface');
+const http = require('http');
 const path = require('path');
 const util = require('util');
 const execAsync = util.promisify(exec);
@@ -36,7 +37,7 @@ let state = {
 // ---- ADB デバイス一覧 ----
 app.get('/api/devices', async (req, res) => {
   try {
-    const { stdout } = await execAsync('adb devices');
+    const { stdout } = await execAsync(`${ADB} devices`);
     const lines = stdout.split('\n').slice(1);
     const devices = lines
       .filter(l => l.trim() && l.includes('\t'))
@@ -57,11 +58,11 @@ app.post('/api/connect', async (req, res) => {
   if (!deviceId) return res.status(400).json({ error: 'deviceId が必要です' });
 
   // 既存のフォワードを削除
-  try { await execAsync(`adb -s ${deviceId} forward --remove tcp:9222`); } catch {}
+  try { await execAsync(`${ADB} -s ${deviceId} forward --remove tcp:9222`); } catch {}
 
   for (const socket of CHROME_SOCKETS) {
     try {
-      await execAsync(`adb -s ${deviceId} forward tcp:9222 localabstract:${socket}`);
+      await execAsync(`${ADB} -s ${deviceId} forward tcp:9222 localabstract:${socket}`);
 
       // 接続テスト（3秒タイムアウト）
       const client = await Promise.race([
@@ -76,7 +77,7 @@ app.post('/api/connect', async (req, res) => {
 
       return res.json({ success: true, socket });
     } catch {
-      try { await execAsync(`adb -s ${deviceId} forward --remove tcp:9222`); } catch {}
+      try { await execAsync(`${ADB} -s ${deviceId} forward --remove tcp:9222`); } catch {}
     }
   }
 
@@ -158,7 +159,7 @@ app.post('/api/reset-location', async (req, res) => {
 // ---- 切断 ----
 app.post('/api/disconnect', async (req, res) => {
   if (state.deviceId) {
-    try { await execAsync(`adb -s ${state.deviceId} forward --remove tcp:9222`); } catch {}
+    try { await execAsync(`${ADB} -s ${state.deviceId} forward --remove tcp:9222`); } catch {}
   }
   state = { connected: false, deviceId: null, socket: null, lat: null, lon: null, locationName: null };
   res.json({ success: true });
