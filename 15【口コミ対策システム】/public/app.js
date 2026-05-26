@@ -234,9 +234,7 @@ async function doSearch() {
   searchResults.innerHTML = '<div style="color:#64748b;font-size:12px;padding:4px">検索中...</div>';
 
   try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ja&countrycodes=jp`
-    );
+    const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
     const items = await r.json();
 
     if (items.length === 0) {
