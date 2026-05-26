@@ -5,6 +5,10 @@ const path = require('path');
 const util = require('util');
 const execAsync = util.promisify(exec);
 
+// ADBのパス（wingetインストール先 or PATH上のadb）
+const ADB = process.env.ADB_PATH ||
+  'C:\\Users\\shira_k13727w\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Google.PlatformTools_Microsoft.Winget.Source_8wekyb3d8bbwe\\platform-tools\\adb.exe';
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
