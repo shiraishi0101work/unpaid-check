@@ -185,33 +185,68 @@ app.post('/api/reset-location', async (req, res) => {
   }
 });
 
+// 全角数字・ハイフン → 半角に正規化
+function normalizeAddress(q) {
+  return q
+    .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[‐－―]/g, '-')
+    .replace(/　/g, ' ');
+}
+
+// 国土地理院API検索
+async function searchGSI(q) {
+  const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`;
+  const { stdout } = await execAsync(`curl -s "${url}" -H "User-Agent: MEO-LocationChecker/1.0"`);
+  const data = JSON.parse(stdout);
+  if (!data || data.length === 0) return [];
+  return data.slice(0, 6).map(item => ({
+    display_name: item.properties.title,
+    lat: String(item.geometry.coordinates[1]),
+    lon: String(item.geometry.coordinates[0])
+  }));
+}
+
 // ---- 住所検索プロキシ（国土地理院API → Nominatimフォールバック）----
 app.get('/api/search', async (req, res) => {
   const q = req.query.q;
   if (!q) return res.json([]);
 
+  // 1. 入力そのまま
   try {
-    // 国土地理院（番地レベルまで対応・日本専用）
-    const gsiUrl = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`;
-    const { stdout: gsiOut } = await execAsync(`curl -s "${gsiUrl}" -H "User-Agent: MEO-LocationChecker/1.0"`);
-    const gsiData = JSON.parse(gsiOut);
-
-    if (gsiData && gsiData.length > 0) {
-      const results = gsiData.slice(0, 6).map(item => ({
-        display_name: item.properties.title,
-        lat: String(item.geometry.coordinates[1]),
-        lon: String(item.geometry.coordinates[0])
-      }));
-      return res.json(results);
-    }
+    const results = await searchGSI(q);
+    if (results.length > 0) return res.json(results);
   } catch {}
 
-  // フォールバック: Nominatim
+  // 2. 全角→半角に正規化して再検索
+  const normalized = normalizeAddress(q);
+  if (normalized !== q) {
+    try {
+      const results = await searchGSI(normalized);
+      if (results.length > 0) return res.json(results);
+    } catch {}
+  }
+
+  // 3. フォールバック: Nominatim
   try {
-    const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&accept-language=ja&countrycodes=jp`;
+    const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(normalized)}&format=json&limit=6&accept-language=ja&countrycodes=jp`;
     const { stdout } = await execAsync(`curl -s "${nomUrl}" -H "User-Agent: MEO-LocationChecker/1.0"`);
-    res.json(JSON.parse(stdout));
-  } catch {
+    const data = JSON.parse(stdout);
+    if (data.length > 0) return res.json(data);
+  } catch {}
+
+  // 4. 番地を除いた住所で再検索（最終手段）
+  const withoutNumber = normalized.replace(/\d+[-－]\d+[-－]?\d*$/, '').replace(/\d+$/, '').trim();
+  if (withoutNumber && withoutNumber !== normalized) {
+    try {
+      const results = await searchGSI(withoutNumber);
+      if (results.length > 0) return res.json(results.map(r => ({ ...r, display_name: r.display_name + '（近辺）' })));
+    } catch {}
+  }
+
+  res.json([]);
+
+  // （旧コードの残骸を防ぐためのダミー）
+  if (false) {
     res.json([]);
   }
 });
