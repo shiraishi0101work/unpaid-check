@@ -1,0 +1,13 @@
+{
+  "name": "meo-location-checker",
+  "version": "1.0.0",
+  "description": "MEO対策用 位置情報チェッカー",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "chrome-remote-interface": "^0.33.0"
+  }
+}
