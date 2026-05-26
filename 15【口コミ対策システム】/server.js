@@ -111,24 +111,31 @@ app.post('/api/set-location', async (req, res) => {
   }
 
   try {
-    const targets = await CDP.List({ port: 9222 });
-    const pages = targets.filter(t => t.type === 'page');
-
-    if (pages.length === 0) {
-      return res.json({ error: 'Chrome のタブが見つかりません。Chrome で何かページを開いてください。' });
-    }
-
+    // 単一接続でTarget APIを使い全タブに適用（Chromeへの負荷を最小化）
+    const client = await CDP({ port: 9222 });
     let successCount = 0;
-    for (const page of pages) {
-      const client = await CDP({ target: page.id, port: 9222 });
-      try {
-        await client.Emulation.setGeolocationOverride({ latitude, longitude, accuracy: 10 });
-        successCount++;
-      } catch (e) {
-        console.error(`Tab ${page.id}: ${e.message}`);
-      } finally {
+    try {
+      const { targetInfos } = await client.Target.getTargets();
+      const pages = targetInfos.filter(t => t.type === 'page');
+
+      if (pages.length === 0) {
         await client.close();
+        return res.json({ error: 'Chrome のタブが見つかりません。Chrome で何かページを開いてください。' });
       }
+
+      for (const target of pages) {
+        try {
+          const { sessionId } = await client.Target.attachToTarget({ targetId: target.targetId, flatten: true });
+          await client.send('Emulation.setGeolocationOverride',
+            { latitude, longitude, accuracy: 10 }, sessionId);
+          await client.Target.detachFromTarget({ sessionId });
+          successCount++;
+        } catch (e) {
+          console.error(`Tab ${target.targetId}: ${e.message}`);
+        }
+      }
+    } finally {
+      await client.close();
     }
 
     state.lat = latitude;
@@ -146,15 +153,19 @@ app.post('/api/reset-location', async (req, res) => {
   if (!state.connected) return res.json({ error: '接続されていません' });
 
   try {
-    const targets = await CDP.List({ port: 9222 });
-    const pages = targets.filter(t => t.type === 'page');
-
-    for (const page of pages) {
-      const client = await CDP({ target: page.id, port: 9222 });
-      try {
-        await client.Emulation.clearGeolocationOverride();
-      } catch {}
-      finally { await client.close(); }
+    const client = await CDP({ port: 9222 });
+    try {
+      const { targetInfos } = await client.Target.getTargets();
+      const pages = targetInfos.filter(t => t.type === 'page');
+      for (const target of pages) {
+        try {
+          const { sessionId } = await client.Target.attachToTarget({ targetId: target.targetId, flatten: true });
+          await client.send('Emulation.clearGeolocationOverride', {}, sessionId);
+          await client.Target.detachFromTarget({ sessionId });
+        } catch {}
+      }
+    } finally {
+      await client.close();
     }
 
     state.lat = null;
