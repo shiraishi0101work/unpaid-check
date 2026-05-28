@@ -78,6 +78,8 @@ function initDB() {
 
   // マイグレーション: 支店住所カラム追加
   try { db.exec(`ALTER TABLE my_company ADD COLUMN branch_address TEXT`); } catch {}
+  // マイグレーション: 定型文によみがなカラム追加
+  try { db.exec(`ALTER TABLE templates ADD COLUMN yomigana TEXT DEFAULT ''`); } catch {}
 
   return db;
 }
