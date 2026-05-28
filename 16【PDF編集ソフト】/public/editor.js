@@ -15,6 +15,7 @@ let pageStates   = {};   // { "1": fabricJSON, ... }
 let sourcePdfFile = '';  // server filename
 let srcOrigName   = '';
 let myCompany     = {};
+let allTemplates  = [];   // { id, title, content, category }
 let selectedTool  = 'select';
 let textColor     = '#000000';
 let shapeColor    = '#000000';
