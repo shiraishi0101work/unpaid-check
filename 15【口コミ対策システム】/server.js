@@ -311,6 +311,15 @@ app.post('/api/disconnect', async (req, res) => {
 // ---- ステータス ----
 app.get('/api/status', (req, res) => res.json(state));
 
+// ---- 設定値 ----
+app.get('/api/config', (req, res) => res.json({
+  port: PORT,
+  adbPath: ADB,
+  chromeSockets: CHROME_SOCKETS,
+  keepAliveIntervalSec: 30,
+  cdpPort: 9222
+}));
+
 app.listen(PORT, () => {
   console.log(`\n✅ MEO位置情報チェッカー 起動完了`);
   console.log(`🌐 http://localhost:${PORT}\n`);
