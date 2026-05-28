@@ -559,7 +559,11 @@ async function loadTemplates() {
 function renderTemplateList() {
   const q    = (document.getElementById('tmpl-search')?.value || '').toLowerCase();
   const list = allTemplates.filter(t =>
-    !q || t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q) || (t.category || '').toLowerCase().includes(q)
+    !q ||
+    t.title.toLowerCase().includes(q) ||
+    t.content.toLowerCase().includes(q) ||
+    (t.category || '').toLowerCase().includes(q) ||
+    (t.yomigana || '').includes(q)
   );
 
   const container = document.getElementById('template-list');
