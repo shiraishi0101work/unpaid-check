@@ -189,8 +189,11 @@ btnApply.addEventListener('click', async () => {
     const data = await r.json();
 
     if (data.success) {
-      const scope = data.deviceGps ? 'Chrome＋デバイス両方に適用' : 'Chrome のみ適用（デバイスGPS未対応）';
-      showToast(`✓ 位置情報を適用しました（${scope}）`, 'success');
+      if (data.deviceGps) {
+        showToast('✓ Chrome＋デバイス両方に適用しました', 'success');
+      } else {
+        showToast(`⚠ Chromeのみ適用。デバイスGPS失敗: ${data.deviceError || '不明'}`, 'error');
+      }
       updateCurrentLocation(selectedLat, selectedLon, selectedName, data.deviceGps);
     } else {
       showToast(data.error, 'error');
