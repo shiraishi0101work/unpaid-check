@@ -184,7 +184,17 @@ app.post('/api/set-location', async (req, res) => {
     state.lon = longitude;
     state.locationName = name || null;
 
-    res.json({ success: true, lat: latitude, lon: longitude, tabCount: 1 });
+    // デバイス全体にもモック位置情報をセット
+    let deviceSuccess = false;
+    try {
+      await setDeviceLocation(state.deviceId, latitude, longitude);
+      deviceSuccess = true;
+      startKeepAlive(state.deviceId, latitude, longitude);
+    } catch (err) {
+      console.warn('デバイスGPS設定失敗（Chromeのみ適用）:', err.message);
+    }
+
+    res.json({ success: true, lat: latitude, lon: longitude, tabCount: 1, deviceGps: deviceSuccess });
   } catch (err) {
     res.json({ error: `位置情報の設定に失敗しました: ${err.message}` });
   }
