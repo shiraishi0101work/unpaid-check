@@ -225,10 +225,10 @@ function closeModal() {
 
 async function save() {
   const body = {
-    title:      document.getElementById('f-title').value.trim(),
-    content:    document.getElementById('f-content').value.trim(),
-    category:   document.getElementById('f-category').value.trim() || '一般',
-    sort_order: parseInt(document.getElementById('f-sort_order').value) || 0,
+    title:    document.getElementById('f-title').value.trim(),
+    content:  document.getElementById('f-content').value.trim(),
+    category: document.getElementById('f-category').value.trim() || '一般',
+    yomigana: document.getElementById('f-yomigana').value.trim(),
   };
   if (!body.title)   { alert('タイトルを入力してください'); return; }
   if (!body.content) { alert('内容を入力してください'); return; }
