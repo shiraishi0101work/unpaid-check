@@ -204,6 +204,9 @@ app.post('/api/set-location', async (req, res) => {
 app.post('/api/reset-location', async (req, res) => {
   if (!state.connected) return res.json({ error: '接続されていません' });
 
+  stopKeepAlive();
+
+  // Chromeリセット
   try {
     const client = await CDP({ port: 9222 });
     try {
@@ -219,15 +222,18 @@ app.post('/api/reset-location', async (req, res) => {
     } finally {
       await client.close();
     }
-
-    state.lat = null;
-    state.lon = null;
-    state.locationName = null;
-
-    res.json({ success: true });
   } catch (err) {
-    res.json({ error: err.message });
+    console.warn('Chrome GPSリセット失敗:', err.message);
   }
+
+  // デバイスリセット
+  await resetDeviceLocation(state.deviceId);
+
+  state.lat = null;
+  state.lon = null;
+  state.locationName = null;
+
+  res.json({ success: true });
 });
 
 // 全角数字・ハイフン → 半角に正規化
