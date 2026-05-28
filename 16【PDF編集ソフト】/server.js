@@ -225,7 +225,8 @@ app.get('/api/templates', (req, res) => {
   const company = db.prepare('SELECT * FROM my_company WHERE id = 1').get() || {};
   const companyItems = [
     { key: 'company_name',   label: '会社名' },
-    { key: 'address',        label: '住所' },
+    { key: 'address',        label: '住所（本社）' },
+    { key: 'branch_address', label: '住所（支店）' },
     { key: 'phone',          label: '電話番号' },
     { key: 'fax',            label: 'FAX' },
     { key: 'email',          label: 'メール' },
