@@ -509,8 +509,9 @@ function renderCompanyFields() {
   const fields = document.getElementById('company-fields');
   const items = [
     { label: '会社名',    key: 'company_name' },
-    { label: '住所',      key: 'address' },
-    { label: '電話',      key: 'phone' },
+    { label: '住所（本社）', key: 'address' },
+    { label: '住所（支店）', key: 'branch_address' },
+    { label: '電話',         key: 'phone' },
     { label: 'FAX',       key: 'fax' },
     { label: 'メール',    key: 'email' },
     { label: '代表者名',  key: 'representative' },
