@@ -50,8 +50,43 @@ let state = {
   socket: null,
   lat: null,
   lon: null,
-  locationName: null
+  locationName: null,
+  keepAliveTimer: null
 };
+
+// ---- デバイス全体のモック位置情報をセット ----
+async function setDeviceLocation(deviceId, lat, lon) {
+  const ts = Date.now();
+  await execAsync(`${ADB} -s ${deviceId} shell appops set android.uid.shell android:mock_location allow`);
+  await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-enabled gps true`);
+  await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-location gps ${lat} ${lon} 0 1 0 0 ${ts}`);
+}
+
+// ---- デバイスのモック位置情報をリセット ----
+async function resetDeviceLocation(deviceId) {
+  try {
+    await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-enabled gps false`);
+  } catch {}
+}
+
+// ---- keepAlive停止 ----
+function stopKeepAlive() {
+  if (state.keepAliveTimer) {
+    clearInterval(state.keepAliveTimer);
+    state.keepAliveTimer = null;
+  }
+}
+
+// ---- keepAlive開始（30秒ごとに座標を再送） ----
+function startKeepAlive(deviceId, lat, lon) {
+  stopKeepAlive();
+  state.keepAliveTimer = setInterval(async () => {
+    if (!state.connected || state.lat === null) return;
+    try {
+      await setDeviceLocation(deviceId, lat, lon);
+    } catch {}
+  }, 30000);
+}
 
 // ---- ADB デバイス一覧 ----
 app.get('/api/devices', async (req, res) => {
