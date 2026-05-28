@@ -199,10 +199,10 @@ function renderTable() {
 
 function openModal() {
   editingId = null;
-  document.getElementById('f-title').value      = '';
-  document.getElementById('f-content').value    = '';
-  document.getElementById('f-category').value   = '';
-  document.getElementById('f-sort_order').value = '0';
+  document.getElementById('f-title').value    = '';
+  document.getElementById('f-content').value  = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-yomigana').value = '';
   document.getElementById('modal-title').textContent = '定型文を追加';
   document.getElementById('modal').classList.add('open');
 }
@@ -211,10 +211,10 @@ function openEdit(id) {
   const t = allTemplates.find(x => x.id === id);
   if (!t) return;
   editingId = id;
-  document.getElementById('f-title').value      = t.title;
-  document.getElementById('f-content').value    = t.content;
-  document.getElementById('f-category').value   = t.category || '';
-  document.getElementById('f-sort_order').value = t.sort_order || 0;
+  document.getElementById('f-title').value    = t.title;
+  document.getElementById('f-content').value  = t.content;
+  document.getElementById('f-category').value = t.category || '';
+  document.getElementById('f-yomigana').value = t.yomigana || '';
   document.getElementById('modal-title').textContent = '定型文を編集';
   document.getElementById('modal').classList.add('open');
 }
