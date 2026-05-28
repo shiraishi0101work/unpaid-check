@@ -153,14 +153,14 @@ app.get('/api/my-company', (req, res) => {
 
 app.put('/api/my-company', (req, res) => {
   const db = getDB();
-  const { company_name, postal_code, address, phone, fax, email, representative, bank_info, notes } = req.body;
+  const { company_name, postal_code, address, branch_address, phone, fax, email, representative, bank_info, notes } = req.body;
   const exists = db.prepare('SELECT id FROM my_company WHERE id = 1').get();
   if (exists) {
-    db.prepare(`UPDATE my_company SET company_name=?,postal_code=?,address=?,phone=?,fax=?,email=?,representative=?,bank_info=?,notes=?,updated_at=datetime('now','localtime') WHERE id=1`)
-      .run(company_name, postal_code, address, phone, fax, email, representative, bank_info, notes);
+    db.prepare(`UPDATE my_company SET company_name=?,postal_code=?,address=?,branch_address=?,phone=?,fax=?,email=?,representative=?,bank_info=?,notes=?,updated_at=datetime('now','localtime') WHERE id=1`)
+      .run(company_name, postal_code, address, branch_address, phone, fax, email, representative, bank_info, notes);
   } else {
-    db.prepare(`INSERT INTO my_company (id,company_name,postal_code,address,phone,fax,email,representative,bank_info,notes) VALUES (1,?,?,?,?,?,?,?,?,?)`)
-      .run(company_name, postal_code, address, phone, fax, email, representative, bank_info, notes);
+    db.prepare(`INSERT INTO my_company (id,company_name,postal_code,address,branch_address,phone,fax,email,representative,bank_info,notes) VALUES (1,?,?,?,?,?,?,?,?,?,?)`)
+      .run(company_name, postal_code, address, branch_address, phone, fax, email, representative, bank_info, notes);
   }
   res.json({ ok: true });
 });
