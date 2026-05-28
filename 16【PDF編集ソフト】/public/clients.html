@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>取引先 — PDF Editor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><span>PDF Tools</span><h1>PDF Editor</h1></div>
+    <div class="sidebar-nav">
+      <div class="nav-label">メニュー</div>
+      <a href="/" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></span><span>ダッシュボード</span></a>
+      <a href="/editor.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span><span>PDFを編集</span></a>
+      <div class="nav-label">管理</div>
+      <a href="/archive.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></span><span>書類アーカイブ</span></a>
+      <a href="/images.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span><span>画像ライブラリ</span></a>
+      <a href="/clients.html" class="nav-item active"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></span><span>取引先</span></a>
+      <a href="/my-company.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><span>自社情報</span></a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header flex-between">
+      <div>
+        <h2>取引先</h2>
+        <p>書類保存時に紐付ける取引先を管理します</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        取引先を追加
+      </button>
+    </div>
+
+    <div id="alert-area"></div>
+
+    <div class="card">
+      <div class="toolbar" style="margin-bottom:16px">
+        <div class="search-wrap">
+          <span class="search-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+          <input type="text" id="search" placeholder="会社名・担当者名で検索..." oninput="renderTable()">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>会社名</th>
+              <th>担当者名</th>
+              <th>電話番号</th>
+              <th>メール</th>
+              <th>登録日</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="6" class="text-muted">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">取引先を追加</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>会社名 *</label>
+        <input type="text" id="f-company_name" placeholder="株式会社〇〇">
+      </div>
+      <div class="form-group">
+        <label>担当者名</label>
+        <input type="text" id="f-contact_name" placeholder="山田 花子">
+      </div>
+      <div class="form-group">
+        <label>担当者電話</label>
+        <input type="text" id="f-contact_phone" placeholder="03-0000-0000">
+      </div>
+      <div class="form-group full">
+        <label>担当者メール</label>
+        <input type="email" id="f-contact_email" placeholder="hanako@example.com">
+      </div>
+      <div class="form-group">
+        <label>郵便番号</label>
+        <input type="text" id="f-postal_code" placeholder="000-0000">
+      </div>
+      <div class="form-group full">
+        <label>住所</label>
+        <input type="text" id="f-address" placeholder="東京都〇〇区〇〇">
+      </div>
+      <div class="form-group full">
+        <label>メモ</label>
+        <textarea id="f-notes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="save()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allClients = [];
+let editingId  = null;
+const FIELDS = ['company_name','contact_name','contact_phone','contact_email','postal_code','address','notes'];
+
+async function loadClients() {
+  const res  = await fetch('/api/clients');
+  allClients = await res.json();
+  renderTable();
+}
+
+function renderTable() {
+  const q    = document.getElementById('search').value.toLowerCase();
+  const list = allClients.filter(c =>
+    !q || c.company_name.toLowerCase().includes(q) || (c.contact_name || '').toLowerCase().includes(q)
+  );
+  const tbody = document.getElementById('table-body');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted">${q ? '検索結果がありません' : '取引先が登録されていません'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><strong>${c.company_name}</strong></td>
+      <td>${c.contact_name || '—'}</td>
+      <td>${c.contact_phone || '—'}</td>
+      <td>${c.contact_email || '—'}</td>
+      <td class="text-muted">${c.created_at.slice(0,10)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-xs" onclick="openEdit(${c.id})">編集</button>
+          <button class="btn btn-danger btn-xs" onclick="del(${c.id},'${c.company_name.replace(/'/g,"\\'")}')">削除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal(id) {
+  editingId = id || null;
+  FIELDS.forEach(k => { document.getElementById('f-' + k).value = ''; });
+  document.getElementById('modal-title').textContent = '取引先を追加';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const c = allClients.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  FIELDS.forEach(k => { document.getElementById('f-' + k).value = c[k] || ''; });
+  document.getElementById('modal-title').textContent = '取引先を編集';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function save() {
+  const body = {};
+  FIELDS.forEach(k => { body[k] = document.getElementById('f-' + k).value; });
+  if (!body.company_name) { alert('会社名を入力してください'); return; }
+
+  const url    = editingId ? `/api/clients/${editingId}` : '/api/clients';
+  const method = editingId ? 'PUT' : 'POST';
+  const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (res.ok) {
+    closeModal();
+    showAlert('保存しました', 'success');
+    loadClients();
+  } else {
+    showAlert('保存に失敗しました', 'error');
+  }
+}
+
+async function del(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+  showAlert('削除しました', 'success');
+  loadClients();
+}
+
+function showAlert(msg, type) {
+  const area = document.getElementById('alert-area');
+  area.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => area.innerHTML = '', 3000);
+}
+
+loadClients();
+</script>
+</body>
+</html>
