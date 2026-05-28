@@ -215,9 +215,13 @@ textarea { resize: vertical; min-height: 80px; }
    EDITOR-SPECIFIC STYLES
 ═══════════════════════════════════════════════════════ */
 
-/* Full-screen editor layout (no sidebar) */
+/* Editor page: sidebar fixed left, editor area fills the rest */
 body.editor-page {
-  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  display: flex; height: 100vh; overflow: hidden;
+}
+.editor-area {
+  margin-left: 220px; flex: 1; display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden; min-width: 0;
 }
 
 /* ── Upload screen ── */
