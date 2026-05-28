@@ -541,6 +541,72 @@ function renderCompanyFields() {
   }
 }
 
+// ── Load & render templates ───────────────────────
+async function loadTemplates() {
+  try {
+    const res  = await fetch('/api/templates');
+    const data = await res.json();
+    // Merge: company items first, then registered templates
+    allTemplates = [
+      ...data.company_items,
+      ...data.templates,
+    ];
+    renderTemplateList();
+  } catch {}
+}
+
+function renderTemplateList() {
+  const q    = (document.getElementById('tmpl-search')?.value || '').toLowerCase();
+  const list = allTemplates.filter(t =>
+    !q || t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q) || (t.category || '').toLowerCase().includes(q)
+  );
+
+  const container = document.getElementById('template-list');
+  if (!list.length) {
+    container.innerHTML = q
+      ? `<p style="font-size:12px;color:var(--text-muted)">見つかりません</p>`
+      : `<p style="font-size:12px;color:var(--text-muted)"><a href="/templates.html" target="_blank" style="color:var(--primary)">定型文を登録</a>するとここに表示されます</p>`;
+    return;
+  }
+
+  // カテゴリ別にグループ化
+  const groups = {};
+  list.forEach(t => {
+    const cat = t.category || '一般';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(t);
+  });
+
+  container.innerHTML = Object.entries(groups).map(([cat, items]) => `
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 0 6px">${cat}</div>
+      ${items.map(t => `
+        <button class="tmpl-item" onclick="insertTemplate(${JSON.stringify(t.content).replace(/"/g,'&quot;')})"
+          title="${t.content.replace(/"/g,'&quot;')}"
+          style="width:100%;text-align:left;background:#f8fafc;border:1px solid var(--border);border-radius:5px;padding:7px 10px;margin-bottom:4px;cursor:pointer;transition:all .12s;font-size:12px;font-family:inherit">
+          <div style="font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
+          <div style="color:var(--text-muted);font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.content}</div>
+        </button>
+      `).join('')}
+    </div>
+  `).join('');
+
+  // hover style
+  container.querySelectorAll('.tmpl-item').forEach(el => {
+    el.addEventListener('mouseenter', () => { el.style.background = 'var(--primary-light)'; el.style.borderColor = 'var(--primary)'; });
+    el.addEventListener('mouseleave', () => { el.style.background = '#f8fafc'; el.style.borderColor = 'var(--border)'; });
+  });
+}
+
+function insertTemplate(content) {
+  // テキストパネルの内容をセットしてaddText呼び出し
+  const textInput = document.getElementById('text-input');
+  if (textInput) textInput.value = content;
+  addText(content);
+  // テキストタブに切り替え（視覚的フィードバック）
+  switchTab('text');
+}
+
 // ── Load clients for archive modal ───────────────
 async function loadClients() {
   try {
