@@ -296,12 +296,16 @@ function setStatusBadge(state, deviceId) {
   }
 }
 
-function updateCurrentLocation(lat, lon, name) {
+function updateCurrentLocation(lat, lon, name, deviceGps) {
   currentLocationCard.style.display = 'flex';
+  const scopeLabel = deviceGps === false
+    ? '<span style="color:#f59e0b;font-size:11px;">⚠ Chrome のみ</span>'
+    : '<span style="color:#4ade80;font-size:11px;">✓ Chrome＋デバイス両方</span>';
   currentLocationInfo.innerHTML =
     `<b>${name}</b><br>` +
     `緯度: ${lat.toFixed(5)}<br>` +
-    `経度: ${lon.toFixed(5)}`;
+    `経度: ${lon.toFixed(5)}<br>` +
+    `適用範囲: ${scopeLabel}`;
 }
 
 // ======= 初期ステータス確認 =======
