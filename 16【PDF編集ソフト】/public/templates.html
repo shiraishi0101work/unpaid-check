@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>定型文管理 — PDF Editor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><span>PDF Tools</span><h1>PDF Editor</h1></div>
+    <div class="sidebar-nav">
+      <div class="nav-label">メニュー</div>
+      <a href="/" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></span><span>ダッシュボード</span></a>
+      <a href="/editor.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span><span>PDFを編集</span></a>
+      <div class="nav-label">管理</div>
+      <a href="/archive.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></span><span>書類アーカイブ</span></a>
+      <a href="/images.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span><span>画像ライブラリ</span></a>
+      <a href="/clients.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></span><span>取引先</span></a>
+      <a href="/templates.html" class="nav-item active"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span><span>定型文</span></a>
+      <a href="/my-company.html" class="nav-item"><span class="nav-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><span>自社情報</span></a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-header flex-between">
+      <div>
+        <h2>定型文管理</h2>
+        <p>PDFエディターの「定型文」タブから呼び出せるテキストを登録します。自社情報も自動的に表示されます。</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        定型文を追加
+      </button>
+    </div>
+
+    <div id="alert-area"></div>
+
+    <!-- 自社情報プレビュー -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <h3>自社情報（自動表示）</h3>
+        <a href="/my-company.html" class="btn btn-ghost btn-sm">自社情報を編集</a>
+      </div>
+      <div id="company-preview" style="display:flex;flex-wrap:wrap;gap:8px">
+        <p class="text-muted" style="font-size:13px">自社情報が登録されていません。</p>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">※ 自社情報に登録した項目はエディターの定型文タブに「自社情報」カテゴリとして自動表示されます</p>
+    </div>
+
+    <!-- 登録済み定型文 -->
+    <div class="card">
+      <div class="card-header"><h3>登録済み定型文</h3></div>
+
+      <!-- Search & filter -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+          <input type="text" id="search" placeholder="タイトル・内容・カテゴリで検索..." oninput="renderTable()">
+        </div>
+        <select id="cat-filter" onchange="renderTable()" style="min-width:140px">
+          <option value="">すべてのカテゴリ</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>タイトル</th>
+              <th>内容</th>
+              <th>カテゴリ</th>
+              <th>順序</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="5" class="text-muted">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 追加/編集 Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">定型文を追加</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group">
+        <label>タイトル * <span style="font-weight:400;text-transform:none;letter-spacing:0">(エディターに表示される名前)</span></label>
+        <input type="text" id="f-title" placeholder="例: 振込先、担当者名、挨拶文">
+      </div>
+      <div class="form-group">
+        <label>内容 * <span style="font-weight:400;text-transform:none;letter-spacing:0">(PDFに挿入されるテキスト)</span></label>
+        <textarea id="f-content" rows="4" placeholder="PDFに差し込みたいテキストを入力..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>カテゴリ</label>
+          <input type="text" id="f-category" placeholder="例: 挨拶文、住所、振込先" list="cat-list">
+          <datalist id="cat-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>表示順序</label>
+          <input type="number" id="f-sort_order" value="0" min="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="save()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allTemplates = [];
+let editingId    = null;
+
+async function loadData() {
+  const [tmplRes, companyRes] = await Promise.all([
+    fetch('/api/templates'),
+    fetch('/api/my-company'),
+  ]);
+  const tmplData  = await tmplRes.json();
+  const company   = await companyRes.json();
+  allTemplates    = tmplData.templates;
+
+  // 自社情報プレビュー
+  const fields = [
+    { key: 'company_name',   label: '会社名' },
+    { key: 'address',        label: '住所' },
+    { key: 'phone',          label: '電話番号' },
+    { key: 'fax',            label: 'FAX' },
+    { key: 'email',          label: 'メール' },
+    { key: 'representative', label: '代表者名' },
+    { key: 'postal_code',    label: '郵便番号' },
+    { key: 'bank_info',      label: '銀行口座' },
+  ].filter(f => company[f.key]);
+
+  const preview = document.getElementById('company-preview');
+  if (fields.length) {
+    preview.innerHTML = fields.map(f => `
+      <div style="background:var(--primary-light);border:1px solid #fbd0cb;border-radius:6px;padding:8px 12px;font-size:13px">
+        <span style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">${f.label}</span>
+        <span style="white-space:pre-wrap">${company[f.key]}</span>
+      </div>
+    `).join('');
+  } else {
+    preview.innerHTML = `<p class="text-muted" style="font-size:13px">自社情報が登録されていません。<a href="/my-company.html" style="color:var(--primary)">自社情報を登録する</a></p>`;
+  }
+
+  // カテゴリフィルタとdatalist更新
+  const cats = [...new Set(allTemplates.map(t => t.category).filter(Boolean))];
+  const sel  = document.getElementById('cat-filter');
+  sel.innerHTML = '<option value="">すべてのカテゴリ</option>' + cats.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('cat-list').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+
+  renderTable();
+}
+
+function renderTable() {
+  const q   = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  const list = allTemplates.filter(t =>
+    (!q || t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q) || (t.category||'').toLowerCase().includes(q)) &&
+    (!cat || t.category === cat)
+  );
+
+  const tbody = document.getElementById('table-body');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-muted">${q || cat ? '条件に合う定型文がありません' : '定型文がまだ登録されていません'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(t => `
+    <tr>
+      <td><strong>${t.title}</strong></td>
+      <td style="max-width:300px">
+        <div style="white-space:pre-wrap;font-size:13px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${t.content}</div>
+      </td>
+      <td><span class="badge badge-blue">${t.category || '一般'}</span></td>
+      <td class="text-muted" style="text-align:center">${t.sort_order}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-xs" onclick="openEdit(${t.id})">編集</button>
+          <button class="btn btn-danger btn-xs" onclick="del(${t.id},'${t.title.replace(/'/g,"\\'")}')">削除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal() {
+  editingId = null;
+  document.getElementById('f-title').value      = '';
+  document.getElementById('f-content').value    = '';
+  document.getElementById('f-category').value   = '';
+  document.getElementById('f-sort_order').value = '0';
+  document.getElementById('modal-title').textContent = '定型文を追加';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const t = allTemplates.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('f-title').value      = t.title;
+  document.getElementById('f-content').value    = t.content;
+  document.getElementById('f-category').value   = t.category || '';
+  document.getElementById('f-sort_order').value = t.sort_order || 0;
+  document.getElementById('modal-title').textContent = '定型文を編集';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function save() {
+  const body = {
+    title:      document.getElementById('f-title').value.trim(),
+    content:    document.getElementById('f-content').value.trim(),
+    category:   document.getElementById('f-category').value.trim() || '一般',
+    sort_order: parseInt(document.getElementById('f-sort_order').value) || 0,
+  };
+  if (!body.title)   { alert('タイトルを入力してください'); return; }
+  if (!body.content) { alert('内容を入力してください'); return; }
+
+  const url    = editingId ? `/api/templates/${editingId}` : '/api/templates';
+  const method = editingId ? 'PUT' : 'POST';
+  const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (res.ok) {
+    closeModal();
+    showAlert('保存しました', 'success');
+    loadData();
+  } else {
+    showAlert('保存に失敗しました', 'error');
+  }
+}
+
+async function del(id, title) {
+  if (!confirm(`「${title}」を削除しますか？`)) return;
+  await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+  showAlert('削除しました', 'success');
+  loadData();
+}
+
+function showAlert(msg, type) {
+  const area = document.getElementById('alert-area');
+  area.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => area.innerHTML = '', 3000);
+}
+
+loadData();
+</script>
+</body>
+</html>
