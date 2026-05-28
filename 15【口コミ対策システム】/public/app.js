@@ -317,7 +317,7 @@ function updateCurrentLocation(lat, lon, name, deviceGps) {
       isConnected = true;
       setStatusBadge('connected', data.deviceId);
       if (data.lat && data.lon) {
-        updateCurrentLocation(data.lat, data.lon, data.locationName || '適用中');
+        updateCurrentLocation(data.lat, data.lon, data.locationName || '適用中', true);
         setPin(data.lat, data.lon, data.locationName || '適用中');
         map.setView([data.lat, data.lon], 13);
       }
