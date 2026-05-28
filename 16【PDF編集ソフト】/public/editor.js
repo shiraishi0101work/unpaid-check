@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFabricCanvas();
   loadLibraryImages();
   loadCompanyInfo();
+  loadTemplates();
   loadClients();
 });
 
