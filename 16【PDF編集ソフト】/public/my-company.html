@@ -116,7 +116,7 @@ async function load() {
 document.getElementById('company-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const body = {};
-  ['company_name','postal_code','address','phone','fax','email','representative','bank_info','notes'].forEach(k => {
+  ['company_name','postal_code','address','branch_address','phone','fax','email','representative','bank_info','notes'].forEach(k => {
     body[k] = document.getElementById(k).value;
   });
   const res = await fetch('/api/my-company', {
