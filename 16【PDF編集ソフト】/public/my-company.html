@@ -103,7 +103,7 @@
 async function load() {
   const res = await fetch('/api/my-company');
   const d   = await res.json();
-  ['company_name','postal_code','address','phone','fax','email','representative','bank_info','notes'].forEach(k => {
+  ['company_name','postal_code','address','branch_address','phone','fax','email','representative','bank_info','notes'].forEach(k => {
     const el = document.getElementById(k);
     if (el) el.value = d[k] || '';
   });
