@@ -186,7 +186,7 @@ function renderTable() {
         <div style="white-space:pre-wrap;font-size:13px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${t.content}</div>
       </td>
       <td><span class="badge badge-blue">${t.category || '一般'}</span></td>
-      <td class="text-muted" style="text-align:center">${t.sort_order}</td>
+      <td class="text-muted">${t.yomigana || '—'}</td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-xs" onclick="openEdit(${t.id})">編集</button>
