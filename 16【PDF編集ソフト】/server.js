@@ -213,6 +213,60 @@ app.delete('/api/clients/:id', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════
+//  TEMPLATES (定型文)
+// ════════════════════════════════════════════════════════
+
+// 定型文一覧（自社情報も含めて返す）
+app.get('/api/templates', (req, res) => {
+  const db = getDB();
+  const templates = db.prepare('SELECT * FROM templates ORDER BY sort_order, created_at').all();
+
+  // 自社情報を定型文として追加
+  const company = db.prepare('SELECT * FROM my_company WHERE id = 1').get() || {};
+  const companyItems = [
+    { key: 'company_name',   label: '会社名' },
+    { key: 'address',        label: '住所' },
+    { key: 'phone',          label: '電話番号' },
+    { key: 'fax',            label: 'FAX' },
+    { key: 'email',          label: 'メール' },
+    { key: 'representative', label: '代表者名' },
+    { key: 'postal_code',    label: '郵便番号' },
+    { key: 'bank_info',      label: '銀行口座' },
+  ].filter(i => company[i.key]).map((i, idx) => ({
+    id: `company_${i.key}`,
+    title: i.label,
+    content: company[i.key],
+    category: '自社情報',
+    is_company: true,
+    sort_order: idx,
+  }));
+
+  res.json({ templates, company_items: companyItems });
+});
+
+app.post('/api/templates', (req, res) => {
+  const { title, content, category, sort_order } = req.body;
+  if (!title || !content) return res.status(400).json({ error: 'タイトルと内容は必須です' });
+  const result = getDB().prepare(
+    `INSERT INTO templates (title, content, category, sort_order) VALUES (?,?,?,?)`
+  ).run(title, content, category || '一般', sort_order || 0);
+  res.json({ id: result.lastInsertRowid });
+});
+
+app.put('/api/templates/:id', (req, res) => {
+  const { title, content, category, sort_order } = req.body;
+  getDB().prepare(
+    `UPDATE templates SET title=?, content=?, category=?, sort_order=?, updated_at=datetime('now','localtime') WHERE id=?`
+  ).run(title, content, category || '一般', sort_order || 0, req.params.id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/templates/:id', (req, res) => {
+  getDB().prepare('DELETE FROM templates WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════
 //  DOCUMENTS (ARCHIVE)
 // ════════════════════════════════════════════════════════
 
