@@ -57,22 +57,23 @@ let state = {
 // ---- デバイス全体のモック位置情報をセット ----
 async function setDeviceLocation(deviceId, lat, lon) {
   const ts = Date.now();
-  const errors = [];
 
-  // appops許可（失敗しても続行）
+  // appops許可（2パターン試す）
   try {
-    await execAsync(`${ADB} -s ${deviceId} shell appops set android.uid.shell android:mock_location allow`);
-  } catch (e) {
-    errors.push('appops: ' + e.stderr || e.message);
+    await execAsync(`${ADB} -s ${deviceId} shell appops set --uid shell android:mock_location allow`);
+  } catch {
+    try {
+      await execAsync(`${ADB} -s ${deviceId} shell appops set android.uid.shell android:mock_location allow`);
+    } catch {}
   }
 
   // テストプロバイダ有効化
-  const { stderr: err1 } = await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-enabled gps true`).catch(e => { throw new Error('provider-enable: ' + (e.stderr || e.message)); });
-  if (err1 && err1.trim()) throw new Error('provider-enable stderr: ' + err1.trim());
+  const r1 = await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-enabled gps true`).catch(e => { throw new Error((e.stderr || e.stdout || e.message).trim()); });
+  if (r1.stderr && r1.stderr.trim()) throw new Error(r1.stderr.trim());
 
   // 座標セット
-  const { stderr: err2 } = await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-location gps ${lat} ${lon} 0 1 0 0 ${ts}`).catch(e => { throw new Error('set-location: ' + (e.stderr || e.message)); });
-  if (err2 && err2.trim()) throw new Error('set-location stderr: ' + err2.trim());
+  const r2 = await execAsync(`${ADB} -s ${deviceId} shell cmd location set-test-provider-location gps ${lat} ${lon} 0 1 0 0 ${ts}`).catch(e => { throw new Error((e.stderr || e.stdout || e.message).trim()); });
+  if (r2.stderr && r2.stderr.trim()) throw new Error(r2.stderr.trim());
 }
 
 // ---- デバイスのモック位置情報をリセット ----
