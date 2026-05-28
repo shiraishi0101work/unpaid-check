@@ -58,13 +58,14 @@ let state = {
 async function setDeviceLocation(deviceId, lat, lon) {
   const ts = Date.now();
 
-  // appops許可（2パターン試す）
-  try {
-    await execAsync(`${ADB} -s ${deviceId} shell appops set --uid shell android:mock_location allow`);
-  } catch {
-    try {
-      await execAsync(`${ADB} -s ${deviceId} shell appops set android.uid.shell android:mock_location allow`);
-    } catch {}
+  // appops許可（3パターン順に試す）
+  const appopsPatterns = [
+    `${ADB} -s ${deviceId} shell appops set --uid 2000 android:mock_location allow`,
+    `${ADB} -s ${deviceId} shell appops set --uid shell android:mock_location allow`,
+    `${ADB} -s ${deviceId} shell appops set android.uid.shell android:mock_location allow`,
+  ];
+  for (const cmd of appopsPatterns) {
+    try { await execAsync(cmd); break; } catch {}
   }
 
   // テストプロバイダ有効化
