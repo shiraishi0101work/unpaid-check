@@ -189,8 +189,9 @@ btnApply.addEventListener('click', async () => {
     const data = await r.json();
 
     if (data.success) {
-      showToast(`✓ 位置情報を適用しました（${data.tabCount}タブ）`, 'success');
-      updateCurrentLocation(selectedLat, selectedLon, selectedName);
+      const scope = data.deviceGps ? 'Chrome＋デバイス両方に適用' : 'Chrome のみ適用（デバイスGPS未対応）';
+      showToast(`✓ 位置情報を適用しました（${scope}）`, 'success');
+      updateCurrentLocation(selectedLat, selectedLon, selectedName, data.deviceGps);
     } else {
       showToast(data.error, 'error');
     }
