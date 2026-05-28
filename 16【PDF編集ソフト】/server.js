@@ -219,46 +219,46 @@ app.delete('/api/clients/:id', (req, res) => {
 // 定型文一覧（自社情報も含めて返す）
 app.get('/api/templates', (req, res) => {
   const db = getDB();
-  const templates = db.prepare('SELECT * FROM templates ORDER BY sort_order, created_at').all();
+  const templates = db.prepare('SELECT * FROM templates ORDER BY yomigana, title, created_at').all();
 
-  // 自社情報を定型文として追加
+  // 自社情報を定型文として追加（よみがなも付与）
   const company = db.prepare('SELECT * FROM my_company WHERE id = 1').get() || {};
   const companyItems = [
-    { key: 'company_name',   label: '会社名' },
-    { key: 'address',        label: '住所（本社）' },
-    { key: 'branch_address', label: '住所（支店）' },
-    { key: 'phone',          label: '電話番号' },
-    { key: 'fax',            label: 'FAX' },
-    { key: 'email',          label: 'メール' },
-    { key: 'representative', label: '代表者名' },
-    { key: 'postal_code',    label: '郵便番号' },
-    { key: 'bank_info',      label: '銀行口座' },
-  ].filter(i => company[i.key]).map((i, idx) => ({
+    { key: 'company_name',   label: '会社名',       yomigana: 'かいしゃめい' },
+    { key: 'address',        label: '住所（本社）',  yomigana: 'じゅうしょほんしゃ' },
+    { key: 'branch_address', label: '住所（支店）',  yomigana: 'じゅうしょしてん' },
+    { key: 'phone',          label: '電話番号',      yomigana: 'でんわばんごう' },
+    { key: 'fax',            label: 'FAX',           yomigana: 'ふぁっくす' },
+    { key: 'email',          label: 'メール',        yomigana: 'めーる' },
+    { key: 'representative', label: '代表者名',      yomigana: 'だいひょうしゃめい' },
+    { key: 'postal_code',    label: '郵便番号',      yomigana: 'ゆうびんばんごう' },
+    { key: 'bank_info',      label: '銀行口座',      yomigana: 'ぎんこうこうざ' },
+  ].filter(i => company[i.key]).map(i => ({
     id: `company_${i.key}`,
     title: i.label,
     content: company[i.key],
     category: '自社情報',
+    yomigana: i.yomigana,
     is_company: true,
-    sort_order: idx,
   }));
 
   res.json({ templates, company_items: companyItems });
 });
 
 app.post('/api/templates', (req, res) => {
-  const { title, content, category, sort_order } = req.body;
+  const { title, content, category, yomigana } = req.body;
   if (!title || !content) return res.status(400).json({ error: 'タイトルと内容は必須です' });
   const result = getDB().prepare(
-    `INSERT INTO templates (title, content, category, sort_order) VALUES (?,?,?,?)`
-  ).run(title, content, category || '一般', sort_order || 0);
+    `INSERT INTO templates (title, content, category, yomigana) VALUES (?,?,?,?)`
+  ).run(title, content, category || '一般', yomigana || '');
   res.json({ id: result.lastInsertRowid });
 });
 
 app.put('/api/templates/:id', (req, res) => {
-  const { title, content, category, sort_order } = req.body;
+  const { title, content, category, yomigana } = req.body;
   getDB().prepare(
-    `UPDATE templates SET title=?, content=?, category=?, sort_order=?, updated_at=datetime('now','localtime') WHERE id=?`
-  ).run(title, content, category || '一般', sort_order || 0, req.params.id);
+    `UPDATE templates SET title=?, content=?, category=?, yomigana=?, updated_at=datetime('now','localtime') WHERE id=?`
+  ).run(title, content, category || '一般', yomigana || '', req.params.id);
   res.json({ ok: true });
 });
 
