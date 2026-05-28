@@ -299,10 +299,12 @@ app.get('/api/search', async (req, res) => {
 
 // ---- 切断 ----
 app.post('/api/disconnect', async (req, res) => {
+  stopKeepAlive();
   if (state.deviceId) {
+    await resetDeviceLocation(state.deviceId);
     try { await execAsync(`${ADB} -s ${state.deviceId} forward --remove tcp:9222`); } catch {}
   }
-  state = { connected: false, deviceId: null, socket: null, lat: null, lon: null, locationName: null };
+  state = { connected: false, deviceId: null, socket: null, lat: null, lon: null, locationName: null, keepAliveTimer: null };
   res.json({ success: true });
 });
 
