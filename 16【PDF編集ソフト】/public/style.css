@@ -260,7 +260,7 @@ body.editor-page {
 
 /* ── Editor layout ── */
 .editor-layout {
-  display: none; flex-direction: column; height: 100vh; overflow: hidden;
+  display: none; flex-direction: column; flex: 1; overflow: hidden;
 }
 .editor-layout.visible { display: flex; }
 
