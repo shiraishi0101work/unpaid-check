@@ -327,6 +327,29 @@ app.post('/api/disconnect', async (req, res) => {
 // ---- ステータス ----
 app.get('/api/status', (req, res) => res.json(state));
 
+// ---- デバイス診断 ----
+app.get('/api/diagnose', async (req, res) => {
+  if (!state.connected || !state.deviceId) return res.json({ error: '先にデバイスに接続してください' });
+  const id = state.deviceId;
+  const results = {};
+
+  const run = async (key, cmd) => {
+    try {
+      const r = await execAsync(cmd);
+      results[key] = { stdout: r.stdout.trim(), stderr: r.stderr.trim(), ok: true };
+    } catch (e) {
+      results[key] = { stdout: (e.stdout||'').trim(), stderr: (e.stderr||'').trim(), error: e.message, ok: false };
+    }
+  };
+
+  await run('android_version',   `${ADB} -s ${id} shell getprop ro.build.version.release`);
+  await run('appops_uid_shell',  `${ADB} -s ${id} shell appops set --uid shell android:mock_location allow`);
+  await run('provider_enable',   `${ADB} -s ${id} shell cmd location set-test-provider-enabled gps true`);
+  await run('set_location',      `${ADB} -s ${id} shell cmd location set-test-provider-location gps 35.6812 139.7671 0 1 0 0 ${Date.now()}`);
+
+  res.json(results);
+});
+
 // ---- 設定値 ----
 app.get('/api/config', (req, res) => res.json({
   port: PORT,
