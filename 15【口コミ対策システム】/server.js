@@ -180,7 +180,12 @@ app.post('/api/set-location', async (req, res) => {
   }
 
   try {
-    // HTTP でタブ一覧取得（WebSocket不使用）
+    // ADB フォワードを念のため再確認
+    try {
+      await execAsync(`${ADB} -s ${state.deviceId} forward tcp:9222 localabstract:${state.socket}`);
+    } catch {}
+
+    // タブ一覧取得
     const targets = await CDP.List({ port: 9222 });
     const pages = targets.filter(t => t.type === 'page' && t.webSocketDebuggerUrl);
 
@@ -188,12 +193,20 @@ app.post('/api/set-location', async (req, res) => {
       return res.json({ error: 'Chrome のタブが見つかりません。Chrome で何かページを開いてください。' });
     }
 
-    // 最初の1タブにだけ送る（最小負荷）
-    const wsUrl = pages[0].webSocketDebuggerUrl.replace('ws://localhost', 'ws://127.0.0.1');
-    console.log('Connecting to:', wsUrl);
+    // 全タブに送る（どのタブで Maps を開いていても確実に反映）
+    let successCount = 0;
+    for (const page of pages) {
+      try {
+        const wsUrl = page.webSocketDebuggerUrl.replace('ws://localhost', 'ws://127.0.0.1');
+        await sendCDPCommand(wsUrl, 'Emulation.setGeolocationOverride',
+          { latitude, longitude, accuracy: 10 });
+        successCount++;
+      } catch {}
+    }
 
-    await sendCDPCommand(wsUrl, 'Emulation.setGeolocationOverride',
-      { latitude, longitude, accuracy: 10 });
+    if (successCount === 0) {
+      return res.json({ error: 'Chrome への位置情報送信に失敗しました。再接続してください。' });
+    }
 
     state.lat = latitude;
     state.lon = longitude;
@@ -211,7 +224,7 @@ app.post('/api/set-location', async (req, res) => {
       console.warn('デバイスGPS設定失敗（Chromeのみ適用）:', err.message);
     }
 
-    res.json({ success: true, lat: latitude, lon: longitude, tabCount: 1, deviceGps: deviceSuccess, deviceError });
+    res.json({ success: true, lat: latitude, lon: longitude, tabCount: successCount, deviceGps: deviceSuccess, deviceError });
   } catch (err) {
     res.json({ error: `位置情報の設定に失敗しました: ${err.message}` });
   }
