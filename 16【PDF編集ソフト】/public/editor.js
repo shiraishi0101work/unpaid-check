@@ -140,12 +140,15 @@ function initFabricCanvas() {
   fabricCanvas.on('object:moving',      updateFloatingControls);
   fabricCanvas.on('object:scaling',     updateFloatingControls);
 
-  // テキスト配置モード: キャンバスクリックで配置
+  // 配置モード: キャンバスクリックで配置
   fabricCanvas.on('mouse:down', (opt) => {
+    const pointer = fabricCanvas.getPointer(opt.e);
     if (textPlacementMode) {
-      const pointer = fabricCanvas.getPointer(opt.e);
       placeTextAt(pointer.x, pointer.y);
       cancelTextPlacement();
+    } else if (imagePlacementMode) {
+      placeImageAt(pointer.x, pointer.y, pendingImageSrc);
+      cancelImagePlacement();
     }
   });
 
