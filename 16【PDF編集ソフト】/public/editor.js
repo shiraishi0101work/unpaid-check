@@ -15,12 +15,14 @@ let pageStates   = {};   // { "1": fabricJSON, ... }
 let sourcePdfFile = '';  // server filename
 let srcOrigName   = '';
 let myCompany     = {};
-let allTemplates  = [];   // { id, title, content, category }
+let allTemplates  = [];
 let selectedTool  = 'select';
 let textColor     = '#000000';
 let shapeColor    = '#000000';
 let pendingExportBlob = null;
 let pendingExportFilename = '';
+let textPlacementMode = false;  // テキスト配置モード
+let autosaveTimer = null;
 
 // ── Init ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,6 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCompanyInfo();
   loadTemplates();
   loadClients();
+  checkForDraft();
+
+  // Escキーでテキスト配置モードキャンセル
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && textPlacementMode) {
+      cancelTextPlacement();
+    }
+  });
 });
 
 // ── Upload zone ───────────────────────────────────
@@ -64,7 +74,6 @@ async function handleFile(file) {
     srcOrigName   = data.original_name;
     document.getElementById('doc-title').value = file.name.replace(/\.pdf$/i, '');
 
-    // Load with PDF.js
     const arrayBuffer = await file.arrayBuffer();
     pdfDoc      = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     totalPages  = pdfDoc.numPages;
@@ -87,10 +96,29 @@ function initFabricCanvas() {
     preserveObjectStacking: true,
     selection: true,
   });
-  fabricCanvas.on('selection:created',  updatePropsPanel);
-  fabricCanvas.on('selection:updated',  updatePropsPanel);
-  fabricCanvas.on('selection:cleared',  clearPropsPanel);
-  fabricCanvas.on('object:modified',    () => saveCurrentState());
+
+  fabricCanvas.on('selection:created',  () => { updatePropsPanel(); updateFloatingControls(); });
+  fabricCanvas.on('selection:updated',  () => { updatePropsPanel(); updateFloatingControls(); });
+  fabricCanvas.on('selection:cleared',  () => { clearPropsPanel(); hideFloatingControls(); });
+  fabricCanvas.on('object:modified',    () => { saveCurrentState(); updateFloatingControls(); });
+  fabricCanvas.on('object:moving',      updateFloatingControls);
+  fabricCanvas.on('object:scaling',     updateFloatingControls);
+
+  // テキスト配置モード: キャンバスクリックで配置
+  fabricCanvas.on('mouse:down', (opt) => {
+    if (textPlacementMode) {
+      const pointer = fabricCanvas.getPointer(opt.e);
+      placeTextAt(pointer.x, pointer.y);
+      cancelTextPlacement();
+    }
+  });
+
+  // テキスト編集終了: editable を false に戻す
+  fabricCanvas.on('text:editing:exited', (opt) => {
+    opt.target.set('editable', false);
+    saveCurrentState();
+    updateFloatingControls();
+  });
 }
 
 // ── Render a PDF page ─────────────────────────────
@@ -102,20 +130,17 @@ async function renderPage(pageNum) {
     const W = Math.round(viewport.width);
     const H = Math.round(viewport.height);
 
-    // Resize Fabric canvas
     fabricCanvas.setWidth(W);
     fabricCanvas.setHeight(H);
     document.getElementById('canvas-wrapper').style.width  = W + 'px';
     document.getElementById('canvas-wrapper').style.height = H + 'px';
 
-    // Render PDF page to temp canvas
     const tmp = document.createElement('canvas');
     tmp.width  = W;
     tmp.height = H;
     await page.render({ canvasContext: tmp.getContext('2d'), viewport }).promise;
     const bgDataUrl = tmp.toDataURL('image/png');
 
-    // Set as Fabric background
     await new Promise((resolve) => {
       fabricCanvas.setBackgroundImage(bgDataUrl, () => {
         fabricCanvas.renderAll();
@@ -123,21 +148,25 @@ async function renderPage(pageNum) {
       }, { scaleX: 1, scaleY: 1, originX: 'left', originY: 'top' });
     });
 
-    // Restore saved objects for this page
     if (pageStates[pageNum] && pageStates[pageNum].objects && pageStates[pageNum].objects.length > 0) {
       await new Promise((resolve) => {
         fabricCanvas.loadFromJSON(pageStates[pageNum], () => {
-          // Re-apply background (loadFromJSON may overwrite it)
           fabricCanvas.setBackgroundImage(bgDataUrl, () => {
             fabricCanvas.renderAll();
             resolve();
           }, { scaleX: 1, scaleY: 1, originX: 'left', originY: 'top' });
         });
       });
+      // ロード後にeditable=falseを確保
+      fabricCanvas.getObjects().forEach(o => {
+        if (o.type === 'i-text') o.set('editable', false);
+      });
+      fabricCanvas.renderAll();
     } else {
       fabricCanvas.getObjects().slice().forEach(o => fabricCanvas.remove(o));
       fabricCanvas.renderAll();
     }
+    hideFloatingControls();
   } finally {
     hideLoading();
   }
@@ -147,8 +176,9 @@ async function renderPage(pageNum) {
 function saveCurrentState() {
   if (!fabricCanvas) return;
   const json = fabricCanvas.toJSON();
-  delete json.backgroundImage; // don't store background (it's re-generated per page)
+  delete json.backgroundImage;
   pageStates[currentPage] = json;
+  scheduleDraftSave();
 }
 
 // ── Page navigation ───────────────────────────────
@@ -194,7 +224,7 @@ function setTool(tool) {
   document.getElementById('tool-' + tool)?.classList.add('active');
 }
 
-// ── ADD IMAGE (direct from device) ───────────────
+// ── ADD IMAGE ────────────────────────────────────
 function addImageDirect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -204,7 +234,6 @@ function addImageDirect(event) {
   event.target.value = '';
 }
 
-// Add from library
 function addImageFromLibrary(fileName) {
   placeImage(`/api/images/file/${fileName}`);
 }
@@ -224,23 +253,55 @@ function placeImage(src) {
 }
 
 // ── ADD TEXT ──────────────────────────────────────
+// 「テキストを追加」ボタン押下 → 配置モードへ
 function addText(content) {
-  const text     = content || document.getElementById('text-input').value || 'テキスト';
-  const size     = parseInt(document.getElementById('text-size')?.value || 16);
-  const bold     = document.getElementById('text-bold')?.checked;
-  const color    = textColor;
+  // 定型文・自社情報から呼ばれた場合はすぐ配置モードへ
+  if (content) {
+    document.getElementById('text-input').value = content;
+    switchTab('text');
+  }
+  if (!fabricCanvas) return;
+  if (!sourcePdfFile && !pdfDoc) {
+    alert('先にPDFを開いてください');
+    return;
+  }
+
+  // 配置モード開始
+  textPlacementMode = true;
+  fabricCanvas.defaultCursor = 'crosshair';
+  fabricCanvas.hoverCursor   = 'crosshair';
+  const hint = document.getElementById('placement-hint');
+  if (hint) hint.style.display = 'block';
+}
+
+// 配置モードキャンセル
+function cancelTextPlacement() {
+  textPlacementMode = false;
+  fabricCanvas.defaultCursor = 'default';
+  fabricCanvas.hoverCursor   = 'move';
+  const hint = document.getElementById('placement-hint');
+  if (hint) hint.style.display = 'none';
+}
+
+// 指定座標にテキストを配置
+function placeTextAt(x, y) {
+  const text  = document.getElementById('text-input').value || 'テキスト';
+  const size  = parseInt(document.getElementById('text-size')?.value || 16);
+  const bold  = document.getElementById('text-bold')?.checked;
+  const color = textColor;
 
   const obj = new fabric.IText(text, {
-    left: 50, top: 50,
+    left: x,
+    top:  y,
     fontFamily: '"Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif',
-    fontSize: size,
+    fontSize:   size,
     fontWeight: bold ? 'bold' : 'normal',
-    fill: color,
-    editable: true,
+    fill:       color,
+    editable:   false,   // 鉛筆ボタンを押すまで編集不可
   });
+
   fabricCanvas.add(obj);
   fabricCanvas.setActiveObject(obj);
-  obj.enterEditing();
   fabricCanvas.renderAll();
   saveCurrentState();
 }
@@ -255,6 +316,18 @@ function selectShapeColor(el) {
   document.querySelectorAll('#shape-color-swatches .color-swatch').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   shapeColor = el.dataset.color;
+}
+
+// ── テキスト編集モード（鉛筆ボタン）────────────────
+function enterTextEdit() {
+  const obj = fabricCanvas.getActiveObject();
+  if (!obj || obj.type !== 'i-text') return;
+  obj.set('editable', true);
+  fabricCanvas.setActiveObject(obj);
+  obj.enterEditing();
+  obj.selectAll();
+  fabricCanvas.renderAll();
+  hideFloatingControls();
 }
 
 // ── ADD SHAPES ────────────────────────────────────
@@ -279,6 +352,39 @@ function addLine() {
   saveCurrentState();
 }
 
+// ── Floating controls (鉛筆 + 削除ボタン) ─────────
+function updateFloatingControls() {
+  const obj = fabricCanvas.getActiveObject();
+  const ctrl = document.getElementById('object-controls');
+  if (!ctrl) return;
+
+  if (!obj || fabricCanvas.getActiveObjects().length > 1) {
+    hideFloatingControls();
+    return;
+  }
+
+  const bound = obj.getBoundingRect(true);
+  const canvasEl = document.getElementById('pdf-canvas');
+  // Fabricのlower-canvas座標系がcanvas-wrapperの左上を基準にしている
+  const x = bound.left + bound.width / 2;
+  const y = Math.max(0, bound.top - 8);
+
+  ctrl.style.display = 'flex';
+  ctrl.style.left    = x + 'px';
+  ctrl.style.top     = y + 'px';
+
+  // テキスト以外は鉛筆ボタンを非表示
+  const pencilBtn = document.getElementById('ctrl-pencil');
+  if (pencilBtn) {
+    pencilBtn.style.display = (obj.type === 'i-text') ? 'flex' : 'none';
+  }
+}
+
+function hideFloatingControls() {
+  const ctrl = document.getElementById('object-controls');
+  if (ctrl) ctrl.style.display = 'none';
+}
+
 // ── Properties panel ──────────────────────────────
 function updatePropsPanel() {
   const obj = fabricCanvas.getActiveObject();
@@ -294,11 +400,24 @@ function updatePropsPanel() {
   const op = Math.round((obj.opacity || 1) * 100);
   document.getElementById('prop-opacity').value = op;
   document.getElementById('prop-opacity-val').textContent = op + '%';
+
+  // テキストの場合: フォントサイズ欄を表示
+  const fsRow = document.getElementById('prop-fontsize-row');
+  if (fsRow) {
+    if (obj.type === 'i-text' || obj.type === 'text') {
+      fsRow.style.display = 'flex';
+      document.getElementById('prop-fontsize').value = Math.round(obj.fontSize || 16);
+    } else {
+      fsRow.style.display = 'none';
+    }
+  }
 }
 
 function clearPropsPanel() {
   document.getElementById('no-selection').style.display = 'block';
   document.getElementById('object-props').style.display = 'none';
+  const fsRow = document.getElementById('prop-fontsize-row');
+  if (fsRow) fsRow.style.display = 'none';
 }
 
 function updateObjProp(prop, val) {
@@ -308,6 +427,16 @@ function updateObjProp(prop, val) {
   obj.setCoords();
   fabricCanvas.renderAll();
   saveCurrentState();
+}
+
+function updateTextFontSize(val) {
+  const obj = fabricCanvas.getActiveObject();
+  if (!obj || (obj.type !== 'i-text' && obj.type !== 'text')) return;
+  obj.set('fontSize', parseInt(val));
+  obj.setCoords();
+  fabricCanvas.renderAll();
+  saveCurrentState();
+  updateFloatingControls();
 }
 
 function getActiveObjOrigW() {
@@ -331,6 +460,99 @@ function deleteSelected() {
   fabricCanvas.renderAll();
   saveCurrentState();
   clearPropsPanel();
+  hideFloatingControls();
+}
+
+// ── Auto-save draft (localStorage) ───────────────
+function scheduleDraftSave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(saveDraft, 2000);
+}
+
+function saveDraft() {
+  if (!sourcePdfFile) return;
+  try {
+    const draft = {
+      sourcePdfFile,
+      srcOrigName,
+      pageStates,
+      currentPage,
+      totalPages,
+      title: document.getElementById('doc-title')?.value || '',
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('pdf_editor_draft', JSON.stringify(draft));
+    showDraftIndicator();
+  } catch (e) {
+    console.warn('Draft save failed:', e);
+  }
+}
+
+function showDraftIndicator() {
+  const el = document.getElementById('draft-indicator');
+  if (!el) return;
+  el.textContent = '自動保存済み ' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+function checkForDraft() {
+  try {
+    const raw = localStorage.getItem('pdf_editor_draft');
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft.sourcePdfFile) return;
+
+    const banner = document.getElementById('draft-banner');
+    const timeEl = document.getElementById('draft-time');
+    if (!banner) return;
+
+    const savedAt = new Date(draft.savedAt);
+    const now = new Date();
+    const diffH = (now - savedAt) / 3600000;
+    if (diffH > 48) { localStorage.removeItem('pdf_editor_draft'); return; } // 48時間超は破棄
+
+    if (timeEl) timeEl.textContent = savedAt.toLocaleString('ja-JP');
+    banner.style.display = 'flex';
+  } catch {}
+}
+
+async function restoreDraft() {
+  try {
+    const raw = localStorage.getItem('pdf_editor_draft');
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+
+    document.getElementById('draft-banner').style.display = 'none';
+    showLoading('前回のデータを復元中...');
+
+    // PDFをサーバーから取得
+    const res = await fetch(`/api/editor/file/${draft.sourcePdfFile}`);
+    if (!res.ok) throw new Error('PDFファイルが見つかりません（サーバー上のファイルが削除された可能性があります）');
+
+    const arrayBuffer = await res.arrayBuffer();
+    pdfDoc        = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    sourcePdfFile = draft.sourcePdfFile;
+    srcOrigName   = draft.srcOrigName || '';
+    pageStates    = draft.pageStates || {};
+    totalPages    = draft.totalPages || pdfDoc.numPages;
+    currentPage   = draft.currentPage || 1;
+
+    if (draft.title) document.getElementById('doc-title').value = draft.title;
+
+    updatePageNav();
+    await renderPage(currentPage);
+    showEditor();
+  } catch (err) {
+    alert('復元エラー: ' + err.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+function discardDraft() {
+  localStorage.removeItem('pdf_editor_draft');
+  document.getElementById('draft-banner').style.display = 'none';
 }
 
 // ── Export ────────────────────────────────────────
@@ -345,7 +567,6 @@ async function buildExportPayload() {
       continue;
     }
 
-    // Render objects to a transparent canvas (no background)
     const page     = await pdfDoc.getPage(pn);
     const viewport = page.getViewport({ scale: renderScale });
     const W = Math.round(viewport.width);
@@ -418,7 +639,6 @@ async function saveToArchive() {
   showLoading('保存中...');
   closeArchiveModal();
   try {
-    // Export PDF to get output filename
     const pages = await buildExportPayload();
     const res = await fetch('/api/editor/export', {
       method: 'POST',
@@ -429,11 +649,8 @@ async function saveToArchive() {
 
     const outputFilename = res.headers.get('X-Output-Filename') || '';
     const blob = await res.blob();
-
-    // Get thumbnail (first page of current state)
     const thumbnail = await getPageThumbnail(1);
 
-    // Save to DB
     const saveRes = await fetch('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -449,11 +666,13 @@ async function saveToArchive() {
     });
     if (!saveRes.ok) throw new Error('DB保存失敗');
 
-    // Offer download too
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = title + '.pdf'; a.click();
     URL.revokeObjectURL(url);
+
+    // アーカイブ保存後はドラフトを削除
+    localStorage.removeItem('pdf_editor_draft');
 
     alert('✅ アーカイブに保存しました');
   } catch (err) {
@@ -533,7 +752,6 @@ function renderCompanyFields() {
       </button>
     `).join('');
 
-  // Logo button
   if (myCompany.logo_path) {
     fields.innerHTML += `
       <button class="btn btn-outline btn-sm" style="justify-content:center" onclick="placeImage('/api/my-company/logo/${myCompany.logo_path}')">
@@ -547,7 +765,6 @@ async function loadTemplates() {
   try {
     const res  = await fetch('/api/templates');
     const data = await res.json();
-    // Merge: company items first, then registered templates
     allTemplates = [
       ...data.company_items,
       ...data.templates,
@@ -574,7 +791,6 @@ function renderTemplateList() {
     return;
   }
 
-  // カテゴリ別にグループ化
   const groups = {};
   list.forEach(t => {
     const cat = t.category || '一般';
@@ -596,7 +812,6 @@ function renderTemplateList() {
     </div>
   `).join('');
 
-  // hover style
   container.querySelectorAll('.tmpl-item').forEach(el => {
     el.addEventListener('mouseenter', () => { el.style.background = 'var(--primary-light)'; el.style.borderColor = 'var(--primary)'; });
     el.addEventListener('mouseleave', () => { el.style.background = '#f8fafc'; el.style.borderColor = 'var(--border)'; });
@@ -604,11 +819,9 @@ function renderTemplateList() {
 }
 
 function insertTemplate(content) {
-  // テキストパネルの内容をセットしてaddText呼び出し
   const textInput = document.getElementById('text-input');
   if (textInput) textInput.value = content;
   addText(content);
-  // テキストタブに切り替え（視覚的フィードバック）
   switchTab('text');
 }
 
