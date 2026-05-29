@@ -293,8 +293,10 @@ function placeTextAt(x, y) {
   const color = textColor;
 
   const obj = new fabric.IText(text, {
-    left: x,
-    top:  y,
+    left:    x,
+    top:     y,
+    originX: 'center',
+    originY: 'center',
     fontFamily: '"Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif',
     fontSize:   size,
     fontWeight: bold ? 'bold' : 'normal',
