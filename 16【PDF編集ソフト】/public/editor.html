@@ -179,8 +179,24 @@
 
     <!-- Canvas area -->
     <div class="editor-canvas-area" id="canvas-area">
-      <div class="canvas-wrapper" id="canvas-wrapper">
+      <div class="canvas-wrapper" id="canvas-wrapper" style="position:relative">
         <canvas id="pdf-canvas"></canvas>
+
+        <!-- テキスト配置モードのヒント -->
+        <div id="placement-hint" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(37,99,235,0.9);color:white;padding:8px 18px;border-radius:8px;font-size:13px;pointer-events:none;z-index:300;white-space:nowrap">
+          クリックしてテキストを配置　[Esc] でキャンセル
+        </div>
+
+        <!-- フローティング操作ボタン（鉛筆 + 削除） -->
+        <div id="object-controls" style="display:none;position:absolute;transform:translate(-50%,-100%);z-index:200;align-items:center;gap:2px;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:4px 6px;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+          <button id="ctrl-pencil" onclick="enterTextEdit()" title="テキストを編集" style="background:none;border:none;cursor:pointer;padding:5px;display:flex;align-items:center;color:#2563eb;border-radius:5px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='none'">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </button>
+          <div style="width:1px;height:16px;background:#e2e8f0"></div>
+          <button id="ctrl-delete" onclick="deleteSelected()" title="削除" style="background:none;border:none;cursor:pointer;padding:5px;display:flex;align-items:center;color:#dc2626;border-radius:5px" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
