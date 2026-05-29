@@ -111,11 +111,26 @@ async function handleFile(file) {
 
 // ── Fabric canvas ─────────────────────────────────
 function initFabricCanvas() {
+  // Canvaスタイルのデフォルトハンドル設定
+  fabric.Object.prototype.set({
+    borderColor:        '#18a0fb',
+    borderScaleFactor:  2,
+    cornerColor:        '#ffffff',
+    cornerStrokeColor:  '#18a0fb',
+    cornerSize:         10,
+    cornerStyle:        'circle',
+    transparentCorners: false,
+    padding:            4,
+  });
+
   fabricCanvas = new fabric.Canvas('pdf-canvas', {
-    preserveObjectStacking: true,
-    selection: true,
-    hoverCursor: 'grab',
-    moveCursor:  'grabbing',
+    preserveObjectStacking:  true,
+    selection:               true,
+    hoverCursor:             'grab',
+    moveCursor:              'grabbing',
+    selectionColor:          'rgba(24,160,251,0.08)',
+    selectionBorderColor:    '#18a0fb',
+    selectionLineWidth:      1.5,
   });
 
   fabricCanvas.on('selection:created',  () => { updatePropsPanel(); updateFloatingControls(); });
