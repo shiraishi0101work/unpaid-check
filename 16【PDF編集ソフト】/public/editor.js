@@ -95,6 +95,8 @@ function initFabricCanvas() {
   fabricCanvas = new fabric.Canvas('pdf-canvas', {
     preserveObjectStacking: true,
     selection: true,
+    hoverCursor: 'grab',
+    moveCursor:  'grabbing',
   });
 
   fabricCanvas.on('selection:created',  () => { updatePropsPanel(); updateFloatingControls(); });
