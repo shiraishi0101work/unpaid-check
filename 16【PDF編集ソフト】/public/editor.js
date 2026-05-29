@@ -280,7 +280,7 @@ function addText(content) {
 function cancelTextPlacement() {
   textPlacementMode = false;
   fabricCanvas.defaultCursor = 'default';
-  fabricCanvas.hoverCursor   = 'move';
+  fabricCanvas.hoverCursor   = 'grab';
   const hint = document.getElementById('placement-hint');
   if (hint) hint.style.display = 'none';
 }
