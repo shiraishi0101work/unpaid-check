@@ -277,12 +277,40 @@ function addImageFromLibrary(fileName) {
   placeImage(`/api/images/file/${fileName}`);
 }
 
+// 画像配置モードに入る
 function placeImage(src) {
+  if (!fabricCanvas) return;
+  if (!sourcePdfFile && !pdfDoc) { alert('先にPDFを開いてください'); return; }
+  pendingImageSrc    = src;
+  imagePlacementMode = true;
+  fabricCanvas.defaultCursor = 'crosshair';
+  fabricCanvas.hoverCursor   = 'crosshair';
+  showPlacementHint('クリックして画像を配置　[Esc] でキャンセル');
+}
+
+// 画像配置モードキャンセル
+function cancelImagePlacement() {
+  imagePlacementMode = false;
+  pendingImageSrc    = '';
+  fabricCanvas.defaultCursor = 'default';
+  fabricCanvas.hoverCursor   = 'grab';
+  hidePlacementHint();
+}
+
+// 指定座標に画像を配置
+function placeImageAt(x, y, src) {
   fabric.Image.fromURL(src, (img) => {
-    const maxW = fabricCanvas.width  * 0.4;
-    const maxH = fabricCanvas.height * 0.4;
+    const maxW  = fabricCanvas.width  * 0.4;
+    const maxH  = fabricCanvas.height * 0.4;
     const scale = Math.min(1, maxW / img.width, maxH / img.height);
-    img.set({ left: 40, top: 40, scaleX: scale, scaleY: scale });
+    img.set({
+      left:    x,
+      top:     y,
+      originX: 'center',
+      originY: 'center',
+      scaleX:  scale,
+      scaleY:  scale,
+    });
     img.setCoords();
     fabricCanvas.add(img);
     fabricCanvas.setActiveObject(img);
