@@ -36,10 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadClients();
   checkForDraft();
 
-  // Escキーでテキスト配置モードキャンセル
+  // Escキーで配置モードキャンセル
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && textPlacementMode) {
-      cancelTextPlacement();
+    if (e.key === 'Escape') {
+      if (textPlacementMode)  cancelTextPlacement();
+      if (imagePlacementMode) cancelImagePlacement();
     }
   });
 
