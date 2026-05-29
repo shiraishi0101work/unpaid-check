@@ -21,7 +21,9 @@ let textColor     = '#000000';
 let shapeColor    = '#000000';
 let pendingExportBlob = null;
 let pendingExportFilename = '';
-let textPlacementMode = false;  // テキスト配置モード
+let textPlacementMode  = false;  // テキスト配置モード
+let imagePlacementMode = false;  // 画像配置モード
+let pendingImageSrc    = '';     // 配置待ち画像URL
 let autosaveTimer = null;
 
 // ── Init ──────────────────────────────────────────
