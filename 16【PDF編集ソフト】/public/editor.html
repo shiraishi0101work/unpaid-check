@@ -209,6 +209,10 @@
       <div id="object-props" style="display:none">
         <div class="prop-section">
           <h4>位置・サイズ</h4>
+          <div class="prop-row" id="prop-fontsize-row" style="display:none">
+            <label>文字サイズ</label>
+            <input type="number" id="prop-fontsize" min="6" max="200" onchange="updateTextFontSize(this.value)">
+          </div>
           <div class="prop-row">
             <label>X</label>
             <input type="number" id="prop-x" onchange="updateObjProp('left', this.value)">
