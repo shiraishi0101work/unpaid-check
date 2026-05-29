@@ -337,15 +337,25 @@ function addText(content) {
   textPlacementMode = true;
   fabricCanvas.defaultCursor = 'crosshair';
   fabricCanvas.hoverCursor   = 'crosshair';
-  const hint = document.getElementById('placement-hint');
-  if (hint) hint.style.display = 'block';
+  showPlacementHint('クリックしてテキストを配置　[Esc] でキャンセル');
 }
 
-// 配置モードキャンセル
+// テキスト配置モードキャンセル
 function cancelTextPlacement() {
   textPlacementMode = false;
   fabricCanvas.defaultCursor = 'default';
   fabricCanvas.hoverCursor   = 'grab';
+  hidePlacementHint();
+}
+
+// ── 配置ヒント共通 ────────────────────────────────
+function showPlacementHint(msg) {
+  const hint = document.getElementById('placement-hint');
+  if (!hint) return;
+  hint.textContent  = msg;
+  hint.style.display = 'block';
+}
+function hidePlacementHint() {
   const hint = document.getElementById('placement-hint');
   if (hint) hint.style.display = 'none';
 }
