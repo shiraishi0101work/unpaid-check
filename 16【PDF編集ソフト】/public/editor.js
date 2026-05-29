@@ -40,6 +40,22 @@ document.addEventListener('DOMContentLoaded', () => {
       cancelTextPlacement();
     }
   });
+
+  // ページ離脱・タブ閉じ時に即時保存
+  window.addEventListener('beforeunload', () => {
+    if (sourcePdfFile) saveDraft();
+  });
+
+  // サイドバーのナビリンクをクリック時にも即時保存してから遷移
+  document.querySelectorAll('.nav-item').forEach(link => {
+    link.addEventListener('click', (e) => {
+      if (!sourcePdfFile) return; // 編集中でなければそのまま
+      e.preventDefault();
+      saveCurrentState();
+      saveDraft();
+      window.location.href = link.href;
+    });
+  });
 });
 
 // ── Upload zone ───────────────────────────────────
