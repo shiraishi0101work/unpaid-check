@@ -124,6 +124,7 @@ function initFabricCanvas() {
   });
 
   fabricCanvas = new fabric.Canvas('pdf-canvas', {
+    enableRetinaScaling:     true,
     preserveObjectStacking:  true,
     selection:               true,
     hoverCursor:             'grab',
