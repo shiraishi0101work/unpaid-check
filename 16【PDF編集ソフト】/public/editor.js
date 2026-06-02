@@ -175,17 +175,21 @@ async function renderPage(pageNum) {
     document.getElementById('canvas-wrapper').style.width  = W + 'px';
     document.getElementById('canvas-wrapper').style.height = H + 'px';
 
+    // DPRスケールで背景をレンダリングして鮮明に表示
+    const dpr = window.devicePixelRatio || 1;
+    const bgViewport = page.getViewport({ scale: renderScale * dpr });
     const tmp = document.createElement('canvas');
-    tmp.width  = W;
-    tmp.height = H;
-    await page.render({ canvasContext: tmp.getContext('2d'), viewport }).promise;
+    tmp.width  = Math.round(bgViewport.width);
+    tmp.height = Math.round(bgViewport.height);
+    await page.render({ canvasContext: tmp.getContext('2d'), viewport: bgViewport }).promise;
     const bgDataUrl = tmp.toDataURL('image/png');
+    const bgScale = 1 / dpr;
 
     await new Promise((resolve) => {
       fabricCanvas.setBackgroundImage(bgDataUrl, () => {
         fabricCanvas.renderAll();
         resolve();
-      }, { scaleX: 1, scaleY: 1, originX: 'left', originY: 'top' });
+      }, { scaleX: bgScale, scaleY: bgScale, originX: 'left', originY: 'top' });
     });
 
     if (pageStates[pageNum] && pageStates[pageNum].objects && pageStates[pageNum].objects.length > 0) {
@@ -194,7 +198,7 @@ async function renderPage(pageNum) {
           fabricCanvas.setBackgroundImage(bgDataUrl, () => {
             fabricCanvas.renderAll();
             resolve();
-          }, { scaleX: 1, scaleY: 1, originX: 'left', originY: 'top' });
+          }, { scaleX: bgScale, scaleY: bgScale, originX: 'left', originY: 'top' });
         });
       });
       // ロード後にeditable=falseを確保
