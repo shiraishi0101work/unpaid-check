@@ -462,7 +462,8 @@ def _build_history_snapshot(year_month: str) -> dict | None:
     seikyu_unpaid = [b for b in seikyu_raw if not meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
 
     # result["unpaid"] は overdue+upcoming の全体集合なので重複になる → カテゴリ別リストのみ使用
-    unpaid_all = (result.get("overdue", []) + seikyu_unpaid +
+    # 請求済みか確認フラグ（seikyu_kakunin）の未入金は確定対象に含めない
+    unpaid_all = (result.get("overdue", []) +
                   result.get("draft_overdue", []) + result.get("ichiji_hokan", []) +
                   result.get("upcoming", []))
     # 請求書IDで重複除去（念のため）
