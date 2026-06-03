@@ -1181,6 +1181,9 @@ def dashboard():
 
     if show_admin_aggregate:
         agg = _load_admin_aggregate()
+        _sort_key = lambda x: (x.get("取引先名", ""), x.get("支払期限", ""))
+        for _cat in ["overdue", "seikyu_kakunin", "draft_overdue", "ichiji_hokan", "upcoming"]:
+            agg[_cat].sort(key=_sort_key)
         return render_template(
             "admin_dashboard.html",
             agg=agg,
