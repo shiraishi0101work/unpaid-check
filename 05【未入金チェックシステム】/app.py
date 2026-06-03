@@ -2469,7 +2469,7 @@ def api_recheck_link(record_id):
                         item["着金日_手動"]   = ""
                         item["着金金額_手動"] = 0
                         result.setdefault("overdue", []).append(item)
-                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        result["overdue"].sort(key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
                         moved = True
                         break
                 if moved:
@@ -2522,7 +2522,7 @@ def api_recheck_unlink(record_id):
                         item["着金日_手動"]   = ""
                         item["着金金額_手動"] = 0
                         result.setdefault("overdue", []).append(item)
-                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        result["overdue"].sort(key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
                         moved = True
                         break
                 if moved:
