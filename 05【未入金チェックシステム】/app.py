@@ -1249,7 +1249,8 @@ def dashboard():
 
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
-        seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
+        seikyu_kakunin = sorted([b for b in seikyu_raw if not b.get("着金日_手動")],
+                               key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
 
         # overdue + ichiji_hokan を統合して現在のメタで再分類
         all_overdue_pool = result.get("overdue", []) + result.get("ichiji_hokan", [])
