@@ -1,8 +1,0 @@
-{
-  "access_token": "4TU_1XFNLJY9mCIPT403IHdCo9sx60wTRpeBS1b9MtE",
-  "refresh_token": "JfeCkS5LCGFOJ4EMHTRLJyxZjPWt6qUy1iW_x1DwQpU",
-  "scope": "mfc/accounting/journal.read",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "saved_at": 1780471008.5560534
-}
