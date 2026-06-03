@@ -1,0 +1,18 @@
+# データ・トークン（環境ごとに異なるため除外）
+data/
+tokens/
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 環境変数
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
