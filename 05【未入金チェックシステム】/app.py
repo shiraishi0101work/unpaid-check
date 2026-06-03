@@ -1670,6 +1670,13 @@ def _run_recheck_all(cid: str):
             existing_jids_furik.add(journal_id)
             new_furikomi += 1
 
+        # 入金履歴のみに絞る（売掛金など売上計上仕訳を除外）
+        payment_deals = [
+            d for d in deals
+            if any(ba in (d.get("科目", "") or "") for ba in _BANK_ACCOUNTS)
+        ]
+        print(f"[再確認] 入金履歴（銀行科目）: {len(payment_deals)}件 / 全{len(deals)}件", flush=True)
+
         for billing in overdue_list:
             bid           = billing.get("請求書ID", "")
             partner_name  = billing.get("取引先名", "").strip()
@@ -1678,7 +1685,7 @@ def _run_recheck_all(cid: str):
             if furikomi_meta and furikomi_meta not in furikomi_list:
                 furikomi_list = [furikomi_meta] + furikomi_list
             if furikomi_list:
-                for d in deals:
+                for d in payment_deals:
                     journal_id = str(d.get("取引ID", ""))
                     if journal_id in existing_jids_rchk:
                         continue
