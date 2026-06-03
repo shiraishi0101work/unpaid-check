@@ -1264,7 +1264,8 @@ def dashboard():
                                  key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         paid_all       = result.get("paid", []) + seikyu_moved + overdue_moved
         draft_overdue = result.get("draft_overdue", [])
-        upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
+        upcoming      = sorted([b for b in result.get("upcoming", []) if in_fy(b)],
+                              key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         paid_fy       = [b for b in paid_all if in_fy(b)]
 
     else:
