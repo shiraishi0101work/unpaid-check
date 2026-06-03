@@ -2322,8 +2322,16 @@ def api_overdue_recheck(invoice_id):
         s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
         return s
 
+    # 入金履歴のみに絞る（売掛金など売上計上仕訳を除外）
+    _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金", "現金"}
+    payment_deals = [
+        d for d in deals
+        if any(ba in (d.get("科目", "") or "") for ba in _BANK_ACCOUNTS)
+    ]
+    print(f"[再確認] 入金履歴（銀行科目）: {len(payment_deals)}件 / 全{len(deals)}件", flush=True)
+
     matched_deals = []
-    for d in deals:
+    for d in payment_deals:
         remark   = d.get("備考", "") or ""
         remark_n = _norm(remark)
         for name in furikomi_list:
