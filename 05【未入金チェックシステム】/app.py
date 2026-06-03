@@ -476,7 +476,7 @@ def _build_history_snapshot(year_month: str) -> dict | None:
         if bid:
             seen_ids.add(bid)
         deduped.append(b)
-    unpaid_all = deduped
+    unpaid_all = sorted(deduped, key=lambda b: b.get("取引先名", ""))
 
     paid_all   = result.get("paid", []) + seikyu_paid
 
