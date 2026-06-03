@@ -985,7 +985,7 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
         # 未収解消済み：解消済みフラグあり
         ichiji_hokan = sorted(
             [b for b in unpaid if b.get("解消済み")],
-            key=lambda x: x.get("支払期限", ""))
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         ichiji_ids = {b["請求書ID"] for b in ichiji_hokan}
 
         # 請求済み確認：未設定 + 送付済み（期限前後問わず）
@@ -994,7 +994,7 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
              if b.get("入金状態") == "未設定" and _is_delivered(b)
              and b["請求書ID"] not in ichiji_ids
              and b.get("請求書ID") not in deleted_seikyu_ids],
-            key=lambda x: x.get("支払期限", ""))
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         seikyu_ids = {b["請求書ID"] for b in seikyu_kakunin}
 
         # 残り（ichiji・seikyu_kakunin・下書きを除いた未入金）を期限で分類
@@ -1004,10 +1004,10 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
                      and b.get("入金状態") == "未入金"]
 
         all_overdue = [b for b in remaining if b.get("支払期限") and b["支払期限"] < today_str]
-        overdue = sorted(all_overdue, key=lambda x: x.get("支払期限", ""))
+        overdue = sorted(all_overdue, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         upcoming = sorted(
             [b for b in remaining if not b.get("支払期限") or b["支払期限"] >= today_str],
-            key=lambda x: x.get("支払期限", ""))
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         draft_overdue = []  # 下書き（未設定+未送付）はどこにも出さない
 
         result = {
