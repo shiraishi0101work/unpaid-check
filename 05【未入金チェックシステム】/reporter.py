@@ -198,8 +198,8 @@ def _write_seikyu_kakunin_sheet(ws, billings: list[dict]):
 
 
 def _write_upcoming_sheet(ws, upcoming: list[dict]):
-    """期日前請求書シート（支払期限が近い順に並べる）"""
-    sorted_billings = sorted(upcoming, key=lambda x: x.get("支払期限", ""))
+    """期日前請求書シート（取引先名順→支払期限順に並べる）"""
+    sorted_billings = sorted(upcoming, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     _write_unpaid_billings(
         ws, sorted_billings,
         title="期日前請求書",
