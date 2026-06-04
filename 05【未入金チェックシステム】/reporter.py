@@ -222,6 +222,7 @@ def _write_diff_sheet(ws, diff_billings: list[dict]):
 
     ws.row_dimensions[1].height = 25
 
+    diff_billings = sorted(diff_billings, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     for r, billing in enumerate(diff_billings, start=2):
         bg   = COLOR_ROW_DIFF
         diff = billing.get("差額", 0)
