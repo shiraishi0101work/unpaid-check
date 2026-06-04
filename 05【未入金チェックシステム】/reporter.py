@@ -260,7 +260,7 @@ def _write_ichiji_hokan_sheet(ws, billings: list[dict]):
 
     ws.row_dimensions[1].height = 25
 
-    sorted_billings = sorted(billings, key=lambda x: x.get("支払期限", ""))
+    sorted_billings = sorted(billings, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     for r, b in enumerate(sorted_billings, start=2):
         due_date = b.get("支払期限", "")
         bg = COLOR_ROW_ICHIJI
