@@ -392,6 +392,18 @@
   </li>
 </ul>
 
+{# ===== 検索ボックス ===== #}
+<div class="d-flex align-items-center gap-2 px-3 py-2 border border-top-0 bg-light"
+     style="border-bottom:none !important;">
+  <i class="bi bi-search text-muted" style="font-size:0.85rem"></i>
+  <input type="text" id="table-search-box" class="form-control form-control-sm"
+         placeholder="取引先名・件名・請求番号で絞り込み..." style="max-width:320px;">
+  <span id="search-count" class="text-muted small ms-1" style="white-space:nowrap"></span>
+  <button type="button" id="search-clear-btn" class="btn btn-outline-secondary btn-sm py-0 px-2 d-none">
+    <i class="bi bi-x"></i>
+  </button>
+</div>
+
 <div class="tab-content border border-top-0 rounded-bottom p-3 bg-white shadow-sm">
 
   {# --- 支払期限超過 --- #}
