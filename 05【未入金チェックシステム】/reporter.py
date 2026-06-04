@@ -299,7 +299,8 @@ def _write_paid_sheet(ws, paid: list[dict]):
 
     ws.row_dimensions[1].height = 25
 
-    for r, billing in enumerate(paid, start=2):
+    sorted_paid = sorted(paid, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
+    for r, billing in enumerate(sorted_paid, start=2):
         bg = COLOR_ROW_PAID
         _data_cell(ws, r, 1, billing.get("請求番号", ""),  bg, center=True)
         _data_cell(ws, r, 2, billing.get("取引先名", ""),  bg)
