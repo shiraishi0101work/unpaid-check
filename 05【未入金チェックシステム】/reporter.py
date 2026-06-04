@@ -131,8 +131,8 @@ def _write_unpaid_billings(ws, billings: list[dict], title: str,
 
 
 def _write_overdue_sheet(ws, overdue: list[dict]):
-    """支払期限超過請求書シート（期限切れ順に並べる）"""
-    sorted_billings = sorted(overdue, key=lambda x: x.get("支払期限", ""))
+    """支払期限超過請求書シート（取引先名順→期限切れ順に並べる）"""
+    sorted_billings = sorted(overdue, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     _write_unpaid_billings(
         ws, sorted_billings,
         title="未収",
