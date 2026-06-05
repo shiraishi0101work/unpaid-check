@@ -1295,6 +1295,8 @@ def dashboard():
         next_year=next_year,
         fy_from=fy_from,
         fy_to=fy_to,
+        invoice_from=result.get("invoice_from", "") if result else "",
+        invoice_to=result.get("invoice_to", "") if result else "",
         show_history_popup=show_history_popup,
         prev_ym=prev_ym,
         current_ym=get_current_year_month(),
@@ -1316,27 +1318,9 @@ def run():
     if fiscal_year is None:
         fiscal_year = get_current_fiscal_year(start_month)
 
-    # 請求書発行月（YYYY-MM 形式 → YYYY-MM-01 / YYYY-MM-末日 に変換）
-    invoice_from_ym = request.form.get("invoice_from_ym") or ""
-    invoice_to_ym   = request.form.get("invoice_to_ym")   or ""
-    def ym_to_from(ym: str) -> str | None:
-        if not ym:
-            return None
-        return f"{ym}-01"
-
-    def ym_to_to(ym: str) -> str | None:
-        import calendar
-        if not ym:
-            return None
-        try:
-            y, m = int(ym[:4]), int(ym[5:7])
-            last = calendar.monthrange(y, m)[1]
-            return f"{ym}-{last:02d}"
-        except Exception:
-            return None
-
-    invoice_from = ym_to_from(invoice_from_ym)
-    invoice_to   = ym_to_to(invoice_to_ym)
+    # 請求書期日（YYYY-MM-DD 形式で直接受け取る）
+    invoice_from = request.form.get("invoice_from_date") or None
+    invoice_to   = request.form.get("invoice_to_date")   or None
 
     # 未指定なら年度から自動設定
     if not invoice_from and not invoice_to:

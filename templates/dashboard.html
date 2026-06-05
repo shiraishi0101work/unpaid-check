@@ -63,14 +63,14 @@
 
     <div class="sidebar-item">
       <label class="sidebar-sublabel" style="font-weight:600;color:#4a5568;">
-        <i class="bi bi-calendar-check" style="font-size:0.75rem"></i> 請求書期日月
+        <i class="bi bi-calendar-check" style="font-size:0.75rem"></i> 請求書期日
       </label>
-      <div class="d-flex gap-1 align-items-center">
-        <input type="month" name="invoice_from_ym" class="form-control form-control-sm"
-               placeholder="開始月" style="flex:1; min-width:0;">
-        <span class="text-muted small">〜</span>
-        <input type="month" name="invoice_to_ym" class="form-control form-control-sm"
-               placeholder="終了月" style="flex:1; min-width:0;">
+      <div class="d-flex flex-column gap-1">
+        <input type="date" name="invoice_from_date" class="form-control form-control-sm"
+               value="{{ invoice_from or '' }}">
+        <div class="text-center text-muted small" style="line-height:1">〜</div>
+        <input type="date" name="invoice_to_date" class="form-control form-control-sm"
+               value="{{ invoice_to or '' }}">
       </div>
       <div class="form-text" style="font-size:0.68rem">支払期限で絞り込み。省略で年度自動設定</div>
     </div>
@@ -239,7 +239,7 @@
     </a>
     <div class="text-center">
       <h5 class="fw-bold mb-0">{{ fiscal_year }}年度</h5>
-      <small class="text-muted">{{ fy_from }} 〜 {{ fy_to }}</small>
+      <small class="text-muted">{% if invoice_from %}{{ invoice_from }} 〜 {{ invoice_to }}{% else %}{{ fy_from }} 〜 {{ fy_to }}{% endif %}</small>
     </div>
     <a href="{{ url_for('dashboard', year=next_year) }}" class="btn btn-outline-secondary btn-sm">
       {{ next_year }}年度 <i class="bi bi-chevron-right"></i>
