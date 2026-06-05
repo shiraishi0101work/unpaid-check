@@ -1,0 +1,10 @@
+# 実データ（アカウント・トークン・照合結果）はGit管理外
+data/auth.json
+data/notify_settings.json
+data/c_*/
+tokens/c_*/
+output/
+venv/
+.env
+__pycache__/
+*.pyc
