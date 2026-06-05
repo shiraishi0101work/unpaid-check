@@ -258,6 +258,12 @@
   {# --- 未収 --- #}
   <div class="tab-pane fade show active" id="tab-overdue">
     {% if overdue %}
+    <div class="d-flex justify-content-start mb-2">
+      <div class="input-group" style="max-width:260px">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="overdue-search" class="form-control form-control-sm" placeholder="取引先名で絞り込み">
+      </div>
+    </div>
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-danger">
@@ -314,6 +320,12 @@
     <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
       <i class="bi bi-info-circle-fill flex-shrink-0"></i>
       <span>送付済みだがMF上の入金ステータスが「未設定」のものです。詳細は各会社ビューで操作してください。</span>
+    </div>
+    <div class="mb-2" style="max-width:260px">
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="seikyu-search" class="form-control form-control-sm" placeholder="取引先名で絞り込み">
+      </div>
     </div>
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
@@ -576,5 +588,25 @@ document.querySelectorAll('.sidebar-stat-item[data-tab]').forEach(el => {
     document.getElementById(tabId)?.scrollIntoView({behavior:'smooth', block:'start'});
   });
 });
+
+// ===== 取引先名 検索フィルター =====
+(function() {
+  function setupSearch(inputId, tableSelector) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('input', function() {
+      var q = this.value.trim().toLowerCase();
+      var rows = document.querySelectorAll(tableSelector + ' tbody tr');
+      rows.forEach(function(row) {
+        var nameCell = row.querySelectorAll('td')[1];
+        if (!nameCell) return;
+        var name = nameCell.textContent.trim().toLowerCase();
+        row.style.display = (q === '' || name.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+  setupSearch('overdue-search', '#tab-overdue .table-responsive table');
+  setupSearch('seikyu-search', '#tab-seikyu-kakunin .table-responsive table');
+})();
 </script>
 {% endblock %}

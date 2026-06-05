@@ -997,13 +997,13 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
         overdue = sorted(
             [b for b in all_overdue
              if b.get("入金状態") == "未入金" and b["請求書ID"] not in ichiji_ids],
-            key=lambda x: x.get("支払期限", ""))
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         seikyu_kakunin = sorted(
             [b for b in all_overdue
              if b.get("入金状態") == "未設定" and _is_delivered(b)
              and b["請求書ID"] not in ichiji_ids
              and b.get("請求書ID") not in deleted_seikyu_ids],
-            key=lambda x: x.get("支払期限", ""))
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         draft_overdue = sorted(
             [b for b in all_overdue
              if b.get("入金状態") == "未設定" and _is_draft_invoice(b)
@@ -1158,6 +1158,9 @@ def _load_admin_aggregate() -> dict:
             item["_company_name"]   = comp_name
             agg["paid"].append(item)
 
+    # 取引先名 → 支払期限 順にソート
+    for cat in ["overdue", "seikyu_kakunin", "draft_overdue", "ichiji_hokan", "upcoming"]:
+        agg[cat] = sorted(agg[cat], key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     return agg
 
 
@@ -1250,7 +1253,7 @@ def dashboard():
 
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
-        seikyu_kakunin = [b for b in seikyu_raw if not b.get("着金日_手動")]
+        seikyu_kakunin = sorted([b for b in seikyu_raw if not b.get("着金日_手動")], key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
 
         # overdue + ichiji_hokan を統合して現在のメタで再分類
         all_overdue_pool = result.get("overdue", []) + result.get("ichiji_hokan", [])
@@ -1261,7 +1264,7 @@ def dashboard():
         ichiji_ids_d   = {b["請求書ID"] for b in ichiji_hokan}
         overdue        = sorted([b for b in all_overdue_pool
                                   if not b.get("着金日_手動") and b["請求書ID"] not in ichiji_ids_d],
-                                 key=lambda x: x.get("支払期限", ""))
+                                 key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         paid_all       = result.get("paid", []) + seikyu_moved + overdue_moved
         draft_overdue = result.get("draft_overdue", [])
         upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]

@@ -397,7 +397,11 @@
   {# --- 支払期限超過 --- #}
   <div class="tab-pane fade show active" id="tab-overdue">
     {% if overdue %}
-    <div class="d-flex justify-content-end mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="input-group" style="max-width:260px">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="overdue-search" class="form-control form-control-sm" placeholder="取引先名で絞り込み">
+      </div>
       <button id="recheck-all-btn"
         class="btn btn-sm {% if auth_accounting %}btn-outline-info{% else %}btn-outline-secondary{% endif %}"
         {% if not auth_accounting %}disabled title="MFクラウド会計を連携してください"{% endif %}>
@@ -485,6 +489,13 @@
     <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" style="font-size:0.82rem">
       <i class="bi bi-info-circle-fill flex-shrink-0"></i>
       <span>請求書をお客様に送付済み（DL・メール・郵送）ですが、MF上の入金ステータスが「未設定」のものです。入金確認済みならMFを更新、未請求なら「未請求」ボタンで除外してください。</span>
+    </div>
+
+    <div class="mb-2" style="max-width:260px">
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="seikyu-search" class="form-control form-control-sm" placeholder="取引先名で絞り込み">
+      </div>
     </div>
 
     {# 一括操作バー #}
@@ -2252,5 +2263,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 {% endif %}
+
+// ===== 取引先名 検索フィルター =====
+(function() {
+  function setupSearch(inputId, tableSelector) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('input', function() {
+      var q = this.value.trim().toLowerCase();
+      var rows = document.querySelectorAll(tableSelector + ' tbody tr');
+      rows.forEach(function(row) {
+        if (!row.id) return; // 合計行などIDなし行はスキップしない
+        var nameCell = row.querySelector('td.fw-semibold');
+        if (!nameCell) return;
+        var name = nameCell.textContent.trim().toLowerCase();
+        row.style.display = (q === '' || name.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+  setupSearch('overdue-search', '#tab-overdue .table-responsive table');
+  setupSearch('seikyu-search', '#seikyu-table');
+})();
 </script>
 {% endblock %}
