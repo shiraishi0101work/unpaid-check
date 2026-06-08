@@ -40,64 +40,59 @@ def item_cx(i): return item_x0(i) + IW//2
 # item_x0: [200, 1080, 1960, 2840]
 # item_cx: [600, 1480, 2360, 3240]
 
-print(f"IW={IW}, IH={IH}, LOGO_ZONE_Y={LOGO_ZONE_Y}")
-print(f"Column centers: {[item_cx(i) for i in range(4)]}")
+# ─── 3. オリジナルロゴをクロップして貼り付け ───
+# クロップ範囲: y=1080〜1680（600px）
+# ・1行目テキストの下端（y≈1040）を避ける
+# ・フェード領域（BG_Y0〜BG_Y0+25）を避ける
+CROP_Y0 = 1080
+CROP_Y1 = 1680   # = CROP_Y0 + IH = 1080 + 600
 
-# ─── 3. オリジナル画像からロゴをマスク合成 ───
-# オリジナル底部のロゴ位置（解析済み）:
-#   OCTON  : content x=911-1503, center x=1207
-#   SHOGUN : content x=2304-2936, center x=2620
-# クロップ範囲: y=BG_Y0〜y=BG_Y0+739（コンテンツ縦範囲）→IHにスケール
-
-CROP_Y0 = BG_Y0         # 1035
-CROP_Y1 = BG_Y0 + 739   # 1774（元ロゴの縦範囲）
-
-def paste_original_logo(result_arr, slot_i, orig_cx, threshold=18):
-    """元画像からロゴを切り抜き、グラデーション背景を透過させてスロットに合成"""
-    # 水平クロップ（IW幅、orig_cx中心）
-    cx0 = max(0, orig_cx - IW//2)
-    cx1 = min(W, cx0 + IW)
+def paste_original_logo(result_arr, slot_i, orig_cx, threshold=45):
+    """
+    元画像からロゴを切り抜き、グラデーション背景をマスクしてスロットに合成。
+    threshold高めで白カード部分を除外し、濃い色のロゴのみ抽出。
+    """
+    crop_w = IW
+    cx0 = max(0, orig_cx - crop_w//2)
+    cx1 = min(W, cx0 + crop_w)
     actual_w = cx1 - cx0
 
-    orig_crop = arr[CROP_Y0:CROP_Y1, cx0:cx1]            # shape: (739, IW, 3)
-    bg_at     = bg_zone[CROP_Y0-BG_Y0:CROP_Y1-BG_Y0, cx0:cx1]  # same shape
+    # 元画像クロップ（IH=600px、スケール不要）
+    orig_crop = arr[CROP_Y0:CROP_Y1, cx0:cx1].astype(np.float32)
+    bg_at     = bg_zone[CROP_Y0-BG_Y0:CROP_Y1-BG_Y0, cx0:cx1]
 
-    # ロゴ領域マスク（グラデーションとの差分）
-    diff = np.abs(orig_crop.astype(np.float32) - bg_at).max(axis=2)
+    # ロゴピクセルマスク（背景グラデーションとの差分が閾値以上）
+    diff     = np.abs(orig_crop - bg_at).max(axis=2)
     mask_raw = (diff > threshold).astype(np.uint8) * 255
 
-    # 幅が足りない場合は中央配置でパディング
+    # 幅不足の場合は中央パディング
     if actual_w < IW:
         pad_l = (IW - actual_w) // 2
-        orig_pad = np.zeros((CROP_Y1-CROP_Y0, IW, 3), dtype=np.uint8)
-        mask_pad = np.zeros((CROP_Y1-CROP_Y0, IW),    dtype=np.uint8)
-        orig_pad[:, pad_l:pad_l+actual_w] = orig_crop
-        mask_pad[:, pad_l:pad_l+actual_w] = mask_raw
-        orig_crop = orig_pad
-        mask_raw  = mask_pad
+        p_img  = np.zeros((IH, IW, 3), dtype=np.float32)
+        p_mask = np.zeros((IH, IW),    dtype=np.uint8)
+        p_img[:, pad_l:pad_l+actual_w]  = orig_crop
+        p_mask[:, pad_l:pad_l+actual_w] = mask_raw
+        orig_crop = p_img
+        mask_raw  = p_mask
 
-    # スケール: (IW, 739) → (IW, IH=600)
-    orig_img = Image.fromarray(orig_crop.astype(np.uint8)).resize((IW, IH), Image.LANCZOS)
-    mask_img = Image.fromarray(mask_raw).resize((IW, IH), Image.LANCZOS)
-    mask_img = mask_img.filter(ImageFilter.GaussianBlur(1))
+    # マスク平滑化（エッジをなめらかに）
+    mask_img = Image.fromarray(mask_raw).filter(ImageFilter.GaussianBlur(1.5))
+    mask_f   = np.array(mask_img, dtype=np.float32)[:, :, np.newaxis] / 255.0
 
-    orig_f = np.array(orig_img, dtype=np.float32)
-    mask_f = np.array(mask_img, dtype=np.float32)[:, :, np.newaxis] / 255.0
-
-    # スロットに合成（ロゴ部分のみ上書き、背景は新グラデーション）
-    dx0 = item_x0(slot_i)
-    dy0 = LOGO_ZONE_Y
+    # スロットに合成（ロゴ部分のみ元画像、背景は新グラデーション）
+    dx0  = item_x0(slot_i)
+    dy0  = LOGO_ZONE_Y
     dest = result_arr[dy0:dy0+IH, dx0:dx0+IW].astype(np.float32)
-    blended = dest * (1 - mask_f) + orig_f * mask_f
+    blended = dest * (1 - mask_f) + orig_crop * mask_f
     result_arr[dy0:dy0+IH, dx0:dx0+IW] = np.clip(blended, 0, 255)
 
-# OCTON（スロット0）
-paste_original_logo(result_arr, slot_i=0, orig_cx=1207)
-print("OCTON pasted")
+# OCTON（スロット0）: content center x≈1207
+paste_original_logo(result_arr, slot_i=0, orig_cx=1207, threshold=45)
 
-# SHOGUN（スロット2）
-paste_original_logo(result_arr, slot_i=2, orig_cx=2620)
-print("SHOGUN pasted")
+# SHOGUN（スロット2）: content center x≈2533（アイコン中心）
+paste_original_logo(result_arr, slot_i=2, orig_cx=2533, threshold=45)
+
+print("OCTON/SHOGUN pasted from original")
 
 # PIL描画用に変換
 result = Image.fromarray(result_arr.astype(np.uint8))
@@ -114,10 +109,12 @@ iw_c        = int(IW * 0.52)
 ih_c        = int(icon_only.height * iw_c / icon_only.width)
 icon_r      = icon_only.resize((iw_c, ih_c), Image.LANCZOS)
 
-logo_top = LOGO_ZONE_Y + int(IH * 0.04)
-paste_x  = item_x0(1) + (IW - iw_c) // 2
-result.paste(icon_r, (paste_x, logo_top), icon_r)
-icon_bottom_c = logo_top + ih_c
+# アイコン縦位置: CROP_Y0(1080)からLOGO_ZONE_Y(1127)へのオフセット分を考慮して
+# 他のロゴと視覚的に揃える（CROP_Y0=1080基準、logo_top≈1127+IH*0.04）
+logo_top_c = LOGO_ZONE_Y + int(IH * 0.10)
+paste_x_c  = item_x0(1) + (IW - iw_c) // 2
+result.paste(icon_r, (paste_x_c, logo_top_c), icon_r)
+icon_bottom_c = logo_top_c + ih_c
 
 cx1  = item_cx(1)
 NAVY = (25, 40, 100)
@@ -138,7 +135,8 @@ BLUE  = (30, 64, 175)
 LBLUE = (147, 197, 253)
 GREEN = (34, 197, 94)
 
-TOP = LOGO_ZONE_Y + int(IH * 0.02)
+# アイコン開始位置（CROP_Y0=1080相当にそろえるため+47上にずらし）
+TOP = LOGO_ZONE_Y + int(IH * 0.10)
 IS  = int(IH * 0.50)   # 300
 
 TW = int(IS * 0.82); TH = int(IS * 0.65)
@@ -160,7 +158,7 @@ d.line([(CCX-int(CR*.55), CCY+int(CR*.05)),
         (CCX-int(CR*.10), CCY+int(CR*.45)),
         (CCX+int(CR*.56), CCY-int(CR*.40))], fill="white", width=7)
 
-# POSラベル
+# POSラベル（CROP_Y0基準でオフセット調整）
 icon_bottom_p = TOP + IS
 ty3 = icon_bottom_p + 14
 d.text((cx3, ty3), "POS System", font=FME(26), fill=(110, 125, 150), anchor="mt")
