@@ -47,50 +47,43 @@ def item_cx(i): return item_x0(i) + IW//2
 CROP_Y0 = 1080
 CROP_Y1 = 1680   # = CROP_Y0 + IH = 1080 + 600
 
-def paste_original_logo(result_arr, slot_i, orig_cx, threshold=45):
+def paste_original_logo(result_arr, slot_i, cx0, cx1, threshold=45):
     """
-    元画像からロゴを切り抜き、グラデーション背景をマスクしてスロットに合成。
-    threshold高めで白カード部分を除外し、濃い色のロゴのみ抽出。
+    元画像の cx0〜cx1 からロゴを切り抜き、スロット中央に合成。
+    グラデーション背景をマスクして除去し、ロゴのみ上書き。
     """
-    crop_w = IW
-    cx0 = max(0, orig_cx - crop_w//2)
-    cx1 = min(W, cx0 + crop_w)
     actual_w = cx1 - cx0
 
-    # 元画像クロップ（IH=600px、スケール不要）
     orig_crop = arr[CROP_Y0:CROP_Y1, cx0:cx1].astype(np.float32)
     bg_at     = bg_zone[CROP_Y0-BG_Y0:CROP_Y1-BG_Y0, cx0:cx1]
 
-    # ロゴピクセルマスク（背景グラデーションとの差分が閾値以上）
     diff     = np.abs(orig_crop - bg_at).max(axis=2)
     mask_raw = (diff > threshold).astype(np.uint8) * 255
 
-    # 幅不足の場合は中央パディング
-    if actual_w < IW:
-        pad_l = (IW - actual_w) // 2
-        p_img  = np.zeros((IH, IW, 3), dtype=np.float32)
-        p_mask = np.zeros((IH, IW),    dtype=np.uint8)
-        p_img[:, pad_l:pad_l+actual_w]  = orig_crop
-        p_mask[:, pad_l:pad_l+actual_w] = mask_raw
-        orig_crop = p_img
-        mask_raw  = p_mask
+    # スロット内で中央配置（IW - actual_w を左右均等にパディング）
+    pad_l = (IW - actual_w) // 2
+    p_img  = np.zeros((IH, IW, 3), dtype=np.float32)
+    p_mask = np.zeros((IH, IW),    dtype=np.uint8)
+    # actual_w が IW を超える場合はトリム
+    w = min(actual_w, IW - pad_l)
+    p_img[:, pad_l:pad_l+w]  = orig_crop[:, :w]
+    p_mask[:, pad_l:pad_l+w] = mask_raw[:, :w]
 
-    # マスク平滑化（エッジをなめらかに）
-    mask_img = Image.fromarray(mask_raw).filter(ImageFilter.GaussianBlur(1.5))
+    mask_img = Image.fromarray(p_mask).filter(ImageFilter.GaussianBlur(1.5))
     mask_f   = np.array(mask_img, dtype=np.float32)[:, :, np.newaxis] / 255.0
 
-    # スロットに合成（ロゴ部分のみ元画像、背景は新グラデーション）
     dx0  = item_x0(slot_i)
     dy0  = LOGO_ZONE_Y
     dest = result_arr[dy0:dy0+IH, dx0:dx0+IW].astype(np.float32)
-    blended = dest * (1 - mask_f) + orig_crop * mask_f
+    blended = dest * (1 - mask_f) + p_img * mask_f
     result_arr[dy0:dy0+IH, dx0:dx0+IW] = np.clip(blended, 0, 255)
 
-# OCTON（スロット0）: content center x≈1207
-paste_original_logo(result_arr, slot_i=0, orig_cx=1207, threshold=45)
+# OCTON（スロット0）: x=807-1607（800px、center=1207）
+paste_original_logo(result_arr, slot_i=0, cx0=807, cx1=1607, threshold=45)
 
-# SHOGUN（スロット2）: content center x≈2533（アイコン中心）
-paste_original_logo(result_arr, slot_i=2, orig_cx=2533, threshold=45)
+# SHOGUN（スロット2）: x=2304-2936（632px、コンテンツ実範囲）
+# ※ x=2133-2303 にはオリジナルCOARIS AI+テキストが残るため除外
+paste_original_logo(result_arr, slot_i=2, cx0=2304, cx1=2936, threshold=45)
 
 print("OCTON/SHOGUN pasted from original")
 
