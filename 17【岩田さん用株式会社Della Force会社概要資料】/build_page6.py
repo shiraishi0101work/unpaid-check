@@ -77,7 +77,7 @@ def paste_original_logo(result_arr, slot_i, orig_cx, threshold=18):
         mask_raw  = mask_pad
 
     # スケール: (IW, 739) → (IW, IH=600)
-    orig_img = Image.fromarray(orig_crop).resize((IW, IH), Image.LANCZOS)
+    orig_img = Image.fromarray(orig_crop.astype(np.uint8)).resize((IW, IH), Image.LANCZOS)
     mask_img = Image.fromarray(mask_raw).resize((IW, IH), Image.LANCZOS)
     mask_img = mask_img.filter(ImageFilter.GaussianBlur(1))
 
