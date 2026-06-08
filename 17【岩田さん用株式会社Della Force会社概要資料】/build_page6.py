@@ -121,22 +121,21 @@ NAVY = (25, 40, 100)
 CYAN = (0, 180, 220)
 ty   = icon_bottom_c + 8
 
-# "COARIS AI+" を一体として中央揃え描画
-f46 = FB(46); f40 = FB(40)
-bb_ai  = d.textbbox((0, 0), "COARIS AI", font=f46)
-bb_pls = d.textbbox((0, 0), "+", font=f40)
-ai_w   = bb_ai[2] - bb_ai[0]
-pls_w  = bb_pls[2] - bb_pls[0]
-gap    = 3
-total_w = ai_w + gap + pls_w
-sx = cx1 - total_w // 2 - bb_ai[0]
-d.text((sx, ty), "COARIS AI", font=f46, fill=NAVY, anchor="lt")
-d.text((sx + ai_w + gap - bb_pls[0], ty + 8), "+", font=f40, fill=CYAN, anchor="lt")
+# "COARIS AI+" を一体として中央揃え描画（textlength で正確に計測）
+F_AI  = FB(42)
+F_PLS = FB(34)
+ai_len  = d.textlength("COARIS AI", font=F_AI)
+pls_len = d.textlength("+",         font=F_PLS)
+gap_px  = 5
+total_len = ai_len + gap_px + pls_len
+sx = cx1 - total_len / 2
+d.text((sx,             ty),    "COARIS AI", font=F_AI,  fill=NAVY, anchor="lt")
+d.text((sx + ai_len + gap_px, ty + 7), "+", font=F_PLS, fill=CYAN, anchor="lt")
 
-d.text((cx1, ty+56), "業務補助AIクラウド", font=FME(24), fill=(80, 90, 110), anchor="mt")
-sep_y = ty + 56 + 34
+d.text((cx1, ty+54), "業務補助AIクラウド", font=FME(24), fill=(80, 90, 110), anchor="mt")
+sep_y = ty + 54 + 34
 d.line([(cx1-IW//3, sep_y), (cx1+IW//3, sep_y)], fill=(200, 215, 235), width=2)
-d.text((cx1, sep_y+14), "COARIS AI（社内AI基盤）", font=FB(27), fill=(40, 45, 60), anchor="mt")
+d.text((cx1, sep_y+14), "COARIS AI（社内AI基盤）", font=FB(26), fill=(40, 45, 60), anchor="mt")
 
 # ─── 5. POS（スロット3）: グラデーション上に直接描画 ───
 cx3   = item_cx(3)
