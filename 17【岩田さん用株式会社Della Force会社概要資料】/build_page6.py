@@ -112,14 +112,33 @@ def make_coaris():
     im = Image.new("RGB", (IW, IH), bg)
     d  = ImageDraw.Draw(im)
     cx = IW//2
-    coaris = Image.open(coaris_logo).convert("RGBA")
-    cw = int(IW * 0.80)
-    ch = int(coaris.height * cw / coaris.width)
-    cr = coaris.resize((cw, ch), Image.LANCZOS)
-    logo_top = int(IH * 0.06)
-    im.paste(cr, ((IW-cw)//2, logo_top), cr)
-    icon_bottom = logo_top + ch
-    sep_y = icon_bottom + 30
+
+    # ロゴ四角.pngのアイコン部分（上60%）だけ切り取って使う
+    coaris_sq = Image.open(r"C:\Users\shira_k13727w\OneDrive\DF\全体\COARIS\ロゴ四角.png").convert("RGBA")
+    # アイコン部分: 上65%を切り取り
+    icon_crop_h = int(coaris_sq.height * 0.60)
+    icon_only   = coaris_sq.crop((0, 0, coaris_sq.width, icon_crop_h))
+    iw = int(IW * 0.52)
+    ih = int(icon_only.height * iw / icon_only.width)
+    icon_r = icon_only.resize((iw, ih), Image.LANCZOS)
+    logo_top = int(IH * 0.04)
+    im.paste(icon_r, ((IW-iw)//2, logo_top), icon_r)
+    icon_bottom = logo_top + ih
+
+    # "COARIS AI+" テキスト（オリジナル資料に合わせて）
+    NAVY = (25, 40, 100)
+    CYAN = (0, 180, 220)
+    ty = icon_bottom + 8
+    d.text((cx, ty), "COARIS AI", font=FB(46), fill=NAVY, anchor="mt")
+    # "+" を右に cyan で追加
+    bbox = d.textbbox((0,0), "COARIS AI", font=FB(46))
+    txt_w = bbox[2] - bbox[0]
+    plus_x = cx + txt_w//2 + 4
+    d.text((plus_x, ty+4), "+", font=FB(36), fill=CYAN, anchor="lt")
+    # サブテキスト
+    d.text((cx, ty+54), "\u696d\u52d9\u88dc\u52a9AI\u30af\u30e9\u30a6\u30c9",
+           font=FME(24), fill=(80,90,110), anchor="mt")
+    sep_y = ty + 54 + 36
     d.line([(cx-IW//3, sep_y),(cx+IW//3, sep_y)], fill=(200,215,235), width=2)
     d.text((cx, sep_y+15), "COARIS AI\uff08\u793e\u5185AI\u57fa\u76e4\uff09",
            font=FB(27), fill=(40,45,60), anchor="mt")
