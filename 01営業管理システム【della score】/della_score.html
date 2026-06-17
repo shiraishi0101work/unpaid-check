@@ -1676,6 +1676,38 @@ function renderProspects(){
   updateProBulkBar();
 }
 
+// ── メモインライン編集 ──────────────────────────────────
+function startMemoEdit(e,id){
+  const disp=document.getElementById('memo-disp-'+id);
+  const ta=document.getElementById('memo-edit-'+id);
+  if(!disp||!ta)return;
+  const p=D.prospects.find(x=>x.id===id);
+  ta.value=p?p.memo||'':'';
+  disp.style.display='none';
+  ta.style.display='';
+  ta.focus();
+}
+function saveMemoEdit(id){
+  const disp=document.getElementById('memo-disp-'+id);
+  const ta=document.getElementById('memo-edit-'+id);
+  if(!disp||!ta)return;
+  const p=D.prospects.find(x=>x.id===id);
+  if(p){
+    p.memo=ta.value;
+    save();
+  }
+  disp.innerHTML=ta.value||'<span style="color:var(--border2)">クリックで入力</span>';
+  ta.style.display='none';
+  disp.style.display='';
+}
+function cancelMemoEdit(id){
+  const disp=document.getElementById('memo-disp-'+id);
+  const ta=document.getElementById('memo-edit-'+id);
+  if(!disp||!ta)return;
+  ta.style.display='none';
+  disp.style.display='';
+}
+
 // ── MF重複チェック ─────────────────────────────────────
 // 重複判定ルール：①請求書番号一致 ②会社名+案件名一致 ③会社名+金額一致
 function normCompany(name){
