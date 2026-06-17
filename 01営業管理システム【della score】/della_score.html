@@ -2615,6 +2615,7 @@ function renderOrders(){
     <td><input type="checkbox" class="ord-row-chk" value="${o.id}" onchange="updateOrdBulkBar()" style="cursor:pointer"></td>
     <td style="font-weight:600">${o.client}</td>
     <td>${o.name||'-'}</td>
+    <td style="font-size:12px;color:${o.order_number?'var(--text)':'var(--red)'};font-weight:${o.order_number?'500':'400'}">${o.order_number||'<span title="契約書未確認">未入力</span>'}</td>
     <td class="amount">${fmtTax(o.amount,o.tax)}</td>
     <td style="color:var(--purple);font-weight:500">${o.collectionMonth?o.collectionMonth.replace('-','年')+'月':'-'}</td>
     <td>${fmtD(o.date)}</td>
