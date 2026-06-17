@@ -685,10 +685,10 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerOrders()">選択した受注に担当者を設定</button>
       <button class="btn btn-sm btn-ghost" onclick="clearOrdSelection()">選択解除</button>
     </div>
-    <table><colgroup><col style="width:28px"><col style="width:12%"><col style="width:14%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:10%"></colgroup>
+    <table><colgroup><col style="width:28px"><col style="width:10%"><col style="width:12%"><col style="width:9%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:10%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" id="ord-chk-all" onchange="document.querySelectorAll('.ord-row-chk').forEach(c=>c.checked=this.checked);updateOrdBulkBar()" style="cursor:pointer"></th>
-        <th>取引先</th><th>案件名</th><th>契約金額</th><th>着金目安</th><th>契約日</th><th>納期</th><th>支払条件</th><th>担当者</th><th></th>
+        <th>取引先</th><th>案件名</th><th>契約番号</th><th>契約金額</th><th>着金目安</th><th>契約日</th><th>納期</th><th>支払条件</th><th>担当者</th><th></th>
       </tr></thead>
       <tbody id="o-tbody"></tbody>
     </table>
