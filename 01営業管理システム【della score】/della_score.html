@@ -1664,7 +1664,7 @@ function renderProspects(){
       <td style="color:${isOverdue?'var(--red)':''}; font-weight:${isOverdue?'600':'400'}">${fmtD(p.deadline)}${isOverdue?' <span style="display:inline-block;background:#FEE2E2;color:#B91C1C;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:3px">要確認</span>':''}</td>
       <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
       <td>${p.mf_quote_id?'<span class="badge bo" style="font-size:10px;margin-right:3px">MF</span>':''}${SB[p.status]||SB.prospect}</td>
-      <td style="color:var(--text2);font-size:12px" title="${p.memo||''}">${p.memo||'-'}</td>
+      <td style="padding:6px 14px" onclick="startMemoEdit(event,'${p.id}')"><div id="memo-disp-${p.id}" style="color:var(--text2);font-size:12px;cursor:text;min-height:20px" title="クリックで編集">${p.memo||'<span style="color:var(--border2)">クリックで入力</span>'}</div><textarea id="memo-edit-${p.id}" rows="2" style="display:none;width:100%;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;font-size:12px;font-family:inherit;resize:none" onblur="saveMemoEdit('${p.id}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveMemoEdit('${p.id}')}if(event.key==='Escape'){cancelMemoEdit('${p.id}')}"></textarea></td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost" onclick="editProspect('${p.id}')">編集</button>
         ${p.status!=='ordered'?`<button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="openOrderFromProspect('${p.id}')">→ 受注</button>`:''}
