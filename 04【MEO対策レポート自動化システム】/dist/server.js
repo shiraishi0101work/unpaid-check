@@ -210,7 +210,6 @@ app.post('/api/generate-report', uploadFields, async (req, res) => {
         const kwData = csvData[0];
         if (kwData) {
             if (keywordFiles.length > 1) {
-                // 複数キーワード画像 → 1スライド横並び
                 slides.keywords = keywordFiles.map((f, i) => ({
                     title: `${monthNum}月対策キーワード順位ご報告`,
                     imagePath: f.path,
@@ -251,6 +250,7 @@ app.post('/api/generate-report', uploadFields, async (req, res) => {
         const userActData = csvData[3];
         if (userActData && (userActData.current || userActData.analysis || userActFiles.length > 0)) {
             if (userActFiles.length > 1) {
+                // 複数枚 → グリッドスライド
                 slides.userActions = userActFiles.map((f, i) => ({
                     title: 'ユーザー行動データ（来店・売上に直結）',
                     imagePath: f.path,

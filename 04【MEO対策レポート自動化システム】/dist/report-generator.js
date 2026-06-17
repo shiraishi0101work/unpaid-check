@@ -207,23 +207,21 @@ class ReportGenerator {
         const totalW = SLIDE_W - 0.3;
         const perW = (totalW - gap * (n - 1)) / n;
         // 画像枠のみ（手動差し込み用プレースホルダー）
-        const placeholderH = SLIDE_H - imageAreaY - 5.4; // コメントボックスの上まで
+        const placeholderH = SLIDE_H - imageAreaY - 5.4;
         for (let i = 0; i < n; i++) {
             const x = 0.15 + i * (perW + gap);
-            // 枠線付き白背景
             slide.addShape(this.pptx.ShapeType.rect, {
                 x, y: imageAreaY, w: perW, h: placeholderH,
                 fill: { color: 'FFFFFF' },
                 line: { color: 'AAAAAA', width: 1 },
             });
-            // ラベル
             slide.addText(`スクリーンショット ${i + 1}`, {
                 x, y: imageAreaY + placeholderH / 2 - 0.2, w: perW, h: 0.4,
                 fontSize: 10, color: 'AAAAAA',
                 align: 'center', fontFace: 'メイリオ',
             });
         }
-        // コメントボックス（スライド下部固定。画像と重なってもOK）
+        // コメントボックス（スライド下部固定）
         const first = keywordSlides[0];
         if (first.currentStatus || first.analysis) {
             const boxY = SLIDE_H - 5.2;
@@ -266,6 +264,7 @@ class ReportGenerator {
         const totalW = SLIDE_W - 0.3;
         const boxY = SLIDE_H - 5.2;
         const imageAreaH = boxY - imageAreaY - 0.1;
+        // 2×2グリッド
         const cols = 2;
         const rows = 2;
         const cellW = (totalW - gap * (cols - 1)) / cols;
@@ -275,6 +274,7 @@ class ReportGenerator {
             const row = Math.floor(i / cols);
             const x = 0.15 + col * (cellW + gap);
             const y = imageAreaY + row * (cellH + gap);
+            // 枠線付き白背景
             slide.addShape(this.pptx.ShapeType.rect, {
                 x, y, w: cellW, h: cellH,
                 fill: { color: 'FFFFFF' },
@@ -298,6 +298,7 @@ class ReportGenerator {
                 });
             }
         }
+        // コメントボックス（スライド下部固定）
         const first = userActSlides[0];
         if (first.currentStatus || first.analysis) {
             const boxH = 5.0;

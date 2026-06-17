@@ -267,7 +267,6 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
         const rawJson = codeMatch?.[1] ?? text.match(/\{[\s\S]*\}/)?.[0] ?? '';
         if (!rawJson) {
             console.warn('[callComment] JSON not found in response:', text.slice(0, 300));
-            // フォールバック: "current" / "analysis" キーをテキストから直接抽出
             const cur = text.match(/"current"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*,|\s*\})/)?.[1] ?? '';
             const ana = text.match(/"analysis"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*\})/)?.[1] ?? '';
             return { current: cur.replace(/\\n/g, '\n'), analysis: ana.replace(/\\n/g, '\n') };
@@ -279,9 +278,8 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
             return result;
         }
         catch {
-            // 制御文字・改行をエスケープして再試行
             try {
-                const cleaned = rawJson.replace(/[\x00-\x1F\x7F]/g, c => {
+                const cleaned = rawJson.replace(/[\x00-\x1F\x7F]/g, (c) => {
                     if (c === '\n')
                         return '\\n';
                     if (c === '\r')
@@ -294,7 +292,6 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
                 return { current: parsed.current ?? '', analysis: parsed.analysis ?? '' };
             }
             catch {
-                // 最終フォールバック: 正規表現でキー値を直接取り出す
                 console.warn('[callComment] JSON parse error after cleanup:', rawJson.slice(0, 300));
                 const cur = rawJson.match(/"current"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*,|\s*\})/)?.[1] ?? '';
                 const ana = rawJson.match(/"analysis"\s*:\s*"([\s\S]*?)(?<!\\)"(?:\s*\})/)?.[1] ?? '';
@@ -306,8 +303,6 @@ trend は前年比で増加なら"up"、減少なら"down"、横ばいなら"fla
         }
     }
     buildPrompt(sectionLabel, month, dataText, curInst, anaInst) {
-        // Gemini使用時はJSON強制モード（responseMimeType）で呼ぶため、プロンプト末尾のJSON例は不要
-        // Claude/OpenAI使用時は末尾のJSON例がフォーマット指示として機能する
         const jsonInstruction = this.commentProvider === 'gemini'
             ? 'currentキーに【現状】の文章、analysisキーに【分析】の文章を入れたJSONを返してください。改行は\\nで表してください。'
             : '以下のJSON形式で返してください。currentキーに【現状】の文章、analysisキーに【分析】の文章を入れてください。改行は\\nで表してください。JSONのみ返してください。\n{"current":"...","analysis":"..."}';

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.REPORTS_DIR = exports.DEFAULT_PROMPTS = void 0;
+exports.DEFAULT_PROMPTS = exports.REPORTS_DIR = void 0;
 exports.getStores = getStores;
 exports.addStore = addStore;
 exports.getStore = getStore;
@@ -94,7 +94,6 @@ function getStores() {
 }
 function addStore(name) {
     const db = readDB();
-    // Check for duplicate
     const existing = db.stores.find(s => s.name === name);
     if (existing)
         return existing;
@@ -109,7 +108,6 @@ function getStore(id) {
 function deleteStore(id) {
     const db = readDB();
     db.stores = db.stores.filter(s => s.id !== id);
-    // Also remove reports for this store
     const storeReports = db.reports.filter(r => r.storeId === id);
     for (const r of storeReports) {
         try {
@@ -133,15 +131,8 @@ function saveReport(data, tmpPath) {
         fs.mkdirSync(storeDir, { recursive: true });
     const fileName = `MEO対策レポート_${data.storeName}様_${data.year}年${data.month}月.pptx`;
     const filePath = path.join(storeDir, fileName);
-    // Copy file to permanent location
     fs.copyFileSync(tmpPath, filePath);
-    const report = {
-        id: generateId(),
-        ...data,
-        fileName,
-        filePath,
-    };
-    // Remove old report for same store/month/year if exists
+    const report = { id: generateId(), ...data, fileName, filePath };
     const oldIdx = db.reports.findIndex(r => r.storeId === data.storeId && r.month === data.month && r.year === data.year);
     if (oldIdx >= 0) {
         try {

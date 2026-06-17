@@ -1,4 +1,5 @@
 declare const REPORTS_DIR: string;
+export { REPORTS_DIR };
 export interface Store {
     id: string;
     name: string;
@@ -39,4 +40,4 @@ export declare function clearDefaultPrompts(): void;
 export declare function getStorePrompts(storeId: string): Partial<PromptSet>;
 export declare function setStorePrompts(storeId: string, prompts: Partial<PromptSet>): void;
 export declare function clearAllStorePromptsForKeys(keys: (keyof PromptSet)[]): void;
-export { REPORTS_DIR };
+//# sourceMappingURL=db.d.ts.map

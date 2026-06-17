@@ -1,4 +1,11 @@
-import type { ReportInput, SlideData } from './types.js';
+import { ReportInput, SlideData } from './types.js';
+interface SlidesInput {
+    keyword?: SlideData;
+    keywords?: SlideData[];
+    views?: SlideData;
+    interactions?: SlideData;
+    userActions?: SlideData | SlideData[];
+}
 export declare class ReportGenerator {
     private pptx;
     constructor();
@@ -6,11 +13,8 @@ export declare class ReportGenerator {
     private addCoverSlide;
     private addContentSlide;
     private addKeywordsSlide;
-    generateReport(input: ReportInput, slides: {
-        keywords?: SlideData[];
-        keyword?: SlideData;
-        views?: SlideData;
-        interactions?: SlideData;
-        userActions?: SlideData;
-    }, outputPath: string): Promise<void>;
+    private addUserActionsGridSlide;
+    generateReport(input: ReportInput, slides: SlidesInput, outputPath: string): Promise<void>;
 }
+export {};
+//# sourceMappingURL=report-generator.d.ts.map

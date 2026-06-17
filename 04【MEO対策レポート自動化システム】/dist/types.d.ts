@@ -51,3 +51,4 @@ export interface UserActionData {
     previousRoutes: number;
     previousReservations: number;
 }
+//# sourceMappingURL=types.d.ts.map
