@@ -4104,8 +4104,6 @@ function savePurchase(){
 function saveOrder(){
   const client=g('of-client').trim();
   if(!client){alert('取引先を入力してください');return;}
-  const orderNumber=g('of-order-number').trim();
-  if(!orderNumber){alert('契約番号は必須です。契約書を確認して入力してください。');return;}
   const owner=g('of-owner').trim(); const date=g('of-date');
   const collectionMonth=g('of-collection-month');
   if(D.editId){
