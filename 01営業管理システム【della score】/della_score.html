@@ -1646,10 +1646,13 @@ function renderProspects(){
   const pageList=list.slice(_prospectPage*P_SIZE,(_prospectPage+1)*P_SIZE);
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
+  const todayStr=today();
   tb.innerHTML=pageList.map(p=>{
     const pf=(p.amount!=null&&p.cost!=null)?p.amount-p.cost:null;
     const pc=pf!=null?(pf>0?'var(--green)':pf<0?'var(--red)':'var(--text2)'):'var(--text2)';
-    return `<tr>
+    const isOverdue=p.deadline&&p.deadline<todayStr&&p.status!=='ordered'&&p.status!=='canceled';
+    const rowBg=isOverdue?'background:#FFF8F0;':'';
+    return `<tr style="${rowBg}">
       <td><input type="checkbox" class="pro-row-chk" value="${p.id}" onchange="updateProBulkBar()" style="cursor:pointer"></td>
       <td title="${p.client}" style="font-weight:600">${p.client}</td>
       <td title="${p.name||''}">${p.name||'-'}</td>
@@ -1658,9 +1661,10 @@ function renderProspects(){
       <td class="amount" style="color:var(--text2)">${fmt(p.cost)}</td>
       <td class="amount" style="color:${pc}">${fmt(pf)}</td>
       <td>${fmtD(p.issued||p.createdAt||p.deadline)}</td>
-      <td>${fmtD(p.deadline)}</td>
+      <td style="color:${isOverdue?'var(--red)':''}; font-weight:${isOverdue?'600':'400'}">${fmtD(p.deadline)}${isOverdue?' <span style="display:inline-block;background:#FEE2E2;color:#B91C1C;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:3px">要確認</span>':''}</td>
       <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
       <td>${p.mf_quote_id?'<span class="badge bo" style="font-size:10px;margin-right:3px">MF</span>':''}${SB[p.status]||SB.prospect}</td>
+      <td style="color:var(--text2);font-size:12px" title="${p.memo||''}">${p.memo||'-'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost" onclick="editProspect('${p.id}')">編集</button>
         ${p.status!=='ordered'?`<button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="openOrderFromProspect('${p.id}')">→ 受注</button>`:''}
