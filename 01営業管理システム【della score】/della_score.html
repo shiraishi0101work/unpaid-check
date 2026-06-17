@@ -1626,7 +1626,8 @@ function renderProspects(){
   const ow=getOwnerFilter('owner-prospects');
   const mf=monthSel?.value||'';
   let list=D.prospects;
-  if(D.filterStatus!=='all') list=list.filter(p=>p.status===D.filterStatus);
+  if(D.filterStatus==='active') list=list.filter(p=>p.status!=='ordered'&&p.status!=='canceled');
+  else if(D.filterStatus!=='all') list=list.filter(p=>p.status===D.filterStatus);
   if(mf) list=list.filter(p=>(p.issued||'').startsWith(mf));
   if(q) list=list.filter(p=>(p.client+p.name+(p.owner||'')+(p.memo||'')+(p.quote_number||'')).toLowerCase().includes(q));
   if(ow) list=list.filter(p=>(p.owner||'')=== ow);
