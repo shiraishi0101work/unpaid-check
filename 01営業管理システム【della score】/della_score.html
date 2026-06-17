@@ -4206,6 +4206,8 @@ function openOrderFromProspect(id){
 function saveOrderFromProspect(prospectId){
   const client=g('of-client').trim();
   if(!client){alert('取引先を入力してください');return;}
+  const orderNumber=g('of-order-number').trim();
+  if(!orderNumber){alert('契約番号は必須です。契約書を確認して入力してください。');return;}
   const owner=g('of-owner').trim();
   const date=g('of-date');
   const collectionMonth=g('of-collection-month');
@@ -4215,7 +4217,7 @@ function saveOrderFromProspect(prospectId){
     tax:parseFloat(g('of-tax'))||null,
     owner,date,delivery:g('of-delivery'),
     payment:g('of-payment'),desc:g('of-desc'),
-    collectionMonth,prospectId
+    collectionMonth,prospectId,order_number:orderNumber
   });
   // 見込みのステータスを「受注」に更新・金額も受注額で上書き
   const p=D.prospects.find(x=>x.id===prospectId);
