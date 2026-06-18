@@ -64,7 +64,7 @@ function iwToDsPurchase($iw) {
         'bank'        => '',
         'items'       => '',
         'status'      => 'unpaid',
-        'owner'       => IW_OWNER,
+        'owner'       => $iw['owner'] ?? IW_OWNER,
         'iw_order_id' => (int)$iw['id'],
     ];
 }
