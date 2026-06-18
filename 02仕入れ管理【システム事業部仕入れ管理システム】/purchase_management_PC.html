@@ -1659,6 +1659,7 @@ function renderCSVPreview(errs) {
       <td style="text-align:right">${r.qty}</td>
       <td>${r.client||'—'}</td>
       <td style="text-align:right">${r.sellPrice ? '¥'+r.sellPrice.toLocaleString() : '—'}</td>
+      <td>${r.owner||'岩田'}</td>
       <td style="color:var(--success-tx);font-size:11px">✓</td>
     </tr>`).join('');
   const errEl = document.getElementById('csv-errors');
