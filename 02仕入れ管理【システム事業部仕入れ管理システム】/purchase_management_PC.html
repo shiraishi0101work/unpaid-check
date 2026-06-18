@@ -598,6 +598,28 @@
     </div>
   </div>
 
+  <!-- 仕入れ先一覧 -->
+  <div id="p-suppliers" class="page">
+    <div class="page-header">
+      <div class="page-title">仕入れ先一覧</div>
+    </div>
+    <div class="card">
+      <div class="card-title">仕入れ先を追加</div>
+      <div class="form-grid">
+        <div class="fg"><label>仕入れ先名 *</label><input type="text" id="sup-name" placeholder="Amazon / e-trend など"></div>
+        <div class="fg"><label>URL</label><input type="url" id="sup-url" placeholder="https://..."></div>
+        <div class="fg full"><label>メモ</label><input type="text" id="sup-memo" placeholder="備考・特記事項など"></div>
+        <div class="fg" style="justify-content:flex-end;align-self:flex-end">
+          <button class="btn btn-primary" onclick="addSupplier()">追加する</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">登録済み仕入れ先</div>
+      <div id="suppliers-list"><p style="text-align:center;color:var(--text-hint);padding:24px;font-size:13px">仕入れ先が登録されていません</p></div>
+    </div>
+  </div>
+
   <!-- カード管理 -->
   <div id="p-cards" class="page">
     <div class="page-header">
