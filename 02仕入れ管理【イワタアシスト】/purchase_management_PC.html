@@ -963,6 +963,16 @@ async function delClient(id, name) {
   toast('削除しました');
 }
 
+async function dupOrd(id) {
+  const res = await apiFetch('duplicate_order', {id});
+  if (!res?.ok) { alert(res?.error || '複製に失敗しました'); return; }
+  const orig = orders.find(o => o.id === id);
+  if (orig) {
+    orders.unshift({...orig, id: res.id, date: new Date().toISOString().split('T')[0], status: '未発注'});
+  }
+  rt(); rmets(); toast('複製しました');
+}
+
 async function delOrd(id) {
   if (!confirm('削除しますか？')) return;
   await apiFetch('del_order', {id});
