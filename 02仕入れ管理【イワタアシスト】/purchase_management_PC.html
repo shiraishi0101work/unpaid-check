@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>イワタアシスト【ウェブ仕入れ管理】</title>
+<title>システム事業部仕入れ管理システム【ウェブ仕入れ管理】</title>
 <style>
   /* ===== DESIGN TOKENS ===== */
   :root {
@@ -482,7 +482,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>発注日</th><th>商品名</th><th>仕入れ先</th>
+            <th>発注日</th><th>商品名</th><th>区分</th><th>仕入れ先</th>
             <th style="text-align:right">数量</th><th style="text-align:right">単価</th><th style="text-align:right">小計</th>
             <th>納品先</th><th>カード</th><th>状態</th><th>メモ</th><th></th>
           </tr></thead>
@@ -549,6 +549,11 @@
           <input type="text" id="fcl2-new" placeholder="新しい納品先名" style="display:none;margin-top:6px;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px">
         </div>
         <div class="fg"><label>支払いカード</label><select id="fcd"><option value="">カードを選択</option></select></div>
+        <div class="fg"><label>区分</label>
+          <select id="fcat">
+            <option>物品</option><option>サーバー</option><option>外注費</option><option>その他</option>
+          </select>
+        </div>
         <div class="fg"><label>ステータス</label>
           <select id="fss"><option>未発注</option><option selected>発注済</option><option>納品済</option><option>キャンセル</option></select>
         </div>
@@ -685,7 +690,7 @@
     <div class="card" style="margin-bottom:20px">
       <div class="card-title">CSVインポート</div>
       <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px;line-height:1.8">
-        CSVの列順：<code style="background:var(--brand-light);padding:2px 6px;border-radius:4px;font-size:12px">発注日, 仕入れ先, 商品名, 仕入れ単価（税抜）, 数量, 納品先, 販売単価</code><br>
+        CSVの列順：<code style="background:var(--brand-light);padding:2px 6px;border-radius:4px;font-size:12px">仕入日, 区分, 仕入れ先, 商品名, 仕入れ単価（税抜）, 数量, 納品先, 販売単価</code><br>
         ※1行目はヘッダー行として読み飛ばします。商品名を省略すると仕入れ先をそのまま使います。
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
@@ -700,7 +705,7 @@
         <div class="table-wrap" style="max-height:320px;overflow-y:auto;margin-bottom:12px">
           <table id="csv-preview-table" style="font-size:12px">
             <thead><tr>
-              <th>発注日</th><th>仕入れ先</th><th>商品名</th><th style="text-align:right">単価（税抜）</th>
+              <th>発注日</th><th>区分</th><th>仕入れ先</th><th>商品名</th><th style="text-align:right">単価（税抜）</th>
               <th style="text-align:right">数量</th><th>納品先</th><th style="text-align:right">販売単価</th><th>備考</th>
             </tr></thead>
             <tbody id="csv-preview-body"></tbody>
@@ -751,6 +756,11 @@
       <div class="fg"><label>納品予定日</label><input type="date" id="edit-delivery-date"></div>
       <div class="fg"><label>納品先</label><input type="text" id="edit-client" list="edit-cldl" placeholder="クライアント名"><datalist id="edit-cldl"></datalist></div>
       <div class="fg"><label>支払いカード</label><select id="edit-card"></select></div>
+      <div class="fg"><label>区分</label>
+        <select id="edit-cat">
+          <option>物品</option><option>サーバー</option><option>外注費</option><option>その他</option>
+        </select>
+      </div>
       <div class="fg"><label>ステータス</label>
         <select id="edit-status"><option>未発注</option><option>発注済</option><option>納品済</option><option>キャンセル</option></select>
       </div>
@@ -881,6 +891,20 @@ function renderMonthly() {
       `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:#f0f0f0;color:${statusColors[s]||'#666'};font-weight:600">${s} ${n}件</span>`
     ).join(' ');
 
+    // 区分別集計
+    const catMap = {};
+    d.orders.forEach(o => {
+      const cat = o.category || '物品';
+      if (!catMap[cat]) catMap[cat] = { count: 0, subtotal: 0 };
+      catMap[cat].count++;
+      catMap[cat].subtotal += (o.qty || 1) * (o.price || 0);
+    });
+    const catColorMap = { '物品': ['var(--brand-light)','var(--brand-dark)'], 'サーバー': ['#EEF2FF','#4338CA'], '外注費': ['#FEF9C3','#A16207'], 'その他': ['#F3F4F6','#6B7280'] };
+    const catHtml = ['物品','サーバー','外注費','その他'].filter(c => catMap[c]).map(c => {
+      const [bg, fg] = catColorMap[c] || ['#F3F4F6','#6B7280'];
+      return `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${bg};color:${fg};font-weight:600">${c} ${catMap[c].count}件 / ¥${catMap[c].subtotal.toLocaleString()}</span>`;
+    }).join(' ');
+
     const rows = d.orders.map(o => `
       <tr>
         <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
@@ -899,6 +923,7 @@ function renderMonthly() {
         <div>
           <div style="font-size:16px;font-weight:700;color:var(--text)">${label}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${statusHtml}</div>
+          ${catHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${catHtml}</div>` : ''}
         </div>
         <div style="display:flex;gap:20px;text-align:right">
           <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">総件数</div><div style="font-size:20px;font-weight:700;color:var(--text)">${d.count}<span style="font-size:12px;font-weight:400;margin-left:2px">件</span></div></div>
@@ -979,7 +1004,7 @@ function rt() {
   const pager = document.getElementById('pager');
 
   if (!total) {
-    tb.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-hint);padding:32px">データがありません</td></tr>';
+    tb.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-hint);padding:32px">データがありません</td></tr>';
     if (pager) pager.innerHTML = '';
     document.getElementById('order-count').textContent = '0件';
     return;
@@ -994,9 +1019,17 @@ function rt() {
   tb.innerHTML = pageData.map(o => {
     const incomplete = !o.name || !o.price || !o.sellPrice || !o.client;
     const rowStyle = incomplete ? 'background:#FFF0F0;' : '';
+    const catColors = {
+      '物品':   ['var(--brand-light)','var(--brand-dark)'],
+      'サーバー':['#EEF2FF','#4338CA'],
+      '外注費': ['#FEF9C3','#A16207'],
+      'その他': ['#F3F4F6','#6B7280']
+    };
+    const [catBg, catFg] = catColors[o.category||'物品'] || catColors['物品'];
     return `<tr style="${rowStyle}">
     <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
     <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
+    <td><span class="badge" style="background:${catBg};color:${catFg}">${o.category||'物品'}</span></td>
     <td style="white-space:nowrap">${o.shop||'—'}</td>
     <td style="text-align:right">${o.qty}</td>
     <td style="text-align:right">¥${o.price.toLocaleString()}</td>
@@ -1123,6 +1156,7 @@ function editOrd(id) {
   document.getElementById('edit-client').value         = o.client       || '';
   document.getElementById('edit-url').value            = o.url          || '';
   document.getElementById('edit-memo').value           = o.memo         || '';
+  document.getElementById('edit-cat').value            = o.category     || '物品';
   document.getElementById('edit-status').value         = o.status       || '未発注';
   document.getElementById('edit-card').innerHTML =
     '<option value="">カードを選択</option>' +
@@ -1153,6 +1187,7 @@ async function saveEdit() {
     deliveryDate: document.getElementById('edit-delivery-date').value           || '',
     client:       document.getElementById('edit-client').value.trim(),
     ccId:         parseInt(document.getElementById('edit-card').value)          || null,
+    category:     document.getElementById('edit-cat').value,
     status:       document.getElementById('edit-status').value,
     memo:         document.getElementById('edit-memo').value.trim()
   };
@@ -1196,6 +1231,7 @@ function clrF() {
   document.getElementById('fp').value = '';
   document.getElementById('fsp').value = '';
   document.getElementById('fdd').value = '';
+  document.getElementById('fcat').value = '物品';
   document.getElementById('fss').value = '発注済';
   document.getElementById('fcd').value = '';
   document.getElementById('pu').value = '';
@@ -1236,7 +1272,8 @@ async function addOrd() {
     client: clientName,
     ccId: parseInt(document.getElementById('fcd').value) || null,
     status: document.getElementById('fss').value,
-    memo: document.getElementById('fm').value.trim()
+    memo: document.getElementById('fm').value.trim(),
+    category: document.getElementById('fcat').value
   };
   const res = await apiFetch('add_order', data);
   orders.push({...data, id: res.id});
@@ -1522,15 +1559,16 @@ function loadCSV(input) {
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVLine(lines[i]);
       const date      = (cols[0] || '').replace(/\//g,'-') || new Date().toISOString().split('T')[0];
-      const shop      = cols[1] || '';
-      const name      = cols[2] || shop;
-      const price     = parseInt((cols[3] || '0').replace(/[,，¥￥\s]/g,'')) || 0;
-      const qty       = parseInt((cols[4] || '1').replace(/[,，\s]/g,'')) || 1;
-      const client    = cols[5] || '';
-      const sellPrice = parseInt((cols[6] || '0').replace(/[,，¥￥\s]/g,'')) || 0;
+      const category  = cols[1] || '物品';
+      const shop      = cols[2] || '';
+      const name      = cols[3] || shop;
+      const price     = parseInt((cols[4] || '0').replace(/[,，¥￥\s]/g,'')) || 0;
+      const qty       = parseInt((cols[5] || '1').replace(/[,，\s]/g,'')) || 1;
+      const client    = cols[6] || '';
+      const sellPrice = parseInt((cols[7] || '0').replace(/[,，¥￥\s]/g,'')) || 0;
       if (!name && !shop) { errs.push(`${i+1}行目: 商品名・仕入れ先が空`); continue; }
-      if (price <= 0) { errs.push(`${i+1}行目: 単価が不正 (${cols[3]})`); continue; }
-      csvParsedRows.push({ date, shop, name, price, qty, client, sellPrice });
+      if (price <= 0) { errs.push(`${i+1}行目: 単価が不正 (${cols[4]})`); continue; }
+      csvParsedRows.push({ date, category, shop, name, price, qty, client, sellPrice });
     }
     renderCSVPreview(errs);
     input.value = '';
@@ -1545,6 +1583,7 @@ function renderCSVPreview(errs) {
   document.getElementById('csv-preview-body').innerHTML = csvParsedRows.map(r => `
     <tr>
       <td>${r.date}</td>
+      <td>${r.category||'物品'}</td>
       <td>${r.shop||'—'}</td>
       <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</td>
       <td style="text-align:right">¥${r.price.toLocaleString()}</td>
@@ -1579,8 +1618,9 @@ function cancelCSV() {
 }
 
 function dlCSVTemplate() {
-  const header = '発注日,仕入れ先,商品名,仕入れ単価（税抜）,数量,納品先,販売単価';
-  const sample = `${new Date().toISOString().split('T')[0]},Amazon,商品名を入力,10000,1,クライアント名,15000`;
+  const header = '仕入日,区分,仕入れ先,商品名,仕入れ単価（税抜）,数量,納品先,販売単価';
+  const date = new Date().toISOString().split('T')[0];
+  const sample = `${date},物品,Amazon,商品名を入力,10000,1,クライアント名,15000`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF' + [header, sample].join('\n')], {type:'text/csv;charset=utf-8'}));
   a.download = 'インポートテンプレート.csv';

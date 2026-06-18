@@ -108,11 +108,13 @@ function getDb() {
         client        TEXT DEFAULT "",
         cc_id         INTEGER DEFAULT NULL,
         status        TEXT DEFAULT "未発注",
-        memo          TEXT DEFAULT ""
+        memo          TEXT DEFAULT "",
+        category      TEXT DEFAULT "物品"
     )');
     // カラム追加（既存DBへの対応）
     try { $db->exec('ALTER TABLE orders ADD COLUMN sell_price INTEGER DEFAULT 0'); } catch(Exception $e) {}
     try { $db->exec('ALTER TABLE orders ADD COLUMN delivery_date TEXT DEFAULT ""'); } catch(Exception $e) {}
+    try { $db->exec('ALTER TABLE orders ADD COLUMN category TEXT DEFAULT "物品"'); } catch(Exception $e) {}
     $db->exec('CREATE TABLE IF NOT EXISTS clients (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         name    TEXT NOT NULL UNIQUE,
@@ -196,6 +198,7 @@ if ($action === 'orders') {
             'ccId'         => $r['cc_id'] ? (int)$r['cc_id'] : null,
             'status'       => $r['status'],
             'memo'         => $r['memo'],
+            'category'     => $r['category'] ?? '物品',
         ];
     }, $rows);
     echo json_encode($out);
@@ -229,8 +232,8 @@ if ($action === 'add_order') {
     if ($clientName) {
         try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
     }
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
-                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
     $s->execute([
         ':date'          => $body['date']         ?? date('Y-m-d'),
         ':name'          => $body['name']          ?? '',
@@ -245,6 +248,7 @@ if ($action === 'add_order') {
         ':cc_id'         => $body['ccId'] ? (int)$body['ccId'] : null,
         ':status'        => $body['status']        ?? '未発注',
         ':memo'          => $body['memo']          ?? '',
+        ':category'      => $body['category']      ?? '物品',
     ]);
     $newId = (int)$db->lastInsertId();
     dsSyncAdd([
@@ -274,12 +278,14 @@ if ($action === 'import_csv') {
         $qty       = max(1, (int)($r['qty'] ?? 1));
         $client    = trim($r['client']    ?? '');
         $sellPrice = (int)($r['sellPrice'] ?? 0);
+        $category  = trim($r['category']  ?? '物品');
+        if (!in_array($category, ['物品','サーバー','外注費','その他'])) $category = '物品';
         if (!$name || $price <= 0) { $errors[] = ($i+1).'行目: 商品名または単価が不正'; continue; }
         if ($client) {
             try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$client, date('Y-m-d')]); } catch(Exception $e) {}
         }
-        $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
-                            VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
+        $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
+                            VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
         $s->execute([
             ':date'          => $date,
             ':name'          => $name,
@@ -294,6 +300,7 @@ if ($action === 'import_csv') {
             ':cc_id'         => null,
             ':status'        => '発注済',
             ':memo'          => '',
+            ':category'      => $category,
         ]);
         $newId = (int)$db->lastInsertId();
         dsSyncAdd(['id'=>$newId,'date'=>$date,'name'=>$name,'shop'=>$shop,'price'=>$price,'qty'=>$qty]);
@@ -331,8 +338,8 @@ if ($action === 'duplicate_order') {
     $st->execute([$id]);
     $orig = $st->fetch(PDO::FETCH_ASSOC);
     if (!$orig) { echo json_encode(['error'=>'not found']); exit; }
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
-                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
     $s->execute([
         ':date'          => date('Y-m-d'),
         ':name'          => $orig['name'],
@@ -347,6 +354,7 @@ if ($action === 'duplicate_order') {
         ':cc_id'         => $orig['cc_id'] ?: null,
         ':status'        => '未発注',
         ':memo'          => $orig['memo'],
+        ':category'      => $orig['category'] ?? '物品',
     ]);
     $newId = (int)$db->lastInsertId();
     dsSyncAdd([
@@ -409,7 +417,7 @@ if ($action === 'update_order') {
     if ($clientName) {
         try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
     }
-    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,sell_price=:sell_price,delivery_date=:delivery_date,client=:client,cc_id=:cc_id,status=:status,memo=:memo WHERE id=:id');
+    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,sell_price=:sell_price,delivery_date=:delivery_date,client=:client,cc_id=:cc_id,status=:status,memo=:memo,category=:category WHERE id=:id');
     $s->execute([
         ':date'          => $body['date']          ?? date('Y-m-d'),
         ':name'          => $body['name']          ?? '',
@@ -424,6 +432,7 @@ if ($action === 'update_order') {
         ':cc_id'         => $body['ccId'] ? (int)$body['ccId'] : null,
         ':status'        => $body['status']        ?? '未発注',
         ':memo'          => $body['memo']          ?? '',
+        ':category'      => $body['category']      ?? '物品',
         ':id'            => $id,
     ]);
     dsSyncAdd([
