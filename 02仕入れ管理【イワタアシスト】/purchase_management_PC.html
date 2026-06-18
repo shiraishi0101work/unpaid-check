@@ -1339,7 +1339,8 @@ async function addOrd() {
     ccId: parseInt(document.getElementById('fcd').value) || null,
     status: document.getElementById('fss').value,
     memo: document.getElementById('fm').value.trim(),
-    category: document.getElementById('fcat').value
+    category: document.getElementById('fcat').value,
+    owner: document.getElementById('fow').value
   };
   const res = await apiFetch('add_order', data);
   orders.push({...data, id: res.id});
