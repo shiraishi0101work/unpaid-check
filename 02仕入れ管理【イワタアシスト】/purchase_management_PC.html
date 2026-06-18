@@ -870,18 +870,33 @@ function scls(s) {
   return s==='発注済'?'badge-ordered':s==='納品済'?'badge-delivered':s==='キャンセル'?'badge-cancelled':'badge-pending';
 }
 
+function setMonthlyTab(tab) {
+  monthlyTab = tab;
+  document.querySelectorAll('.mtab').forEach(b => {
+    const isActive = b.id === 'mtab-' + tab;
+    b.style.borderBottom  = isActive ? '2px solid var(--brand)' : '2px solid transparent';
+    b.style.color         = isActive ? 'var(--brand)' : 'var(--text-sub)';
+  });
+  renderMonthly();
+}
+
 function renderMonthly() {
   const el = document.getElementById('monthly-summary');
   if (!el) return;
 
+  // タブに応じてフィルタ
+  const src = monthlyTab === 'all' ? orders : orders.filter(o => (o.owner || '岩田') === monthlyTab);
+
   // 月ごとに集計
   const map = {};
-  orders.forEach(o => {
-    const m = (o.date || '').slice(0, 7); // YYYY-MM
+  src.forEach(o => {
+    const m = (o.date || '').slice(0, 7);
     if (!m) return;
-    if (!map[m]) map[m] = { count: 0, subtotal: 0, orders: [] };
+    if (!map[m]) map[m] = { count: 0, purchase: 0, sales: 0, orders: [] };
+    const qty = o.qty || 1;
     map[m].count++;
-    map[m].subtotal += (o.qty || 1) * (o.price || 0);
+    map[m].purchase += qty * (o.price    || 0);
+    map[m].sales    += qty * (o.sellPrice || 0);
     map[m].orders.push(o);
   });
 
@@ -892,66 +907,94 @@ function renderMonthly() {
   }
 
   const statusColors = { '未発注': 'var(--warn-tx)', '発注済': 'var(--brand)', '納品済': 'var(--success-tx)', 'キャンセル': 'var(--danger-tx)' };
+  const catColorMap  = { '物品': ['var(--brand-light)','var(--brand-dark)'], 'サーバー': ['#EEF2FF','#4338CA'], '外注費': ['#FEF9C3','#A16207'], 'その他': ['#F3F4F6','#6B7280'] };
+  const ownerColors  = { '岩田': ['#E0F5F4','#007F77'], '谷藤': ['#FEF5E4','#8A6000'] };
 
   el.innerHTML = months.map(m => {
     const d = map[m];
-    const tax = Math.round(d.subtotal * 0.1);
-    const total = d.subtotal + tax;
     const [y, mo] = m.split('-');
-    const label = `${y}年${parseInt(mo)}月`;
+    const label  = `${y}年${parseInt(mo)}月`;
+    const gross  = d.sales - d.purchase;
+    const margin = d.sales > 0 ? Math.round(gross / d.sales * 100) : 0;
 
-    // ステータス別集計
+    // ステータス別
     const statusMap = {};
     d.orders.forEach(o => { statusMap[o.status] = (statusMap[o.status] || 0) + 1; });
     const statusHtml = Object.entries(statusMap).map(([s, n]) =>
       `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:#f0f0f0;color:${statusColors[s]||'#666'};font-weight:600">${s} ${n}件</span>`
     ).join(' ');
 
-    // 区分別集計
+    // 区分別
     const catMap = {};
     d.orders.forEach(o => {
       const cat = o.category || '物品';
-      if (!catMap[cat]) catMap[cat] = { count: 0, subtotal: 0 };
+      if (!catMap[cat]) catMap[cat] = { count:0, purchase:0 };
       catMap[cat].count++;
-      catMap[cat].subtotal += (o.qty || 1) * (o.price || 0);
+      catMap[cat].purchase += (o.qty||1) * (o.price||0);
     });
-    const catColorMap = { '物品': ['var(--brand-light)','var(--brand-dark)'], 'サーバー': ['#EEF2FF','#4338CA'], '外注費': ['#FEF9C3','#A16207'], 'その他': ['#F3F4F6','#6B7280'] };
     const catHtml = ['物品','サーバー','外注費','その他'].filter(c => catMap[c]).map(c => {
       const [bg, fg] = catColorMap[c] || ['#F3F4F6','#6B7280'];
-      return `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${bg};color:${fg};font-weight:600">${c} ${catMap[c].count}件 / ¥${catMap[c].subtotal.toLocaleString()}</span>`;
+      return `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${bg};color:${fg};font-weight:600">${c} ${catMap[c].count}件 / ¥${catMap[c].purchase.toLocaleString()}</span>`;
     }).join(' ');
 
-    const rows = d.orders.map(o => `
+    // 担当者別（全体タブのみ）
+    let ownerHtml = '';
+    if (monthlyTab === 'all') {
+      const ownerMap = {};
+      d.orders.forEach(o => {
+        const ow = o.owner || '岩田';
+        if (!ownerMap[ow]) ownerMap[ow] = { purchase:0, sales:0 };
+        ownerMap[ow].purchase += (o.qty||1)*(o.price||0);
+        ownerMap[ow].sales    += (o.qty||1)*(o.sellPrice||0);
+      });
+      ownerHtml = Object.entries(ownerMap).map(([ow, v]) => {
+        const [bg, fg] = ownerColors[ow] || ['#F3F4F6','#6B7280'];
+        const g = v.sales - v.purchase;
+        return `<span style="font-size:11px;padding:2px 10px;border-radius:999px;background:${bg};color:${fg};font-weight:600">${ow} 仕入¥${v.purchase.toLocaleString()} 売上¥${v.sales.toLocaleString()} 粗利¥${g.toLocaleString()}</span>`;
+      }).join(' ');
+    }
+
+    const rows = d.orders.map(o => {
+      const ow = o.owner || '岩田';
+      const [owBg, owFg] = ownerColors[ow] || ['#F3F4F6','#6B7280'];
+      return `
       <tr>
         <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
-        <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
+        <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
         <td style="white-space:nowrap">${o.shop||'—'}</td>
-        <td style="text-align:right">${o.qty}</td>
         <td style="text-align:right">¥${o.price.toLocaleString()}</td>
-        <td style="text-align:right;font-weight:600">¥${(o.qty*o.price).toLocaleString()}</td>
+        <td style="text-align:right">¥${((o.qty||1)*o.price).toLocaleString()}</td>
+        <td style="text-align:right;color:var(--success-tx)">¥${((o.qty||1)*(o.sellPrice||0)).toLocaleString()}</td>
+        <td style="text-align:right;font-weight:600;color:${((o.qty||1)*((o.sellPrice||0)-(o.price||0)))>=0?'var(--success-tx)':'var(--danger-tx)'}">¥${((o.qty||1)*((o.sellPrice||0)-(o.price||0))).toLocaleString()}</td>
         <td style="white-space:nowrap">${o.client||'—'}</td>
+        <td><span style="font-size:11px;padding:1px 7px;border-radius:999px;background:${owBg};color:${owFg};font-weight:600">${ow}</span></td>
         <td><span class="badge ${scls(o.status)}">${o.status}</span></td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     return `
     <div class="card" style="margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
         <div>
           <div style="font-size:16px;font-weight:700;color:var(--text)">${label}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${statusHtml}</div>
           ${catHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${catHtml}</div>` : ''}
+          ${ownerHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${ownerHtml}</div>` : ''}
         </div>
-        <div style="display:flex;gap:20px;text-align:right">
-          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">総件数</div><div style="font-size:20px;font-weight:700;color:var(--text)">${d.count}<span style="font-size:12px;font-weight:400;margin-left:2px">件</span></div></div>
-          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">合計（税抜）</div><div style="font-size:20px;font-weight:700;color:var(--brand)">¥${d.subtotal.toLocaleString()}</div></div>
-          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">合計（税込）</div><div style="font-size:20px;font-weight:700;color:var(--text)">¥${total.toLocaleString()}</div></div>
+        <div style="display:flex;gap:20px;text-align:right;flex-wrap:wrap">
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:2px">件数</div><div style="font-size:20px;font-weight:700;color:var(--text)">${d.count}<span style="font-size:12px;font-weight:400;margin-left:2px">件</span></div></div>
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:2px">仕入れ合計</div><div style="font-size:20px;font-weight:700;color:var(--brand)">¥${d.purchase.toLocaleString()}</div></div>
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:2px">売上合計</div><div style="font-size:20px;font-weight:700;color:var(--success-tx)">¥${d.sales.toLocaleString()}</div></div>
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:2px">粗利 / 粗利率</div><div style="font-size:20px;font-weight:700;color:${gross>=0?'var(--success-tx)':'var(--danger-tx)'}">¥${gross.toLocaleString()} <span style="font-size:13px">(${margin}%)</span></div></div>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>発注日</th><th>商品名</th><th>仕入れ先</th><th style="text-align:right">数量</th>
-            <th style="text-align:right">単価</th><th style="text-align:right">小計</th><th>納品先</th><th>状態</th>
+            <th>発注日</th><th>商品名</th><th>仕入れ先</th>
+            <th style="text-align:right">単価</th><th style="text-align:right">仕入れ小計</th>
+            <th style="text-align:right">売上小計</th><th style="text-align:right">粗利</th>
+            <th>納品先</th><th>担当者</th><th>状態</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
