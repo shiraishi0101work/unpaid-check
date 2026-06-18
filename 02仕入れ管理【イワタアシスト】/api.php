@@ -423,7 +423,8 @@ if ($action === 'update_order') {
     if ($clientName) {
         try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
     }
-    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,sell_price=:sell_price,delivery_date=:delivery_date,client=:client,cc_id=:cc_id,status=:status,memo=:memo,category=:category WHERE id=:id');
+    $owner = in_array($body['owner'] ?? '', ['岩田','谷藤']) ? $body['owner'] : '岩田';
+    $s = $db->prepare('UPDATE orders SET date=:date,name=:name,shop=:shop,brand=:brand,url=:url,qty=:qty,price=:price,sell_price=:sell_price,delivery_date=:delivery_date,client=:client,cc_id=:cc_id,status=:status,memo=:memo,category=:category,owner=:owner WHERE id=:id');
     $s->execute([
         ':date'          => $body['date']          ?? date('Y-m-d'),
         ':name'          => $body['name']          ?? '',
@@ -439,6 +440,7 @@ if ($action === 'update_order') {
         ':status'        => $body['status']        ?? '未発注',
         ':memo'          => $body['memo']          ?? '',
         ':category'      => $body['category']      ?? '物品',
+        ':owner'         => $owner,
         ':id'            => $id,
     ]);
     dsSyncAdd([
@@ -448,6 +450,7 @@ if ($action === 'update_order') {
         'shop'  => $body['shop']   ?? '',
         'price' => (int)($body['price'] ?? 0),
         'qty'   => (int)($body['qty']   ?? 1),
+        'owner' => $owner,
     ]);
     echo json_encode(['ok' => true]);
     exit;
