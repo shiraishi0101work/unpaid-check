@@ -678,8 +678,42 @@
   <!-- エクスポート -->
   <div id="p-export" class="page">
     <div class="page-header">
-      <div class="page-title">エクスポート / API連携</div>
+      <div class="page-title">エクスポート / インポート</div>
     </div>
+
+    <!-- CSVインポート -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">CSVインポート</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px;line-height:1.8">
+        CSVの列順：<code style="background:var(--brand-light);padding:2px 6px;border-radius:4px;font-size:12px">発注日, 仕入れ先, 商品名, 仕入れ単価（税抜）, 数量, 納品先, 販売単価</code><br>
+        ※1行目はヘッダー行として読み飛ばします。商品名を省略すると仕入れ先をそのまま使います。
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <label class="btn btn-primary" style="cursor:pointer">
+          📂 CSVファイルを選択
+          <input type="file" id="csv-file" accept=".csv,text/csv" style="display:none" onchange="loadCSV(this)">
+        </label>
+        <button class="btn btn-sm" onclick="dlCSVTemplate()">テンプレートをダウンロード</button>
+      </div>
+      <div id="csv-preview" style="display:none">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px" id="csv-preview-label"></div>
+        <div class="table-wrap" style="max-height:320px;overflow-y:auto;margin-bottom:12px">
+          <table id="csv-preview-table" style="font-size:12px">
+            <thead><tr>
+              <th>発注日</th><th>仕入れ先</th><th>商品名</th><th style="text-align:right">単価（税抜）</th>
+              <th style="text-align:right">数量</th><th>納品先</th><th style="text-align:right">販売単価</th><th>備考</th>
+            </tr></thead>
+            <tbody id="csv-preview-body"></tbody>
+          </table>
+        </div>
+        <div id="csv-errors" style="display:none;background:var(--danger-bg);color:var(--danger-tx);font-size:12px;padding:10px;border-radius:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="csv-import-btn" onclick="execCSVImport()">登録する</button>
+          <button class="btn" onclick="cancelCSV()">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">データ出力</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
