@@ -259,6 +259,25 @@ if ($action === 'add_order') {
     exit;
 }
 
+// ── 全発注を DellaScore へ再同期 ──
+if ($action === 'resync_all') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $rows = $db->query('SELECT * FROM orders')->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) {
+        dsSyncAdd([
+            'id'    => $r['id'],
+            'date'  => $r['date'],
+            'name'  => $r['name'],
+            'shop'  => $r['shop'],
+            'price' => (int)$r['price'],
+            'qty'   => (int)$r['qty'],
+        ]);
+    }
+    echo json_encode(['ok'=>true, 'count'=>count($rows)]);
+    exit;
+}
+
 // ── 発注複製 ──
 if ($action === 'duplicate_order') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
