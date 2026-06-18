@@ -201,6 +201,7 @@ if ($action === 'orders') {
             'status'       => $r['status'],
             'memo'         => $r['memo'],
             'category'     => $r['category'] ?? '物品',
+            'owner'        => $r['owner'] ?? '岩田',
         ];
     }, $rows);
     echo json_encode($out);
