@@ -2043,8 +2043,11 @@ async function stmtApprove(id) {
 
 // Init
 (async () => {
-  [orders, cards, clients, statements] = await Promise.all([apiFetch('orders'), apiFetch('cards'), apiFetch('clients'), apiFetch('card_statements')]);
-  rmets(); rt(); updFilters(); today(); updStmtBadge();
+  [orders, cards, clients, suppliers, statements] = await Promise.all([
+    apiFetch('orders'), apiFetch('cards'), apiFetch('clients'),
+    apiFetch('suppliers'), apiFetch('card_statements')
+  ]);
+  rmets(); rt(); updFilters(); today(); updStmtBadge(); updSupDl();
 })();
 </script>
 </body>
