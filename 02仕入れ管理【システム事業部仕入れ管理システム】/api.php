@@ -122,6 +122,13 @@ function getDb() {
         name    TEXT NOT NULL UNIQUE,
         created TEXT DEFAULT ""
     )');
+    $db->exec('CREATE TABLE IF NOT EXISTS suppliers (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        name    TEXT NOT NULL UNIQUE,
+        url     TEXT DEFAULT "",
+        memo    TEXT DEFAULT "",
+        created TEXT DEFAULT ""
+    )');
     $db->exec('CREATE TABLE IF NOT EXISTS cards (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         name    TEXT NOT NULL,
