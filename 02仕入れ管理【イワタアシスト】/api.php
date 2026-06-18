@@ -260,6 +260,45 @@ if ($action === 'add_order') {
     exit;
 }
 
+// ── 発注複製 ──
+if ($action === 'duplicate_order') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $id = (int)$body['id'];
+    $st = $db->prepare('SELECT * FROM orders WHERE id=?');
+    $st->execute([$id]);
+    $orig = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$orig) { echo json_encode(['error'=>'not found']); exit; }
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
+    $s->execute([
+        ':date'          => date('Y-m-d'),
+        ':name'          => $orig['name'],
+        ':shop'          => $orig['shop'],
+        ':brand'         => $orig['brand'],
+        ':url'           => $orig['url'],
+        ':qty'           => (int)$orig['qty'],
+        ':price'         => (int)$orig['price'],
+        ':sell_price'    => (int)($orig['sell_price'] ?? 0),
+        ':delivery_date' => $orig['delivery_date'] ?? '',
+        ':client'        => $orig['client'],
+        ':cc_id'         => $orig['cc_id'] ?: null,
+        ':status'        => '未発注',
+        ':memo'          => $orig['memo'],
+    ]);
+    $newId = (int)$db->lastInsertId();
+    dsSyncAdd([
+        'id'    => $newId,
+        'date'  => date('Y-m-d'),
+        'name'  => $orig['name'],
+        'shop'  => $orig['shop'],
+        'price' => (int)$orig['price'],
+        'qty'   => (int)$orig['qty'],
+    ]);
+    echo json_encode(['ok'=>true, 'id'=>$newId]);
+    exit;
+}
+
 // ── 発注削除 ──
 if ($action === 'del_order') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
