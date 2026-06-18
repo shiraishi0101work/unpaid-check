@@ -109,12 +109,14 @@ function getDb() {
         cc_id         INTEGER DEFAULT NULL,
         status        TEXT DEFAULT "未発注",
         memo          TEXT DEFAULT "",
-        category      TEXT DEFAULT "物品"
+        category      TEXT DEFAULT "物品",
+        owner         TEXT DEFAULT "岩田"
     )');
     // カラム追加（既存DBへの対応）
     try { $db->exec('ALTER TABLE orders ADD COLUMN sell_price INTEGER DEFAULT 0'); } catch(Exception $e) {}
     try { $db->exec('ALTER TABLE orders ADD COLUMN delivery_date TEXT DEFAULT ""'); } catch(Exception $e) {}
     try { $db->exec('ALTER TABLE orders ADD COLUMN category TEXT DEFAULT "物品"'); } catch(Exception $e) {}
+    try { $db->exec('ALTER TABLE orders ADD COLUMN owner TEXT DEFAULT "岩田"'); } catch(Exception $e) {}
     $db->exec('CREATE TABLE IF NOT EXISTS clients (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         name    TEXT NOT NULL UNIQUE,
