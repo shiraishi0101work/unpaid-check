@@ -187,6 +187,42 @@ if ($action === 'del_client') {
     exit;
 }
 
+// ── 仕入れ先一覧 ──
+if ($action === 'suppliers') {
+    $db = getDb();
+    $rows = $db->query('SELECT * FROM suppliers ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(array_map(fn($r) => ['id'=>(int)$r['id'],'name'=>$r['name'],'url'=>$r['url'],'memo'=>$r['memo']], $rows));
+    exit;
+}
+
+// ── 仕入れ先追加 ──
+if ($action === 'add_supplier') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $name = trim($body['name'] ?? '');
+    if (!$name) { echo json_encode(['error'=>'名前を入力してください']); exit; }
+    try {
+        $s = $db->prepare('INSERT INTO suppliers (name, url, memo, created) VALUES (?, ?, ?, ?)');
+        $s->execute([$name, trim($body['url'] ?? ''), trim($body['memo'] ?? ''), date('Y-m-d')]);
+        echo json_encode(['ok'=>true, 'id'=>(int)$db->lastInsertId(), 'name'=>$name]);
+    } catch (Exception $e) {
+        $row = $db->prepare('SELECT id FROM suppliers WHERE name=?');
+        $row->execute([$name]);
+        $r = $row->fetch(PDO::FETCH_ASSOC);
+        echo json_encode(['ok'=>true, 'id'=>(int)($r['id']??0), 'name'=>$name]);
+    }
+    exit;
+}
+
+// ── 仕入れ先削除 ──
+if ($action === 'del_supplier') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $db->prepare('DELETE FROM suppliers WHERE id=?')->execute([(int)$body['id']]);
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 // ── 発注一覧 ──
 if ($action === 'orders') {
     $db = getDb();
