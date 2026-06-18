@@ -585,7 +585,8 @@ function rt() {
       ${chip(o.ccId) ? `<div style="margin-top:6px">${chip(o.ccId)}</div>` : ''}
       ${o.memo ? `<div style="font-size:11px;color:var(--text-sub);margin-top:4px">${o.memo}</div>` : ''}
       <div class="order-actions">
-        <button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})">削除</button>
+        <button class="btn btn-sm" onclick="dupOrd(${o.id})">複製</button>
+        <button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})" style="margin-left:4px">削除</button>
       </div>
     </div>`;
   }).join('');
