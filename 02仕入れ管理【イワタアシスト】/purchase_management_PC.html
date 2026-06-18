@@ -1154,42 +1154,101 @@ function apiHeaders() {
   return { 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
 }
 
-async function callAI(text, url, shopGuess) {
-  const headers = apiHeaders();
-  if (!headers) throw new Error('no api key');
-  const prompt = `あなたは通販サイトの商品情報抽出の専門家です。以下のテキストから商品情報を正確に抽出してJSONのみで返してください。
+function extractFromDom(doc, url, shopGuess) {
+  const result = { name:'', shop: shopGuess||'', brand:'', price:0, model:'', color:'', spec:'', memo:'' };
 
-抽出フィールド（不明は空文字か0）:
-{
-  "name": "商品の正式名称（型番・モデル名を含む完全な名称）",
-  "shop": "販売ショップ名",
-  "brand": "ブランド・メーカー名",
-  "price": 税込価格の数値（不明は0）,
-  "model": "型番・品番",
-  "color": "カラー・色",
-  "spec": "主要スペック概要",
-  "memo": "その他の重要仕様・特記事項"
+  // ── JSON-LD (Schema.org Product) ──
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+    try {
+      const d = JSON.parse(s.textContent);
+      const items = Array.isArray(d) ? d : [d];
+      items.forEach(item => {
+        const t = item['@type'];
+        if (!t || !(t === 'Product' || (Array.isArray(t) && t.includes('Product')))) return;
+        if (item.name)  result.name  = result.name  || item.name;
+        if (item.brand) result.brand = result.brand || (typeof item.brand === 'object' ? item.brand.name : item.brand);
+        if (item.model) result.model = result.model || item.model;
+        const offer = item.offers || (item.offers && item.offers[0]);
+        if (offer) {
+          const o = Array.isArray(offer) ? offer[0] : offer;
+          const p = parseFloat(o.price || o.highPrice || o.lowPrice || 0);
+          if (p > 0 && !result.price) result.price = Math.round(p);
+        }
+      });
+    } catch(e) {}
+  });
+
+  // ── OGP ──
+  const og = k => doc.querySelector(`meta[property="${k}"]`)?.content || '';
+  if (!result.name)  result.name  = og('og:title') || doc.querySelector('title')?.textContent?.trim() || '';
+  if (!result.price) {
+    const ogp = parseFloat((og('og:price:amount') || og('product:price:amount')).replace(/[,，]/g,''));
+    if (ogp > 0) result.price = Math.round(ogp);
+  }
+  if (!result.brand) result.brand = og('og:brand') || og('product:brand') || '';
+
+  // ── サイト別セレクタ ──
+  const $ = s => doc.querySelector(s);
+  const host = (() => { try { return new URL(url).hostname; } catch(e){ return ''; } })();
+
+  if (/amazon\.co\.jp/.test(host)) {
+    result.name  = result.name  || $('[id="productTitle"]')?.textContent?.trim() || '';
+    result.brand = result.brand || $('#bylineInfo')?.textContent?.replace(/ブランド：|Visit the |Store/gi,'').trim() || '';
+    if (!result.price) {
+      const whole = $('.a-price-whole')?.textContent?.replace(/[,，\s]/g,'') || '';
+      const frac  = $('.a-price-fraction')?.textContent || '00';
+      if (whole) result.price = Math.round(parseFloat(whole + '.' + frac));
+    }
+  } else if (/rakuten\.co\.jp/.test(host)) {
+    result.name  = result.name  || $('.item_name,.productName')?.textContent?.trim() || '';
+    if (!result.price) {
+      const pt = $('.price2,.important')?.textContent || '';
+      const pm = pt.match(/[\d,，]+/); if (pm) result.price = parseInt(pm[0].replace(/[,，]/g,''));
+    }
+  } else if (/e-trend\.co\.jp/.test(host)) {
+    result.name  = result.name  || $('h1.name,h1')?.textContent?.trim() || '';
+    if (!result.price) {
+      const pt = $('.price,.priceBox')?.textContent || '';
+      const pm = pt.match(/[\d,，]+/); if (pm) result.price = parseInt(pm[0].replace(/[,，]/g,''));
+    }
+  } else if (/yodobashi\.com/.test(host)) {
+    result.name  = result.name  || $('h1.js-productName,h1')?.textContent?.trim() || '';
+    if (!result.price) {
+      const pt = $('.price_whole,.productPrice')?.textContent || '';
+      const pm = pt.match(/[\d,，]+/); if (pm) result.price = parseInt(pm[0].replace(/[,，]/g,''));
+    }
+  } else if (/kakaku\.com/.test(host)) {
+    result.name  = result.name  || $('h1.ksHeader_title,h1')?.textContent?.trim() || '';
+    if (!result.price) {
+      const pt = $('.ksHeader_minPrice,.priceTable')?.textContent || '';
+      const pm = pt.match(/[\d,，]+/); if (pm) result.price = parseInt(pm[0].replace(/[,，]/g,''));
+    }
+  }
+
+  // ── 汎用価格抽出（まだ取れていない場合）──
+  if (!result.price) {
+    const bodyText = (doc.body?.textContent || '').slice(0, 5000);
+    const priceMatches = [...bodyText.matchAll(/[¥￥]\s*([\d,，]+)/g)];
+    const prices = priceMatches.map(m => parseInt(m[1].replace(/[,，]/g,''))).filter(p => p > 100 && p < 10000000);
+    if (prices.length) result.price = prices[0];
+  }
+
+  // 商品名が長すぎる場合トリム
+  if (result.name.length > 100) result.name = result.name.slice(0, 100).trim();
+
+  return result;
 }
 
-ショップ候補: ${shopGuess || '不明'}
-URL: ${url || '不明'}
-
-テキスト:
-${text.slice(0, 8000)}
-
-JSONのみ。マークダウン不要。`;
-
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers,
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }] })
-  });
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || 'api error');
-  const txt = d.content.filter(c => c.type === 'text').map(c => c.text).join('');
-  const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('parse failed');
-  return JSON.parse(m[0]);
+function extractFromText(text, shopGuess) {
+  const result = { name:'', shop: shopGuess||'', brand:'', price:0, model:'', color:'', spec:'', memo:'' };
+  // 価格抽出
+  const priceMatches = [...text.matchAll(/[¥￥]\s*([\d,，]+)/g)];
+  const prices = priceMatches.map(m => parseInt(m[1].replace(/[,，]/g,''))).filter(p => p > 100 && p < 10000000);
+  if (prices.length) result.price = prices[0];
+  // 型番（英数字混在パターン）
+  const modelM = text.match(/[A-Z]{1,5}[-_]?[\dA-Z]{3,12}/);
+  if (modelM) result.model = modelM[0];
+  return result;
 }
 
 function applyParsed(parsed, url, shopGuess, source) {
