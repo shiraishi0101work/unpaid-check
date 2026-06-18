@@ -344,8 +344,8 @@ if ($action === 'duplicate_order') {
     $st->execute([$id]);
     $orig = $st->fetch(PDO::FETCH_ASSOC);
     if (!$orig) { echo json_encode(['error'=>'not found']); exit; }
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
-                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category,owner)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category,:owner)');
     $s->execute([
         ':date'          => date('Y-m-d'),
         ':name'          => $orig['name'],
@@ -361,6 +361,7 @@ if ($action === 'duplicate_order') {
         ':status'        => '未発注',
         ':memo'          => $orig['memo'],
         ':category'      => $orig['category'] ?? '物品',
+        ':owner'         => $orig['owner'] ?? '岩田',
     ]);
     $newId = (int)$db->lastInsertId();
     dsSyncAdd([
@@ -370,6 +371,7 @@ if ($action === 'duplicate_order') {
         'shop'  => $orig['shop'],
         'price' => (int)$orig['price'],
         'qty'   => (int)$orig['qty'],
+        'owner' => $orig['owner'] ?? '岩田',
     ]);
     echo json_encode(['ok'=>true, 'id'=>$newId]);
     exit;
