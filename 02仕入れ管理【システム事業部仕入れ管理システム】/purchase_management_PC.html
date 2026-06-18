@@ -1633,9 +1633,11 @@ function loadCSV(input) {
       const qty       = parseInt((cols[5] || '1').replace(/[,，\s]/g,'')) || 1;
       const client    = cols[6] || '';
       const sellPrice = parseInt((cols[7] || '0').replace(/[,，¥￥\s]/g,'')) || 0;
+      const ownerRaw  = (cols[8] || '').trim();
+      const owner     = ownerRaw === '谷藤' ? '谷藤' : '岩田';
       if (!name && !shop) { errs.push(`${i+1}行目: 商品名・仕入れ先が空`); continue; }
       if (price <= 0) { errs.push(`${i+1}行目: 単価が不正 (${cols[4]})`); continue; }
-      csvParsedRows.push({ date, category, shop, name, price, qty, client, sellPrice });
+      csvParsedRows.push({ date, category, shop, name, price, qty, client, sellPrice, owner });
     }
     renderCSVPreview(errs);
     input.value = '';
