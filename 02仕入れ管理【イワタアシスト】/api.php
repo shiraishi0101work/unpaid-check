@@ -235,8 +235,9 @@ if ($action === 'add_order') {
     if ($clientName) {
         try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
     }
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
-                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category,owner)
+                        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category,:owner)');
+    $owner = in_array($body['owner'] ?? '', ['岩田','谷藤']) ? $body['owner'] : '岩田';
     $s->execute([
         ':date'          => $body['date']         ?? date('Y-m-d'),
         ':name'          => $body['name']          ?? '',
@@ -252,6 +253,7 @@ if ($action === 'add_order') {
         ':status'        => $body['status']        ?? '未発注',
         ':memo'          => $body['memo']          ?? '',
         ':category'      => $body['category']      ?? '物品',
+        ':owner'         => $owner,
     ]);
     $newId = (int)$db->lastInsertId();
     dsSyncAdd([
@@ -261,6 +263,7 @@ if ($action === 'add_order') {
         'shop'  => $body['shop']   ?? '',
         'price' => (int)($body['price'] ?? 0),
         'qty'   => (int)($body['qty']   ?? 1),
+        'owner' => $owner,
     ]);
     echo json_encode(['ok'=>true, 'id'=>$newId]);
     exit;
