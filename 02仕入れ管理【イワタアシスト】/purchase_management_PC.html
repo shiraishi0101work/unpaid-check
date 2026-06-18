@@ -1311,21 +1311,17 @@ async function loadURL() {
   }
 }
 
-async function parseText() {
+function parseText() {
   const text = document.getElementById('paste-text').value.trim();
   if (!text || text.length < 20) { alert('テキストを貼り付けてください'); return; }
-  const btn = document.getElementById('parse-btn');
   ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
-  showLoading(true); btn.disabled = true; btn.textContent = '解析中...';
-  try {
-    const parsed = await callAI(text, '', '');
-    if (parsed.name || parsed.shop) { applyParsed(parsed, '', '', 'テキスト'); }
-    else { throw new Error('no data'); }
-  } catch(e) {
-    document.getElementById('erb').textContent = '解析できませんでした。商品名・価格が含まれるテキストを貼り付けてください。';
+  const parsed = extractFromText(text, '');
+  if (parsed.price || parsed.model) {
+    applyParsed(parsed, '', '', 'テキスト');
+    document.getElementById('okb').textContent += ' ※商品名は手動で確認してください。';
+  } else {
+    document.getElementById('erb').textContent = '価格・型番を検出できませんでした。商品名・価格を手動で入力してください。';
     document.getElementById('erb').style.display = '';
-  } finally {
-    showLoading(false); btn.disabled = false; btn.textContent = '解析する';
   }
 }
 
