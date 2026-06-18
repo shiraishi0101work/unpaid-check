@@ -810,6 +810,81 @@ function scls(s) {
   return s==='発注済'?'badge-ordered':s==='納品済'?'badge-delivered':s==='キャンセル'?'badge-cancelled':'badge-pending';
 }
 
+function renderMonthly() {
+  const el = document.getElementById('monthly-summary');
+  if (!el) return;
+
+  // 月ごとに集計
+  const map = {};
+  orders.forEach(o => {
+    const m = (o.date || '').slice(0, 7); // YYYY-MM
+    if (!m) return;
+    if (!map[m]) map[m] = { count: 0, subtotal: 0, orders: [] };
+    map[m].count++;
+    map[m].subtotal += (o.qty || 1) * (o.price || 0);
+    map[m].orders.push(o);
+  });
+
+  const months = Object.keys(map).sort().reverse();
+  if (!months.length) {
+    el.innerHTML = '<p style="text-align:center;color:var(--text-hint);padding:40px">データがありません</p>';
+    return;
+  }
+
+  const statusColors = { '未発注': 'var(--warn-tx)', '発注済': 'var(--brand)', '納品済': 'var(--success-tx)', 'キャンセル': 'var(--danger-tx)' };
+
+  el.innerHTML = months.map(m => {
+    const d = map[m];
+    const tax = Math.round(d.subtotal * 0.1);
+    const total = d.subtotal + tax;
+    const [y, mo] = m.split('-');
+    const label = `${y}年${parseInt(mo)}月`;
+
+    // ステータス別集計
+    const statusMap = {};
+    d.orders.forEach(o => { statusMap[o.status] = (statusMap[o.status] || 0) + 1; });
+    const statusHtml = Object.entries(statusMap).map(([s, n]) =>
+      `<span style="font-size:11px;padding:2px 8px;border-radius:999px;background:#f0f0f0;color:${statusColors[s]||'#666'};font-weight:600">${s} ${n}件</span>`
+    ).join(' ');
+
+    const rows = d.orders.map(o => `
+      <tr>
+        <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
+        <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
+        <td style="white-space:nowrap">${o.shop||'—'}</td>
+        <td style="text-align:right">${o.qty}</td>
+        <td style="text-align:right">¥${o.price.toLocaleString()}</td>
+        <td style="text-align:right;font-weight:600">¥${(o.qty*o.price).toLocaleString()}</td>
+        <td style="white-space:nowrap">${o.client||'—'}</td>
+        <td><span class="badge ${scls(o.status)}">${o.status}</span></td>
+      </tr>`).join('');
+
+    return `
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)">${label}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${statusHtml}</div>
+        </div>
+        <div style="display:flex;gap:20px;text-align:right">
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">総件数</div><div style="font-size:20px;font-weight:700;color:var(--text)">${d.count}<span style="font-size:12px;font-weight:400;margin-left:2px">件</span></div></div>
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">合計（税抜）</div><div style="font-size:20px;font-weight:700;color:var(--brand)">¥${d.subtotal.toLocaleString()}</div></div>
+          <div><div style="font-size:11px;color:var(--text-sub);font-weight:500;letter-spacing:.04em;margin-bottom:2px">合計（税込）</div><div style="font-size:20px;font-weight:700;color:var(--text)">¥${total.toLocaleString()}</div></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>発注日</th><th>商品名</th><th>仕入れ先</th><th style="text-align:right">数量</th>
+            <th style="text-align:right">単価</th><th style="text-align:right">小計</th><th>納品先</th><th>状態</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function rmets() {
   const tot = orders.length;
   const amt = orders.reduce((s, o) => s + o.qty * o.price, 0);
