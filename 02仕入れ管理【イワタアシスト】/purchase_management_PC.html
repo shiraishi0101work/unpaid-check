@@ -1222,6 +1222,18 @@ function applyParsed(parsed, url, shopGuess, source) {
   okb.style.display = '';
 }
 
+function setUrlOnly() {
+  const url = document.getElementById('pu').value.trim();
+  if (!url) { alert('URLを入力してください'); return; }
+  document.getElementById('fu').value = url;
+  const shopGuess = guessShop(url);
+  if (shopGuess) document.getElementById('fs').value = shopGuess;
+  ['okb','erb','fprev'].forEach(id => document.getElementById(id).style.display = 'none');
+  const okb = document.getElementById('okb');
+  okb.textContent = 'URLをセットしました。商品名・価格を手動で入力してください。';
+  okb.style.display = '';
+}
+
 async function loadURL() {
   const url = document.getElementById('pu').value.trim();
   if (!url) { alert('URLを入力してください'); return; }
