@@ -1085,6 +1085,9 @@ function rt() {
       'その他': ['#F3F4F6','#6B7280']
     };
     const [catBg, catFg] = catColors[o.category||'物品'] || catColors['物品'];
+    const ow = o.owner || '岩田';
+    const owColors = { '岩田': ['#E0F5F4','#007F77'], '谷藤': ['#FEF5E4','#8A6000'] };
+    const [owBg, owFg] = owColors[ow] || ['#F3F4F6','#6B7280'];
     return `<tr style="${rowStyle}">
     <td style="white-space:nowrap;color:var(--text-sub)">${o.date}</td>
     <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.url ? `<a href="${o.url}" target="_blank">${o.name}</a>` : o.name}</td>
@@ -1094,6 +1097,7 @@ function rt() {
     <td style="text-align:right">¥${o.price.toLocaleString()}</td>
     <td style="text-align:right;font-weight:600">¥${(o.qty*o.price).toLocaleString()}</td>
     <td style="white-space:nowrap">${o.client||'—'}</td>
+    <td><span style="font-size:11px;padding:1px 7px;border-radius:999px;background:${owBg};color:${owFg};font-weight:600">${ow}</span></td>
     <td>${chip(o.ccId)}</td>
     <td><span class="badge ${scls(o.status)}">${o.status}</span></td>
     <td style="color:var(--text-sub);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.memo||''}</td>
