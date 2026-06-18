@@ -799,6 +799,7 @@ function sw(page, el) {
   document.getElementById('p-' + page).classList.add('active');
   if (page === 'list')    { rmets(); rt(); updFilters(); }
   if (page === 'add')     { today(); updCCSel(); updClSel(); }
+  if (page === 'monthly') { renderMonthly(); }
   if (page === 'clients') { renderClients(); }
   if (page === 'cards')   { renderCC(); }
   if (page === 'stmt')    { updStmtCardSel(); renderStmt(); }
