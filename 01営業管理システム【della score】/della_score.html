@@ -1463,11 +1463,17 @@ const PAGE_TITLES={
 function nav(page, el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n=>{
+      if(n.getAttribute('onclick')==='nav(\''+page+'\',this)') n.classList.add('active');
+    });
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=document.getElementById('page-'+page);
   if(pg) pg.classList.add('active');
   document.getElementById('page-title').textContent = PAGE_TITLES[page]||page;
   document.getElementById('top-btn').style.display = page==='prospects'?'':'none';
+  location.hash = page;
   if(page==='monthly') renderMonthly();
   else if(page==='chart') renderChart();
   else if(page==='staff') renderStaff();
