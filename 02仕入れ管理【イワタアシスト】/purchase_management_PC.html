@@ -886,16 +886,19 @@ function renderMonthly() {
 }
 
 function rmets() {
-  const tot = orders.length;
-  const amt = orders.reduce((s, o) => s + o.qty * o.price, 0);
-  const ord = orders.filter(o => o.status === '発注済').length;
-  const del = orders.filter(o => o.status === '納品済').length;
+  const filtered = getFiltered();
+  const tot = filtered.length;
+  const amt = filtered.reduce((s, o) => s + o.qty * o.price, 0);
+  const ord = filtered.filter(o => o.status === '発注済').length;
+  const del = filtered.filter(o => o.status === '納品済').length;
+  const isFiltered = tot !== orders.length;
+  const label = isFiltered ? `絞り込み中 ${tot}件 / 全${orders.length}件` : `全${orders.length}件`;
   document.getElementById('mets').innerHTML = `
     <div class="metric-card"><div class="metric-label">総件数</div><div class="metric-value">${tot}</div></div>
-    <div class="metric-card"><div class="metric-label">合計金額</div><div class="metric-value">¥${amt.toLocaleString()}</div></div>
+    <div class="metric-card"><div class="metric-label">合計金額（税抜）</div><div class="metric-value">¥${amt.toLocaleString()}</div></div>
     <div class="metric-card"><div class="metric-label">発注済</div><div class="metric-value">${ord}</div></div>
     <div class="metric-card"><div class="metric-label">納品済</div><div class="metric-value">${del}</div></div>`;
-  document.getElementById('order-count').textContent = `全${tot}件`;
+  document.getElementById('order-count').textContent = label;
 }
 
 function updFilters() {
