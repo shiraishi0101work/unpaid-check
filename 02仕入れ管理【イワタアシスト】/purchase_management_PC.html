@@ -879,6 +879,7 @@ function rt() {
     <td style="color:var(--text-sub);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.memo||''}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-sm" onclick="editOrd(${o.id})">編集</button>
+      <button class="btn btn-sm" onclick="dupOrd(${o.id})" style="margin-left:4px">複製</button>
       <button class="btn btn-sm btn-danger" onclick="delOrd(${o.id})" style="margin-left:4px">削除</button>
     </td>
   </tr>`;
