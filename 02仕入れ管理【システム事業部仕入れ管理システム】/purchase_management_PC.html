@@ -1688,9 +1688,9 @@ function cancelCSV() {
 }
 
 function dlCSVTemplate() {
-  const header = '仕入日,区分,仕入れ先,商品名,仕入れ単価（税抜）,数量,納品先,販売単価';
+  const header = '仕入日,区分,仕入れ先,商品名,仕入れ単価（税抜）,数量,納品先,販売単価,担当者';
   const date = new Date().toISOString().split('T')[0];
-  const sample = `${date},物品,Amazon,商品名を入力,10000,1,クライアント名,15000`;
+  const sample = `${date},物品,Amazon,商品名を入力,10000,1,クライアント名,15000,岩田`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF' + [header, sample].join('\n')], {type:'text/csv;charset=utf-8'}));
   a.download = 'インポートテンプレート.csv';
