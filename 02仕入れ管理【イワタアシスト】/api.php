@@ -259,6 +259,50 @@ if ($action === 'add_order') {
     exit;
 }
 
+// ── CSV一括インポート ──
+if ($action === 'import_csv') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+    $db = getDb();
+    $rows = $body['rows'] ?? [];
+    $imported = 0;
+    $errors = [];
+    foreach ($rows as $i => $r) {
+        $date      = trim($r['date']      ?? date('Y-m-d'));
+        $shop      = trim($r['shop']      ?? '');
+        $name      = trim($r['name']      ?? $shop);
+        $price     = (int)($r['price']    ?? 0);
+        $qty       = max(1, (int)($r['qty'] ?? 1));
+        $client    = trim($r['client']    ?? '');
+        $sellPrice = (int)($r['sellPrice'] ?? 0);
+        if (!$name || $price <= 0) { $errors[] = ($i+1).'行目: 商品名または単価が不正'; continue; }
+        if ($client) {
+            try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$client, date('Y-m-d')]); } catch(Exception $e) {}
+        }
+        $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo)
+                            VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo)');
+        $s->execute([
+            ':date'          => $date,
+            ':name'          => $name,
+            ':shop'          => $shop,
+            ':brand'         => '',
+            ':url'           => '',
+            ':qty'           => $qty,
+            ':price'         => $price,
+            ':sell_price'    => $sellPrice,
+            ':delivery_date' => '',
+            ':client'        => $client,
+            ':cc_id'         => null,
+            ':status'        => '発注済',
+            ':memo'          => '',
+        ]);
+        $newId = (int)$db->lastInsertId();
+        dsSyncAdd(['id'=>$newId,'date'=>$date,'name'=>$name,'shop'=>$shop,'price'=>$price,'qty'=>$qty]);
+        $imported++;
+    }
+    echo json_encode(['ok'=>true, 'imported'=>$imported, 'errors'=>$errors]);
+    exit;
+}
+
 // ── 全発注を DellaScore へ再同期 ──
 if ($action === 'resync_all') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
