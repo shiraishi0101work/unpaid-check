@@ -87,7 +87,7 @@ $clients = array_map(fn($c) => [
     'owners'  => $c['owners'] ?? [],
 ], storeGet($DS_DB, 'clients'));
 
-// ── イワタアシスト データ取得 ──────────────────────
+// ── システム事業部仕入れ管理システム データ取得 ──────────────────────
 $iw_orders = array_map(fn($o) => [
     'id'     => $o['id'],
     'date'   => $o['date'],
