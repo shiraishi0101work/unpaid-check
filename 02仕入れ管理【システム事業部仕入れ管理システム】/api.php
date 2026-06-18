@@ -285,13 +285,15 @@ if ($action === 'import_csv') {
         $client    = trim($r['client']    ?? '');
         $sellPrice = (int)($r['sellPrice'] ?? 0);
         $category  = trim($r['category']  ?? '物品');
+        $owner     = trim($r['owner']     ?? '岩田');
         if (!in_array($category, ['物品','サーバー','外注費','その他'])) $category = '物品';
+        if (!in_array($owner, ['岩田','谷藤'])) $owner = '岩田';
         if (!$name || $price <= 0) { $errors[] = ($i+1).'行目: 商品名または単価が不正'; continue; }
         if ($client) {
             try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$client, date('Y-m-d')]); } catch(Exception $e) {}
         }
-        $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category)
-                            VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category)');
+        $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category,owner)
+                            VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category,:owner)');
         $s->execute([
             ':date'          => $date,
             ':name'          => $name,
@@ -307,9 +309,10 @@ if ($action === 'import_csv') {
             ':status'        => '発注済',
             ':memo'          => '',
             ':category'      => $category,
+            ':owner'         => $owner,
         ]);
         $newId = (int)$db->lastInsertId();
-        dsSyncAdd(['id'=>$newId,'date'=>$date,'name'=>$name,'shop'=>$shop,'price'=>$price,'qty'=>$qty]);
+        dsSyncAdd(['id'=>$newId,'date'=>$date,'name'=>$name,'shop'=>$shop,'price'=>$price,'qty'=>$qty,'owner'=>$owner]);
         $imported++;
     }
     echo json_encode(['ok'=>true, 'imported'=>$imported, 'errors'=>$errors]);
