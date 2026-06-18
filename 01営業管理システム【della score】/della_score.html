@@ -5084,6 +5084,7 @@ async function doLogin(){
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
       render();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
+      restoreNavFromHash();
     }
   }catch(e){}
 })();
