@@ -5061,6 +5061,7 @@ async function doLogin(){
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
       render();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
+      restoreNavFromHash();
     }else{
       errEl.style.display='';
       errEl.textContent='メールアドレスまたはパスワードが正しくありません。';
