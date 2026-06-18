@@ -1192,7 +1192,7 @@ async function dupOrd(id) {
   if (!res?.ok) { alert(res?.error || '複製に失敗しました'); return; }
   const orig = orders.find(o => o.id === id);
   if (orig) {
-    orders.unshift({...orig, id: res.id, date: new Date().toISOString().split('T')[0], status: '未発注'});
+    orders.unshift({...orig, id: res.id, date: new Date().toISOString().split('T')[0], status: '未発注', owner: orig.owner || '岩田'});
   }
   rt(); rmets(); toast('複製しました');
 }
