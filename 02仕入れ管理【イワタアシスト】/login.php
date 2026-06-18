@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="card">
   <div class="logo">
-    <div class="logo-title">イワタアシスト</div>
+    <div class="logo-title">システム事業部仕入れ管理システム</div>
     <div class="logo-sub">仕入れ管理システム</div>
   </div>
   <form method="post">
