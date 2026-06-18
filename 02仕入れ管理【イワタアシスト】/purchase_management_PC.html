@@ -935,6 +935,7 @@ function getFiltered() {
 }
 
 function rt() {
+  rmets();
   const filtered = getFiltered();
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
