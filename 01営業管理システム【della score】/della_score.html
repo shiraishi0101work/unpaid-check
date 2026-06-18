@@ -1483,6 +1483,14 @@ function nav(page, el){
   else render();
 }
 
+function restoreNavFromHash(){
+  const hash = location.hash.replace('#','');
+  const validPages = Object.keys(PAGE_TITLES).concat(['mf-invoices','mf-quotes','invoices','purchases','orders','clients']);
+  if(hash && validPages.includes(hash)){
+    nav(hash, null);
+  }
+}
+
 // ── フィルタ ─────────────────────────────────────
 function filt(s, el){
   D.filterStatus=s;
