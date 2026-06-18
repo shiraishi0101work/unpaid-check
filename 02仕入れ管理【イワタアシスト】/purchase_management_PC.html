@@ -1295,27 +1295,17 @@ async function loadURL() {
     if (!pr.ok) throw new Error('fetch failed');
     const pd = await pr.json();
     if (!pd.contents || pd.contents.length < 100) throw new Error('empty');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = pd.contents;
-    ['script','style','nav','footer','header','noscript','aside'].forEach(t => tmp.querySelectorAll(t).forEach(e => e.remove()));
-    const pageText = (tmp.innerText || tmp.textContent || '').replace(/\s+/g, ' ').trim();
-    const parsed = await callAI(pageText, url, shopGuess);
-    if (!parsed.name && !parsed.shop) throw new Error('no data');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(pd.contents, 'text/html');
+    const parsed = extractFromDom(doc, url, shopGuess);
+    if (!parsed.name && !parsed.price) throw new Error('no data');
     applyParsed(parsed, url, shopGuess, 'ページ');
   } catch(e) {
-    try {
-      const parsed = await callAI('URLのみからできる限り推測してください。', url, shopGuess);
-      if (parsed.name || parsed.shop) {
-        applyParsed(parsed, url, shopGuess, 'URL');
-        document.getElementById('okb').textContent += ' ※ページ取得不可のためURLから推測。単価など要確認。';
-      } else { throw new Error('no data'); }
-    } catch(e2) {
-      if (shopGuess) document.getElementById('fs').value = shopGuess;
-      document.getElementById('fu').value = url;
-      const erb = document.getElementById('erb');
-      erb.textContent = 'ページを取得できませんでした。「テキストを貼り付ける」タブをお試しください。';
-      erb.style.display = '';
-    }
+    if (shopGuess) document.getElementById('fs').value = shopGuess;
+    document.getElementById('fu').value = url;
+    const erb = document.getElementById('erb');
+    erb.textContent = 'ページを取得できませんでした。「テキストを貼り付ける」タブをお試しください。';
+    erb.style.display = '';
   } finally {
     showLoading(false); btn.disabled = false; btn.textContent = '読み込む';
   }
