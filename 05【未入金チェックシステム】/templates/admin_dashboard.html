@@ -235,14 +235,12 @@
       <span class="badge bg-warning text-dark ms-1">{{ upcoming|length }}</span>
     </a>
   </li>
-  {% if ichiji_hokan %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-ichiji" id="btn-tab-ichiji">
       <i class="bi bi-archive" style="color:#6f42c1"></i> 一時保管
       <span class="badge ms-1" style="background:#6f42c1">{{ ichiji_hokan|length }}</span>
     </a>
   </li>
-  {% endif %}
   <li class="nav-item">
     <a class="nav-link" data-bs-toggle="tab" href="#tab-paid" id="btn-tab-paid">
       <i class="bi bi-check-circle text-success"></i> 入金確認済み
