@@ -257,6 +257,158 @@ def api_cleanup(video_id):
     return jsonify({"deleted": count})
 
 
+# ========================
+# エディター用API
+# ========================
+
+@app.route("/api/get-subtitles", methods=["POST"])
+def api_get_subtitles():
+    """クリップの字幕データを取得"""
+    data = request.get_json()
+    video_id = data.get("video_id")
+    clip_start = float(data.get("start_time", 0))
+    clip_end = float(data.get("end_time", 0))
+
+    transcript = get_transcript(video_id)
+    subtitles = []
+    for entry in transcript:
+        entry_start = entry["start"]
+        entry_end = entry_start + entry["duration"]
+        if entry_end < clip_start or entry_start > clip_end:
+            continue
+        subtitles.append({
+            "text": entry["text"],
+            "start": round(entry_start - clip_start, 2),
+            "end": round(entry_end - clip_start, 2),
+            "font_size": 48,
+            "color": "#FFFFFF",
+            "outline_color": "#000000",
+            "outline_width": 3,
+            "bold": True,
+            "position": "bottom",
+            "style_name": "Default",
+        })
+
+    return jsonify({"subtitles": subtitles})
+
+
+@app.route("/api/upload-image", methods=["POST"])
+def api_upload_image():
+    """画像素材をアップロード"""
+    if "file" not in request.files:
+        return jsonify({"error": "ファイルが選択されていません"}), 400
+
+    file = request.files["file"]
+    if not file.filename:
+        return jsonify({"error": "ファイル名がありません"}), 400
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+        return jsonify({"error": "対応形式: PNG, JPG, GIF, WebP"}), 400
+
+    filename = f"{uuid.uuid4().hex[:8]}{ext}"
+    filepath = os.path.join(UPLOADS_DIR, filename)
+    file.save(filepath)
+
+    return jsonify({
+        "filename": filename,
+        "path": filepath,
+        "url": f"/api/uploads/{filename}",
+    })
+
+
+@app.route("/api/uploads/<filename>")
+def serve_upload(filename):
+    """アップロード画像を配信"""
+    return send_from_directory(UPLOADS_DIR, filename)
+
+
+@app.route("/api/upload-reference", methods=["POST"])
+def api_upload_reference():
+    """参考画像をアップロードしてスタイル分析"""
+    global current_style
+
+    files = request.files.getlist("files")
+    if not files:
+        return jsonify({"error": "ファイルが選択されていません"}), 400
+
+    paths = []
+    for file in files[:5]:
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+            continue
+        filename = f"ref_{uuid.uuid4().hex[:8]}{ext}"
+        filepath = os.path.join(REFERENCES_DIR, filename)
+        file.save(filepath)
+        paths.append(filepath)
+
+    if not paths:
+        return jsonify({"error": "有効な画像がありません"}), 400
+
+    # AIでスタイル分析
+    style = analyze_reference_style(paths)
+    current_style = style
+
+    return jsonify({"style": style, "files_count": len(paths)})
+
+
+@app.route("/api/get-style")
+def api_get_style():
+    """現在のスタイル設定を取得"""
+    return jsonify({"style": current_style})
+
+
+@app.route("/api/suggest-decorations", methods=["POST"])
+def api_suggest_decorations():
+    """AIが装飾配置を提案"""
+    data = request.get_json()
+    transcript_text = data.get("transcript_text", "")
+    available_images = data.get("images", [])
+
+    suggestions = suggest_decorations(transcript_text, current_style, available_images)
+    return jsonify({"suggestions": suggestions})
+
+
+@app.route("/api/export", methods=["POST"])
+def api_export():
+    """編集内容を反映して最終エクスポート"""
+    data = request.get_json()
+    video_id = data.get("video_id")
+    clip_index = int(data.get("clip_index", 1))
+    subtitles = data.get("subtitles", [])
+    overlays = data.get("overlays", [])
+    format_type = data.get("format", "horizontal")
+
+    # オーバーレイ画像のパスを解決
+    for ov in overlays:
+        if ov.get("type") == "image" and ov.get("filename"):
+            ov["file_path"] = os.path.join(UPLOADS_DIR, ov["filename"])
+
+    # クリップファイルを探す
+    clip_filename = f"{video_id}_clip_{clip_index:03d}.mp4"
+    clip_path = os.path.join(config.CLIPS_DIR, clip_filename)
+
+    if not os.path.exists(clip_path):
+        return jsonify({"error": "クリップファイルが見つかりません"}), 404
+
+    job_id = create_job()
+
+    def run():
+        try:
+            update_job(job_id, status="running", progress=30, message="エクスポート中...")
+            result = export_with_overlays(
+                clip_path, subtitles, overlays, format_type, video_id, clip_index
+            )
+            update_job(job_id, status="completed", progress=100,
+                       message="エクスポート完了",
+                       result=result)
+        except Exception as e:
+            update_job(job_id, status="error", error=str(e))
+
+    threading.Thread(target=run, daemon=True).start()
+    return jsonify({"job_id": job_id})
+
+
 if __name__ == "__main__":
     print("=" * 50)
     print("切り抜き動画作成システム")
