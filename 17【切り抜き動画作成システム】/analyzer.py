@@ -1,5 +1,5 @@
 import json
-import google.generativeai as genai
+from google import genai
 import config
 from transcript import format_timestamp, transcript_to_text
 
@@ -9,8 +9,7 @@ def analyze_highlights(transcript, comments, video_title, duration):
     if not config.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEYが設定されていません")
 
-    genai.configure(api_key=config.GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = genai.Client(api_key=config.GEMINI_API_KEY)
 
     # トランスクリプトをチャンクに分割（長い動画対応）
     chunk_size = 1800  # 30分ごと
