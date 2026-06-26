@@ -85,7 +85,10 @@ def analyze_highlights(transcript, comments, video_title, duration):
 JSON配列のみを出力し、他のテキストは含めないでください。"""
 
         try:
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+            )
             text = response.text.strip()
 
             # JSON部分を抽出
