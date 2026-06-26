@@ -14,9 +14,17 @@ from ai_style import analyze_reference_style, suggest_decorations, get_default_s
 from overlay_export import export_with_overlays
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
+
+UPLOADS_DIR = os.path.join(config.BASE_DIR, "uploads")
+REFERENCES_DIR = os.path.join(config.BASE_DIR, "references")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+os.makedirs(REFERENCES_DIR, exist_ok=True)
 
 # ジョブ管理（インメモリ）
 jobs = {}
+# スタイル設定キャッシュ
+current_style = get_default_style()
 
 
 def create_job():
