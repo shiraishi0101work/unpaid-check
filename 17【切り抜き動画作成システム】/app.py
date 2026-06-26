@@ -2,6 +2,7 @@ import os
 import uuid
 import threading
 from flask import Flask, render_template, request, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 import config
 from downloader import get_video_info, download_video
 from transcript import get_transcript
@@ -9,6 +10,8 @@ from comments import get_comments
 from analyzer import analyze_highlights, generate_timestamp_text
 from clipper import extract_clip, extract_clips_batch
 from editor import auto_edit_clip, auto_edit_vertical_with_blur
+from ai_style import analyze_reference_style, suggest_decorations, get_default_style
+from overlay_export import export_with_overlays
 
 app = Flask(__name__)
 
