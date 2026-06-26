@@ -1,0 +1,10 @@
+downloads/
+clips/
+output/
+*.mp4
+*.mkv
+*.webm
+*.part
+__pycache__/
+*.pyc
+.env
