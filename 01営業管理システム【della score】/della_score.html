@@ -1842,34 +1842,58 @@ function renderProspects(){
     document.getElementById('prospect-next').disabled=_prospectPage>=totalPPages-1;
   }
   const pageList=list.slice(_prospectPage*P_SIZE,(_prospectPage+1)*P_SIZE);
-  if(!list.length){tb.innerHTML='';em.style.display='';return;}
+  const cardList=document.getElementById('p-card-list');
+  if(!list.length){if(cardList)cardList.innerHTML='';tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
   const todayStr=today();
+  // カード表示
+  if(cardList){
+    cardList.innerHTML=pageList.map(p=>{
+      const pf=(p.amount!=null&&p.cost!=null)?p.amount-p.cost:null;
+      const pc=pf!=null?(pf>0?'#16A34A':pf<0?'#DC2626':'#94A3B8'):'#94A3B8';
+      const isOverdue=p.deadline&&p.deadline<todayStr&&p.status!=='ordered'&&p.status!=='canceled';
+      return `<div class="pro-card${isOverdue?' overdue':''}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="min-width:0">
+            <div class="pro-card-top">
+              <input type="checkbox" class="pro-row-chk" value="${p.id}" onchange="updateProBulkBar()" style="cursor:pointer;flex-shrink:0">
+              <span class="pro-card-client">${p.client}</span>
+              <span class="pro-card-name">${p.name||''}</span>
+            </div>
+          </div>
+          <div class="pro-card-amounts">
+            <span class="pro-card-amt">${fmt(p.amount)}</span>
+            ${pf!=null?`<span class="pro-card-profit" style="color:${pc}">粗利 ${fmt(pf)}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;grid-column:1/-1;margin-top:4px">
+          <div class="pro-card-meta">
+            ${p.owner?`<span class="pill">${p.owner}</span>`:'<span style="color:#CBD5E1;font-size:11px">担当者なし</span>'}
+            ${p.mf_quote_id?'<span class="badge bo" style="font-size:10px">MF</span>':''}
+            ${SB[p.status]||SB.prospect}
+            ${p.quote_number?`<span class="pro-card-meta-item">No.${p.quote_number}</span>`:''}
+            <span class="pro-card-meta-item">発行 ${fmtD(p.issued||p.createdAt||p.deadline)}</span>
+            <span class="pro-card-meta-item" style="${isOverdue?'color:#DC2626;font-weight:700':''}">期限 ${fmtD(p.deadline)}${isOverdue?' [期限超過]':''}</span>
+            ${p.cost!=null?`<span class="pro-card-meta-item">原価 ${fmt(p.cost)}</span>`:''}
+          </div>
+          <div class="pro-card-actions">
+            <button class="btn btn-sm btn-ghost" onclick="editProspect('${p.id}')">編集</button>
+            ${p.status!=='ordered'?`<button class="btn btn-sm" style="color:#15803D;border-color:#BBF7D0;background:#F0FDF4" onclick="openOrderFromProspect('${p.id}')">受注</button>`:''}
+            ${p.status!=='canceled'?`<button class="btn btn-sm" style="color:#94A3B8;border-color:#E2E8F0" onclick="lostProspect('${p.id}')">失注</button>`:''}
+            <button class="btn btn-sm btn-ghost" onclick="issueInvoice('${p.id}')">請求書</button>
+          </div>
+        </div>
+        <div class="pro-card-memo" onclick="startMemoEdit(event,'${p.id}')">
+          <div id="memo-disp-${p.id}" style="min-height:16px" title="クリックで編集">${p.memo||'<span style="color:#CBD5E1">メモを入力...</span>'}</div>
+          <textarea id="memo-edit-${p.id}" rows="2" style="display:none;width:100%;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;font-size:12px;font-family:inherit;resize:none;background:#fff" onblur="saveMemoEdit('${p.id}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveMemoEdit('${p.id}')}if(event.key==='Escape'){cancelMemoEdit('${p.id}')}"></textarea>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  // CSV用テーブルも更新
   tb.innerHTML=pageList.map(p=>{
     const pf=(p.amount!=null&&p.cost!=null)?p.amount-p.cost:null;
-    const pc=pf!=null?(pf>0?'var(--green)':pf<0?'var(--red)':'var(--text2)'):'var(--text2)';
-    const isOverdue=p.deadline&&p.deadline<todayStr&&p.status!=='ordered'&&p.status!=='canceled';
-    const rowBg=isOverdue?'background:#FFF8F0;':'';
-    return `<tr style="${rowBg}">
-      <td><input type="checkbox" class="pro-row-chk" value="${p.id}" onchange="updateProBulkBar()" style="cursor:pointer"></td>
-      <td title="${p.client}" style="font-weight:600">${p.client}</td>
-      <td title="${p.name||''}">${p.name||'-'}</td>
-      <td style="font-size:11px;color:var(--text3)">${p.quote_number||'-'}</td>
-      <td class="amount">${fmt(p.amount)}</td>
-      <td class="amount" style="color:var(--text2)">${fmt(p.cost)}</td>
-      <td class="amount" style="color:${pc}">${fmt(pf)}</td>
-      <td>${fmtD(p.issued||p.createdAt||p.deadline)}</td>
-      <td style="color:${isOverdue?'var(--red)':''}; font-weight:${isOverdue?'600':'400'}">${fmtD(p.deadline)}${isOverdue?' <span style="display:inline-block;background:#FEE2E2;color:#B91C1C;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:3px">要確認</span>':''}</td>
-      <td>${p.owner?`<span class="pill">${p.owner}</span>`:'-'}</td>
-      <td>${p.mf_quote_id?'<span class="badge bo" style="font-size:10px;margin-right:3px">MF</span>':''}${SB[p.status]||SB.prospect}</td>
-      <td style="padding:6px 14px" onclick="startMemoEdit(event,'${p.id}')"><div id="memo-disp-${p.id}" style="color:var(--text2);font-size:12px;cursor:text;min-height:20px" title="クリックで編集">${p.memo||'<span style="color:var(--border2)">クリックで入力</span>'}</div><textarea id="memo-edit-${p.id}" rows="2" style="display:none;width:100%;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;font-size:12px;font-family:inherit;resize:none" onblur="saveMemoEdit('${p.id}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveMemoEdit('${p.id}')}if(event.key==='Escape'){cancelMemoEdit('${p.id}')}"></textarea></td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-ghost" onclick="editProspect('${p.id}')">編集</button>
-        ${p.status!=='ordered'?`<button class="btn btn-sm" style="color:#1A6644;border-color:#9FE1CB;background:#E6F4EE" onclick="openOrderFromProspect('${p.id}')">→ 受注</button>`:''}
-        ${p.status!=='canceled'?`<button class="btn btn-sm" style="color:#8892B0;border-color:#DDE2EF" onclick="lostProspect('${p.id}')">失注</button>`:''}
-        <button class="btn btn-sm btn-ghost" onclick="issueInvoice('${p.id}')">請求書</button>
-      </td>
-    </tr>`;
+    return `<tr><td>${p.client}</td><td>${p.name||''}</td><td>${p.quote_number||''}</td><td>${p.amount||0}</td><td>${p.cost||0}</td><td>${pf||0}</td><td>${p.issued||''}</td><td>${p.deadline||''}</td><td>${p.owner||''}</td><td>${p.status||''}</td><td>${p.memo||''}</td></tr>`;
   }).join('');
   updateProBulkBar();
 }
