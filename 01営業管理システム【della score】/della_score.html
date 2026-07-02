@@ -3190,6 +3190,167 @@ function applyRecurring(kind){
   alert('今月分を登録しました。');
 }
 
+// ── ダッシュボード ───────────────────────────────────
+function renderDashboard(){
+  const now=new Date();
+  const curM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevM=prevD.getFullYear()+'-'+String(prevD.getMonth()+1).padStart(2,'0');
+  const isPL=D.monthlyMode==='PL';
+
+  // 月のデータ取得ヘルパー
+  function monthData(m){
+    const sales=isPL
+      ? D.orders.filter(o=>(o.date||'').startsWith(m))
+      : D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
+    const pur=D.purchases.filter(p=>(p.due||'').startsWith(m));
+    const sa=sales.reduce((s,i)=>s+(i.amount||0),0);
+    const pa=pur.reduce((s,p)=>s+(p.amount||0),0);
+    return{sales,pur,sa,pa,profit:sa-pa,margin:sa?Math.round((sa-pa)/sa*100):0};
+  }
+
+  const cur=monthData(curM);
+  const prev=monthData(prevM);
+
+  // KPIカード更新
+  document.getElementById('dk-sales').textContent=fmt(cur.sa);
+  document.getElementById('dk-purchase').textContent=fmt(cur.pa);
+  document.getElementById('dk-profit').textContent=fmt(cur.profit);
+  document.getElementById('dk-margin').textContent=cur.margin+'%';
+
+  // 粗利率ゲージ
+  const gauge=document.getElementById('dk-gauge');
+  const gPct=Math.max(0,Math.min(100,cur.margin));
+  gauge.style.width=gPct+'%';
+  gauge.style.background=gPct>=40?'#16A34A':gPct>=20?'#F59E0B':'#DC2626';
+
+  // 前月比
+  function diffBadge(cur,prev,elId){
+    const el=document.getElementById(elId);
+    if(!prev){el.textContent='前月比 —';el.className='dash-kpi-sub flat';return;}
+    const diff=cur-prev;
+    const pct=prev?Math.round(diff/prev*100):0;
+    const arrow=diff>0?'↑':diff<0?'↓':'→';
+    const cls=diff>0?'up':diff<0?'down':'flat';
+    el.innerHTML='前月比 '+arrow+' '+Math.abs(pct)+'%'+(diff!==0?' <span style="font-weight:400">('+( diff>0?'+':'')+fmt(diff).replace('¥','')+')</span>':'');
+    el.className='dash-kpi-sub '+cls;
+  }
+  diffBadge(cur.sa,prev.sa,'dk-sales-diff');
+  diffBadge(cur.pa,prev.pa,'dk-purchase-diff');
+  diffBadge(cur.profit,prev.profit,'dk-profit-diff');
+
+  // ── 6ヶ月推移グラフ（SVG折れ線） ──
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  }
+  const mData=months.map(m=>monthData(m));
+  const maxVal=Math.max(...mData.map(d=>Math.max(d.sa,d.pa,Math.max(0,d.profit))),1);
+
+  const area=document.getElementById('dash-trend-area');
+  const W=area.offsetWidth-66;
+  const H=area.offsetHeight-44;
+  const padL=50,padT=10;
+
+  function toX(i){return padL+i*(W/(months.length-1));}
+  function toY(v){return padT+H-v/maxVal*H;}
+
+  // グリッド線
+  let svg='<svg width="100%" height="100%" viewBox="0 0 '+(W+padL+16)+' '+(H+padT+28)+'" style="overflow:visible">';
+  // Y軸ガイド
+  for(let i=0;i<=4;i++){
+    const y=padT+H*i/4;
+    const v=Math.round(maxVal*(4-i)/4);
+    svg+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W+padL)+'" y2="'+y+'" stroke="#E2E8F0" stroke-width="1"/>';
+    svg+='<text x="'+(padL-8)+'" y="'+(y+4)+'" text-anchor="end" fill="#94A3B8" font-size="10" font-weight="500">'+(v>=10000?(v/10000).toFixed(v%10000?1:0)+'万':v.toLocaleString())+'</text>';
+  }
+  // X軸ラベル
+  months.forEach((m,i)=>{
+    const x=toX(i);
+    svg+='<text x="'+x+'" y="'+(H+padT+20)+'" text-anchor="middle" fill="#94A3B8" font-size="11" font-weight="500">'+parseInt(m.split('-')[1])+'月</text>';
+  });
+
+  // 仕入れ（エリア＋線）
+  let purPts=mData.map((d,i)=>toX(i)+','+toY(d.pa)).join(' ');
+  svg+='<polygon points="'+toX(0)+','+toY(0)+' '+purPts+' '+toX(months.length-1)+','+toY(0)+'" fill="rgba(249,115,22,.08)"/>';
+  svg+='<polyline points="'+purPts+'" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+
+  // 売上（エリア＋線）
+  let salePts=mData.map((d,i)=>toX(i)+','+toY(d.sa)).join(' ');
+  svg+='<polygon points="'+toX(0)+','+toY(0)+' '+salePts+' '+toX(months.length-1)+','+toY(0)+'" fill="rgba(59,130,246,.08)"/>';
+  svg+='<polyline points="'+salePts+'" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+
+  // 粗利（線）
+  let profPts=mData.map((d,i)=>toX(i)+','+toY(Math.max(0,d.profit))).join(' ');
+  svg+='<polygon points="'+toX(0)+','+toY(0)+' '+profPts+' '+toX(months.length-1)+','+toY(0)+'" fill="rgba(22,163,74,.06)"/>';
+  svg+='<polyline points="'+profPts+'" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,3"/>';
+
+  // ドット＋ツールチップ
+  mData.forEach((d,i)=>{
+    const x=toX(i);
+    svg+='<circle cx="'+x+'" cy="'+toY(d.sa)+'" r="4" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>売上 '+fmt(d.sa)+'</title></circle>';
+    svg+='<circle cx="'+x+'" cy="'+toY(d.pa)+'" r="4" fill="#F97316" stroke="#fff" stroke-width="2"><title>仕入れ '+fmt(d.pa)+'</title></circle>';
+    svg+='<circle cx="'+x+'" cy="'+toY(Math.max(0,d.profit))+'" r="4" fill="#16A34A" stroke="#fff" stroke-width="2"><title>粗利 '+fmt(d.profit)+'</title></circle>';
+  });
+
+  svg+='</svg>';
+  area.innerHTML=svg;
+
+  // ── 担当者別ランキング ──
+  const ownerMap={};
+  cur.sales.forEach(i=>{
+    if(i.ownerItems&&i.ownerItems.length>0){
+      i.ownerItems.forEach(oi=>{const k=oi.owner||i.owner||'未設定';ownerMap[k]=(ownerMap[k]||0)+(oi.amount||0);});
+    } else {
+      const k=i.owner||'未設定';ownerMap[k]=(ownerMap[k]||0)+(i.amount||0);
+    }
+  });
+  const ranked=Object.entries(ownerMap).sort((a,b)=>b[1]-a[1]);
+  const rankEl=document.getElementById('dash-staff-rank');
+  const rankEmpty=document.getElementById('dash-staff-empty');
+  if(!ranked.length){rankEl.innerHTML='';rankEmpty.style.display='';} else {
+    rankEmpty.style.display='none';
+    const maxSa=ranked[0][1]||1;
+    rankEl.innerHTML=ranked.map(([name,amt],i)=>{
+      const rc=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+      const pct=Math.round(amt/maxSa*100);
+      return '<div class="dash-rank-item">'+
+        '<div class="dash-rank-num '+rc+'">'+(i+1)+'</div>'+
+        '<div class="dash-rank-name">'+name+'</div>'+
+        '<div class="dash-rank-bar-wrap"><div class="dash-rank-bar" style="width:'+pct+'%"><span>'+pct+'%</span></div></div>'+
+        '<div class="dash-rank-amt">'+fmt(amt)+'</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  // ── 直近の取引 ──
+  const recentInv=[...D.invoices].sort((a,b)=>(b.issued||'').localeCompare(a.issued||'')).slice(0,6);
+  const recentPur=[...D.purchases].sort((a,b)=>(b.due||b.issued||'').localeCompare(a.due||a.issued||'')).slice(0,6);
+
+  const salesEl=document.getElementById('dash-recent-sales');
+  const salesEmpty=document.getElementById('dash-sales-empty');
+  if(!recentInv.length){salesEl.innerHTML='';salesEmpty.style.display='';} else {
+    salesEmpty.style.display='none';
+    salesEl.innerHTML=recentInv.map(i=>'<div class="dash-activity-item">'+
+      '<div class="dash-act-icon act-in">&#9650;</div>'+
+      '<div class="dash-act-info"><div class="dash-act-name">'+(i.client||'-')+'</div><div class="dash-act-detail">'+(i.name||'-')+' ・ '+(i.issued||'-')+'</div></div>'+
+      '<div class="dash-act-amount in">'+fmt(i.amount)+'</div>'+
+    '</div>').join('');
+  }
+
+  const purEl=document.getElementById('dash-recent-purchases');
+  const purEmpty=document.getElementById('dash-pur-empty');
+  if(!recentPur.length){purEl.innerHTML='';purEmpty.style.display='';} else {
+    purEmpty.style.display='none';
+    purEl.innerHTML=recentPur.map(p=>'<div class="dash-activity-item">'+
+      '<div class="dash-act-icon act-out">&#9660;</div>'+
+      '<div class="dash-act-info"><div class="dash-act-name">'+(p.supplier||p.client||'-')+'</div><div class="dash-act-detail">'+(p.desc||'-')+' ・ '+(p.due||'-')+'</div></div>'+
+      '<div class="dash-act-amount out">'+fmt(p.amount)+'</div>'+
+    '</div>').join('');
+  }
+}
+
 // ── 月次 ──────────────────────────────────────────
 function filterOwnerDetail(name, chipEl){
   if(chipEl){ // チップクリック時はページリセット
