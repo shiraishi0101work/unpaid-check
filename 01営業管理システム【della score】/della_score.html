@@ -1679,8 +1679,9 @@ function restoreNavFromHash(){
 function filt(s, el){
   D.filterStatus=s;
   _prospectPage=0;
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
+  const container=document.getElementById('prospect-chips');
+  if(container) container.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
   renderProspects();
 }
 
