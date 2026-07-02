@@ -3344,7 +3344,7 @@ function renderDashboard(){
   if(!recentPur.length){purEl.innerHTML='';purEmpty.style.display='';} else {
     purEmpty.style.display='none';
     purEl.innerHTML=recentPur.map(p=>'<div class="dash-activity-item">'+
-      '<div class="dash-act-icon act-out">&#9660;</div>'+
+      '<div class="dash-act-icon act-out">OUT</div>'+
       '<div class="dash-act-info"><div class="dash-act-name">'+(p.supplier||p.client||'-')+'</div><div class="dash-act-detail">'+(p.desc||'-')+' ・ '+(p.due||'-')+'</div></div>'+
       '<div class="dash-act-amount out">'+fmt(p.amount)+'</div>'+
     '</div>').join('');
