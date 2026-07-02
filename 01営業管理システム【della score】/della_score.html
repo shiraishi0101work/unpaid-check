@@ -1620,7 +1620,8 @@ function nav(page, el){
   document.getElementById('page-title').textContent = PAGE_TITLES[page]||page;
   document.getElementById('top-btn').style.display = page==='prospects'?'':'none';
   location.hash = page;
-  if(page==='monthly') renderMonthly();
+  if(page==='dashboard') renderDashboard();
+  else if(page==='monthly') renderMonthly();
   else if(page==='chart') renderChart();
   else if(page==='staff') renderStaff();
   else if(page==='recurring') renderRecurring();
