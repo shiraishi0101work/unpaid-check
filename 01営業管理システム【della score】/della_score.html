@@ -5376,7 +5376,7 @@ async function doLogin(){
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
-      render();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
+      render();renderDashboard();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
       restoreNavFromHash();
     }else{
       errEl.style.display='';
@@ -5399,7 +5399,7 @@ async function doLogin(){
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
-      render();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
+      render();renderDashboard();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
       restoreNavFromHash();
     }
   }catch(e){}
