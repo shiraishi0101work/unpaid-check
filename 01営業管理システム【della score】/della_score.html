@@ -445,50 +445,69 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
 
 <!-- 見込み -->
 <div class="page" id="page-prospects">
-  <div class="stats s2">
-    <div class="stat-card sc-blue"><div class="stat-label">見込み総額</div><div class="stat-value" id="s-total">¥0</div><div class="stat-sub" id="s-count">0件</div></div>
-    <div class="stat-card sc-green"><div class="stat-label">粗利 合計</div><div class="stat-value" id="s-profit">¥0</div><div class="stat-sub" id="s-margin">利益率 —</div></div>
+  <!-- パイプラインサマリー -->
+  <div class="dash-grid dash-g4" id="prospect-pipeline">
+    <div class="dash-kpi" style="border-top:4px solid #3B82F6;cursor:pointer" onclick="filt('active',document.querySelector('#prospect-chips .chip:first-child'))">
+      <div class="dash-kpi-label">見込み総額</div>
+      <div class="dash-kpi-value" style="color:#1E40AF" id="s-total">--</div>
+      <div class="dash-kpi-sub flat" id="s-count">0件</div>
+    </div>
+    <div class="dash-kpi" style="border-top:4px solid #F59E0B;cursor:pointer" onclick="filt('invoiced',document.querySelector('#prospect-chips .chip:nth-child(3)'))">
+      <div class="dash-kpi-label">請求済み</div>
+      <div class="dash-kpi-value" style="color:#B45309" id="s-invoiced">--</div>
+      <div class="dash-kpi-sub flat" id="s-ic">0件</div>
+    </div>
+    <div class="dash-kpi" style="border-top:4px solid #16A34A;cursor:pointer" onclick="filt('ordered',document.querySelector('#prospect-chips .chip:nth-child(4)'))">
+      <div class="dash-kpi-label">受注</div>
+      <div class="dash-kpi-value" style="color:#15803D" id="s-ordered">--</div>
+      <div class="dash-kpi-sub flat" id="s-oc">0件</div>
+    </div>
+    <div class="dash-kpi" style="border-top:4px solid #8B5CF6">
+      <div class="dash-kpi-label">粗利 合計</div>
+      <div class="dash-kpi-value" style="color:#6D28D9" id="s-profit">--</div>
+      <div class="dash-kpi-sub flat" id="s-margin">利益率 --</div>
+    </div>
   </div>
-  <div class="section">
-    <div class="sec-hdr">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="sec-title">案件一覧</span>
-        <div id="prospect-pager" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
-          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-prev" onclick="chProspectPage(-1)">‹ 前へ</button>
-          <span id="prospect-page-lbl"></span>
-          <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-next" onclick="chProspectPage(1)">次へ ›</button>
-        </div>
+
+  <!-- フィルター行 -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <input id="search-prospects" placeholder="検索..." oninput="_prospectPage=0;renderProspects()" style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;width:180px;font-family:inherit;background:#fff">
+    <select id="owner-prospects" onchange="_prospectPage=0;renderProspects()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:#fff"><option value="">担当者：全員</option></select>
+    <select id="prospect-month-filter" onchange="_prospectPage=0;renderProspects()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:#fff"><option value="">発行月：全期間</option></select>
+    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-prospects" onchange="_prospectPage=0;renderProspects()"> 担当者未入力のみ</label>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <select id="csv-prospect-month" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:#fff"><option value="">発行月でCSV出力</option></select>
+      <button class="btn btn-sm" onclick="exportProspectCSV()">CSV</button>
+    </div>
+  </div>
+
+  <div class="dash-section" style="padding:0;overflow:hidden">
+    <!-- ステータスタブ + ページャー -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #F1F5F9;flex-wrap:wrap;gap:8px">
+      <div class="chip-row" id="prospect-chips">
+        <button class="chip active" onclick="filt('active',this)">進行中</button>
+        <button class="chip" onclick="filt('prospect',this)">見込みのみ</button>
+        <button class="chip" onclick="filt('invoiced',this)">請求済み</button>
+        <button class="chip" onclick="filt('ordered',this)">受注</button>
+        <button class="chip" onclick="filt('all',this)">すべて</button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <input id="search-prospects" placeholder="🔍 検索..." oninput="_prospectPage=0;renderProspects()" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;width:160px;font-family:inherit">
-        <select id="owner-prospects" onchange="_prospectPage=0;renderProspects()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">担当者：全員</option></select>
-        <select id="prospect-month-filter" onchange="_prospectPage=0;renderProspects()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月：全期間</option></select>
-        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filter-no-owner-prospects" onchange="_prospectPage=0;renderProspects()"> 担当者未入力のみ</label>
-        <select id="csv-prospect-month" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--text)"><option value="">発行月でCSV出力</option></select>
-        <button class="btn btn-sm" onclick="exportProspectCSV()">↓ CSV</button>
-        <div class="chip-row">
-          <button class="chip active" onclick="filt('active',this)">進行中</button>
-          <button class="chip" onclick="filt('prospect',this)">見込みのみ</button>
-          <button class="chip" onclick="filt('invoiced',this)">請求済み</button>
-          <button class="chip" onclick="filt('ordered',this)">受注</button>
-          <button class="chip" onclick="filt('all',this)">すべて</button>
-        </div>
+      <div id="prospect-pager" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text3)">
+        <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-prev" onclick="chProspectPage(-1)">前へ</button>
+        <span id="prospect-page-lbl"></span>
+        <button class="btn btn-sm" style="padding:2px 8px;font-size:11px" id="prospect-next" onclick="chProspectPage(1)">次へ</button>
       </div>
     </div>
-    <div id="pro-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin-bottom:8px;align-items:center;gap:10px;flex-wrap:wrap">
+    <div id="pro-bulk-owner-bar" style="display:none;padding:8px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);margin:8px 16px;align-items:center;gap:10px;flex-wrap:wrap">
       <span id="pro-bulk-sel-count" style="font-size:13px;font-weight:600;color:#1D4ED8"></span>
       <input id="pro-bulk-owner-input" list="owners-dl" placeholder="担当者名を入力..." style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:160px">
       <button class="btn btn-sm btn-primary" onclick="bulkSetOwnerProspects()">選択した見込みに担当者を設定</button>
       <button class="btn btn-sm btn-ghost" onclick="clearProSelection()">選択解除</button>
     </div>
-    <table style="table-layout:fixed"><colgroup><col style="width:28px"><col style="width:9%"><col style="width:11%"><col style="width:5%"><col style="width:7%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:7%"><col style="width:8%"><col style="width:12%"><col style="width:auto"></colgroup>
-      <thead><tr>
-        <th><input type="checkbox" id="pro-chk-all" onchange="document.querySelectorAll('.pro-row-chk').forEach(c=>c.checked=this.checked);updateProBulkBar()" style="cursor:pointer"></th>
-        <th>取引先</th><th>案件名</th><th>見積番号</th><th>金額</th><th>原価</th><th>粗利</th><th>発行日</th><th>期限</th><th>担当者</th><th>ステータス</th><th>メモ</th><th></th>
-      </tr></thead>
-      <tbody id="p-tbody"></tbody>
-    </table>
+    <!-- カード形式の案件リスト -->
+    <div id="p-card-list" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px"></div>
     <div class="empty" id="p-empty" style="display:none">案件がありません。</div>
+    <!-- 非表示テーブル（CSV出力用に残す） -->
+    <table style="display:none"><tbody id="p-tbody"></tbody></table>
   </div>
 </div>
 
