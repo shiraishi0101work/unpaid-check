@@ -3333,7 +3333,7 @@ function renderDashboard(){
   if(!recentInv.length){salesEl.innerHTML='';salesEmpty.style.display='';} else {
     salesEmpty.style.display='none';
     salesEl.innerHTML=recentInv.map(i=>'<div class="dash-activity-item">'+
-      '<div class="dash-act-icon act-in">&#9650;</div>'+
+      '<div class="dash-act-icon act-in">IN</div>'+
       '<div class="dash-act-info"><div class="dash-act-name">'+(i.client||'-')+'</div><div class="dash-act-detail">'+(i.name||'-')+' ・ '+(i.issued||'-')+'</div></div>'+
       '<div class="dash-act-amount in">'+fmt(i.amount)+'</div>'+
     '</div>').join('');
