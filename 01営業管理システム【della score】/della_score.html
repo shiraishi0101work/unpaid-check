@@ -3539,6 +3539,112 @@ function renderDashboard(){
   }
 }
 
+// ── 商品カテゴリ別 内訳 ─────────────────────────────────
+let _catDetailFilter = null;
+function renderCategoryBreakdown(mSales, totalSales){
+  const cm = {};
+  mSales.forEach(i => {
+    if(i.ownerItems && i.ownerItems.length > 0){
+      i.ownerItems.forEach(oi => {
+        const cat = oi.category || classifyText(oi.desc || i.name);
+        if(!cm[cat]) cm[cat] = {sales:0, count:0, items:[]};
+        cm[cat].sales += (oi.amount||0);
+        cm[cat].count++;
+        cm[cat].items.push({client:i.client, name:oi.desc||i.name, amount:oi.amount, due:i.due, owner:oi.owner||i.owner});
+      });
+    } else {
+      const cat = i.category || classifyText(i.name);
+      if(!cm[cat]) cm[cat] = {sales:0, count:0, items:[]};
+      cm[cat].sales += (i.amount||0);
+      cm[cat].count++;
+      cm[cat].items.push({client:i.client, name:i.name, amount:i.amount, due:i.due, owner:i.owner});
+    }
+  });
+  const cats = Object.entries(cm).sort((a,b) => b[1].sales - a[1].sales);
+  const maxS = Math.max(...cats.map(([,v])=>v.sales),1);
+  const bd = document.getElementById('cat-breakdown');
+  const be = document.getElementById('cat-empty');
+  const filterRow = document.getElementById('cat-filter-row');
+  if(filterRow){
+    filterRow.innerHTML = '<button class="chip active" onclick="filterCatDetail(null,this)">全商品</button>' +
+      cats.map(([name])=>`<button class="chip" onclick="filterCatDetail('${name.replace(/'/g,"\\'")}',this)">${name}</button>`).join('');
+  }
+  if(!cats.length){ bd.innerHTML=''; be.style.display=''; document.getElementById('cat-detail').style.display='none'; }
+  else {
+    be.style.display='none';
+    bd.innerHTML = cats.map(([name,v]) => {
+      const pct = totalSales ? Math.round(v.sales/totalSales*100) : 0;
+      return `<div class="owner-row" style="cursor:pointer" onclick="filterCatDetail('${name.replace(/'/g,"\\'")}',null)">
+        <div><span class="pill">${name}</span></div>
+        <div><div class="mini-bar-wrap"><div class="mini-bar" style="width:${Math.round(v.sales/maxS*100)}%"></div></div></div>
+        <div style="text-align:right;color:var(--text2);font-size:12px">${v.count}件</div>
+        <div style="text-align:right;font-weight:600">${fmt(v.sales)}</div>
+        <div style="text-align:right;color:var(--text2);font-size:12px">${pct}%</div>
+      </div>`;
+    }).join('');
+    renderCatDetail(cm, _catDetailFilter);
+  }
+}
+function filterCatDetail(name, chipEl){
+  _catDetailFilter = name;
+  if(chipEl){
+    document.querySelectorAll('#cat-filter-row .chip').forEach(c=>c.classList.remove('active'));
+    chipEl.classList.add('active');
+  } else {
+    document.querySelectorAll('#cat-filter-row .chip').forEach(c=>{
+      c.classList.toggle('active', c.textContent===name||(name===null&&c.textContent==='全商品'));
+    });
+  }
+  // 再計算
+  const m=D.currentMonth;
+  const isPL=D.monthlyMode==='PL';
+  const mSales=isPL?D.orders.filter(o=>(o.date||'').startsWith(m)):D.invoices.filter(i=>(i.due||i.issued||'').startsWith(m));
+  const mIt=mSales.reduce((s,i)=>s+(i.amount||0),0);
+  const cm={};
+  mSales.forEach(i=>{
+    if(i.ownerItems&&i.ownerItems.length>0){
+      i.ownerItems.forEach(oi=>{
+        const cat=oi.category||classifyText(oi.desc||i.name);
+        if(!cm[cat])cm[cat]={sales:0,count:0,items:[]};
+        cm[cat].sales+=(oi.amount||0); cm[cat].count++;
+        cm[cat].items.push({client:i.client,name:oi.desc||i.name,amount:oi.amount,due:i.due,owner:oi.owner||i.owner});
+      });
+    } else {
+      const cat=i.category||classifyText(i.name);
+      if(!cm[cat])cm[cat]={sales:0,count:0,items:[]};
+      cm[cat].sales+=(i.amount||0); cm[cat].count++;
+      cm[cat].items.push({client:i.client,name:i.name,amount:i.amount,due:i.due,owner:i.owner});
+    }
+  });
+  renderCatDetail(cm, name);
+}
+function renderCatDetail(cm, filterName){
+  const detailEl=document.getElementById('cat-detail');
+  const grid=document.getElementById('cat-detail-grid');
+  const targets=filterName?[[filterName,cm[filterName]||{sales:0,count:0,items:[]}]]:Object.entries(cm).sort((a,b)=>b[1].sales-a[1].sales);
+  if(!targets.length||!targets.some(([,v])=>v.items.length>0)){ detailEl.style.display='none'; return; }
+  detailEl.style.display='';
+  grid.innerHTML=targets.map(([name,v])=>{
+    return `<div class="section" style="margin-bottom:10px">
+      <div class="sec-hdr" style="padding:8px 12px">
+        <span class="sec-title" style="font-size:13px">${name}</span>
+        <span style="font-size:12px;color:var(--text3)">${v.count}件 / ${fmt(v.sales)}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse"><thead><tr>
+        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">請求先</th>
+        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">案件名</th>
+        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">金額</th>
+        <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">担当者</th>
+      </tr></thead><tbody>${v.items.map(r=>`<tr style="font-size:12px">
+        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${r.client||'-'}</td>
+        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${r.name||'-'}</td>
+        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${fmt(r.amount)}</td>
+        <td style="padding:4px 8px;border-bottom:0.5px solid var(--border)">${r.owner?`<span class="pill">${r.owner}</span>`:'-'}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>`;
+  }).join('');
+}
+
 // ── 月次 ──────────────────────────────────────────
 function filterOwnerDetail(name, chipEl){
   if(chipEl){ // チップクリック時はページリセット
