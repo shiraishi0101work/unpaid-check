@@ -3222,6 +3222,7 @@ function renderSettings(){
   if(startEl) startEl.value = s.fiscalStart || 4;
   if(endEl) endEl.value = s.fiscalEnd || 3;
   if(taxEl) taxEl.value = s.taxRate ?? 10;
+  renderCategorySettings();
 }
 function saveSettings(){
   D.settings = {
