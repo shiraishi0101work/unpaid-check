@@ -635,6 +635,20 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="owner-detail-grid"></div>
     </div>
   </div>
+  <!-- 商品別 内訳 -->
+  <div class="section" style="margin-bottom:14px">
+    <div class="sec-hdr">
+      <span class="sec-title">商品別 内訳</span>
+      <div class="chip-row" id="cat-filter-row" style="flex-wrap:nowrap"></div>
+    </div>
+    <div class="owner-row owner-row-hd"><div>商品カテゴリ</div><div>売上 構成比</div><div style="text-align:right">件数</div><div style="text-align:right">売上（税抜）</div><div style="text-align:right">構成比</div></div>
+    <div id="cat-breakdown"></div>
+    <div class="empty" id="cat-empty" style="display:none">この月のデータがありません。</div>
+    <div id="cat-detail" style="display:none;border-top:0.5px solid var(--border);padding:14px 16px">
+      <div id="cat-detail-grid"></div>
+    </div>
+  </div>
+
   <div class="two-col">
     <div class="section" id="m-prospect-sec">
       <div class="sec-hdr"><span class="sec-title">見込み案件</span></div>
