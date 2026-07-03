@@ -2348,11 +2348,17 @@ def api_overdue_recheck(invoice_id):
     # 振込名義が会計の適用（備考）または取引先名に含まれているかで照合
     import re as _re
     import jaconv as _jc
+    from name_utils import similarity as _nu_similarity
+
+    _LEGAL_PREFIX = _re.compile(
+        r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
+    )
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
         s = _jc.h2z(s, kana=True, ascii=False, digit=False)
-        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        s = _LEGAL_PREFIX.sub('', s)
+        s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
 
     # 入金履歴のみに絞る（売掛金など売上計上仕訳を除外）
@@ -2369,16 +2375,25 @@ def api_overdue_recheck(invoice_id):
         remark_n     = _norm(remark)
         deal_name    = d.get("取引先名", "") or ""
         deal_name_n  = _norm(deal_name)
+        matched = False
         for name in search_names:
             if not name or len(name) < 2:
                 continue
             name_n = _norm(name)
             if len(name_n) >= 2 and (name_n in remark_n or name_n in deal_name_n):
-                matched_deals.append(d)
+                matched = True
                 break
             if name in remark or name in deal_name:
-                matched_deals.append(d)
+                matched = True
                 break
+        # 部分一致で見つからなかった場合、ファジーマッチで類似度チェック
+        if not matched and partner_name:
+            if remark_n and _nu_similarity(partner_name, remark_n) >= 0.55:
+                matched = True
+            elif deal_name and _nu_similarity(partner_name, deal_name) >= 0.55:
+                matched = True
+        if matched:
+            matched_deals.append(d)
 
     # recheck_records に追加（会計取引IDで重複除去、レコードIDはUUID）
     import uuid as _uuid
