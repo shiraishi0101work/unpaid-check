@@ -4658,7 +4658,9 @@ function getOwnerItems(type){
     const desc  =(row.querySelector('.oitem-desc')?.value||'').trim();
     const amount=parseFloat(row.querySelector('.oitem-amount')?.value)||0;
     const owner =(row.querySelector('.oitem-owner')?.value||'').trim();
-    if(desc||amount||owner) items.push({desc,amount,owner});
+    const catSel=(row.querySelector('.oitem-cat')?.value||'').trim();
+    const category=catSel||classifyText(desc);
+    if(desc||amount||owner) items.push({desc,amount,owner,category});
   });
   return items;
 }
