@@ -1690,7 +1690,11 @@ def _run_recheck_all(cid: str):
             furikomi_list = _get_furikomi_list(company_tantou, partner_name)
             if furikomi_meta and furikomi_meta not in furikomi_list:
                 furikomi_list = [furikomi_meta] + furikomi_list
-            if furikomi_list:
+            # 振込名義リスト + 取引先名自体も検索キーワードに含める
+            search_names = list(furikomi_list)
+            if partner_name and partner_name not in search_names:
+                search_names.append(partner_name)
+            if search_names:
                 for d in payment_deals:
                     journal_id = str(d.get("取引ID", ""))
                     if journal_id in existing_jids_rchk:
@@ -1700,7 +1704,7 @@ def _run_recheck_all(cid: str):
                     deal_name    = d.get("取引先名", "") or ""
                     deal_name_n  = _norm(deal_name)
                     matched  = False
-                    for name in furikomi_list:
+                    for name in search_names:
                         if not name or len(name) < 2:
                             continue
                         name_n = _norm(name)
