@@ -1597,8 +1597,6 @@ def _run_recheck_all(cid: str):
     import jaconv as _jc
     import requests
     from mf_accounting import get_deals, get_unclassified_deals, AccountingPeriodError
-    from name_utils import normalize as _nu_normalize, similarity as _nu_similarity
-
     _LEGAL_PREFIX = _re.compile(
         r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
     )
@@ -1609,6 +1607,12 @@ def _run_recheck_all(cid: str):
         s = _LEGAL_PREFIX.sub('', s)
         s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
+
+    def _kata_runs(s: str) -> list[str]:
+        """文字列からカタカナ3文字以上の連続部分を抽出"""
+        normalized = _jc.hira2kata(s.strip())
+        normalized = _jc.h2z(normalized, kana=True, ascii=False, digit=False)
+        return [m for m in _re.findall(r'[\u30A0-\u30FF]{3,}', normalized)]
 
     try:
         result = _load_result()
