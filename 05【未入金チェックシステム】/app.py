@@ -2351,8 +2351,6 @@ def api_overdue_recheck(invoice_id):
     # 振込名義が会計の適用（備考）または取引先名に含まれているかで照合
     import re as _re
     import jaconv as _jc
-    from name_utils import similarity as _nu_similarity
-
     _LEGAL_PREFIX = _re.compile(
         r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
     )
@@ -2363,6 +2361,12 @@ def api_overdue_recheck(invoice_id):
         s = _LEGAL_PREFIX.sub('', s)
         s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
+
+    def _kata_runs(s: str) -> list[str]:
+        """文字列からカタカナ3文字以上の連続部分を抽出"""
+        normalized = _jc.hira2kata(s.strip())
+        normalized = _jc.h2z(normalized, kana=True, ascii=False, digit=False)
+        return [m for m in _re.findall(r'[\u30A0-\u30FF]{3,}', normalized)]
 
     # 入金履歴のみに絞る（売掛金など売上計上仕訳を除外）
     _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金", "現金"}
