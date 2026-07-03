@@ -4464,6 +4464,7 @@ function openInvoiceModal(){
   switchInvTab('single');
   document.getElementById('inv-actions').innerHTML='<button class="btn" onclick="closeModal(\'invoice-modal\')">キャンセル</button><button class="btn btn-primary" onclick="saveInvoice()">発行・登録する</button>';
   refreshOwners();
+  refreshCategorySelect('if-category','');
   openModal('invoice-modal');
 }
 
