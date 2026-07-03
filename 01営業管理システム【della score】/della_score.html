@@ -5487,6 +5487,7 @@ async function doLogin(){
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
+      autoImportMfInvoices();
       render();renderDashboard();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
       restoreNavFromHash();
     }
