@@ -1695,14 +1695,19 @@ def _run_recheck_all(cid: str):
                     journal_id = str(d.get("取引ID", ""))
                     if journal_id in existing_jids_rchk:
                         continue
-                    remark   = d.get("備考", "") or ""
-                    remark_n = _norm(remark)
+                    remark       = d.get("備考", "") or ""
+                    remark_n     = _norm(remark)
+                    deal_name    = d.get("取引先名", "") or ""
+                    deal_name_n  = _norm(deal_name)
                     matched  = False
                     for name in furikomi_list:
                         if not name or len(name) < 2:
                             continue
                         name_n = _norm(name)
-                        if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+                        if len(name_n) >= 2 and (name_n in remark_n or name_n in deal_name_n):
+                            matched = True
+                            break
+                        if name in remark or name in deal_name:
                             matched = True
                             break
                     if matched:
