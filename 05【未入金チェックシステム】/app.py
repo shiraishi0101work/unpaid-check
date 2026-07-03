@@ -1597,11 +1597,17 @@ def _run_recheck_all(cid: str):
     import jaconv as _jc
     import requests
     from mf_accounting import get_deals, get_unclassified_deals, AccountingPeriodError
+    from name_utils import normalize as _nu_normalize, similarity as _nu_similarity
+
+    _LEGAL_PREFIX = _re.compile(
+        r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
+    )
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
         s = _jc.h2z(s, kana=True, ascii=False, digit=False)
-        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        s = _LEGAL_PREFIX.sub('', s)
+        s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
 
     try:
