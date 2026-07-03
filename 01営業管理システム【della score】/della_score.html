@@ -1589,7 +1589,7 @@ async function loadFromServer(){
     if('importedMfInvIds'  in d) D.importedMfInvIds = d.importedMfInvIds   || [];
     if('importedMfQuoIds'  in d) D.importedMfQuoIds = d.importedMfQuoIds   || [];
     if('mfSkipCounts'      in d) D.mfSkipCounts     = d.mfSkipCounts       || {};
-    if('settings'          in d) D.settings         = Object.assign({ bizName:'', fiscalStart:4, fiscalEnd:3, taxRate:10 }, d.settings||{});
+    if('settings'          in d) { const def = { bizName:'', fiscalStart:4, fiscalEnd:3, taxRate:10 }; D.settings = Object.assign(def, d.settings||{}); if(!D.settings.categories) D.settings.categories = D.settings.categories || []; }
   } catch(e){ console.warn('サーバー接続失敗、初期データを使用:', e); }
 }
 function save(){
