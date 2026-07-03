@@ -2393,12 +2393,12 @@ def api_overdue_recheck(invoice_id):
             if name in remark or name in deal_name:
                 matched = True
                 break
-        # 部分一致で見つからなかった場合、ファジーマッチで類似度チェック
+        # 部分一致で見つからなかった場合、取引先名のカタカナ部分で照合
         if not matched and partner_name:
-            if remark_n and _nu_similarity(partner_name, remark_n) >= 0.55:
-                matched = True
-            elif deal_name and _nu_similarity(partner_name, deal_name) >= 0.55:
-                matched = True
+            for krun in _kata_runs(partner_name):
+                if krun in remark_n or krun in deal_name_n:
+                    matched = True
+                    break
         if matched:
             matched_deals.append(d)
 
