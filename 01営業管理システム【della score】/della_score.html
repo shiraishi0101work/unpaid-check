@@ -4637,11 +4637,14 @@ function addOwnerItemRow(type, item){
   const listEl=document.getElementById(type==='inv'?'inv-owner-items':'pur-owner-items');
   if(!listEl) return;
   const row=document.createElement('div');
-  row.style.cssText='display:grid;grid-template-columns:1fr 110px 130px 28px;gap:4px;margin-bottom:4px;align-items:center';
+  row.style.cssText='display:grid;grid-template-columns:1fr 110px 130px 120px 28px;gap:4px;margin-bottom:4px;align-items:center';
   const iStyle='padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit;width:100%;box-sizing:border-box';
+  const cats=(D.settings&&D.settings.categories)||[];
+  const catOpts='<option value="">自動判定</option>'+cats.map(c=>`<option value="${c.name}"${item?.category===c.name?' selected':''}>${c.name}</option>`).join('')+'<option value="その他"'+(item?.category==='その他'?' selected':'')+'>その他</option>';
   row.innerHTML=`<input placeholder="品目名" value="${item?.desc||''}" class="oitem-desc" style="${iStyle}">
     <input type="number" placeholder="金額(税抜)" value="${item?.amount!=null&&item.amount!==''?item.amount:''}" class="oitem-amount" style="${iStyle}">
     <input placeholder="担当者" list="owners-dl" value="${item?.owner||''}" class="oitem-owner" style="${iStyle}">
+    <select class="oitem-cat" style="${iStyle}">${catOpts}</select>
     <button type="button" onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">✕</button>`;
   listEl.appendChild(row);
 }
