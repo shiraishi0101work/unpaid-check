@@ -2343,14 +2343,18 @@ def api_overdue_recheck(invoice_id):
 
     matched_deals = []
     for d in payment_deals:
-        remark   = d.get("備考", "") or ""
-        remark_n = _norm(remark)
+        remark       = d.get("備考", "") or ""
+        remark_n     = _norm(remark)
+        deal_name    = d.get("取引先名", "") or ""
+        deal_name_n  = _norm(deal_name)
         for name in furikomi_list:
             if not name or len(name) < 2:
                 continue
             name_n = _norm(name)
-            # 正規化後の名前が適用に含まれるか、または元テキストで含まれるか
-            if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+            if len(name_n) >= 2 and (name_n in remark_n or name_n in deal_name_n):
+                matched_deals.append(d)
+                break
+            if name in remark or name in deal_name:
                 matched_deals.append(d)
                 break
 
