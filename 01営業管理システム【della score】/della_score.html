@@ -4709,12 +4709,13 @@ function saveInvoice(){
   const ownerItems=getOwnerItems('inv');
   if(D.editId){
     const inv=D.invoices.find(x=>x.id===D.editId);
-    if(inv){inv.client=client;inv.name=g('if-name');inv.billing_number=g('if-billing-number');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');inv.ownerItems=ownerItems;classifyInvoice(inv);}
+    const manualCat=(document.getElementById('if-category')?.value||'').trim();
+    if(inv){inv.client=client;inv.name=g('if-name');inv.billing_number=g('if-billing-number');inv.amount=parseFloat(g('if-amount'))||null;inv.tax=parseFloat(g('if-tax'))||null;inv.owner=owner;inv.issued=issued;inv.due=due;inv.bank=g('if-bank');inv.items=g('if-items');inv.ownerItems=ownerItems;classifyInvoice(inv);if(manualCat)inv.category=manualCat;}
     D.editId=null;
   } else {
     const prospectId=g('if-prospect');
     const newInv={id:uid(),client,name:g('if-name'),billing_number:g('if-billing-number'),amount:parseFloat(g('if-amount'))||null,tax:parseFloat(g('if-tax'))||null,owner,issued,due,bank:g('if-bank'),items:g('if-items'),ownerItems,prospectId};
-    classifyInvoice(newInv);
+    classifyInvoice(newInv);if(manualCat)newInv.category=manualCat;
     D.invoices.unshift(newInv);
     if(prospectId){const p=D.prospects.find(x=>x.id===prospectId);if(p)p.status='invoiced';}
     upsertClient({name:client,owner,date:issued});
