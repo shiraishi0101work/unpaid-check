@@ -2398,14 +2398,16 @@ function autoImportMfInvoices(){
   const ownerMap = buildOwnerMap();
   targets.forEach(m=>{
     D.importedMfInvIds.push(m.id);
-    D.invoices.unshift({
+    const newInv = {
       id: uid(), billing_number: m.billing_number||'',
       client: m.partner||'', name: m.title||'',
       amount: m.total_price||0, tax: m.tax||0,
       issued: m.billing_date||'', due: m.due_date||'',
       bank:'', items:'', owner: ownerMap[m.partner]||'', prospectId:'',
       mf_id: m.id
-    });
+    };
+    classifyInvoice(newInv);
+    D.invoices.unshift(newInv);
   });
   save();
   return targets.length;
