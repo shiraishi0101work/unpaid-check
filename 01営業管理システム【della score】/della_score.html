@@ -3740,6 +3740,8 @@ function renderMonthly(){
     // 全員の詳細を初期表示
     renderOwnerDetail(om, null);
   }
+  // ── 商品カテゴリ別 内訳 ──────────────────────
+  renderCategoryBreakdown(mSales, mIt);
   const setTbl=(tbId,emId,rows)=>{
     const tb=document.getElementById(tbId);const em=document.getElementById(emId);
     if(!rows.length){tb.innerHTML='';em.style.display='';}
