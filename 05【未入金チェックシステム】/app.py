@@ -1724,13 +1724,12 @@ def _run_recheck_all(cid: str):
                         if name in remark or name in deal_name:
                             matched = True
                             break
-                    # 部分一致で見つからなかった場合、ファジーマッチで類似度チェック
+                    # 部分一致で見つからなかった場合、取引先名のカタカナ部分で照合
                     if not matched and partner_name:
-                        # 備考から法人格略称を除去した文字列と取引先名の類似度
-                        if remark_n and _nu_similarity(partner_name, remark_n) >= 0.55:
-                            matched = True
-                        elif deal_name and _nu_similarity(partner_name, deal_name) >= 0.55:
-                            matched = True
+                        for krun in _kata_runs(partner_name):
+                            if krun in remark_n or krun in deal_name_n:
+                                matched = True
+                                break
                     if matched:
                         recheck_records.append({
                             "id":                     str(_uuid.uuid4()),
