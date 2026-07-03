@@ -3302,6 +3302,12 @@ function renderCategorySettings(){
     <button type="button" onclick="this.closest('.cat-row').remove()" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">✕</button>
   </div>`).join('');
 }
+function refreshCategorySelect(selectId, currentVal){
+  const el=document.getElementById(selectId);
+  if(!el) return;
+  const cats=(D.settings&&D.settings.categories)||[];
+  el.innerHTML='<option value="">自動判定</option>'+cats.map(c=>`<option value="${c.name}"${c.name===currentVal?' selected':''}>${c.name}</option>`).join('')+'<option value="その他"'+('その他'===currentVal?' selected':'')+'>その他</option>';
+}
 function addCategoryRow(){
   const listEl = document.getElementById('cat-master-list');
   if(!listEl) return;
