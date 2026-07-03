@@ -950,6 +950,23 @@ input:focus,select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 
     </div>
   </div>
 
+  <!-- 商品カテゴリマスタ -->
+  <div class="section" style="max-width:680px;margin-top:16px">
+    <div class="sec-hdr">
+      <span class="sec-title">商品カテゴリマスタ</span>
+      <button class="btn btn-sm btn-ghost" onclick="addCategoryRow()">+ カテゴリを追加</button>
+    </div>
+    <div style="padding:16px">
+      <p style="margin:0 0 10px;font-size:12px;color:var(--text3)">請求書の案件名/品目名にキーワードが含まれていれば、自動的にカテゴリを割り当てます。上のルールが優先されます。どれにも該当しない場合は「その他」になります。</p>
+      <div style="display:grid;grid-template-columns:160px 1fr 28px;gap:6px;margin-bottom:6px;padding:0 2px">
+        <span style="font-size:11px;color:var(--text3);font-weight:600">カテゴリ名</span>
+        <span style="font-size:11px;color:var(--text3);font-weight:600">マッチキーワード（カンマ区切り）</span>
+        <span></span>
+      </div>
+      <div id="cat-master-list"></div>
+    </div>
+  </div>
+
   <!-- システム連携エクスポート -->
   <div class="section" style="max-width:480px;margin-top:16px">
     <div class="sec-hdr"><span class="sec-title">システム連携エクスポート</span></div>
