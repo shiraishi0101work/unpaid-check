@@ -4815,6 +4815,7 @@ function editInvoice(id){
   // フォームに値を入れる
   document.getElementById('inv-modal-title').textContent='請求書を編集';
   sv('if-client',inv.client);sv('if-name',inv.name||'');sv('if-billing-number',inv.billing_number||'');sv('if-amount',inv.amount||'');sv('if-tax',inv.tax||'');sv('if-owner',inv.owner||'');sv('if-issued',inv.issued||'');sv('if-due',inv.due||'');sv('if-bank',inv.bank||'');sv('if-items',inv.items||'');
+  refreshCategorySelect('if-category',inv.category||'');
   (inv.ownerItems||[]).forEach(item=>addOwnerItemRow('inv',item));
   document.getElementById('inv-actions').innerHTML=`<button class="btn btn-danger btn-sm" onclick="delItem('invoices','${id}');closeModal('invoice-modal')">削除</button><span style="flex:1"></span><button class="btn" onclick="closeModal('invoice-modal')">キャンセル</button><button class="btn btn-primary" onclick="saveInvoice()">更新する</button>`;
   openModal('invoice-modal');
