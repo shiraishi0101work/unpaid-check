@@ -5682,6 +5682,7 @@ async function doLogin(){
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
       autoImportMfInvoices();
+      classifyAllInvoices();
       render();renderDashboard();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
       restoreNavFromHash();
     }else{
@@ -5706,6 +5707,7 @@ async function doLogin(){
       document.getElementById('main-app').style.display='flex';
       await loadFromServer();
       autoImportMfInvoices();
+      classifyAllInvoices();
       render();renderDashboard();renderMonthly();renderChart();initDropZones();updateApiKeyBtn();
       restoreNavFromHash();
     }
