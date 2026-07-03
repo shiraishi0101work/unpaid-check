@@ -2319,7 +2319,12 @@ def api_overdue_recheck(invoice_id):
     if furikomi_meta and furikomi_meta not in furikomi_list:
         furikomi_list = [furikomi_meta] + furikomi_list
 
-    if not furikomi_list:
+    # 振込名義リスト + 取引先名自体も検索キーワードに含める
+    search_names = list(furikomi_list)
+    if partner_name and partner_name not in search_names:
+        search_names.append(partner_name)
+
+    if not search_names:
         return jsonify({
             "ok":          False,
             "error":       f"「{partner_name}」の振込名義が登録されていません。顧客リストまたは編集ボタンから振込名義を登録してください。",
@@ -2327,7 +2332,7 @@ def api_overdue_recheck(invoice_id):
             "total_count": 0,
         }), 400
 
-    # 振込名義が会計の適用（備考）に含まれているかで照合
+    # 振込名義が会計の適用（備考）または取引先名に含まれているかで照合
     import re as _re
     import jaconv as _jc
 
@@ -2351,7 +2356,7 @@ def api_overdue_recheck(invoice_id):
         remark_n     = _norm(remark)
         deal_name    = d.get("取引先名", "") or ""
         deal_name_n  = _norm(deal_name)
-        for name in furikomi_list:
+        for name in search_names:
             if not name or len(name) < 2:
                 continue
             name_n = _norm(name)
