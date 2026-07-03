@@ -1700,7 +1700,7 @@ def _run_recheck_all(cid: str):
             search_names = list(furikomi_list)
             if partner_name and partner_name not in search_names:
                 search_names.append(partner_name)
-            if search_names:
+            if search_names or partner_name:
                 for d in payment_deals:
                     journal_id = str(d.get("取引ID", ""))
                     if journal_id in existing_jids_rchk:
@@ -1720,6 +1720,13 @@ def _run_recheck_all(cid: str):
                         if name in remark or name in deal_name:
                             matched = True
                             break
+                    # 部分一致で見つからなかった場合、ファジーマッチで類似度チェック
+                    if not matched and partner_name:
+                        # 備考から法人格略称を除去した文字列と取引先名の類似度
+                        if remark_n and _nu_similarity(partner_name, remark_n) >= 0.55:
+                            matched = True
+                        elif deal_name and _nu_similarity(partner_name, deal_name) >= 0.55:
+                            matched = True
                     if matched:
                         recheck_records.append({
                             "id":                     str(_uuid.uuid4()),
