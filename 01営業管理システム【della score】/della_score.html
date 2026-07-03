@@ -3211,11 +3211,70 @@ function saveSettings(){
     bizName: document.getElementById('set-biz-name').value.trim(),
     fiscalStart: parseInt(document.getElementById('set-fiscal-start').value),
     fiscalEnd: parseInt(document.getElementById('set-fiscal-end').value),
-    taxRate: parseInt(document.getElementById('set-tax-rate').value)
+    taxRate: parseInt(document.getElementById('set-tax-rate').value),
+    categories: getCategorySettings()
   };
-  save();
+  classifyAllInvoices();
+  save(); renderAll();
   const msg = document.getElementById('settings-saved');
   if(msg){ msg.style.display=''; setTimeout(()=>msg.style.display='none', 2000); }
+}
+
+// ── カテゴリ自動分類 ─────────────────────────────────
+function classifyText(text){
+  if(!text) return 'その他';
+  const cats = (D.settings && D.settings.categories) || [];
+  const t = text.toLowerCase();
+  for(const cat of cats){
+    for(const kw of (cat.keywords||[])){
+      if(kw && t.indexOf(kw.toLowerCase()) !== -1) return cat.name;
+    }
+  }
+  return 'その他';
+}
+function classifyInvoice(inv){
+  if(inv.ownerItems && inv.ownerItems.length > 0){
+    inv.ownerItems.forEach(oi => { oi.category = classifyText(oi.desc || inv.name); });
+    inv.category = inv.ownerItems[0].category;
+  } else {
+    inv.category = classifyText(inv.name);
+  }
+}
+function classifyAllInvoices(){
+  (D.invoices||[]).forEach(i => classifyInvoice(i));
+}
+
+// ── カテゴリマスタ設定UI ──────────────────────────────
+function getCategorySettings(){
+  const rows = document.querySelectorAll('#cat-master-list .cat-row');
+  const cats = [];
+  rows.forEach(row => {
+    const name = (row.querySelector('.cat-name')?.value||'').trim();
+    const kws = (row.querySelector('.cat-keywords')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    if(name) cats.push({name, keywords: kws});
+  });
+  return cats;
+}
+function renderCategorySettings(){
+  const cats = (D.settings && D.settings.categories) || [];
+  const listEl = document.getElementById('cat-master-list');
+  if(!listEl) return;
+  listEl.innerHTML = cats.map((c,i) => `<div class="cat-row" style="display:grid;grid-template-columns:160px 1fr 28px;gap:6px;margin-bottom:4px;align-items:center">
+    <input class="cat-name" value="${c.name}" placeholder="カテゴリ名" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit">
+    <input class="cat-keywords" value="${(c.keywords||[]).join(', ')}" placeholder="キーワード（カンマ区切り）" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit">
+    <button type="button" onclick="this.closest('.cat-row').remove()" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">✕</button>
+  </div>`).join('');
+}
+function addCategoryRow(){
+  const listEl = document.getElementById('cat-master-list');
+  if(!listEl) return;
+  const row = document.createElement('div');
+  row.className = 'cat-row';
+  row.style.cssText = 'display:grid;grid-template-columns:160px 1fr 28px;gap:6px;margin-bottom:4px;align-items:center';
+  row.innerHTML = `<input class="cat-name" value="" placeholder="カテゴリ名" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit">
+    <input class="cat-keywords" value="" placeholder="キーワード（カンマ区切り）" style="padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:inherit">
+    <button type="button" onclick="this.closest('.cat-row').remove()" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">✕</button>`;
+  listEl.appendChild(row);
 }
 function renderRecurring(){
   // 固定請求
