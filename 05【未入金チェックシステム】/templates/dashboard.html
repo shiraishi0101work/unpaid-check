@@ -983,6 +983,7 @@
                 {% if diff < 0 %}▲¥{{ "{:,.0f}".format(diff | abs) }}{% elif diff > 0 %}+¥{{ "{:,.0f}".format(diff) }}{% else %}—{% endif %}
               {% else %}—{% endif %}
             </td>
+            <td class="small text-muted">{{ b.メモ or '—' }}</td>
             <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
             <td class="text-center">
               <button class="btn btn-outline-secondary btn-xs py-0 px-1 edit-btn"
