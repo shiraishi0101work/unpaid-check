@@ -517,6 +517,7 @@
             <th class="text-end">請求金額</th>
             <th>送付方法</th>
             <th>入金予定日</th>
+            <th>マネフォメモ</th>
             <th>社内メモ</th>
             <th class="text-center" style="width:140px">操作</th>
           </tr>
@@ -549,6 +550,7 @@
             <td class="small {% if b.入金予定日_手動 %}text-primary fw-semibold{% else %}text-muted{% endif %}">
               {{ b.入金予定日_手動 or '—' }}
             </td>
+            <td class="small text-muted">{{ b.メモ or '—' }}</td>
             <td class="small text-muted">{{ b.メモ_手動 }}</td>
             <td class="text-center">
               <div class="d-flex gap-1 justify-content-center">
