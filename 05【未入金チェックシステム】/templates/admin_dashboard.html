@@ -546,6 +546,7 @@
             <td class="text-end small">
               {% if manual_amt %}¥{{ "{:,.0f}".format(manual_amt) }}{% else %}<span class="text-muted">—</span>{% endif %}
             </td>
+            <td class="small text-muted">{{ b.メモ or '—' }}</td>
             <td class="small"><span class="badge bg-success">{{ b.入金状態 }}</span></td>
           </tr>
           {% endfor %}
@@ -554,7 +555,7 @@
           <tr>
             <td colspan="7">合計</td>
             <td class="text-end">¥{{ "{:,.0f}".format(paid_fy|sum(attribute='請求金額')) }}</td>
-            <td colspan="2"></td>
+            <td colspan="3"></td>
           </tr>
         </tfoot>
       </table>
