@@ -345,37 +345,32 @@ class InvoiceNotifierApp:
         if active:
             self.show_popup(active)
 
+        tick = 0
         while self.running:
             try:
-                # 新着チェック
-                new_found = self.check_new_emails()
-
-                # 開封チェック（アクティブなアラートがあるときだけ）
-                read_detected = self.check_read_status()
-
-                # ポップアップ更新
-                active = load_active_alerts()
-                if active:
-                    if new_found or read_detected:
+                # 新着チェックは CHECK_INTERVAL ごと
+                if tick % CHECK_INTERVAL == 0:
+                    new_found = self.check_new_emails()
+                    active = load_active_alerts()
+                    if new_found and active:
                         self.show_popup(active)
-                else:
-                    self.hide_popup()
 
-                if new_found:
-                    # 新着検知直後は短い間隔でチェック（開封検知を早くする）
-                    for _ in range(10):
-                        if not self.running:
-                            break
-                        time.sleep(1)
-                    continue
+                # アクティブアラートがあれば5秒ごとに開封チェック
+                active = load_active_alerts()
+                if active and tick % 5 == 0:
+                    read_detected = self.check_read_status()
+                    if read_detected:
+                        active = load_active_alerts()
+                        if active:
+                            self.show_popup(active)
+                        else:
+                            self.hide_popup()
 
             except Exception:
                 pass
 
-            for _ in range(CHECK_INTERVAL):
-                if not self.running:
-                    break
-                time.sleep(1)
+            time.sleep(1)
+            tick += 1
 
     def run(self):
         self.root.mainloop()
