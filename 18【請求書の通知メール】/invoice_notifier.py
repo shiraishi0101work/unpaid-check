@@ -303,19 +303,9 @@ class InvoiceNotifierApp:
         return new_found
 
     def check_read_status(self):
-        """未開封だった請求書メールが開封されたかチェック。
-        検知から120秒以内はチェックしない（ポップアップを確実に表示するため）"""
+        """未開封だった請求書メールが開封されたかチェック"""
         active_alerts = load_active_alerts()
         if not active_alerts:
-            return False
-
-        now = time.time()
-        # 全アラートが検知から120秒以内ならスキップ
-        all_recent = all(
-            now - info.get("notify_time", 0) < 30
-            for info in active_alerts.values()
-        )
-        if all_recent:
             return False
 
         removed = False
@@ -327,10 +317,6 @@ class InvoiceNotifierApp:
 
             uids_to_remove = []
             for uid in list(active_alerts.keys()):
-                # 検知から120秒以内のものはスキップ
-                if now - active_alerts[uid].get("notify_time", 0) < 120:
-                    continue
-                # FLAGSを取得して\Seenがあるか確認
                 status, flag_data = mail.uid("fetch", uid.encode(), "(FLAGS)")
                 if status == "OK" and flag_data[0]:
                     flags_str = flag_data[0].decode() if isinstance(flag_data[0], bytes) else str(flag_data[0])
