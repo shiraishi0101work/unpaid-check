@@ -147,10 +147,10 @@ class InvoiceNotifierApp:
             self.popup.attributes("-transparentcolor", BG_TRANSPARENT)
             self.popup.configure(bg=BG_TRANSPARENT)
 
-            # 全体キャンバス（角丸の背景を描く）
-            W = 380
-            card_h = 90 * len(alerts) + 100
-            H = card_h
+            # コンパクトなポップアップ
+            W = 280
+            H = 140
+            count = len(alerts)
 
             canvas = tk.Canvas(
                 self.popup, width=W, height=H,
@@ -158,84 +158,46 @@ class InvoiceNotifierApp:
             )
             canvas.pack()
 
-            # 影（少しずらした角丸）
+            # 影
             self._round_rect(canvas, 4, 4, W - 2, H - 2, 22, fill=COLOR_ACCENT_LIGHT, outline="")
 
             # メイン背景（角丸・白）
             self._round_rect(canvas, 0, 0, W - 6, H - 6, 20, fill=COLOR_WHITE, outline=COLOR_BORDER, width=1.5)
 
             # 上部アクセントライン
-            self._round_rect(canvas, 0, 0, W - 6, 50, 20, fill=COLOR_ACCENT, outline="")
-            canvas.create_rectangle(0, 30, W - 6, 50, fill=COLOR_ACCENT, outline="")
+            self._round_rect(canvas, 0, 0, W - 6, 8, 20, fill=COLOR_ACCENT, outline="")
+            canvas.create_rectangle(0, 6, W - 6, 8, fill=COLOR_ACCENT, outline="")
 
-            # ヘッダーテキスト
+            # メインテキスト
             canvas.create_text(
-                W // 2 - 3, 25,
+                W // 2 - 3, 45,
                 text="請求書メールが届いています",
-                font=("Meiryo UI", 11, "bold"), fill=COLOR_WHITE
+                font=("Meiryo UI", 11, "bold"), fill=COLOR_TEXT
+            )
+
+            # 件数（大きく表示）
+            canvas.create_text(
+                W // 2 - 3, 82,
+                text=f"{count} 件",
+                font=("Meiryo UI", 22, "bold"), fill=COLOR_ACCENT_DARK
             )
 
             # 装飾ドット
-            for i, dx in enumerate([-60, -40, -20, 20, 40, 60]):
+            for dx in [-30, -15, 0, 15, 30]:
                 canvas.create_oval(
-                    W // 2 + dx - 2, 44, W // 2 + dx + 2, 48,
+                    W // 2 + dx - 2, 108, W // 2 + dx + 2, 112,
                     fill=COLOR_ACCENT_LIGHT, outline=""
                 )
 
-            # メールカード
-            y_offset = 60
-            for uid, info in alerts.items():
-                subject = info.get("subject", "")
-                sender = info.get("sender", "")
-                detected = info.get("detected", "")
-
-                # カード背景
-                self._round_rect(
-                    canvas, 16, y_offset, W - 22, y_offset + 78, 12,
-                    fill=COLOR_CARD, outline=COLOR_BORDER, width=1
-                )
-
-                # 左のアクセントバー
-                canvas.create_rectangle(
-                    20, y_offset + 10, 24, y_offset + 68,
-                    fill=COLOR_ACCENT, outline=""
-                )
-
-                # 件名（長い場合は切り詰め）
-                display_subject = subject if len(subject) <= 28 else subject[:27] + "..."
-                canvas.create_text(
-                    34, y_offset + 22,
-                    text=display_subject,
-                    font=("Meiryo UI", 10, "bold"), fill=COLOR_TEXT,
-                    anchor="w"
-                )
-
-                # 差出人
-                display_sender = sender if len(sender) <= 35 else sender[:34] + "..."
-                canvas.create_text(
-                    34, y_offset + 44,
-                    text=f"From: {display_sender}",
-                    font=("Meiryo UI", 8), fill=COLOR_TEXT_LIGHT,
-                    anchor="w"
-                )
-
-                # 検知時刻
-                canvas.create_text(
-                    34, y_offset + 62,
-                    text=detected,
-                    font=("Meiryo UI", 8), fill=COLOR_TEXT_SOFT,
-                    anchor="w"
-                )
-
-                self.alert_labels[uid] = True
-                y_offset += 86
-
             # フッター
             canvas.create_text(
-                W // 2 - 3, H - 22,
-                text="- メールを開封すると自動で消えます -",
+                W // 2 - 3, H - 18,
+                text="- 開封すると自動で消えます -",
                 font=("Meiryo UI", 8), fill=COLOR_TEXT_SOFT
             )
+
+            for uid in alerts:
+                self.alert_labels[uid] = True
 
             # サイズと位置（画面右側中央）
             self.popup.update_idletasks()
