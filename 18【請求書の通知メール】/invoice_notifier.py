@@ -1,9 +1,9 @@
 """
-請求書メール通知システム（ステータスウィンドウ版）
+請求書メール通知システム
 - IMAPでメールサーバーを定期監視
 - 件名に「請求書」を含む新着メールを検知
-- Windowsデスクトップ通知（トースト通知）で通知
-- 小さいステータスウィンドウを常時表示
+- 画面右側にポップアップ表示
+- メールが開封（既読）されたらポップアップ自動消去
 """
 
 import imaplib
@@ -39,6 +39,7 @@ CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "60"))
 KEYWORD = "請求書"
 
 STATE_FILE = BASE_DIR / "seen_uids.json"
+ALERT_FILE = BASE_DIR / "active_alerts.json"
 
 
 def load_seen_uids():
@@ -51,6 +52,19 @@ def load_seen_uids():
 def save_seen_uids(uids):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(list(uids), f)
+
+
+def load_active_alerts():
+    """未開封の請求書メール（ポップアップ表示中）のUID→情報"""
+    if ALERT_FILE.exists():
+        with open(ALERT_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def save_active_alerts(alerts):
+    with open(ALERT_FILE, "w", encoding="utf-8") as f:
+        json.dump(alerts, f, ensure_ascii=False)
 
 
 def decode_mime_header(raw):
@@ -80,157 +94,146 @@ def send_desktop_notification(subject, sender):
 class InvoiceNotifierApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("請求書監視")
-        self.root.attributes("-topmost", True)
-        self.root.resizable(False, False)
-        self.root.configure(bg="#1a1a2e")
+        self.root.withdraw()  # メインウィンドウは非表示
 
-        # ウィンドウサイズと位置（右下に配置）
-        w, h = 320, 120
-        screen_w = self.root.winfo_screenwidth()
-        screen_h = self.root.winfo_screenheight()
-        x = screen_w - w - 20
-        y = screen_h - h - 80
-        self.root.geometry(f"{w}x{h}+{x}+{y}")
-
-        # 閉じるボタンで最小化（終了防止）
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        # --- UI ---
-        frame = tk.Frame(self.root, bg="#1a1a2e", padx=10, pady=8)
-        frame.pack(fill="both", expand=True)
-
-        # タイトル行
-        title_frame = tk.Frame(frame, bg="#1a1a2e")
-        title_frame.pack(fill="x")
-
-        tk.Label(
-            title_frame, text="請求書メール監視",
-            font=("Meiryo UI", 11, "bold"), fg="#e0e0e0", bg="#1a1a2e"
-        ).pack(side="left")
-
-        self.status_dot = tk.Label(
-            title_frame, text="●", font=("Meiryo UI", 10),
-            fg="#00c853", bg="#1a1a2e"
-        )
-        self.status_dot.pack(side="right")
-
-        # 区切り線
-        tk.Frame(frame, height=1, bg="#333355").pack(fill="x", pady=4)
-
-        # 情報表示
-        info_frame = tk.Frame(frame, bg="#1a1a2e")
-        info_frame.pack(fill="x")
-
-        tk.Label(
-            info_frame, text="最終チェック:",
-            font=("Meiryo UI", 9), fg="#888888", bg="#1a1a2e"
-        ).grid(row=0, column=0, sticky="w")
-
-        self.last_check_label = tk.Label(
-            info_frame, text="--:--:--",
-            font=("Meiryo UI", 9, "bold"), fg="#e0e0e0", bg="#1a1a2e"
-        )
-        self.last_check_label.grid(row=0, column=1, sticky="w", padx=(8, 0))
-
-        tk.Label(
-            info_frame, text="本日の検知:",
-            font=("Meiryo UI", 9), fg="#888888", bg="#1a1a2e"
-        ).grid(row=1, column=0, sticky="w")
-
-        self.detect_count_label = tk.Label(
-            info_frame, text="0 件",
-            font=("Meiryo UI", 9, "bold"), fg="#e0e0e0", bg="#1a1a2e"
-        )
-        self.detect_count_label.grid(row=1, column=1, sticky="w", padx=(8, 0))
-
-        tk.Label(
-            info_frame, text="状態:",
-            font=("Meiryo UI", 9), fg="#888888", bg="#1a1a2e"
-        ).grid(row=2, column=0, sticky="w")
-
-        self.status_label = tk.Label(
-            info_frame, text="起動中...",
-            font=("Meiryo UI", 9, "bold"), fg="#ffd600", bg="#1a1a2e"
-        )
-        self.status_label.grid(row=2, column=1, sticky="w", padx=(8, 0))
-
-        # 状態管理
-        self.detect_count = 0
-        self.today = datetime.now().strftime("%Y-%m-%d")
         self.running = True
-
-        # ドラッグ移動
-        self.root.bind("<Button-1>", self.start_drag)
-        self.root.bind("<B1-Motion>", self.on_drag)
+        self.popup = None  # ポップアップウィンドウ
+        self.alert_labels = {}  # UID → ラベルウィジェット
 
         # バックグラウンドスレッド開始
         self.thread = threading.Thread(target=self.monitor_loop, daemon=True)
         self.thread.start()
 
-    def start_drag(self, event):
+    def show_popup(self, alerts):
+        """ポップアップを表示/更新する"""
+        def _show():
+            # 既存ポップアップを破棄して作り直す
+            if self.popup and self.popup.winfo_exists():
+                self.popup.destroy()
+            self.alert_labels.clear()
+
+            if not alerts:
+                self.popup = None
+                return
+
+            self.popup = tk.Toplevel(self.root)
+            self.popup.title("請求書通知")
+            self.popup.attributes("-topmost", True)
+            self.popup.overrideredirect(True)  # タイトルバーなし
+            self.popup.configure(bg="#b71c1c")
+
+            # 外枠
+            outer = tk.Frame(self.popup, bg="#b71c1c", padx=2, pady=2)
+            outer.pack(fill="both", expand=True)
+
+            inner = tk.Frame(outer, bg="#1a1a2e", padx=12, pady=10)
+            inner.pack(fill="both", expand=True)
+
+            # ヘッダー
+            header = tk.Frame(inner, bg="#1a1a2e")
+            header.pack(fill="x", pady=(0, 6))
+
+            tk.Label(
+                header, text="!! 請求書メール受信 !!",
+                font=("Meiryo UI", 12, "bold"), fg="#ff5252", bg="#1a1a2e"
+            ).pack(side="left")
+
+            # 区切り線
+            tk.Frame(inner, height=1, bg="#ff5252").pack(fill="x", pady=(0, 6))
+
+            # 各メールを表示
+            for uid, info in alerts.items():
+                mail_frame = tk.Frame(inner, bg="#262640", padx=8, pady=6)
+                mail_frame.pack(fill="x", pady=2)
+
+                subject = info.get("subject", "")
+                sender = info.get("sender", "")
+                detected = info.get("detected", "")
+
+                tk.Label(
+                    mail_frame, text=subject,
+                    font=("Meiryo UI", 10, "bold"), fg="#ffffff", bg="#262640",
+                    anchor="w", wraplength=340
+                ).pack(fill="x")
+
+                tk.Label(
+                    mail_frame, text=f"差出人: {sender}",
+                    font=("Meiryo UI", 8), fg="#aaaaaa", bg="#262640",
+                    anchor="w"
+                ).pack(fill="x")
+
+                tk.Label(
+                    mail_frame, text=f"検知: {detected}",
+                    font=("Meiryo UI", 8), fg="#888888", bg="#262640",
+                    anchor="w"
+                ).pack(fill="x")
+
+                self.alert_labels[uid] = mail_frame
+
+            # フッター
+            tk.Label(
+                inner, text="メールを開封すると自動で消えます",
+                font=("Meiryo UI", 8), fg="#666666", bg="#1a1a2e"
+            ).pack(pady=(6, 0))
+
+            # サイズ計算して右端中央に配置
+            self.popup.update_idletasks()
+            pw = self.popup.winfo_reqwidth()
+            ph = self.popup.winfo_reqheight()
+            screen_w = self.popup.winfo_screenwidth()
+            screen_h = self.popup.winfo_screenheight()
+            x = screen_w - pw - 20
+            y = (screen_h - ph) // 2
+            self.popup.geometry(f"+{x}+{y}")
+
+            # ドラッグ移動
+            inner.bind("<Button-1>", self._start_drag)
+            inner.bind("<B1-Motion>", self._on_drag)
+
+        self.root.after(0, _show)
+
+    def hide_popup(self):
+        """ポップアップを消す"""
+        def _hide():
+            if self.popup and self.popup.winfo_exists():
+                self.popup.destroy()
+            self.popup = None
+            self.alert_labels.clear()
+        self.root.after(0, _hide)
+
+    def _start_drag(self, event):
         self._drag_x = event.x
         self._drag_y = event.y
 
-    def on_drag(self, event):
-        x = self.root.winfo_x() + event.x - self._drag_x
-        y = self.root.winfo_y() + event.y - self._drag_y
-        self.root.geometry(f"+{x}+{y}")
-
-    def on_close(self):
-        if hasattr(self, '_confirm_shown') and self._confirm_shown:
-            return
-        self._confirm_shown = True
-        result = tk.messagebox.askyesno(
-            "確認", "請求書メール監視を終了しますか？"
-        )
-        self._confirm_shown = False
-        if result:
-            self.running = False
-            self.root.destroy()
-
-    def update_ui(self, last_check=None, status=None, status_color=None, new_detections=0):
-        """UIをスレッドセーフに更新"""
-        def _update():
-            if last_check:
-                self.last_check_label.config(text=last_check)
-            if status:
-                self.status_label.config(text=status, fg=status_color or "#e0e0e0")
-            # 日付が変わったらカウントリセット
-            today = datetime.now().strftime("%Y-%m-%d")
-            if today != self.today:
-                self.detect_count = 0
-                self.today = today
-            self.detect_count += new_detections
-            self.detect_count_label.config(
-                text=f"{self.detect_count} 件",
-                fg="#ff1744" if self.detect_count > 0 else "#e0e0e0"
-            )
-        self.root.after(0, _update)
+    def _on_drag(self, event):
+        if self.popup and self.popup.winfo_exists():
+            x = self.popup.winfo_x() + event.x - self._drag_x
+            y = self.popup.winfo_y() + event.y - self._drag_y
+            self.popup.geometry(f"+{x}+{y}")
 
     def initial_scan(self):
         """初回起動: 既存メールを既読登録"""
         if STATE_FILE.exists():
             return
-        self.update_ui(status="初回スキャン中...", status_color="#ffd600")
         try:
             mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
             mail.login(IMAP_USER, IMAP_PASSWORD)
             mail.select("INBOX")
             status, data = mail.uid("search", None, "ALL")
             seen = set()
-            if status == "OK":
+            if status == "OK" and data[0]:
                 for uid_bytes in data[0].split():
                     seen.add(uid_bytes.decode())
             save_seen_uids(seen)
             mail.logout()
-        except Exception as e:
-            self.update_ui(status=f"初回スキャンエラー", status_color="#ff1744")
+        except Exception:
+            pass
 
-    def check_emails(self):
-        """メールチェック"""
+    def check_new_emails(self):
+        """新着メールをチェックし、請求書メールを検知"""
         seen_uids = load_seen_uids()
-        new_count = 0
+        active_alerts = load_active_alerts()
+        new_found = False
 
         mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
         mail.login(IMAP_USER, IMAP_PASSWORD)
@@ -239,9 +242,9 @@ class InvoiceNotifierApp:
         status, data = mail.uid("search", None, "ALL")
         if status != "OK":
             mail.logout()
-            return 0
+            return False
 
-        all_uids = data[0].split()
+        all_uids = data[0].split() if data[0] else []
 
         for uid_bytes in all_uids:
             uid = uid_bytes.decode()
@@ -261,52 +264,99 @@ class InvoiceNotifierApp:
 
             if KEYWORD in subject:
                 sender = decode_mime_header(msg.get("From", ""))
+                now_str = datetime.now().strftime("%m/%d %H:%M")
+                active_alerts[uid] = {
+                    "subject": subject,
+                    "sender": sender,
+                    "detected": now_str,
+                }
                 send_desktop_notification(subject, sender)
-                new_count += 1
+                new_found = True
 
             seen_uids.add(uid)
 
         save_seen_uids(seen_uids)
+        save_active_alerts(active_alerts)
         mail.logout()
-        return new_count
+        return new_found
+
+    def check_read_status(self):
+        """未開封だった請求書メールが開封されたかチェック"""
+        active_alerts = load_active_alerts()
+        if not active_alerts:
+            return False
+
+        removed = False
+
+        try:
+            mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+            mail.login(IMAP_USER, IMAP_PASSWORD)
+            mail.select("INBOX")
+
+            uids_to_remove = []
+            for uid in list(active_alerts.keys()):
+                # FLAGSを取得して\Seenがあるか確認
+                status, flag_data = mail.uid("fetch", uid.encode(), "(FLAGS)")
+                if status == "OK" and flag_data[0]:
+                    flags_str = flag_data[0].decode() if isinstance(flag_data[0], bytes) else str(flag_data[0])
+                    if "\\Seen" in flags_str:
+                        uids_to_remove.append(uid)
+
+            for uid in uids_to_remove:
+                del active_alerts[uid]
+                removed = True
+
+            mail.logout()
+        except Exception:
+            pass
+
+        if removed:
+            save_active_alerts(active_alerts)
+
+        return removed
 
     def monitor_loop(self):
-        """メインの監視ループ（バックグラウンドスレッド）"""
+        """メインの監視ループ"""
         self.initial_scan()
+
+        # 起動時: 既存のアクティブアラートがあればポップアップ復元
+        active = load_active_alerts()
+        if active:
+            self.show_popup(active)
 
         while self.running:
             try:
-                self.update_ui(status="チェック中...", status_color="#ffd600")
-                new_count = self.check_emails()
-                now = datetime.now().strftime("%H:%M:%S")
+                # 新着チェック
+                new_found = self.check_new_emails()
 
-                if new_count > 0:
-                    self.update_ui(
-                        last_check=now,
-                        status=f"請求書 {new_count}件 検知!",
-                        status_color="#ff1744",
-                        new_detections=new_count
-                    )
+                # 開封チェック（アクティブなアラートがあるときだけ）
+                read_detected = self.check_read_status()
+
+                # ポップアップ更新
+                active = load_active_alerts()
+                if active:
+                    if new_found or read_detected:
+                        self.show_popup(active)
                 else:
-                    self.update_ui(
-                        last_check=now,
-                        status="監視中",
-                        status_color="#00c853"
-                    )
-            except Exception as e:
-                self.update_ui(
-                    status="接続エラー",
-                    status_color="#ff1744"
-                )
+                    self.hide_popup()
 
-            # CHECK_INTERVAL秒待つ（1秒刻みで終了チェック）
+                if new_found:
+                    # 新着検知直後は短い間隔でチェック（開封検知を早くする）
+                    for _ in range(10):
+                        if not self.running:
+                            break
+                        time.sleep(1)
+                    continue
+
+            except Exception:
+                pass
+
             for _ in range(CHECK_INTERVAL):
                 if not self.running:
                     break
                 time.sleep(1)
 
     def run(self):
-        import tkinter.messagebox
         self.root.mainloop()
 
 
