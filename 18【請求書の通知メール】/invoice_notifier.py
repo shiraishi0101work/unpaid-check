@@ -312,7 +312,7 @@ class InvoiceNotifierApp:
         now = time.time()
         # 全アラートが検知から120秒以内ならスキップ
         all_recent = all(
-            now - info.get("notify_time", 0) < 120
+            now - info.get("notify_time", 0) < 30
             for info in active_alerts.values()
         )
         if all_recent:
