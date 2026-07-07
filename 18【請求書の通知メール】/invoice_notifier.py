@@ -104,10 +104,21 @@ class InvoiceNotifierApp:
         self.thread = threading.Thread(target=self.monitor_loop, daemon=True)
         self.thread.start()
 
+    def _round_rect(self, canvas, x1, y1, x2, y2, r, **kwargs):
+        """角丸四角形を描画"""
+        points = [
+            x1 + r, y1, x2 - r, y1,
+            x2, y1, x2, y1 + r,
+            x2, y2 - r, x2, y2,
+            x2 - r, y2, x1 + r, y2,
+            x1, y2, x1, y2 - r,
+            x1, y1 + r, x1, y1,
+        ]
+        return canvas.create_polygon(points, smooth=True, **kwargs)
+
     def show_popup(self, alerts):
         """ポップアップを表示/更新する"""
         def _show():
-            # 既存ポップアップを破棄して作り直す
             if self.popup and self.popup.winfo_exists():
                 self.popup.destroy()
             self.alert_labels.clear()
@@ -116,79 +127,127 @@ class InvoiceNotifierApp:
                 self.popup = None
                 return
 
+            # --- 色定義（天使界隈 / 水色 x 白） ---
+            BG_TRANSPARENT = "#f0f0f0"
+            COLOR_WHITE = "#ffffff"
+            COLOR_CARD = "#f0f8ff"
+            COLOR_ACCENT = "#89c4e1"
+            COLOR_ACCENT_LIGHT = "#c5e5f5"
+            COLOR_ACCENT_DARK = "#5ba3c9"
+            COLOR_TEXT = "#4a6d7c"
+            COLOR_TEXT_LIGHT = "#8aaab8"
+            COLOR_TEXT_SOFT = "#a0c4d4"
+            COLOR_BORDER = "#d4eef8"
+            COLOR_GLOW = "#e8f4fa"
+
             self.popup = tk.Toplevel(self.root)
             self.popup.title("請求書通知")
             self.popup.attributes("-topmost", True)
-            self.popup.overrideredirect(True)  # タイトルバーなし
-            self.popup.configure(bg="#b71c1c")
+            self.popup.overrideredirect(True)
+            self.popup.attributes("-transparentcolor", BG_TRANSPARENT)
+            self.popup.configure(bg=BG_TRANSPARENT)
 
-            # 外枠
-            outer = tk.Frame(self.popup, bg="#b71c1c", padx=2, pady=2)
-            outer.pack(fill="both", expand=True)
+            # 全体キャンバス（角丸の背景を描く）
+            W = 380
+            card_h = 90 * len(alerts) + 100
+            H = card_h
 
-            inner = tk.Frame(outer, bg="#1a1a2e", padx=12, pady=10)
-            inner.pack(fill="both", expand=True)
+            canvas = tk.Canvas(
+                self.popup, width=W, height=H,
+                bg=BG_TRANSPARENT, highlightthickness=0
+            )
+            canvas.pack()
 
-            # ヘッダー
-            header = tk.Frame(inner, bg="#1a1a2e")
-            header.pack(fill="x", pady=(0, 6))
+            # 影（少しずらした角丸）
+            self._round_rect(canvas, 4, 4, W - 2, H - 2, 22, fill=COLOR_ACCENT_LIGHT, outline="")
 
-            tk.Label(
-                header, text="!! 請求書メール受信 !!",
-                font=("Meiryo UI", 12, "bold"), fg="#ff5252", bg="#1a1a2e"
-            ).pack(side="left")
+            # メイン背景（角丸・白）
+            self._round_rect(canvas, 0, 0, W - 6, H - 6, 20, fill=COLOR_WHITE, outline=COLOR_BORDER, width=1.5)
 
-            # 区切り線
-            tk.Frame(inner, height=1, bg="#ff5252").pack(fill="x", pady=(0, 6))
+            # 上部アクセントライン
+            self._round_rect(canvas, 0, 0, W - 6, 50, 20, fill=COLOR_ACCENT, outline="")
+            canvas.create_rectangle(0, 30, W - 6, 50, fill=COLOR_ACCENT, outline="")
 
-            # 各メールを表示
+            # ヘッダーテキスト
+            canvas.create_text(
+                W // 2 - 3, 25,
+                text="請求書メールが届いています",
+                font=("Meiryo UI", 11, "bold"), fill=COLOR_WHITE
+            )
+
+            # 装飾ドット
+            for i, dx in enumerate([-60, -40, -20, 20, 40, 60]):
+                canvas.create_oval(
+                    W // 2 + dx - 2, 44, W // 2 + dx + 2, 48,
+                    fill=COLOR_ACCENT_LIGHT, outline=""
+                )
+
+            # メールカード
+            y_offset = 60
             for uid, info in alerts.items():
-                mail_frame = tk.Frame(inner, bg="#262640", padx=8, pady=6)
-                mail_frame.pack(fill="x", pady=2)
-
                 subject = info.get("subject", "")
                 sender = info.get("sender", "")
                 detected = info.get("detected", "")
 
-                tk.Label(
-                    mail_frame, text=subject,
-                    font=("Meiryo UI", 10, "bold"), fg="#ffffff", bg="#262640",
-                    anchor="w", wraplength=340
-                ).pack(fill="x")
+                # カード背景
+                self._round_rect(
+                    canvas, 16, y_offset, W - 22, y_offset + 78, 12,
+                    fill=COLOR_CARD, outline=COLOR_BORDER, width=1
+                )
 
-                tk.Label(
-                    mail_frame, text=f"差出人: {sender}",
-                    font=("Meiryo UI", 8), fg="#aaaaaa", bg="#262640",
+                # 左のアクセントバー
+                canvas.create_rectangle(
+                    20, y_offset + 10, 24, y_offset + 68,
+                    fill=COLOR_ACCENT, outline=""
+                )
+
+                # 件名（長い場合は切り詰め）
+                display_subject = subject if len(subject) <= 28 else subject[:27] + "..."
+                canvas.create_text(
+                    34, y_offset + 22,
+                    text=display_subject,
+                    font=("Meiryo UI", 10, "bold"), fill=COLOR_TEXT,
                     anchor="w"
-                ).pack(fill="x")
+                )
 
-                tk.Label(
-                    mail_frame, text=f"検知: {detected}",
-                    font=("Meiryo UI", 8), fg="#888888", bg="#262640",
+                # 差出人
+                display_sender = sender if len(sender) <= 35 else sender[:34] + "..."
+                canvas.create_text(
+                    34, y_offset + 44,
+                    text=f"From: {display_sender}",
+                    font=("Meiryo UI", 8), fill=COLOR_TEXT_LIGHT,
                     anchor="w"
-                ).pack(fill="x")
+                )
 
-                self.alert_labels[uid] = mail_frame
+                # 検知時刻
+                canvas.create_text(
+                    34, y_offset + 62,
+                    text=detected,
+                    font=("Meiryo UI", 8), fill=COLOR_TEXT_SOFT,
+                    anchor="w"
+                )
+
+                self.alert_labels[uid] = True
+                y_offset += 86
 
             # フッター
-            tk.Label(
-                inner, text="メールを開封すると自動で消えます",
-                font=("Meiryo UI", 8), fg="#666666", bg="#1a1a2e"
-            ).pack(pady=(6, 0))
+            canvas.create_text(
+                W // 2 - 3, H - 22,
+                text="- メールを開封すると自動で消えます -",
+                font=("Meiryo UI", 8), fill=COLOR_TEXT_SOFT
+            )
 
-            # サイズ計算して右端中央に配置
+            # サイズと位置（画面右側中央）
             self.popup.update_idletasks()
-            pw = self.popup.winfo_reqwidth()
-            ph = self.popup.winfo_reqheight()
             screen_w = self.popup.winfo_screenwidth()
             screen_h = self.popup.winfo_screenheight()
-            x = screen_w - pw - 20
-            y = (screen_h - ph) // 2
-            self.popup.geometry(f"+{x}+{y}")
+            x = screen_w - W - 30
+            y = (screen_h - H) // 2
+            self.popup.geometry(f"{W}x{H}+{x}+{y}")
 
             # ドラッグ移動
-            inner.bind("<Button-1>", self._start_drag)
-            inner.bind("<B1-Motion>", self._on_drag)
+            canvas.bind("<Button-1>", self._start_drag)
+            canvas.bind("<B1-Motion>", self._on_drag)
 
         self.root.after(0, _show)
 
