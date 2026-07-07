@@ -269,6 +269,7 @@ class InvoiceNotifierApp:
                     "subject": subject,
                     "sender": sender,
                     "detected": now_str,
+                    "notify_time": time.time(),
                 }
                 send_desktop_notification(subject, sender)
                 new_found = True
