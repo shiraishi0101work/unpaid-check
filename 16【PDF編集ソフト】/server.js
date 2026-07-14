@@ -16,7 +16,7 @@ const AUTH_PASS = process.env.AUTH_PASS || 'pdf2024';
 app.use(basicAuth({
   users: { [AUTH_USER]: AUTH_PASS },
   challenge: true,
-  realm: 'PDF Editor',
+  realm: 'デラPDF',
 }));
 
 app.use(express.json({ limit: '50mb' }));
