@@ -336,4 +336,4 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`PDF Editor: http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`デラPDF: http://localhost:${PORT}`));
