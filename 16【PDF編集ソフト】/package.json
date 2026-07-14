@@ -1,7 +1,7 @@
 {
-  "name": "pdf-editor",
+  "name": "della-pdf",
   "version": "1.0.0",
-  "description": "PDF編集ソフト",
+  "description": "デラPDF",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
