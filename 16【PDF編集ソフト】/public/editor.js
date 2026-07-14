@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-//  PDF Editor — editor.js
+//  デラPDF — editor.js
 // ═══════════════════════════════════════════════════
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
