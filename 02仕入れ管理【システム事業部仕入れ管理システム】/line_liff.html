@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>備品購入申請</title>
+<script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  background: #F2F5F5;
+  color: #1A2A29;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ヘッダー */
+.header {
+  background: #00A89D;
+  color: #fff;
+  padding: 18px 20px;
+  text-align: center;
+}
+.header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.header p {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+/* フォーム */
+.form-wrap {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3A5A58;
+  margin-bottom: 6px;
+}
+.field label .required {
+  color: #D04040;
+  font-size: 11px;
+  margin-left: 4px;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #D0DFDE;
+  border-radius: 10px;
+  font-size: 16px;
+  color: #1A2A29;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #00A89D;
+  box-shadow: 0 0 0 3px rgba(0,168,157,0.12);
+}
+.field textarea {
+  height: 80px;
+  resize: vertical;
+}
+.field input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A7170' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+/* 金額行（横並び） */
+.price-row {
+  display: flex;
+  gap: 10px;
+}
+.price-row .field {
+  flex: 1;
+}
+
+/* 新規納品先追加 */
+.new-client-row {
+  display: none;
+  gap: 8px;
+  align-items: end;
+  margin-top: 8px;
+}
+.new-client-row.show { display: flex; }
+.new-client-row input { flex: 1; }
+.new-client-row button {
+  padding: 12px 16px;
+  background: #00A89D;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* 送信ボタン */
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: #00A89D;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+.submit-btn:hover { background: #008F86; }
+.submit-btn:disabled {
+  background: #A0C4C1;
+  cursor: not-allowed;
+}
+
+/* 確認モーダル */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
+.modal-header {
+  background: #00A89D;
+  color: #fff;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+.modal-body {
+  padding: 20px;
+}
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #EEF3F3;
+  font-size: 14px;
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-label {
+  color: #5A7170;
+  font-weight: 600;
+}
+.confirm-value {
+  color: #1A2A29;
+  font-weight: 700;
+  text-align: right;
+  max-width: 60%;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-cancel {
+  background: #E8EEEE;
+  color: #3A5A58;
+}
+.btn-confirm {
+  background: #00A89D;
+  color: #fff;
+}
+
+/* 完了画面 */
+.done-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+}
+.done-screen.show { display: block; }
+.done-icon {
+  width: 72px;
+  height: 72px;
+  background: #00A89D;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.done-icon svg {
+  width: 36px;
+  height: 36px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
+}
+.done-screen h2 {
+  font-size: 20px;
+  color: #1A2A29;
+  margin-bottom: 8px;
+}
+.done-screen p {
+  font-size: 14px;
+  color: #5A7170;
+  line-height: 1.6;
+}
+.done-close {
+  margin-top: 30px;
+  padding: 14px 40px;
+  background: #00A89D;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* エラー */
+.error-msg {
+  display: none;
+  background: #FDECEC;
+  color: #9A2020;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.error-msg.show { display: block; }
+
+/* ローディング */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 40px;
+}
+.loading.show { display: block; }
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #D0DFDE;
+  border-top-color: #00A89D;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>備品購入 事前申請</h1>
+  <p>購入前に申請してください。管理者の承認後に購入できます。</p>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p style="color:#5A7170">読み込み中...</p>
+</div>
+
+<div class="form-wrap" id="formWrap" style="display:none">
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="field">
+    <label>商品名<span class="required">必須</span></label>
+    <input type="text" id="itemName" placeholder="例: USBハブ 4ポート">
+  </div>
+
+  <div class="field">
+    <label>購入先（店舗・サイト）</label>
+    <input type="text" id="shop" placeholder="例: Amazon、ヨドバシカメラ">
+  </div>
+
+  <div class="price-row">
+    <div class="field">
+      <label>仕入単価（税抜）<span class="required">必須</span></label>
+      <input type="number" id="price" placeholder="0" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>数量</label>
+      <input type="number" id="qty" value="1" min="1" inputmode="numeric">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>販売価格（税抜）</label>
+    <input type="number" id="sellPrice" placeholder="0" inputmode="numeric">
+  </div>
+
+  <div class="field">
+    <label>納品先<span class="required">必須</span></label>
+    <select id="client">
+      <option value="">-- 選択してください --</option>
+    </select>
+    <div class="new-client-row" id="newClientRow">
+      <input type="text" id="newClientName" placeholder="新しい納品先名">
+      <button type="button" onclick="addClient()">追加</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>カテゴリ</label>
+    <select id="category">
+      <option value="物品" selected>物品</option>
+      <option value="サーバー">サーバー</option>
+      <option value="外注費">外注費</option>
+      <option value="その他">その他</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>メモ（任意）</label>
+    <textarea id="memo" placeholder="購入理由や補足情報があれば記入"></textarea>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="showConfirm()">申請内容を確認する</button>
+</div>
+
+<!-- 確認モーダル -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-header">申請内容の確認</div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">戻る</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="submitRequest()">この内容で申請する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 完了画面 -->
+<div class="done-screen" id="doneScreen">
+  <div class="done-icon">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <h2>申請が完了しました</h2>
+  <p>管理者に通知が送信されました。<br>承認されるまでお待ちください。</p>
+  <button class="done-close" onclick="closeLiff()">閉じる</button>
+</div>
+
+<script>
+const API_BASE = '';  // 同一オリジンなので空文字
+let liffProfile = null;
+let clients = [];
+
+// LIFF初期化
+async function initLiff() {
+  document.getElementById('loading').classList.add('show');
+  try {
+    await liff.init({ liffId: document.querySelector('meta[name="liff-id"]')?.content || getLiffIdFromUrl() });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    liffProfile = await liff.getProfile();
+    await loadClients();
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('formWrap').style.display = 'block';
+  } catch (e) {
+    // LIFF外でのテスト用フォールバック
+    console.log('LIFF init failed, running in standalone mode:', e);
+    liffProfile = { userId: 'test_user', displayName: 'テストユーザー' };
+    await loadClients();
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('formWrap').style.display = 'block';
+  }
+}
+
+function getLiffIdFromUrl() {
+  // URLから LIFF ID を取得（liff.state パラメータなど）
+  const m = location.pathname.match(/\/liff\/([^/]+)/);
+  return m ? m[1] : '';
+}
+
+// 納品先一覧を取得
+async function loadClients() {
+  try {
+    const res = await fetch(API_BASE + '/line_api.php?action=clients');
+    clients = await res.json();
+    const sel = document.getElementById('client');
+    clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+    // 「新規追加」選択肢
+    const optNew = document.createElement('option');
+    optNew.value = '__new__';
+    optNew.textContent = '+ 新しい納品先を追加';
+    sel.appendChild(optNew);
+  } catch (e) {
+    console.error('Failed to load clients:', e);
+  }
+}
+
+// 納品先ドロップダウン変更時
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('client').addEventListener('change', function() {
+    const row = document.getElementById('newClientRow');
+    if (this.value === '__new__') {
+      row.classList.add('show');
+      document.getElementById('newClientName').focus();
+    } else {
+      row.classList.remove('show');
+    }
+  });
+});
+
+// 新規納品先追加
+async function addClient() {
+  const name = document.getElementById('newClientName').value.trim();
+  if (!name) return;
+  try {
+    const res = await fetch(API_BASE + '/line_api.php?action=add_client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const sel = document.getElementById('client');
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      // 「新規追加」の前に挿入
+      sel.insertBefore(opt, sel.lastElementChild);
+      sel.value = name;
+      document.getElementById('newClientRow').classList.remove('show');
+      document.getElementById('newClientName').value = '';
+    }
+  } catch (e) {
+    console.error('Failed to add client:', e);
+  }
+}
+
+// 確認モーダル表示
+function showConfirm() {
+  const name = document.getElementById('itemName').value.trim();
+  const price = parseInt(document.getElementById('price').value) || 0;
+  const client = document.getElementById('client').value;
+
+  // バリデーション
+  if (!name) return showError('商品名を入力してください');
+  if (price <= 0) return showError('仕入単価を入力してください');
+  if (!client || client === '__new__') return showError('納品先を選択してください');
+
+  hideError();
+  const qty = parseInt(document.getElementById('qty').value) || 1;
+  const sellPrice = parseInt(document.getElementById('sellPrice').value) || 0;
+  const shop = document.getElementById('shop').value.trim();
+  const category = document.getElementById('category').value;
+  const memo = document.getElementById('memo').value.trim();
+  const subtotal = price * qty;
+
+  let html = '';
+  html += confirmRow('商品名', name);
+  if (shop) html += confirmRow('購入先', shop);
+  html += confirmRow('仕入単価', '\\' + price.toLocaleString());
+  html += confirmRow('数量', qty);
+  html += confirmRow('小計（税抜）', '\\' + subtotal.toLocaleString());
+  if (sellPrice > 0) {
+    html += confirmRow('販売価格', '\\' + sellPrice.toLocaleString());
+    const profit = sellPrice * qty - subtotal;
+    html += confirmRow('粗利', '\\' + profit.toLocaleString());
+  }
+  html += confirmRow('納品先', client);
+  html += confirmRow('カテゴリ', category);
+  if (memo) html += confirmRow('メモ', memo);
+  html += confirmRow('申請者', liffProfile?.displayName || '不明');
+
+  document.getElementById('confirmBody').innerHTML = html;
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function confirmRow(label, value) {
+  return '<div class="confirm-row"><span class="confirm-label">' + label + '</span><span class="confirm-value">' + escHtml(String(value)) + '</span></div>';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
+// 申請送信
+async function submitRequest() {
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const data = {
+    requester: liffProfile?.displayName || '不明',
+    requesterId: liffProfile?.userId || '',
+    name: document.getElementById('itemName').value.trim(),
+    shop: document.getElementById('shop').value.trim(),
+    qty: parseInt(document.getElementById('qty').value) || 1,
+    price: parseInt(document.getElementById('price').value) || 0,
+    sellPrice: parseInt(document.getElementById('sellPrice').value) || 0,
+    client: document.getElementById('client').value,
+    category: document.getElementById('category').value,
+    memo: document.getElementById('memo').value.trim(),
+  };
+
+  try {
+    const res = await fetch(API_BASE + '/line_api.php?action=submit_request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (result.ok) {
+      document.getElementById('confirmModal').classList.remove('show');
+      document.getElementById('formWrap').style.display = 'none';
+      document.getElementById('doneScreen').classList.add('show');
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'この内容で申請する';
+      showError(result.error || '送信に失敗しました');
+      closeConfirm();
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'この内容で申請する';
+    showError('通信エラーが発生しました');
+    closeConfirm();
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideError() {
+  document.getElementById('errorMsg').classList.remove('show');
+}
+
+function closeLiff() {
+  if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+    liff.closeWindow();
+  } else {
+    window.close();
+  }
+}
+
+// 起動
+initLiff();
+</script>
+</body>
+</html>
