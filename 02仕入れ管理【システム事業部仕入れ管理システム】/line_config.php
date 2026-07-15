@@ -11,9 +11,10 @@ define('LINE_CHANNEL_ACCESS_TOKEN', 'ここにチャネルアクセストーク�
 // LIFF ID（LINE Developers → LIFFタブ → LIFF アプリ追加で取得）
 define('LINE_LIFF_ID', 'ここにLIFF IDを貼り付け');
 
-// 管理者のLINE ユーザーID（承認通知の送信先）
-// Bot と友だちになった後、Webhookイベントのsource.userIdで確認できます
-define('LINE_ADMIN_USER_ID', 'ここに管理者のユーザーIDを貼り付け');
+// 通知先グループID
+// Botをグループに招待後、Webhookイベントの source.groupId で確認できます
+// （初回招待時にログに出力されます）
+define('LINE_GROUP_ID', 'ここにグループIDを貼り付け');
 
 // このサーバーの公開URL（末尾スラッシュなし）
 // 例: https://example.com  や  https://xxxx.ngrok-free.app
