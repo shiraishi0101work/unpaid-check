@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>備品購入申請</title>
+<title>備品購入報告</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -290,8 +290,8 @@ body {
 <body>
 
 <div class="header">
-  <h1>備品購入 事前申請</h1>
-  <p>購入前に申請してください。管理者の承認後に購入できます。</p>
+  <h1>備品購入報告</h1>
+  <p>購入した備品の情報を入力してください</p>
 </div>
 
 <div class="loading" id="loading">
@@ -351,20 +351,20 @@ body {
 
   <div class="field">
     <label>メモ（任意）</label>
-    <textarea id="memo" placeholder="購入理由や補足情報があれば記入"></textarea>
+    <textarea id="memo" placeholder="補足情報があれば記入"></textarea>
   </div>
 
-  <button class="submit-btn" id="submitBtn" onclick="showConfirm()">申請内容を確認する</button>
+  <button class="submit-btn" id="submitBtn" onclick="showConfirm()">内容を確認する</button>
 </div>
 
 <!-- 確認モーダル -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal">
-    <div class="modal-header">申請内容の確認</div>
+    <div class="modal-header">報告内容の確認</div>
     <div class="modal-body" id="confirmBody"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeConfirm()">戻る</button>
-      <button class="btn-confirm" id="confirmBtn" onclick="submitRequest()">この内容で申請する</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="submitReport()">この内容で報告する</button>
     </div>
   </div>
 </div>
@@ -374,17 +374,17 @@ body {
   <div class="done-icon">
     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
   </div>
-  <h2>申請が完了しました</h2>
-  <p>管理者に通知が送信されました。<br>承認されるまでお待ちください。</p>
-  <button class="done-close" onclick="closeLiff()">閉じる</button>
+  <h2>報告が完了しました</h2>
+  <p>仕入れ管理システムに登録されました。<br>グループに通知が送信されました。</p>
+  <button class="done-close" onclick="resetForm()">続けて報告する</button>
+  <button class="done-close" style="background:#E8EEEE;color:#3A5A58;margin-top:10px" onclick="closeLiff()">閉じる</button>
 </div>
 
 <script>
-const API_BASE = '';  // 同一オリジンなので空文字
+const API_BASE = '';
 let liffProfile = null;
 let clients = [];
 
-// LIFF初期化
 async function initLiff() {
   document.getElementById('loading').classList.add('show');
   try {
@@ -398,7 +398,6 @@ async function initLiff() {
     document.getElementById('loading').classList.remove('show');
     document.getElementById('formWrap').style.display = 'block';
   } catch (e) {
-    // LIFF外でのテスト用フォールバック
     console.log('LIFF init failed, running in standalone mode:', e);
     liffProfile = { userId: 'test_user', displayName: 'テストユーザー' };
     await loadClients();
@@ -408,12 +407,10 @@ async function initLiff() {
 }
 
 function getLiffIdFromUrl() {
-  // URLから LIFF ID を取得（liff.state パラメータなど）
   const m = location.pathname.match(/\/liff\/([^/]+)/);
   return m ? m[1] : '';
 }
 
-// 納品先一覧を取得
 async function loadClients() {
   try {
     const res = await fetch(API_BASE + '/line_api.php?action=clients');
@@ -425,7 +422,6 @@ async function loadClients() {
       opt.textContent = c.name;
       sel.appendChild(opt);
     });
-    // 「新規追加」選択肢
     const optNew = document.createElement('option');
     optNew.value = '__new__';
     optNew.textContent = '+ 新しい納品先を追加';
@@ -435,7 +431,6 @@ async function loadClients() {
   }
 }
 
-// 納品先ドロップダウン変更時
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('client').addEventListener('change', function() {
     const row = document.getElementById('newClientRow');
@@ -448,7 +443,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// 新規納品先追加
 async function addClient() {
   const name = document.getElementById('newClientName').value.trim();
   if (!name) return;
@@ -464,7 +458,6 @@ async function addClient() {
       const opt = document.createElement('option');
       opt.value = name;
       opt.textContent = name;
-      // 「新規追加」の前に挿入
       sel.insertBefore(opt, sel.lastElementChild);
       sel.value = name;
       document.getElementById('newClientRow').classList.remove('show');
@@ -475,13 +468,11 @@ async function addClient() {
   }
 }
 
-// 確認モーダル表示
 function showConfirm() {
   const name = document.getElementById('itemName').value.trim();
   const price = parseInt(document.getElementById('price').value) || 0;
   const client = document.getElementById('client').value;
 
-  // バリデーション
   if (!name) return showError('商品名を入力してください');
   if (price <= 0) return showError('仕入単価を入力してください');
   if (!client || client === '__new__') return showError('納品先を選択してください');
@@ -508,7 +499,7 @@ function showConfirm() {
   html += confirmRow('納品先', client);
   html += confirmRow('カテゴリ', category);
   if (memo) html += confirmRow('メモ', memo);
-  html += confirmRow('申請者', liffProfile?.displayName || '不明');
+  html += confirmRow('報告者', liffProfile?.displayName || '不明');
 
   document.getElementById('confirmBody').innerHTML = html;
   document.getElementById('confirmModal').classList.add('show');
@@ -528,8 +519,7 @@ function closeConfirm() {
   document.getElementById('confirmModal').classList.remove('show');
 }
 
-// 申請送信
-async function submitRequest() {
+async function submitReport() {
   const btn = document.getElementById('confirmBtn');
   btn.disabled = true;
   btn.textContent = '送信中...';
@@ -548,7 +538,7 @@ async function submitRequest() {
   };
 
   try {
-    const res = await fetch(API_BASE + '/line_api.php?action=submit_request', {
+    const res = await fetch(API_BASE + '/line_api.php?action=submit_report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -560,16 +550,34 @@ async function submitRequest() {
       document.getElementById('doneScreen').classList.add('show');
     } else {
       btn.disabled = false;
-      btn.textContent = 'この内容で申請する';
+      btn.textContent = 'この内容で報告する';
       showError(result.error || '送信に失敗しました');
       closeConfirm();
     }
   } catch (e) {
     btn.disabled = false;
-    btn.textContent = 'この内容で申請する';
+    btn.textContent = 'この内容で報告する';
     showError('通信エラーが発生しました');
     closeConfirm();
   }
+}
+
+function resetForm() {
+  document.getElementById('doneScreen').classList.remove('show');
+  document.getElementById('formWrap').style.display = 'block';
+  document.getElementById('itemName').value = '';
+  document.getElementById('shop').value = '';
+  document.getElementById('price').value = '';
+  document.getElementById('qty').value = '1';
+  document.getElementById('sellPrice').value = '';
+  document.getElementById('client').value = '';
+  document.getElementById('memo').value = '';
+  document.getElementById('category').value = '物品';
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = false;
+  btn.textContent = 'この内容で報告する';
+  hideError();
+  window.scrollTo(0, 0);
 }
 
 function showError(msg) {
@@ -590,7 +598,6 @@ function closeLiff() {
   }
 }
 
-// 起動
 initLiff();
 </script>
 </body>
