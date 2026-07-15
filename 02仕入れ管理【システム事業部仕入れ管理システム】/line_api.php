@@ -1,7 +1,7 @@
 <?php
 /**
- * LINE LIFF / Webhook 用 API エンドポイント
- * 既存の api.php とは別に、LINE専用の処理をまとめる
+ * LINE 購入報告 API エンドポイント
+ * LIFFフォームからの報告送信・納品先管理
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +18,6 @@ function getDb() {
     $db = new PDO('sqlite:' . __DIR__ . '/iwata_assist.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->exec('PRAGMA journal_mode=WAL');
-    // purchase_requests テーブル確保
     $db->exec('CREATE TABLE IF NOT EXISTS purchase_requests (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         request_date TEXT NOT NULL,
@@ -32,9 +31,7 @@ function getDb() {
         client       TEXT DEFAULT "",
         category     TEXT DEFAULT "物品",
         memo         TEXT DEFAULT "",
-        status       TEXT DEFAULT "pending",
-        approved_by  TEXT DEFAULT "",
-        approved_at  TEXT DEFAULT "",
+        status       TEXT DEFAULT "registered",
         order_id     INTEGER DEFAULT NULL
     )');
     return $db;
@@ -70,8 +67,8 @@ if ($action === 'add_client') {
     exit;
 }
 
-// ── 申請送信（LIFFフォームから）──
-if ($action === 'submit_request') {
+// ── 購入報告送信（LIFFフォームから）→ 即時orders登録 ──
+if ($action === 'submit_report') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
     $db = getDb();
 
@@ -84,16 +81,46 @@ if ($action === 'submit_request') {
     if ($price <= 0)  { echo json_encode(['error'=>'仕入単価を入力してください']); exit; }
     if (!$client)     { echo json_encode(['error'=>'納品先を選択してください']); exit; }
 
-    $qty       = max(1, (int)($body['qty'] ?? 1));
-    $sellPrice = (int)($body['sellPrice'] ?? 0);
-    $shop      = trim($body['shop'] ?? '');
-    $category  = trim($body['category'] ?? '物品');
-    $memo      = trim($body['memo'] ?? '');
+    $qty         = max(1, (int)($body['qty'] ?? 1));
+    $sellPrice   = (int)($body['sellPrice'] ?? 0);
+    $shop        = trim($body['shop'] ?? '');
+    $category    = trim($body['category'] ?? '物品');
+    $memo        = trim($body['memo'] ?? '');
     $requesterId = trim($body['requesterId'] ?? '');
 
+    // ── 1. ordersテーブルに即時登録 ──
+    $clientName = $client;
+    try { $db->prepare('INSERT OR IGNORE INTO clients (name,created) VALUES (?,?)')->execute([$clientName, date('Y-m-d')]); } catch(Exception $e) {}
+
+    $s = $db->prepare('INSERT INTO orders (date,name,shop,brand,url,qty,price,sell_price,delivery_date,client,cc_id,status,memo,category,owner)
+        VALUES (:date,:name,:shop,:brand,:url,:qty,:price,:sell_price,:delivery_date,:client,:cc_id,:status,:memo,:category,:owner)');
+    $owner = $requester ?: '不明';
+    $s->execute([
+        ':date'          => date('Y-m-d'),
+        ':name'          => $name,
+        ':shop'          => $shop,
+        ':brand'         => '',
+        ':url'           => '',
+        ':qty'           => $qty,
+        ':price'         => $price,
+        ':sell_price'    => $sellPrice,
+        ':delivery_date' => '',
+        ':client'        => $clientName,
+        ':cc_id'         => null,
+        ':status'        => '発注済',
+        ':memo'          => $memo,
+        ':category'      => $category,
+        ':owner'         => $owner,
+    ]);
+    $orderId = (int)$db->lastInsertId();
+
+    // ── 2. DellaScore仕入れ同期 ──
+    syncToDellaScore($orderId, $name, $shop, $price, $qty, $owner);
+
+    // ── 3. 報告履歴に記録 ──
     $s = $db->prepare('INSERT INTO purchase_requests
-        (request_date, requester, requester_id, name, shop, qty, price, sell_price, client, category, memo, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending")');
+        (request_date, requester, requester_id, name, shop, qty, price, sell_price, client, category, memo, status, order_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "registered", ?)');
     $s->execute([
         date('Y-m-d H:i:s'),
         $requester,
@@ -106,134 +133,33 @@ if ($action === 'submit_request') {
         $client,
         $category,
         $memo,
-    ]);
-    $requestId = (int)$db->lastInsertId();
-
-    // 管理者にLINE通知
-    sendApprovalNotification($requestId, [
-        'requester' => $requester,
-        'name'      => $name,
-        'shop'      => $shop,
-        'qty'       => $qty,
-        'price'     => $price,
-        'sellPrice' => $sellPrice,
-        'client'    => $client,
-        'category'  => $category,
-        'memo'      => $memo,
+        $orderId,
     ]);
 
-    echo json_encode(['ok'=>true, 'id'=>$requestId]);
-    exit;
-}
-
-// ── 申請一覧（管理画面用）──
-if ($action === 'requests') {
-    $db = getDb();
-    $status = $_GET['status'] ?? '';
-    $sql = 'SELECT * FROM purchase_requests';
-    if ($status) {
-        $sql .= ' WHERE status = ?';
-        $s = $db->prepare($sql . ' ORDER BY id DESC');
-        $s->execute([$status]);
-    } else {
-        $s = $db->query($sql . ' ORDER BY id DESC');
-    }
-    $rows = $s->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($rows);
-    exit;
-}
-
-// ── 承認処理（Webhookから呼ばれる）──
-if ($action === 'approve') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
-    $db = getDb();
-    $id = (int)($body['id'] ?? 0);
-
-    $st = $db->prepare('SELECT * FROM purchase_requests WHERE id=? AND status="pending"');
-    $st->execute([$id]);
-    $req = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$req) { echo json_encode(['error'=>'申請が見つかりません']); exit; }
-
-    // ordersテーブルに登録
-    $db->exec('CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL, name TEXT NOT NULL, shop TEXT DEFAULT "",
-        brand TEXT DEFAULT "", url TEXT DEFAULT "", qty INTEGER DEFAULT 1,
-        price INTEGER DEFAULT 0, sell_price INTEGER DEFAULT 0,
-        delivery_date TEXT DEFAULT "", client TEXT DEFAULT "",
-        cc_id INTEGER DEFAULT NULL, status TEXT DEFAULT "未発注",
-        memo TEXT DEFAULT "", category TEXT DEFAULT "物品", owner TEXT DEFAULT "岩田"
-    )');
-
-    $s = $db->prepare('INSERT INTO orders (date,name,shop,qty,price,sell_price,client,status,memo,category,owner)
-        VALUES (?,?,?,?,?,?,?,"未発注",?,?,?)');
-    $s->execute([
-        date('Y-m-d'),
-        $req['name'],
-        $req['shop'],
-        (int)$req['qty'],
-        (int)$req['price'],
-        (int)$req['sell_price'],
-        $req['client'],
-        $req['memo'],
-        $req['category'],
-        $req['requester'],
-    ]);
-    $orderId = (int)$db->lastInsertId();
-
-    // DellaScore同期
-    syncToDellaScore($orderId, $req);
-
-    // 申請ステータス更新
-    $s = $db->prepare('UPDATE purchase_requests SET status="approved", approved_at=?, order_id=? WHERE id=?');
-    $s->execute([date('Y-m-d H:i:s'), $orderId, $id]);
-
-    // 申請者に承認通知
-    if ($req['requester_id']) {
-        sendReplyToRequester($req['requester_id'], $req['name'], 'approved');
-    }
+    // ── 4. グループLINEに通知 ──
+    sendGroupNotification($requester, $name, $shop, $price, $qty, $sellPrice, $client, $category, $memo);
 
     echo json_encode(['ok'=>true, 'orderId'=>$orderId]);
     exit;
 }
 
-// ── 却下処理（Webhookから呼ばれる）──
-if ($action === 'reject') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error'=>'method']); exit; }
+// ── 報告履歴一覧（管理画面用）──
+if ($action === 'reports') {
     $db = getDb();
-    $id = (int)($body['id'] ?? 0);
-
-    $st = $db->prepare('SELECT * FROM purchase_requests WHERE id=? AND status="pending"');
-    $st->execute([$id]);
-    $req = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$req) { echo json_encode(['error'=>'申請が見つかりません']); exit; }
-
-    $s = $db->prepare('UPDATE purchase_requests SET status="rejected", approved_at=? WHERE id=?');
-    $s->execute([date('Y-m-d H:i:s'), $id]);
-
-    // 申請者に却下通知
-    if ($req['requester_id']) {
-        sendReplyToRequester($req['requester_id'], $req['name'], 'rejected');
-    }
-
-    echo json_encode(['ok'=>true]);
+    $rows = $db->query('SELECT * FROM purchase_requests ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($rows);
     exit;
 }
 
 // ═══════════════════════════════════════════
-//  LINE Messaging API ヘルパー関数
+//  ヘルパー関数
 // ═══════════════════════════════════════════
 
 /**
- * 管理者に承認依頼のFlex Messageを送信
+ * グループLINEに購入報告通知を送信
  */
-function sendApprovalNotification($requestId, $data) {
-    $subtotal = $data['price'] * $data['qty'];
-    $profitText = '';
-    if ($data['sellPrice'] > 0) {
-        $profit = $data['sellPrice'] * $data['qty'] - $subtotal;
-        $profitText = '粗利: \\' . number_format($profit);
-    }
+function sendGroupNotification($requester, $name, $shop, $price, $qty, $sellPrice, $client, $category, $memo) {
+    $subtotal = $price * $qty;
 
     $flexContents = [
         'type' => 'bubble',
@@ -241,70 +167,55 @@ function sendApprovalNotification($requestId, $data) {
             'type' => 'box',
             'layout' => 'vertical',
             'backgroundColor' => '#00A89D',
+            'paddingAll' => '16px',
             'contents' => [
-                ['type' => 'text', 'text' => '備品購入申請', 'color' => '#ffffff', 'weight' => 'bold', 'size' => 'lg'],
-                ['type' => 'text', 'text' => '申請者: ' . $data['requester'], 'color' => '#ffffffcc', 'size' => 'sm', 'margin' => 'sm'],
+                ['type' => 'text', 'text' => '新規入力ありがとうございます', 'color' => '#ffffff', 'weight' => 'bold', 'size' => 'md'],
+                ['type' => 'text', 'text' => '報告者: ' . $requester, 'color' => '#ffffffcc', 'size' => 'sm', 'margin' => 'sm'],
             ]
         ],
         'body' => [
             'type' => 'box',
             'layout' => 'vertical',
             'spacing' => 'md',
+            'paddingAll' => '16px',
             'contents' => [
-                infoRow('商品名', $data['name']),
-                infoRow('購入先', $data['shop'] ?: '未記入'),
-                infoRow('単価', '\\' . number_format($data['price'])),
-                infoRow('数量', (string)$data['qty']),
+                infoRow('商品名', $name),
+                infoRow('購入先', $shop ?: '未記入'),
+                infoRow('単価(税抜)', '\\' . number_format($price)),
+                infoRow('数量', (string)$qty),
                 infoRow('小計(税抜)', '\\' . number_format($subtotal)),
-                infoRow('納品先', $data['client']),
-                infoRow('カテゴリ', $data['category']),
+                infoRow('納品先', $client),
+                infoRow('カテゴリ', $category),
             ]
         ],
-        'footer' => [
-            'type' => 'box',
-            'layout' => 'horizontal',
-            'spacing' => 'md',
-            'contents' => [
-                [
-                    'type' => 'button',
-                    'action' => ['type' => 'postback', 'label' => '承認', 'data' => 'action=approve&id=' . $requestId],
-                    'style' => 'primary',
-                    'color' => '#00A89D',
-                    'height' => 'sm',
-                ],
-                [
-                    'type' => 'button',
-                    'action' => ['type' => 'postback', 'label' => '却下', 'data' => 'action=reject&id=' . $requestId],
-                    'style' => 'secondary',
-                    'height' => 'sm',
-                ],
-            ]
-        ]
     ];
 
-    if ($data['sellPrice'] > 0) {
-        $flexContents['body']['contents'][] = infoRow('販売価格', '\\' . number_format($data['sellPrice']));
+    if ($sellPrice > 0) {
+        $profit = $sellPrice * $qty - $subtotal;
+        $flexContents['body']['contents'][] = infoRow('販売価格', '\\' . number_format($sellPrice));
+        $flexContents['body']['contents'][] = infoRow('粗利', '\\' . number_format($profit));
     }
-    if ($profitText) {
-        $flexContents['body']['contents'][] = infoRow('粗利', $profitText);
-    }
-    if ($data['memo']) {
+
+    if ($memo) {
         $flexContents['body']['contents'][] = [
-            'type' => 'box', 'layout' => 'vertical', 'margin' => 'lg',
+            'type' => 'separator', 'margin' => 'lg',
+        ];
+        $flexContents['body']['contents'][] = [
+            'type' => 'box', 'layout' => 'vertical', 'margin' => 'md',
             'contents' => [
                 ['type' => 'text', 'text' => 'メモ', 'size' => 'xs', 'color' => '#8C8C8C'],
-                ['type' => 'text', 'text' => $data['memo'], 'size' => 'sm', 'wrap' => true],
+                ['type' => 'text', 'text' => $memo, 'size' => 'sm', 'wrap' => true, 'margin' => 'xs'],
             ]
         ];
     }
 
     $message = [
         'type' => 'flex',
-        'altText' => '【備品購入申請】' . $data['name'] . ' - ' . $data['requester'],
+        'altText' => '【購入報告】' . $name . ' - ' . $requester,
         'contents' => $flexContents,
     ];
 
-    linePush(LINE_ADMIN_USER_ID, [$message]);
+    linePush(LINE_GROUP_ID, [$message]);
 }
 
 function infoRow($label, $value) {
@@ -316,18 +227,6 @@ function infoRow($label, $value) {
             ['type' => 'text', 'text' => $value, 'size' => 'sm', 'weight' => 'bold', 'flex' => 5, 'wrap' => true],
         ]
     ];
-}
-
-/**
- * 申請者に承認/却下の結果を通知
- */
-function sendReplyToRequester($userId, $itemName, $result) {
-    if ($result === 'approved') {
-        $text = "【承認されました】\n\n商品: {$itemName}\n\n購入を進めてください。";
-    } else {
-        $text = "【却下されました】\n\n商品: {$itemName}\n\n詳細は管理者にお問い合わせください。";
-    }
-    linePush($userId, [['type' => 'text', 'text' => $text]]);
 }
 
 /**
@@ -354,13 +253,12 @@ function linePush($to, $messages) {
     if ($code !== 200) {
         error_log("LINE Push failed: HTTP {$code} - {$res}");
     }
-    return $code === 200;
 }
 
 /**
  * DellaScore仕入れ同期
  */
-function syncToDellaScore($orderId, $req) {
+function syncToDellaScore($orderId, $name, $shop, $price, $qty, $owner) {
     $dsDbPath = __DIR__ . '/../01営業管理システム【della score】/della_score.db';
     if (!file_exists($dsDbPath)) return;
     try {
@@ -372,20 +270,19 @@ function syncToDellaScore($orderId, $req) {
         $r = $s->fetch();
         $purchases = $r ? (json_decode($r['value'], true) ?: []) : [];
 
-        $amount = (int)$req['price'] * (int)$req['qty'];
-        $tax = (int)round($amount * 0.1);
+        $amount = $price * $qty;
         $purchases[] = [
             'id'          => 'iw_' . $orderId,
-            'supplier'    => $req['shop'] ?: '（購入先未記入）',
-            'desc'        => $req['name'] . ((int)$req['qty'] > 1 ? 'x' . $req['qty'] : ''),
+            'supplier'    => $shop ?: '（購入先未記入）',
+            'desc'        => $name . ($qty > 1 ? 'x' . $qty : ''),
             'amount'      => $amount,
-            'tax'         => $tax,
+            'tax'         => (int)round($amount * 0.1),
             'issued'      => date('Y-m-d'),
             'due'         => '',
             'bank'        => '',
             'items'       => '',
             'status'      => 'unpaid',
-            'owner'       => $req['requester'],
+            'owner'       => $owner,
             'iw_order_id' => $orderId,
         ];
 
