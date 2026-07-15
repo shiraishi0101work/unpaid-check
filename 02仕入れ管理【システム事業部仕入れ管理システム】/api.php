@@ -146,6 +146,24 @@ function getDb() {
         memo    TEXT DEFAULT "",
         status  TEXT DEFAULT "pending"
     )');
+    $db->exec('CREATE TABLE IF NOT EXISTS purchase_requests (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_date TEXT NOT NULL,
+        requester    TEXT NOT NULL DEFAULT "",
+        requester_id TEXT DEFAULT "",
+        name         TEXT NOT NULL,
+        shop         TEXT DEFAULT "",
+        qty          INTEGER DEFAULT 1,
+        price        INTEGER DEFAULT 0,
+        sell_price   INTEGER DEFAULT 0,
+        client       TEXT DEFAULT "",
+        category     TEXT DEFAULT "物品",
+        memo         TEXT DEFAULT "",
+        status       TEXT DEFAULT "pending",
+        approved_by  TEXT DEFAULT "",
+        approved_at  TEXT DEFAULT "",
+        order_id     INTEGER DEFAULT NULL
+    )');
     return $db;
 }
 
