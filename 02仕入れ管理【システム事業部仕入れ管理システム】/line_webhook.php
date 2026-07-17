@@ -17,6 +17,7 @@ if ($signature !== $hash) {
 }
 
 $events = json_decode($body, true)['events'] ?? [];
+error_log("WEBHOOK RECEIVED: " . $body);
 
 foreach ($events as $event) {
     $type   = $event['type'] ?? '';
