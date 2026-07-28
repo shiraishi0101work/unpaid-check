@@ -1,6 +1,0 @@
-node_modules/
-.env
-data.db
-uploads/
-*.db-shm
-*.db-wal
