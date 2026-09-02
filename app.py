@@ -462,7 +462,8 @@ def _build_history_snapshot(year_month: str) -> dict | None:
     seikyu_unpaid = [b for b in seikyu_raw if not meta.get(b.get("請求書ID",""), {}).get("着金日_手動")]
 
     # result["unpaid"] は overdue+upcoming の全体集合なので重複になる → カテゴリ別リストのみ使用
-    unpaid_all = (result.get("overdue", []) + seikyu_unpaid +
+    # 請求済みか確認フラグ（seikyu_kakunin）の未入金は確定対象に含めない
+    unpaid_all = (result.get("overdue", []) +
                   result.get("draft_overdue", []) + result.get("ichiji_hokan", []) +
                   result.get("upcoming", []))
     # 請求書IDで重複除去（念のため）
@@ -475,7 +476,7 @@ def _build_history_snapshot(year_month: str) -> dict | None:
         if bid:
             seen_ids.add(bid)
         deduped.append(b)
-    unpaid_all = deduped
+    unpaid_all = sorted(deduped, key=lambda b: b.get("取引先名", ""))
 
     paid_all   = result.get("paid", []) + seikyu_paid
 
@@ -877,8 +878,10 @@ def parse_mf_accounting_csv(file_content: bytes) -> list:
         partner = row.get("取引先", row.get("取引先名", "")).strip()
         remark  = row.get("摘要", row.get("備考", row.get("description", ""))).strip()
 
-        # 借方科目
-        account = row.get("借方科目", "").strip()
+        # 借方科目・貸方科目
+        debit_account = row.get("借方科目", "").strip()
+        credit_account = row.get("貸方科目", "").strip()
+        account = debit_account or credit_account
 
         # 仕訳ID（MF仕訳ID列が無ければ行番号で代替）
         jid = row.get("MF仕訳ID", row.get("仕訳ID", "")).strip() or f"csv_{i}"
@@ -893,6 +896,8 @@ def parse_mf_accounting_csv(file_content: bytes) -> list:
             "取引先名": partner,
             "備考":     remark,
             "科目":     account,
+            "借方科目": debit_account,
+            "貸方科目": credit_account,
             "_matched": False,
         })
 
@@ -974,42 +979,40 @@ def _run_check(invoice_from=None, invoice_to=None, due_from=None, due_to=None, c
 
         all_paid = paid_mf + paid_manual
 
-        # 未入金を期限超過/期日前に分類
-        all_overdue = [b for b in unpaid if b.get("支払期限") and b["支払期限"] < today_str]
-        upcoming    = sorted(
-            [b for b in unpaid if not b.get("支払期限") or b["支払期限"] >= today_str],
-            key=lambda x: x.get("支払期限", ""))
-
-        # 期限超過を4分類
-        # ① メモ入力あり → 一時保管（毎月要確認）--- 他のタブには出さない
-        # ② MFで「未入金」明示 → 未収
-        # ③ MFで「未設定」かつ送付済み → 請求済みか確認
-        # ④ MFで「未設定」かつ未送付 → 下書き（期限超過）
+        # 全未払いを先に送付状態で仕分け
+        # ① MFで「未設定」かつ送付済み → 請求済みか確認タブ（期限前後問わず）
+        # ② MFで「未入金」明示 → 期限超過なら未収タブ、期日前なら期日前タブ
+        # ③ MFで「未設定」かつ未送付（下書き）→ どこにも出さない
         deleted_draft_ids  = load_deleted_drafts()
         deleted_seikyu_ids = load_deleted_seikyu()
 
-        # 未収解消済み：解消済みフラグあり（メモは未収タブに残す）
+        # 未収解消済み：解消済みフラグあり
         ichiji_hokan = sorted(
-            [b for b in all_overdue if b.get("解消済み")],
-            key=lambda x: x.get("支払期限", ""))
+            [b for b in unpaid if b.get("解消済み")],
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         ichiji_ids = {b["請求書ID"] for b in ichiji_hokan}
 
-        overdue = sorted(
-            [b for b in all_overdue
-             if b.get("入金状態") == "未入金" and b["請求書ID"] not in ichiji_ids],
-            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
+        # 請求済み確認：未設定 + 送付済み（期限前後問わず）
         seikyu_kakunin = sorted(
-            [b for b in all_overdue
+            [b for b in unpaid
              if b.get("入金状態") == "未設定" and _is_delivered(b)
              and b["請求書ID"] not in ichiji_ids
              and b.get("請求書ID") not in deleted_seikyu_ids],
             key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
-        draft_overdue = sorted(
-            [b for b in all_overdue
-             if b.get("入金状態") == "未設定" and _is_draft_invoice(b)
-             and b["請求書ID"] not in ichiji_ids
-             and b.get("請求書ID") not in deleted_draft_ids],
-            key=lambda x: x.get("支払期限", ""))
+        seikyu_ids = {b["請求書ID"] for b in seikyu_kakunin}
+
+        # 残り（ichiji・seikyu_kakunin・下書きを除いた未入金）を期限で分類
+        remaining = [b for b in unpaid
+                     if b["請求書ID"] not in ichiji_ids
+                     and b["請求書ID"] not in seikyu_ids
+                     and b.get("入金状態") == "未入金"]
+
+        all_overdue = [b for b in remaining if b.get("支払期限") and b["支払期限"] < today_str]
+        overdue = sorted(all_overdue, key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
+        upcoming = sorted(
+            [b for b in remaining if not b.get("支払期限") or b["支払期限"] >= today_str],
+            key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
+        draft_overdue = []  # 下書き（未設定+未送付）はどこにも出さない
 
         result = {
             "paid":            all_paid,
@@ -1158,9 +1161,6 @@ def _load_admin_aggregate() -> dict:
             item["_company_name"]   = comp_name
             agg["paid"].append(item)
 
-    # 取引先名 → 支払期限 順にソート
-    for cat in ["overdue", "seikyu_kakunin", "draft_overdue", "ichiji_hokan", "upcoming"]:
-        agg[cat] = sorted(agg[cat], key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
     return agg
 
 
@@ -1185,6 +1185,9 @@ def dashboard():
 
     if show_admin_aggregate:
         agg = _load_admin_aggregate()
+        _sort_key = lambda x: (x.get("取引先名", ""), x.get("支払期限", ""))
+        for _cat in ["overdue", "seikyu_kakunin", "draft_overdue", "ichiji_hokan", "upcoming"]:
+            agg[_cat].sort(key=_sort_key)
         return render_template(
             "admin_dashboard.html",
             agg=agg,
@@ -1253,21 +1256,23 @@ def dashboard():
 
         seikyu_raw     = result.get("seikyu_kakunin", [])
         seikyu_moved   = [b for b in seikyu_raw if b.get("着金日_手動")]
-        seikyu_kakunin = sorted([b for b in seikyu_raw if not b.get("着金日_手動")], key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
+        seikyu_kakunin = sorted([b for b in seikyu_raw if not b.get("着金日_手動")],
+                               key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
 
         # overdue + ichiji_hokan を統合して現在のメタで再分類
         all_overdue_pool = result.get("overdue", []) + result.get("ichiji_hokan", [])
         overdue_moved  = [b for b in all_overdue_pool if b.get("着金日_手動")]
         ichiji_hokan   = sorted([b for b in all_overdue_pool
                                   if b.get("解消済み") and not b.get("着金日_手動")],
-                                 key=lambda x: x.get("支払期限", ""))
+                                 key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         ichiji_ids_d   = {b["請求書ID"] for b in ichiji_hokan}
         overdue        = sorted([b for b in all_overdue_pool
                                   if not b.get("着金日_手動") and b["請求書ID"] not in ichiji_ids_d],
                                  key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         paid_all       = result.get("paid", []) + seikyu_moved + overdue_moved
         draft_overdue = result.get("draft_overdue", [])
-        upcoming      = [b for b in result.get("upcoming", []) if in_fy(b)]
+        upcoming      = sorted([b for b in result.get("upcoming", []) if in_fy(b)],
+                              key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
         paid_fy       = [b for b in paid_all if in_fy(b)]
 
     else:
@@ -1295,8 +1300,6 @@ def dashboard():
         next_year=next_year,
         fy_from=fy_from,
         fy_to=fy_to,
-        invoice_from=result.get("invoice_from", "") if result else "",
-        invoice_to=result.get("invoice_to", "") if result else "",
         show_history_popup=show_history_popup,
         prev_ym=prev_ym,
         current_ym=get_current_year_month(),
@@ -1318,9 +1321,27 @@ def run():
     if fiscal_year is None:
         fiscal_year = get_current_fiscal_year(start_month)
 
-    # 請求書期日（YYYY-MM-DD 形式で直接受け取る）
-    invoice_from = request.form.get("invoice_from_date") or None
-    invoice_to   = request.form.get("invoice_to_date")   or None
+    # 請求書発行月（YYYY-MM 形式 → YYYY-MM-01 / YYYY-MM-末日 に変換）
+    invoice_from_ym = request.form.get("invoice_from_ym") or ""
+    invoice_to_ym   = request.form.get("invoice_to_ym")   or ""
+    def ym_to_from(ym: str) -> str | None:
+        if not ym:
+            return None
+        return f"{ym}-01"
+
+    def ym_to_to(ym: str) -> str | None:
+        import calendar
+        if not ym:
+            return None
+        try:
+            y, m = int(ym[:4]), int(ym[5:7])
+            last = calendar.monthrange(y, m)[1]
+            return f"{ym}-{last:02d}"
+        except Exception:
+            return None
+
+    invoice_from = ym_to_from(invoice_from_ym)
+    invoice_to   = ym_to_to(invoice_to_ym)
 
     # 未指定なら年度から自動設定
     if not invoice_from and not invoice_to:
@@ -1579,19 +1600,23 @@ def _run_recheck_all(cid: str):
     import uuid as _uuid
     import jaconv as _jc
     import requests
-    from mf_accounting import get_deals, AccountingPeriodError
+    from mf_accounting import get_deals, get_unclassified_deals, AccountingPeriodError
+    _LEGAL_PREFIX = _re.compile(
+        r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
+    )
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
         s = _jc.h2z(s, kana=True, ascii=False, digit=False)
-        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        s = _LEGAL_PREFIX.sub('', s)
+        s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
 
-    def _norm_fuzzy(s: str) -> str:
-        """類似マッチ用: 長音符(ー)も除去して比較"""
-        s = _norm(s)
-        s = s.replace('ー', '')
-        return s
+    def _kata_runs(s: str) -> list[str]:
+        """文字列からカタカナ3文字以上の連続部分を抽出"""
+        normalized = _jc.hira2kata(s.strip())
+        normalized = _jc.h2z(normalized, kana=True, ascii=False, digit=False)
+        return [m for m in _re.findall(r'[\u30A0-\u30FF]{3,}', normalized)]
 
     try:
         result = _load_result()
@@ -1617,14 +1642,60 @@ def _run_recheck_all(cid: str):
                 raise AccountingPeriodError(str(e)) from e
             raise
 
+        try:
+            unclassified_deals = get_unclassified_deals(fetch_from, fetch_to, company_id=cid)
+            print(f"[再確認] 未仕分け: {len(unclassified_deals)}件", flush=True)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 400:
+                raise AccountingPeriodError(str(e)) from e
+            raise
+
         overdue_list   = result.get("overdue", [])
         meta_all       = load_meta()
         company_tantou = load_company_tantou()
 
         recheck_records = load_recheck_records()
-        existing_jids_rchk = {r.get("journal_id", r["id"]) for r in recheck_records}
+        furikomi_unconf = load_furikomi_unconfirmed()
+        existing_jids_rchk  = {r.get("journal_id", r["id"]) for r in recheck_records}
+        existing_jids_furik = {r.get("journal_id", r["id"]) for r in furikomi_unconf}
 
-        new_recheck = 0
+        _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金"}
+        new_furikomi = 0
+        new_recheck  = 0
+
+        for d in unclassified_deals:
+            journal_id = str(d.get("取引ID", ""))
+            if journal_id in existing_jids_furik:
+                continue
+            account = d.get("科目", "") or ""
+            if not any(ba in account for ba in _BANK_ACCOUNTS):
+                continue
+            furikomi_unconf.append({
+                "id":                   str(_uuid.uuid4()),
+                "journal_id":           journal_id,
+                "fetched_at":           datetime.now().isoformat(),
+                "suggested_partner":    "",
+                "candidate_invoice_id": "",
+                "取引先名":             d.get("取引先名", ""),
+                "着金日":               d.get("着金日", ""),
+                "入金金額":             d.get("入金金額", 0),
+                "備考":                 d.get("備考", ""),
+                "科目":                 account,
+                "furikomi_to_register": "",
+                "linked_invoice_id":    None,
+                "linked_invoice_num":   None,
+                "linked_at":            None,
+                "deleted":              False,
+            })
+            existing_jids_furik.add(journal_id)
+            new_furikomi += 1
+
+        # 入金履歴のみに絞る（売掛金など売上計上仕訳を除外）
+        payment_deals = [
+            d for d in deals
+            if any(ba in (d.get("科目", "") or "") for ba in _BANK_ACCOUNTS)
+        ]
+        print(f"[再確認] 入金履歴（銀行科目）: {len(payment_deals)}件 / 全{len(deals)}件", flush=True)
 
         for billing in overdue_list:
             bid           = billing.get("請求書ID", "")
@@ -1633,35 +1704,35 @@ def _run_recheck_all(cid: str):
             furikomi_list = _get_furikomi_list(company_tantou, partner_name)
             if furikomi_meta and furikomi_meta not in furikomi_list:
                 furikomi_list = [furikomi_meta] + furikomi_list
-            if furikomi_list:
-                for d in deals:
+            # 振込名義リスト + 取引先名自体も検索キーワードに含める
+            search_names = list(furikomi_list)
+            if partner_name and partner_name not in search_names:
+                search_names.append(partner_name)
+            if search_names or partner_name:
+                for d in payment_deals:
                     journal_id = str(d.get("取引ID", ""))
                     if journal_id in existing_jids_rchk:
                         continue
-                    remark   = d.get("備考", "") or ""
-                    remark_n = _norm(remark)
-                    remark_f = _norm_fuzzy(remark)
+                    remark       = d.get("備考", "") or ""
+                    remark_n     = _norm(remark)
+                    deal_name    = d.get("取引先名", "") or ""
+                    deal_name_n  = _norm(deal_name)
                     matched  = False
-                    similarity_flag     = False
-                    similar_matched_name = ""
-                    # 厳密マッチ
-                    for name in furikomi_list:
+                    for name in search_names:
                         if not name or len(name) < 2:
                             continue
                         name_n = _norm(name)
-                        if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
+                        if len(name_n) >= 2 and (name_n in remark_n or name_n in deal_name_n):
                             matched = True
                             break
-                    # 厳密マッチ失敗時: 類似マッチ（長音符無視）
-                    if not matched:
-                        for name in furikomi_list:
-                            if not name or len(name) < 2:
-                                continue
-                            name_f = _norm_fuzzy(name)
-                            if len(name_f) >= 2 and name_f in remark_f:
+                        if name in remark or name in deal_name:
+                            matched = True
+                            break
+                    # 部分一致で見つからなかった場合、取引先名のカタカナ部分で照合
+                    if not matched and partner_name:
+                        for krun in _kata_runs(partner_name):
+                            if krun in remark_n or krun in deal_name_n:
                                 matched = True
-                                similarity_flag = True
-                                similar_matched_name = name
                                 break
                     if matched:
                         recheck_records.append({
@@ -1679,24 +1750,25 @@ def _run_recheck_all(cid: str):
                             "linked_invoice_id":      None,
                             "linked_invoice_num":     None,
                             "linked_at":              None,
-                            "similarity_flag":        similarity_flag,
-                            "similar_matched_name":   similar_matched_name,
                         })
                         existing_jids_rchk.add(journal_id)
                         new_recheck += 1
 
         save_recheck_records(recheck_records)
+        save_furikomi_unconfirmed(furikomi_unconf)
 
         with _recheck_all_lock:
             _recheck_all_status["running"]    = False
             _recheck_all_status["error"]      = None
             _recheck_all_status["error_type"] = None
             _recheck_all_status["result"]     = {
-                "ok":           True,
-                "new_recheck":  new_recheck,
-                "total_recheck": len([r for r in recheck_records if not r.get("deleted")]),
-                "from_date":    fetch_from,
-                "to_date":      fetch_to,
+                "ok":            True,
+                "new_recheck":   new_recheck,
+                "new_furikomi":  new_furikomi,
+                "total_recheck":  len([r for r in recheck_records if not r.get("deleted")]),
+                "total_furikomi": len([r for r in furikomi_unconf  if not r.get("deleted")]),
+                "from_date":     fetch_from,
+                "to_date":       fetch_to,
             }
     except AccountingPeriodError as e:
         print(f"[再確認] 会計期間エラー: {e}", flush=True)
@@ -2085,87 +2157,6 @@ def api_customers_delete():
 
 
 
-@app.route("/api/unclassified/check", methods=["POST"])
-@login_required
-def api_unclassified_check():
-    """会計未仕分けタブ: 今日から2カ月前までの未仕分け仕訳を取得して保存する"""
-    from datetime import timedelta
-    cid = get_company_id()
-    if not auth.is_authenticated("accounting", cid):
-        return jsonify({"error": "MFクラウド会計の連携が必要です。"}), 401
-
-    today = date.today()
-    m = today.month - 2
-    y = today.year
-    if m <= 0:
-        m += 12
-        y -= 1
-    from_dt   = date(y, m, 1)
-    from_date = from_dt.strftime("%Y-%m-%d")
-    to_date   = today.strftime("%Y-%m-%d")
-
-    # 会計期間またぎチェック: またぐ場合は今期開始日にクリップ
-    _s      = load_settings()
-    _fstart = _s.get("fiscal_year_start_month", 4)
-    _fy_year = today.year if today.month >= _fstart else today.year - 1
-    curr_from_dt = date(_fy_year, _fstart, 1)
-    curr_from    = curr_from_dt.strftime("%Y-%m-%d")
-    spans_fiscal = (from_dt < curr_from_dt <= today)
-    if spans_fiscal:
-        return jsonify({"error": "過去2カ月間が会計期間をまたいでいるためデータ取得ができません。マネーフォワードクラウド会計でご確認ください。", "error_type": "accounting_period"}), 400
-
-    try:
-        from mf_accounting import get_unclassified_deals
-    except ImportError as e:
-        return jsonify({"error": f"mf_accounting モジュールが見つかりません: {e}"}), 500
-
-    try:
-        raw_deals = get_unclassified_deals(from_date, to_date, company_id=cid)
-    except RuntimeError as e:
-        return jsonify({"error": str(e)}), 401
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    filtered = raw_deals
-
-    existing = load_furikomi_unconfirmed()
-    existing_ids = {r.get("取引ID") for r in existing}
-
-    import uuid as _uuid
-    new_records = []
-    for d in filtered:
-        tid = d.get("取引ID", "")
-        if tid in existing_ids:
-            continue
-        new_records.append({
-            "id":                  str(_uuid.uuid4()),
-            "取引ID":              tid,
-            "着金日":              d.get("着金日", ""),
-            "入金金額":            d.get("入金金額", 0),
-            "取引先名":            d.get("取引先名", ""),
-            "備考":                d.get("備考", ""),
-            "科目":                d.get("科目", ""),
-            "suggested_partner":   d.get("取引先名", ""),
-            "candidate_invoice_id": None,
-            "linked_invoice_id":   None,
-            "deleted":             False,
-        })
-
-    all_records = existing + new_records
-    save_furikomi_unconfirmed(all_records)
-
-    total = len([r for r in all_records if not r.get("deleted") and not r.get("linked_invoice_id")])
-    return jsonify({
-        "ok":             True,
-        "new_count":      len(new_records),
-        "total":          total,
-        "from_date":      from_date,
-        "to_date":        to_date,
-        "spans_fiscal":   spans_fiscal,
-        "fiscal_boundary": curr_from if spans_fiscal else None,
-    })
-
-
 @app.route("/api/invoice/<invoice_id>/delete-draft", methods=["POST"])
 def delete_draft_invoice(invoice_id):
     """下書き（期限超過）タブから請求書を削除（非表示）する"""
@@ -2348,7 +2339,12 @@ def api_overdue_recheck(invoice_id):
     if furikomi_meta and furikomi_meta not in furikomi_list:
         furikomi_list = [furikomi_meta] + furikomi_list
 
-    if not furikomi_list:
+    # 振込名義リスト + 取引先名自体も検索キーワードに含める
+    search_names = list(furikomi_list)
+    if partner_name and partner_name not in search_names:
+        search_names.append(partner_name)
+
+    if not search_names:
         return jsonify({
             "ok":          False,
             "error":       f"「{partner_name}」の振込名義が登録されていません。顧客リストまたは編集ボタンから振込名義を登録してください。",
@@ -2356,28 +2352,60 @@ def api_overdue_recheck(invoice_id):
             "total_count": 0,
         }), 400
 
-    # 振込名義が会計の適用（備考）に含まれているかで照合
+    # 振込名義が会計の適用（備考）または取引先名に含まれているかで照合
     import re as _re
     import jaconv as _jc
+    _LEGAL_PREFIX = _re.compile(
+        r'^(カ\)|カ）|ユ\)|ユ）|ゼイ\)|ゼイ）|シャ\)|シャ）|ド\)|ド）)\s*'
+    )
 
     def _norm(s: str) -> str:
         s = _jc.hira2kata(s.strip())
         s = _jc.h2z(s, kana=True, ascii=False, digit=False)
-        s = _re.sub(r'[\s\u3000\-－　]', '', s).upper()
+        s = _LEGAL_PREFIX.sub('', s)
+        s = _re.sub(r'[\s\u3000\-－·・　()\(\)（）]', '', s).upper()
         return s
 
+    def _kata_runs(s: str) -> list[str]:
+        """文字列からカタカナ3文字以上の連続部分を抽出"""
+        normalized = _jc.hira2kata(s.strip())
+        normalized = _jc.h2z(normalized, kana=True, ascii=False, digit=False)
+        return [m for m in _re.findall(r'[\u30A0-\u30FF]{3,}', normalized)]
+
+    # 入金のみに絞る（借方科目が銀行口座 = お客さんからの振込入金）
+    # 出金（貸方が銀行口座）は除外する
+    _BANK_ACCOUNTS = {"普通預金", "当座預金", "定期預金", "郵便貯金", "現金"}
+    payment_deals = [
+        d for d in deals
+        if any(ba in (d.get("借方科目", d.get("科目", "")) or "") for ba in _BANK_ACCOUNTS)
+    ]
+    print(f"[再確認] 入金履歴（借方が銀行科目）: {len(payment_deals)}件 / 全{len(deals)}件", flush=True)
+
     matched_deals = []
-    for d in deals:
-        remark   = d.get("備考", "") or ""
-        remark_n = _norm(remark)
-        for name in furikomi_list:
+    for d in payment_deals:
+        remark       = d.get("備考", "") or ""
+        remark_n     = _norm(remark)
+        deal_name    = d.get("取引先名", "") or ""
+        deal_name_n  = _norm(deal_name)
+        matched = False
+        for name in search_names:
             if not name or len(name) < 2:
                 continue
             name_n = _norm(name)
-            # 正規化後の名前が適用に含まれるか、または元テキストで含まれるか
-            if (len(name_n) >= 2 and name_n in remark_n) or name in remark:
-                matched_deals.append(d)
+            if len(name_n) >= 2 and (name_n in remark_n or name_n in deal_name_n):
+                matched = True
                 break
+            if name in remark or name in deal_name:
+                matched = True
+                break
+        # 部分一致で見つからなかった場合、取引先名のカタカナ部分で照合
+        if not matched and partner_name:
+            for krun in _kata_runs(partner_name):
+                if krun in remark_n or krun in deal_name_n:
+                    matched = True
+                    break
+        if matched:
+            matched_deals.append(d)
 
     # recheck_records に追加（会計取引IDで重複除去、レコードIDはUUID）
     import uuid as _uuid
@@ -2504,7 +2532,7 @@ def api_recheck_link(record_id):
                         item["着金日_手動"]   = ""
                         item["着金金額_手動"] = 0
                         result.setdefault("overdue", []).append(item)
-                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        result["overdue"].sort(key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
                         moved = True
                         break
                 if moved:
@@ -2557,7 +2585,7 @@ def api_recheck_unlink(record_id):
                         item["着金日_手動"]   = ""
                         item["着金金額_手動"] = 0
                         result.setdefault("overdue", []).append(item)
-                        result["overdue"].sort(key=lambda x: x.get("支払期限", ""))
+                        result["overdue"].sort(key=lambda x: (x.get("取引先名", ""), x.get("支払期限", "")))
                         moved = True
                         break
                 if moved:
@@ -2941,14 +2969,6 @@ def history_download(year_month):
 def rules_page():
     return render_template(
         "rules.html",
-        auth_invoice=auth.is_authenticated("invoice", get_company_id()),
-        settings=load_settings(),
-    )
-
-@app.route("/howto")
-def howto_page():
-    return render_template(
-        "howto.html",
         auth_invoice=auth.is_authenticated("invoice", get_company_id()),
         settings=load_settings(),
     )

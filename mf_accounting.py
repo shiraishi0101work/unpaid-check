@@ -117,8 +117,10 @@ def _to_deal_dict(j: dict) -> list[dict]:
             or ""
         )
 
-        # 借方科目名
-        account = debitor.get("account_name") or creditor.get("account_name") or ""
+        # 借方科目名・貸方科目名
+        debit_account = debitor.get("account_name") or ""
+        credit_account = creditor.get("account_name") or ""
+        account = debit_account or credit_account
 
         # 備考: branch.remark + journal.memo を結合
         full_remark = " ".join(filter(None, [remark, memo]))
@@ -133,6 +135,8 @@ def _to_deal_dict(j: dict) -> list[dict]:
             "取引先名": partner,
             "備考":     full_remark,
             "科目":     account,
+            "借方科目": debit_account,
+            "貸方科目": credit_account,
             "_matched": False,
             "_raw":     j,
         })
