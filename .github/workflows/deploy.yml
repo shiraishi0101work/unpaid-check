@@ -18,11 +18,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd ${{ secrets.PROJECT_DIR_REPO }}
+            cd /opt/unpaid_check
             git fetch origin main
             git reset --hard origin/main
-            sudo rsync -av --exclude='tokens/' --exclude='data/' --exclude='.env' --exclude='output/' ${{ secrets.PROJECT_DIR_REPO }}/ ${{ secrets.PROJECT_DIR }}/
-            sudo mkdir -p ${{ secrets.PROJECT_DIR }}/output
-            sudo chown -R www-data:www-data ${{ secrets.PROJECT_DIR }}/output
             sudo systemctl restart unpaid_check.service
-    
